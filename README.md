@@ -402,14 +402,14 @@ These shape execution and must be resolved before some downstream decisions. Tra
 - **AI engine v1.0 — Evidence Engine + Knowledge Graph:**
   - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
   - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
-  - **GEO ingestion** — NCBI GEO DataSets metadata (`vitiligo ingest geo`) for vitiligo-linked omics series (GSE accessions, summaries, organism, sample counts).
+  - **GEO ingestion** — **311 vitiligo-linked GEO DataSets** (GSE series metadata: title, summary, organism, sample counts) via `vitiligo ingest geo`.
   - **ClinicalTrials.gov ingestion** — **320 vitiligo trials** with structured status, phase, conditions, interventions, sponsors, locations, eligibility, primary/secondary outcomes, enrollment, and dates.
   - **EU CTR (CTIS) ingestion** — **22 EU vitiligo trials** with normalized phases, statuses, sponsors, countries, full eligibility criteria, and trial objectives — including the active Phase 3 EU trials of ruxolitinib, povorcitinib, and upadacitinib in non-segmental vitiligo.
   - **Open Targets ingestion** — **237 drug/target priors** for vitiligo (`EFO_0004208`): 37 clinical drug candidates (ruxolitinib, povorcitinib, upadacitinib, ritlecitinib, …) plus top 200 associated gene targets with association scores and mechanism-of-action enrichment.
   - **WHO ICTRP ingestion (XML file import)** — import global trial records from https://trialsearch.who.int/ exports; deduplicates against existing ClinicalTrials.gov and EU CTR rows.
   - **DrugBank ingestion (XML file import)** — vitiligo-filtered drug/target priors with mechanisms from a local full-database XML export (academic license); seeds from Open Targets drug names by default.
   - **Source-agnostic SQLite store** for documents, embeddings, trials, and priors; bookkeeping for resumable, idempotent ingestion runs across all sources.
-  - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **12,053 vectors** for the entire corpus.
+  - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **14,242 vectors** across PubMed, PMC, and GEO.
   - **Semantic search** over papers; **structured search** over trials with cross-registry filtering (source / status / phase / country / has-results / free-text).
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
@@ -422,11 +422,8 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
 2. **Expert-spot-check** the knowledge graph v1 (`vitiligo graph stats`, `vitiligo graph neighbors vitiligo`).
-3. Layer in **evidence-level tagging** per source (RCT / cohort / mouse / review) and surface it in answers.
-4. **Deploy** the Evidence Engine publicly (see [`docs/deploy.md`](docs/deploy.md)) and attach the corpus volume.
-5. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
-
----
+3. **Deploy** the Evidence Engine publicly — see [`scripts/deploy/`](scripts/deploy/) and [`docs/deploy.md`](docs/deploy.md).
+4. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
 ## How to Read This Document
 

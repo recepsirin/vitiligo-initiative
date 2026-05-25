@@ -29,6 +29,7 @@ vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.gov
 vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
 vitiligo ingest opentargets        # ~37 drugs + 200 targets for vitiligo (EFO_0004208)
+vitiligo ingest geo                # ~311 vitiligo-linked GEO series (GSE metadata)
 vitiligo ingest ictrp --file export.xml   # WHO ICTRP XML export (see trialsearch.who.int)
 vitiligo ingest drugbank --file full_database.xml   # DrugBank academic XML export
 
