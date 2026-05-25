@@ -263,6 +263,11 @@ button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
   border-radius: 999px;
 }
 
+.tag-evidence {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+}
+
 /* Ask */
 
 .answer {

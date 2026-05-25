@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
+from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.logging import get_logger
 from vitiligo.reasoning.llm import LLMClient
 
@@ -28,6 +29,8 @@ class Citation:
     year: int | None
     doi: str | None
     score: float
+    evidence_level: str
+    evidence_level_label: str
 
 
 @dataclass
@@ -88,6 +91,8 @@ def _build_user_prompt(question: str, hits: list[SearchHit]) -> str:
             meta_bits.append(str(doc.year))
         if doc.doi:
             meta_bits.append(f"doi:{doc.doi}")
+        level = classify_document(doc)
+        meta_bits.append(f"evidence:{evidence_level_label(level)}")
         meta = " | ".join(meta_bits) if meta_bits else ""
 
         lines.append(f"[{idx}] {doc.title or '(no title)'}")
@@ -113,6 +118,7 @@ def _build_user_prompt(question: str, hits: list[SearchHit]) -> str:
 
 def _hit_to_citation(index: int, hit: SearchHit) -> Citation:
     doc = hit.document
+    level = classify_document(doc)
     return Citation(
         index=index,
         source=doc.source.value,
@@ -122,4 +128,6 @@ def _hit_to_citation(index: int, hit: SearchHit) -> Citation:
         year=doc.year,
         doi=doc.doi,
         score=hit.score,
+        evidence_level=level.value,
+        evidence_level_label=evidence_level_label(level),
     )

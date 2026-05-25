@@ -41,6 +41,7 @@ function metaBits(item) {
   if (item.journal) bits.push(item.journal);
   if (item.year) bits.push(item.year);
   if (item.doi) bits.push(`<a href="https://doi.org/${escapeHtml(item.doi)}" target="_blank">doi:${escapeHtml(item.doi)}</a>`);
+  if (item.evidence_level_label) bits.push(`<span class="tag tag-evidence">${escapeHtml(item.evidence_level_label)}</span>`);
   if (item.source && item.source_id) {
     if (item.source === 'pubmed') {
       bits.push(`<a href="https://pubmed.ncbi.nlm.nih.gov/${escapeHtml(item.source_id)}/" target="_blank">PMID ${escapeHtml(item.source_id)}</a>`);
@@ -141,10 +142,13 @@ function linkifyCitations(html) {
 
 function renderCitation(c) {
   const meta = metaBits(c);
+  const evidence = c.evidence_level_label
+    ? `<span class="tag tag-evidence">${escapeHtml(c.evidence_level_label)}</span> `
+    : '';
   return `
     <div class="citation" id="cite-${c.index}">
       <span class="citation-index">[${c.index}]</span>
-      <span>${escapeHtml(c.title || '(no title)')}</span>
+      ${evidence}<span>${escapeHtml(c.title || '(no title)')}</span>
       <div class="citation-meta">${meta}</div>
     </div>
   `;
@@ -212,6 +216,7 @@ function renderTrialCitation(t) {
       <span class="trial-status status-${escapeHtml((t.status || 'UNKNOWN').toLowerCase())}">${escapeHtml(t.status || 'UNKNOWN')}</span>
       <span class="trial-phase">${escapeHtml(phase)}</span>
       ${t.has_results ? '<span class="trial-results-badge">has results</span>' : ''}
+      ${t.evidence_level_label ? `<span class="tag tag-evidence">${escapeHtml(t.evidence_level_label)}</span>` : ''}
       <div class="trial-citation-title">${escapeHtml(t.title || '(no title)')}</div>
       ${sponsors ? `<div class="citation-meta">Sponsors: ${escapeHtml(sponsors)}</div>` : ''}
       ${countries ? `<div class="citation-meta">Countries: ${escapeHtml(countries)}</div>` : ''}

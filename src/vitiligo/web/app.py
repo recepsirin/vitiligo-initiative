@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import semantic_search
+from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import get_neighbors, search_entities, summarize_graph
 from vitiligo.reasoning import (
     LLMUnavailable,
@@ -170,9 +171,10 @@ def create_app() -> FastAPI:
     @app.post("/api/search")
     def search(req: SearchRequest) -> dict[str, Any]:
         hits = semantic_search(query=req.query, top_k=req.top_k)
-        return {
-            "query": req.query,
-            "results": [
+        results = []
+        for rank, hit in enumerate(hits, start=1):
+            level = classify_document(hit.document)
+            results.append(
                 {
                     "rank": rank,
                     "score": hit.score,
@@ -184,10 +186,11 @@ def create_app() -> FastAPI:
                     "doi": hit.document.doi,
                     "abstract": hit.document.abstract,
                     "mesh_terms": hit.document.mesh_terms,
+                    "evidence_level": level.value,
+                    "evidence_level_label": evidence_level_label(level),
                 }
-                for rank, hit in enumerate(hits, start=1)
-            ],
-        }
+            )
+        return {"query": req.query, "results": results}
 
     @app.post("/api/ask")
     def ask(req: AskRequest) -> dict[str, Any]:

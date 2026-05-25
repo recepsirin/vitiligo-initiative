@@ -21,6 +21,7 @@ from dataclasses import asdict, dataclass
 
 from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
+from vitiligo.evidence import classify_document, classify_trial, evidence_level_label
 from vitiligo.graph.query import GraphEdgeView, retrieve_graph_for_hypothesize
 from vitiligo.logging import get_logger
 from vitiligo.priors import retrieve_priors_for_hypothesize
@@ -45,6 +46,8 @@ class TrialCitation:
     sponsors: list[str]
     countries: list[str]
     has_results: bool
+    evidence_level: str
+    evidence_level_label: str
 
 
 @dataclass
@@ -200,6 +203,7 @@ def _trial_to_citation(idx: int, trial: Trial) -> TrialCitation:
         s.get("name") or "" for s in (trial.sponsors or [])[:3] if isinstance(s, dict)
     ]
     sponsor_names = [s for s in sponsor_names if s]
+    trial_level = classify_trial(trial)
     return TrialCitation(
         index=idx,
         source=src_value,
@@ -210,6 +214,8 @@ def _trial_to_citation(idx: int, trial: Trial) -> TrialCitation:
         sponsors=sponsor_names,
         countries=list(trial.countries or [])[:8],
         has_results=bool(trial.has_results),
+        evidence_level=trial_level.value,
+        evidence_level_label=evidence_level_label(trial_level),
     )
 
 
@@ -265,6 +271,8 @@ def _build_user_prompt(
             meta_bits.append(str(doc.year))
         if doc.publication_types:
             meta_bits.append(", ".join(doc.publication_types[:2]))
+        level = classify_document(doc)
+        meta_bits.append(f"evidence:{evidence_level_label(level)}")
         meta = " | ".join(meta_bits) if meta_bits else ""
 
         lines.append(f"[{idx}] {doc.title or '(no title)'}")
@@ -300,7 +308,8 @@ def _build_user_prompt(
             )
             lines.append(
                 f"    Status: {trial.status or 'unknown'} | Phase: {phase} | "
-                f"Has results: {'yes' if trial.has_results else 'no'}"
+                f"Has results: {'yes' if trial.has_results else 'no'} | "
+                f"Evidence: {evidence_level_label(classify_trial(trial))}"
             )
             if sponsors:
                 lines.append(f"    Sponsors: {sponsors}")

@@ -15,6 +15,7 @@ from sqlmodel import func, select
 from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
+from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import (
     get_neighbors,
     run_graph_build,
@@ -538,6 +539,8 @@ def search_cmd(
             meta_bits.append(str(doc.year))
         if doc.doi:
             meta_bits.append(f"doi:{doc.doi}")
+        level = classify_document(doc)
+        meta_bits.append(f"[magenta]{evidence_level_label(level)}[/magenta]")
         if meta_bits:
             console.print("  ".join(meta_bits))
         if show_abstract and doc.abstract:

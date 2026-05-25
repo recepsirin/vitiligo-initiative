@@ -56,6 +56,7 @@ def _trial(
         summary=summary,
         status=status,
         phases=phases or ["PHASE2"],
+        study_type="INTERVENTIONAL",
         conditions=["Vitiligo"],
         keywords=[],
         interventions=[{"type": "DRUG", "name": "LY4005130", "description": None, "other_names": []}],
@@ -102,6 +103,7 @@ def test_user_prompt_lists_papers_and_trials_separately() -> None:
     assert "REGISTERED CLINICAL TRIALS:" in prompt
     assert "[T1] ctgov:NCT07533019" in prompt
     assert "Status: RECRUITING" in prompt
+    assert "Evidence: Clinical trial" in prompt
     assert "Phase: PHASE2" in prompt
     assert "Sponsors: Eli Lilly" in prompt
     assert "Interventions: LY4005130" in prompt
@@ -161,6 +163,8 @@ def test_trial_to_citation_extracts_metadata() -> None:
     assert citation.title == "LY4005130 in non-segmental vitiligo"
     assert citation.has_results is True
     assert citation.sponsors == ["Eli Lilly"]
+    assert citation.evidence_level == "clinical_trial"
+    assert citation.evidence_level_label == "Clinical trial"
     assert "Netherlands" in citation.countries
 
 

@@ -143,6 +143,15 @@ Two LLM-backed pipelines built on top of search:
 
 Both default to `claude-sonnet-4-5` via the `anthropic` SDK. The model is configurable via `ANTHROPIC_MODEL`. If `ANTHROPIC_API_KEY` is not set, the calls raise `LLMUnavailable` with a clear message — no silent degraded mode. Search itself works without an API key.
 
+### Evidence levels (`vitiligo.evidence`)
+
+Each retrieved paper and trial is tagged with an evidence tier derived from existing metadata (no re-ingestion):
+
+- **Papers** — PubMed `publication_types`, MeSH terms, and title/abstract cues → RCT, meta-analysis, systematic review, cohort, case report, mouse/animal, in vitro, etc.
+- **Trials** — registry `study_type` → clinical trial vs cohort/observational.
+
+Tags surface in semantic search, Ask/Hypothesize prompts, API responses, and the web UI.
+
 ### Knowledge graph (`vitiligo.graph`)
 
 A persisted entity–relation graph for vitiligo, grounded in structured sources first and optionally enriched by LLM extraction:
