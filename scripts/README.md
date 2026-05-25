@@ -8,6 +8,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/common.sh`](deploy/common.sh) | Shared shell helpers |
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
+| [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
 | [`deploy/fly-upload-db.sh`](deploy/fly-upload-db.sh) | Upload `data/vitiligo.db` to Fly volume |
 | [`deploy/fly-seed-graph.sh`](deploy/fly-seed-graph.sh) | Run `vitiligo graph seed` on Fly |
 | [`deploy/fly-redeploy.sh`](deploy/fly-redeploy.sh) | Redeploy container only |
@@ -20,6 +21,10 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 ```bash
 # Local Docker smoke test
 ./scripts/deploy/docker-smoke.sh
+
+# Verify corpus before upload
+./scripts/deploy/prepare-db.sh
+./scripts/deploy/prepare-db.sh --gzip
 
 # Fly.io (requires flyctl + ANTHROPIC_API_KEY)
 ./scripts/deploy/fly-first-deploy.sh
@@ -34,6 +39,7 @@ FLY_APP=my-engine ./scripts/deploy/fly-redeploy.sh
 ./scripts/ingest/geo.sh 10             # smoke test (10 records)
 WITH_GEO=0 ./scripts/ingest/sync-engine.sh   # graph seed + embed only
 ./scripts/ingest/sync-engine.sh        # GEO + graph + embed + stats
+vitiligo graph export -o exports/graph-review.json
 ```
 
 See [`docs/deploy.md`](../docs/deploy.md) for full deployment documentation.

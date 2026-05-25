@@ -21,6 +21,9 @@ Helper scripts live under [`scripts/deploy/`](../scripts/deploy/). See [`scripts
 ### First deploy
 
 ```bash
+# Verify local corpus (optional)
+./scripts/deploy/prepare-db.sh
+
 # One-shot: app + volume + secrets + deploy
 export ANTHROPIC_API_KEY=sk-ant-...
 ./scripts/deploy/fly-first-deploy.sh

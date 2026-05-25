@@ -54,6 +54,7 @@ htmlcov/
 
 # Project data (large, regenerable)
 data/
+exports/
 !data/.gitkeep
 logs/
 *.db

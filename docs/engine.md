@@ -233,6 +233,7 @@ vitiligo graph seed                                  # deterministic seed from p
 vitiligo graph extract --limit 50                    # LLM extraction (requires API key)
 vitiligo graph build --extract --extract-limit 50    # seed + extract
 vitiligo graph stats
+vitiligo graph export -o exports/graph-review.json    # JSON for expert spot-check
 vitiligo graph search ruxolitinib
 vitiligo graph neighbors vitiligo
 

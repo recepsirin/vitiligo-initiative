@@ -28,7 +28,7 @@ from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import semantic_search
 from vitiligo.evidence import classify_document, evidence_level_label
-from vitiligo.graph import get_neighbors, search_entities, summarize_graph
+from vitiligo.graph import export_graph_snapshot, get_neighbors, search_entities, summarize_graph
 from vitiligo.reasoning import (
     LLMUnavailable,
     ask_with_citations,
@@ -312,6 +312,14 @@ def create_app() -> FastAPI:
                 for e in edges
             ],
         }
+
+    @app.get("/api/graph/export")
+    def graph_export(edge_limit: int | None = None) -> dict[str, Any]:
+        if edge_limit is not None and edge_limit < 1:
+            raise HTTPException(status_code=400, detail="edge_limit must be >= 1.")
+        return export_graph_snapshot(
+            edge_limit=min(edge_limit, 10_000) if edge_limit is not None else None
+        )
 
     app.mount(
         "/static",

@@ -17,6 +17,7 @@ from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
 from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import (
+    export_graph_snapshot,
     get_neighbors,
     run_graph_build,
     search_entities,
@@ -787,6 +788,40 @@ def graph_neighbors_cmd(
             f"[bold]{edge.object_name}[/bold] ({edge.object_kind}) "
             f"[dim]conf={edge.confidence:.2f} {edge.extraction_method}[/dim]"
         )
+
+
+@graph_app.command("export")
+def graph_export_cmd(
+    output: str = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Write JSON snapshot to this path (default: stdout).",
+    ),
+    edge_limit: int | None = typer.Option(
+        None,
+        "--edge-limit",
+        help="Cap edges exported (default: all).",
+    ),
+) -> None:
+    """Export the knowledge graph as JSON for expert review or archival."""
+    import json
+    from pathlib import Path
+
+    init_db()
+    snapshot = export_graph_snapshot(edge_limit=edge_limit)
+    text = json.dumps(snapshot, indent=2)
+
+    if output:
+        path = Path(output)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        console.print(
+            f"[green]Exported[/green] {len(snapshot['entities'])} entities, "
+            f"{len(snapshot['edges'])} edges -> [cyan]{path}[/cyan]"
+        )
+    else:
+        console.print(text)
 
 
 # --------------------------------------------------------------------- priors
