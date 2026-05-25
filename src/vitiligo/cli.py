@@ -17,6 +17,7 @@ from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
 from vitiligo.ingest import (
     run_ctgov_ingestion,
+    run_drugbank_ingestion,
     run_euctr_ingestion,
     run_ictrp_ingestion,
     run_opentargets_ingestion,
@@ -31,6 +32,7 @@ from vitiligo.reasoning import (
     generate_hypotheses,
 )
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
+from vitiligo.sources.drugbank import DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.opentargets import DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY
 from vitiligo.sources.opentargets import DEFAULT_TARGET_LIMIT
@@ -309,6 +311,54 @@ def ingest_ictrp(
     _print_ingest_stats(stats)
 
 
+@ingest_app.command("drugbank")
+def ingest_drugbank(
+    file: str = typer.Argument(..., help="Path to DrugBank full-database XML or .zip export."),
+    query: str = typer.Option(
+        DRUGBANK_DEFAULT_QUERY,
+        "--query",
+        "-q",
+        help="Text filter for vitiligo relevance (searches indication, mechanism, names).",
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        "-l",
+        help="Cap matching drugs (targets from those drugs are still emitted).",
+    ),
+    no_seed: bool = typer.Option(
+        False,
+        "--no-seed-from-opentargets",
+        help="Do not also include DrugBank drugs matching Open Targets drug names.",
+    ),
+) -> None:
+    """Import vitiligo drug/target priors from a local DrugBank XML export.
+
+    Requires an academic DrugBank account to download the full database from
+    https://go.drugbank.com/releases/latest (Export → all-full-database).
+    """
+    settings = get_settings()
+    xml_path = Path(file)
+    console.rule("[bold]DrugBank (XML) ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"File:     [yellow]{xml_path}[/yellow]")
+    console.print(f"Query:    [magenta]{query}[/magenta]")
+    if limit:
+        console.print(f"Limit:    [magenta]{limit}[/magenta] (smoke test)")
+    console.print()
+
+    stats = run_drugbank_ingestion(
+        file=xml_path,
+        query=query,
+        seed_from_opentargets=not no_seed,
+        limit=limit,
+    )
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
 # --------------------------------------------------------------------- db
 
 
@@ -574,7 +624,7 @@ def priors_stats() -> None:
 
     if total == 0:
         console.print(
-            "[yellow]No priors yet. Run `vitiligo ingest opentargets`.[/yellow]"
+            "[yellow]No priors yet. Run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`.[/yellow]"
         )
         return
 
@@ -606,7 +656,7 @@ def priors_sample(
         raise typer.Exit(code=2)
 
     if not rows:
-        console.print("[yellow]No priors found. Run `vitiligo ingest opentargets`.[/yellow]")
+        console.print("[yellow]No priors found. Run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`.[/yellow]")
         return
 
     console.rule(f"[bold]Sample {kind} priors[/bold]")

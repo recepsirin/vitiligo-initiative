@@ -30,6 +30,7 @@ vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.go
 vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
 vitiligo ingest opentargets        # ~37 drugs + 200 targets for vitiligo (EFO_0004208)
 vitiligo ingest ictrp --file export.xml   # WHO ICTRP XML export (see trialsearch.who.int)
+vitiligo ingest drugbank --file full_database.xml   # DrugBank academic XML export
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -95,12 +96,12 @@ Currently shipped:
 | `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
 | `vitiligo.sources.opentargets` | Open Targets Platform GraphQL v4 | ChEMBL id (drugs) / Ensembl id (targets) | Disease resolution + drug candidates + associated targets; mechanism-of-action enrichment per drug |
 | `vitiligo.sources.ictrp` | WHO ICTRP search portal (XML export) | ICTRP TrialID | File import from https://trialsearch.who.int/; skips ctgov/euctr duplicates |
+| `vitiligo.sources.drugbank` | DrugBank full database (XML export) | DB id | File import from academic download; vitiligo text filter + Open Targets name seeding |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
 | GEO / ArrayExpress | Public omics datasets | E-utilities + REST |
 
 ### Storage (`vitiligo.storage`)
@@ -108,7 +109,7 @@ Planned (in priority order):
 - `documents` table for papers and any other text-centric records, keyed by `(source, source_id)`.
 - `embeddings` table mapping `(document_id, model, scope)` → L2-normalized vector bytes.
 - `trials` table for clinical-trial registry records — separate from `documents` because their structure is operational (status / phase / locations / eligibility) rather than narrative. Keyed by `(source, source_id)` where source is `ctgov | euctr | ictrp`.
-- `priors` table for drug and target priors (Open Targets today; DrugBank later). Keyed by `(source, kind, source_id, disease_id)`.
+- `priors` table for drug and target priors (Open Targets + DrugBank). Keyed by `(source, kind, source_id, disease_id)`.
 - `raw_metadata` JSON field on `documents`, `trials`, and `priors` preserves source-specific data, so we can re-derive structured fields without re-fetching.
 - `ingestion_runs` table tracks every fetch (papers and trials alike): source, query, counts, status, errors.
 
@@ -175,6 +176,7 @@ vitiligo ingest pubmed --query 'vitiligo AND JAK'   # custom query
 vitiligo ingest pmc                                 # PMC Open Access full text
 vitiligo ingest opentargets                         # Open Targets drug + target priors
 vitiligo ingest ictrp --file export.xml              # WHO ICTRP XML export
+vitiligo ingest drugbank --file full_database.xml    # DrugBank academic XML (.zip ok)
 vitiligo ingest opentargets --target-limit 50       # smoke test (fewer targets)
 
 # Embeddings
@@ -239,10 +241,9 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **DrugBank ingestion** — open-subset drug mechanisms and repurposing priors.
+1. **Public deployment** — host the Evidence Engine (Fly.io / Render) with rate limiting + telemetry.
 2. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
 3. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
 4. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
 5. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
-6. **Public deployment** — host the Evidence Engine somewhere reachable (Fly.io / Render) with rate limiting + telemetry.
-7. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.
+6. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.

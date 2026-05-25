@@ -103,7 +103,7 @@ def test_user_prompt_lists_papers_and_trials_separately() -> None:
     assert "Phase: PHASE2" in prompt
     assert "Sponsors: Eli Lilly" in prompt
     assert "Interventions: LY4005130" in prompt
-    assert "DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets`)" in prompt
+    assert "DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)" in prompt
 
 
 def test_user_prompt_lists_priors() -> None:
@@ -122,7 +122,7 @@ def test_user_prompt_lists_priors() -> None:
         trials=[],
         priors=[drug, target],
     )
-    assert "DRUG & TARGET PRIORS (Open Targets):" in prompt
+    assert "DRUG & TARGET PRIORS (Open Targets + DrugBank):" in prompt
     assert "[P1] DRUG RUXOLITINIB (opentargets:CHEMBL1789941)" in prompt
     assert "Clinical stage: APPROVAL" in prompt
     assert "[P2] TARGET JAK1 (opentargets:ENSG00000162434)" in prompt

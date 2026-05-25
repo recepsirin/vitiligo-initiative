@@ -71,19 +71,83 @@ def retrieve_priors_for_hypothesize(
 
     Drugs are filtered to those with at least Phase 2 clinical activity
     (or approved drugs). Targets are the top-scoring associations.
+    Open Targets supplies clinical stage; DrugBank adds mechanism depth.
     """
-    drugs = list_drug_priors(disease_id=disease_id, limit=drug_limit * 3)
-    high_signal_drugs = [
-        d
-        for d in drugs
-        if (d.clinical_stage or "") in _HIGH_SIGNAL_STAGES
-        or (d.clinical_stage or "").startswith("PHASE")
-    ]
-    selected_drugs = (high_signal_drugs or drugs)[:drug_limit]
-    selected_targets = list_target_priors(
-        disease_id=disease_id, limit=target_limit, min_score=0.25
+    ot_drugs = list_drug_priors(
+        disease_id=disease_id,
+        sources=(PriorSourceKind.OPENTARGETS,),
+        limit=drug_limit * 3,
     )
-    return selected_drugs + selected_targets
+    db_drugs = list_drug_priors(
+        disease_id=disease_id,
+        sources=(PriorSourceKind.DRUGBANK,),
+        limit=drug_limit * 2,
+    )
+    merged_drugs = _merge_drug_priors(ot_drugs, db_drugs, limit=drug_limit)
+
+    ot_targets = list_target_priors(
+        disease_id=disease_id,
+        sources=(PriorSourceKind.OPENTARGETS,),
+        limit=target_limit,
+        min_score=0.25,
+    )
+    db_targets = list_target_priors(
+        disease_id=disease_id,
+        sources=(PriorSourceKind.DRUGBANK,),
+        limit=target_limit,
+        min_score=0.0,
+    )
+    merged_targets = _merge_target_priors(ot_targets, db_targets, limit=target_limit)
+    return merged_drugs + merged_targets
+
+
+def _normalize_prior_name(name: str) -> str:
+    return name.upper().strip()
+
+
+def _merge_drug_priors(
+    primary: list[Prior],
+    secondary: list[Prior],
+    *,
+    limit: int,
+) -> list[Prior]:
+    high_signal_stages = _HIGH_SIGNAL_STAGES
+
+    def _is_high_signal(d: Prior) -> bool:
+        return (d.clinical_stage or "") in high_signal_stages or (
+            d.clinical_stage or ""
+        ).startswith("PHASE")
+
+    filtered_primary = [d for d in primary if _is_high_signal(d)] or primary
+    seen = {_normalize_prior_name(d.name) for d in filtered_primary}
+    merged = list(filtered_primary[:limit])
+    for drug in secondary:
+        key = _normalize_prior_name(drug.name)
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(drug)
+        if len(merged) >= limit:
+            break
+    return merged[:limit]
+
+
+def _merge_target_priors(
+    primary: list[Prior],
+    secondary: list[Prior],
+    *,
+    limit: int,
+) -> list[Prior]:
+    seen = {t.source_id for t in primary}
+    merged = list(primary[:limit])
+    for target in sorted(secondary, key=lambda t: t.score or 0.0, reverse=True):
+        if target.source_id in seen:
+            continue
+        seen.add(target.source_id)
+        merged.append(target)
+        if len(merged) >= limit:
+            break
+    return merged[:limit]
 
 
 def summarize_priors(

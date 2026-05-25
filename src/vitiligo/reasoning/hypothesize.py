@@ -280,7 +280,7 @@ def _build_user_prompt(
         lines.append("")
 
     if priors:
-        lines.append("DRUG & TARGET PRIORS (Open Targets):")
+        lines.append("DRUG & TARGET PRIORS (Open Targets + DrugBank):")
         lines.append("")
         for idx, prior in enumerate(priors, start=1):
             kind = prior.kind.value if hasattr(prior.kind, "value") else str(prior.kind)
@@ -304,7 +304,7 @@ def _build_user_prompt(
                     lines.append(f"    Gene: {desc}")
             lines.append("")
     else:
-        lines.append("DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets`)")
+        lines.append("DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)")
         lines.append("")
 
     lines.append("---")

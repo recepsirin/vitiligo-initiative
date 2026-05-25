@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drugbank xmlns="http://www.drugbank.ca" version="5.1">
+  <drug type="small molecule" created="2005-06-13" updated="2020-01-01">
+    <drugbank-id primary="true">DB00600</drugbank-id>
+    <name>Monobenzone</name>
+    <description>A depigmenting agent used for vitiligo treatment.</description>
+    <groups>
+      <group>approved</group>
+    </groups>
+    <indication>Used to treat vitiligo by permanent depigmentation of remaining normal skin.</indication>
+    <mechanism-of-action>Monobenzone causes destruction of melanocytes in the skin.</mechanism-of-action>
+    <synonyms>
+      <synonym>Monobenzyl ether of hydroquinone</synonym>
+    </synonyms>
+    <categories>
+      <category>Depigmenting Agents</category>
+    </categories>
+    <targets>
+      <target>
+        <id>BE0000048</id>
+        <name>Tyrosinase</name>
+        <organism>Humans</organism>
+        <actions>
+          <action>inhibitor</action>
+        </actions>
+        <known-action>yes</known-action>
+        <polypeptide id="P14679" source="Swiss-Prot">
+          <name>Tyrosinase</name>
+          <gene-name>TYR</gene-name>
+        </polypeptide>
+      </target>
+    </targets>
+  </drug>
+  <drug type="small molecule" created="2005-06-13" updated="2020-01-01">
+    <drugbank-id primary="true">DB00945</drugbank-id>
+    <name>Aspirin</name>
+    <description>An analgesic and antipyretic agent.</description>
+    <groups>
+      <group>approved</group>
+    </groups>
+    <indication>Pain, fever, and cardiovascular prophylaxis.</indication>
+    <mechanism-of-action>Inhibits cyclooxygenase enzymes.</mechanism-of-action>
+  </drug>
+  <drug type="small molecule" created="2010-06-13" updated="2022-01-01">
+    <drugbank-id primary="true">DB08877</drugbank-id>
+    <name>Ruxolitinib</name>
+    <description>A Janus kinase inhibitor.</description>
+    <groups>
+      <group>approved</group>
+      <group>investigational</group>
+    </groups>
+    <indication>Investigated for repigmentation in non-segmental vitiligo.</indication>
+    <mechanism-of-action>Selective JAK1 and JAK2 inhibition modulates IFN-gamma signaling implicated in vitiligo pathogenesis.</mechanism-of-action>
+    <targets>
+      <target>
+        <id>BE0000766</id>
+        <name>Tyrosine-protein kinase JAK1</name>
+        <organism>Humans</organism>
+        <actions>
+          <action>inhibitor</action>
+        </actions>
+        <known-action>yes</known-action>
+        <polypeptide id="P23458" source="Swiss-Prot">
+          <name>Tyrosine-protein kinase JAK1</name>
+          <gene-name>JAK1</gene-name>
+        </polypeptide>
+      </target>
+    </targets>
+  </drug>
+</drugbank>

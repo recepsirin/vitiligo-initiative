@@ -16,6 +16,14 @@ from sqlmodel import select
 from vitiligo.logging import get_logger
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.ctgov import CTGovClient
+from vitiligo.sources.drugbank import (
+    DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY,
+)
+from vitiligo.sources.drugbank import (
+    count_drugbank_drugs,
+    iter_drugbank_priors,
+    normalize_drug_name,
+)
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
 from vitiligo.sources.ictrp import (
@@ -39,6 +47,7 @@ from vitiligo.storage import (
     Document,
     IngestionRun,
     Prior,
+    PriorKind,
     PriorSourceKind,
     SourceKind,
     Trial,
@@ -393,6 +402,97 @@ def run_opentargets_ingestion(
         updated=updated,
         run_id=run_id,
     )
+
+
+def run_drugbank_ingestion(
+    file: Path,
+    query: str = DRUGBANK_DEFAULT_QUERY,
+    disease_id: str = DEFAULT_VITILIGO_EFO_ID,
+    seed_from_opentargets: bool = True,
+    limit: int | None = None,
+    commit_every: int = 25,
+) -> IngestionStats:
+    """Import vitiligo-relevant drug/target priors from a DrugBank XML export."""
+    if not file.is_file():
+        raise FileNotFoundError(f"DrugBank export not found: {file}")
+
+    init_db()
+    run_query = f"file:{file}|query:{query}"
+    total_found = count_drugbank_drugs(file)
+
+    run = IngestionRun(source=PriorSourceKind.DRUGBANK.value, query=run_query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = 0
+    inserted = 0
+    updated = 0
+
+    try:
+        with session_scope() as session:
+            tracked = session.get(IngestionRun, run_id)
+            if tracked is not None:
+                tracked.total_found = total_found
+
+            seed_names = _load_opentargets_seed_names(session) if seed_from_opentargets else set()
+
+            for prior in iter_drugbank_priors(
+                file,
+                query=query,
+                disease_id=disease_id,
+                seed_names=seed_names or None,
+                limit=limit,
+            ):
+                fetched += 1
+                ins, upd = _upsert_prior(session, prior)
+                inserted += ins
+                updated += upd
+
+                if fetched % commit_every == 0:
+                    session.commit()
+                    logger.info(
+                        "Progress [drugbank]: fetched=%d inserted=%d updated=%d",
+                        fetched,
+                        inserted,
+                        updated,
+                    )
+
+            session.commit()
+
+        _finalize_run(run_id, "completed", fetched, inserted, updated, fetched, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=drugbank")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=PriorSourceKind.DRUGBANK.value,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        run_id=run_id,
+    )
+
+
+def _load_opentargets_seed_names(session) -> set[str]:  # type: ignore[no-untyped-def]
+    rows = session.exec(
+        select(Prior.name, Prior.synonyms).where(
+            Prior.source == PriorSourceKind.OPENTARGETS,
+            Prior.kind == PriorKind.DRUG,
+            Prior.disease_id == DEFAULT_VITILIGO_EFO_ID,
+        )
+    ).all()
+    names: set[str] = set()
+    for name, synonyms in rows:
+        if name:
+            names.add(normalize_drug_name(name))
+        for syn in synonyms or []:
+            if syn:
+                names.add(normalize_drug_name(str(syn)))
+    return names
 
 
 def _chain_priors(*iters: Iterator[Prior]) -> Iterator[Prior]:
