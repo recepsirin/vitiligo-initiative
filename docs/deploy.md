@@ -41,7 +41,10 @@ Verify:
 
 ```bash
 fly open /api/health
-# expect: "ready": true, documents > 0
+# expect: "ready": true, documents > 0, graph_entities > 0 after seeding
+
+# One-time on the deployed machine (or locally before upload):
+fly ssh console -C "vitiligo graph seed"
 ```
 
 ### Updates

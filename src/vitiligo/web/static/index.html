@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="search">Search</button>
         <button class="tab" data-tab="ask">Ask</button>
         <button class="tab" data-tab="hypothesize">Hypothesize</button>
+        <button class="tab" data-tab="graph">Graph</button>
         <button class="tab" data-tab="trials">Trials</button>
       </nav>
     </div>
@@ -62,7 +63,7 @@
     <!-- HYPOTHESIZE -->
     <section class="panel hidden" id="panel-hypothesize">
       <h2>Generate ranked candidates</h2>
-      <p class="hint">From a research intent, the engine retrieves and asks the LLM to extract ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations.</p>
+      <p class="hint">From a research intent, the engine retrieves papers, trials, priors, and knowledge-graph relations, then asks the LLM for ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations.</p>
       <form id="form-hypothesize" class="row">
         <input type="text" id="hyp-intent" placeholder="e.g. stop spread of active non-segmental vitiligo" required />
         <select id="hyp-topk">
@@ -73,6 +74,19 @@
         <button type="submit">Hypothesize</button>
       </form>
       <div id="hyp-result" class="results"></div>
+    </section>
+
+    <!-- GRAPH -->
+    <section class="panel hidden" id="panel-graph">
+      <h2>Knowledge graph</h2>
+      <p class="hint">Browse vitiligo-connected entities and relations seeded from Open Targets priors and clinical trials. Run <code>vitiligo graph seed</code> to populate.</p>
+      <div id="graph-stats" class="trial-stats"></div>
+      <form id="form-graph" class="row">
+        <input type="text" id="graph-query" placeholder="e.g. ruxolitinib, JAK1, vitiligo" required />
+        <button type="submit">Search entities</button>
+      </form>
+      <div id="graph-results" class="results"></div>
+      <div id="graph-neighbors" class="results"></div>
     </section>
 
     <!-- TRIALS -->

@@ -5,6 +5,7 @@ const panels = {
   search: document.getElementById('panel-search'),
   ask: document.getElementById('panel-ask'),
   hypothesize: document.getElementById('panel-hypothesize'),
+  graph: document.getElementById('panel-graph'),
   trials: document.getElementById('panel-trials'),
 };
 
@@ -16,6 +17,9 @@ tabs.forEach(tab => {
     panels[tab.dataset.tab].classList.remove('hidden');
     if (tab.dataset.tab === 'trials' && !trialsStatsLoaded) {
       loadTrialsStats();
+    }
+    if (tab.dataset.tab === 'graph' && !graphStatsLoaded) {
+      loadGraphStats();
     }
   });
 });
@@ -163,23 +167,31 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
   const out = document.getElementById('hyp-result');
   if (!intent) return;
 
-  showLoading(out, 'Generating ranked candidates over papers + trials + priors… this may take 30–60s');
+  showLoading(out, 'Generating ranked candidates over papers + trials + priors + graph… this may take 30–60s');
   try {
     const data = await postJson('/api/hypothesize', { intent, top_k: topK });
     const candidatesHtml = (data.candidates || []).map(renderCandidate).join('');
     const citationsHtml = (data.citations || []).map(renderCitation).join('');
     const trialCitationsHtml = (data.trial_citations || []).map(renderTrialCitation).join('');
     const priorCitationsHtml = (data.prior_citations || []).map(renderPriorCitation).join('');
+    const graphCitationsHtml = (data.graph_citations || []).map(renderGraphCitation).join('');
+    const graphCount = data.graph_citations ? data.graph_citations.length : 0;
     const evidenceSummary = `
       <div class="evidence-summary">
         Evidence base: <strong>${data.citations ? data.citations.length : 0}</strong> papers,
         <strong>${data.trial_citations ? data.trial_citations.length : 0}</strong> trials,
-        <strong>${data.prior_citations ? data.prior_citations.length : 0}</strong> priors
+        <strong>${data.prior_citations ? data.prior_citations.length : 0}</strong> priors,
+        <strong>${graphCount}</strong> graph edges
       </div>`;
     out.innerHTML = `
       ${evidenceSummary}
       ${data.notes ? `<div class="hyp-notes">${escapeHtml(data.notes)}</div>` : ''}
       ${candidatesHtml || '<div class="empty">No candidates returned.</div>'}
+      ${graphCitationsHtml ? `
+        <div class="citations">
+          <h3>Knowledge graph (${graphCount})</h3>
+          ${graphCitationsHtml}
+        </div>` : ''}
       ${priorCitationsHtml ? `
         <div class="citations">
           <h3>Drug &amp; target priors (${data.prior_citations.length})</h3>
@@ -199,6 +211,28 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
     showError(out, err.message);
   }
 });
+
+function renderGraphCitation(g) {
+  const predicate = String(g.predicate || '').replace(/_/g, ' ');
+  const conf = g.confidence != null ? Number(g.confidence).toFixed(2) : '—';
+  const method = g.extraction_method || 'unknown';
+  const sources = g.evidence_count != null ? `${g.evidence_count} source(s)` : '';
+  return `
+    <div class="graph-citation" id="graph-cite-${g.index}">
+      <span class="citation-index">[G${g.index}]</span>
+      <span class="graph-edge">
+        <span class="graph-entity">${escapeHtml(g.subject_name)}</span>
+        <span class="graph-entity-kind">${escapeHtml(g.subject_kind || '')}</span>
+        <span class="graph-predicate">→ ${escapeHtml(predicate)} →</span>
+        <span class="graph-entity">${escapeHtml(g.object_name)}</span>
+        <span class="graph-entity-kind">${escapeHtml(g.object_kind || '')}</span>
+      </span>
+      <div class="citation-meta">
+        confidence ${escapeHtml(conf)} · ${escapeHtml(method)}${sources ? ` · ${escapeHtml(sources)}` : ''}
+      </div>
+    </div>
+  `;
+}
 
 function renderTrialCitation(t) {
   const externalUrl = trialExternalUrl({ source: t.source, source_id: t.source_id });
@@ -248,7 +282,8 @@ function renderCandidate(c) {
   const cites = (c.citation_indices || []).map(i => `<a class="cite" href="#cite-${i}">[${i}]</a>`).join(' ');
   const trialCites = (c.trial_citation_indices || []).map(i => `<a class="cite cite-trial" href="#trial-cite-${i}">[T${i}]</a>`).join(' ');
   const priorCites = (c.prior_citation_indices || []).map(i => `<a class="cite cite-prior" href="#prior-cite-${i}">[P${i}]</a>`).join(' ');
-  const allCites = [cites, trialCites, priorCites].filter(Boolean).join(' · ');
+  const graphCites = (c.graph_citation_indices || []).map(i => `<a class="cite cite-graph" href="#graph-cite-${i}">[G${i}]</a>`).join(' ');
+  const allCites = [cites, trialCites, priorCites, graphCites].filter(Boolean).join(' · ');
   return `
     <article class="candidate">
       <div class="candidate-header">
@@ -263,6 +298,114 @@ function renderCandidate(c) {
     </article>
   `;
 }
+
+// ---- graph ----------------------------------------------------------
+
+let graphStatsLoaded = false;
+
+async function loadGraphStats() {
+  const out = document.getElementById('graph-stats');
+  out.innerHTML = '<span class="empty">Loading graph stats…</span>';
+  try {
+    const res = await fetch('/api/graph/stats');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const totals = Object.fromEntries((data.total || []).map(r => [r.label, r.count]));
+    const kindBadges = (data.by_kind || []).slice(0, 5).map(r =>
+      `<span class="trial-stat"><strong>${r.count}</strong> ${escapeHtml(r.label)}</span>`
+    ).join('');
+    const predBadges = (data.by_predicate || []).slice(0, 4).map(r =>
+      `<span class="trial-stat"><strong>${r.count}</strong> ${escapeHtml(r.label.replace(/_/g, ' '))}</span>`
+    ).join('');
+    out.innerHTML = `
+      <span class="trial-stat trial-stat-total"><strong>${totals.entities || 0}</strong> entities</span>
+      <span class="trial-stat trial-stat-total"><strong>${totals.edges || 0}</strong> edges</span>
+      ${kindBadges}
+      ${predBadges}
+    `;
+    graphStatsLoaded = true;
+  } catch (err) {
+    out.innerHTML = `<span class="error">${escapeHtml(err.message)}</span>`;
+  }
+}
+
+async function loadGraphNeighbors(name) {
+  const out = document.getElementById('graph-neighbors');
+  showLoading(out, `Loading neighbors of "${name}"…`);
+  try {
+    const res = await fetch(`/api/graph/neighbors?name=${encodeURIComponent(name)}&limit=40`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.results.length) {
+      out.innerHTML = '<div class="empty">No neighbors found.</div>';
+      return;
+    }
+    out.innerHTML = `
+      <h3>Neighbors of ${escapeHtml(data.name)}</h3>
+      ${data.results.map(renderGraphEdgeRow).join('')}
+    `;
+  } catch (err) {
+    showError(out, err.message);
+  }
+}
+
+function renderGraphEdgeRow(e) {
+  const predicate = String(e.predicate || '').replace(/_/g, ' ');
+  const conf = e.confidence != null ? Number(e.confidence).toFixed(2) : '—';
+  return `
+    <div class="graph-citation">
+      <span class="graph-edge">
+        <span class="graph-entity">${escapeHtml(e.subject_name)}</span>
+        <span class="graph-entity-kind">${escapeHtml(e.subject_kind || '')}</span>
+        <span class="graph-predicate">→ ${escapeHtml(predicate)} →</span>
+        <span class="graph-entity">${escapeHtml(e.object_name)}</span>
+        <span class="graph-entity-kind">${escapeHtml(e.object_kind || '')}</span>
+      </span>
+      <div class="citation-meta">confidence ${escapeHtml(conf)} · ${escapeHtml(e.extraction_method || '')}</div>
+    </div>
+  `;
+}
+
+document.getElementById('form-graph').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const query = document.getElementById('graph-query').value.trim();
+  const out = document.getElementById('graph-results');
+  const neighbors = document.getElementById('graph-neighbors');
+  neighbors.innerHTML = '';
+  if (!query) return;
+
+  showLoading(out, `Searching entities for "${query}"…`);
+  try {
+    const res = await fetch(`/api/graph/search?q=${encodeURIComponent(query)}&limit=25`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.results.length) {
+      out.innerHTML = '<div class="empty">No entities match. Run <code>vitiligo graph seed</code> first.</div>';
+      return;
+    }
+    out.innerHTML = `
+      <h3>Entities (${data.results.length})</h3>
+      ${data.results.map(entity => `
+        <article class="hit graph-entity-hit">
+          <div class="hit-header">
+            <span class="hit-source">${escapeHtml(entity.kind)}:${escapeHtml(entity.key)}</span>
+          </div>
+          <div class="hit-title">
+            <button type="button" class="link-button graph-entity-link" data-name="${encodeURIComponent(entity.name)}">
+              ${escapeHtml(entity.name)}
+            </button>
+          </div>
+          ${entity.aliases && entity.aliases.length ? `<div class="hit-meta">${entity.aliases.slice(0, 4).map(a => escapeHtml(a)).join(' · ')}</div>` : ''}
+        </article>
+      `).join('')}
+    `;
+    out.querySelectorAll('.graph-entity-link').forEach(btn => {
+      btn.addEventListener('click', () => loadGraphNeighbors(decodeURIComponent(btn.dataset.name || '')));
+    });
+  } catch (err) {
+    showError(out, err.message);
+  }
+});
 
 // ---- trials ---------------------------------------------------------
 

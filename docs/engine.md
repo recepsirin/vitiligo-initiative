@@ -182,6 +182,8 @@ A small FastAPI app exposing JSON endpoints plus a static HTML UI:
 | GET | `/api/graph/search?q=` | Entity search |
 | GET | `/api/graph/neighbors?name=` | Adjacent edges |
 
+The UI includes a **Graph** tab for entity search and neighbor browsing (spot-checking the knowledge graph without the CLI).
+
 Production deployment: see [`docs/deploy.md`](deploy.md) (Dockerfile, `fly.toml` for Amsterdam, `render.yaml`, rate limiting, persistent volume for `vitiligo.db`).
 
 The UI is intentionally a single static HTML file with vanilla CSS/JS — no build step, no framework, fast to iterate on, easy to deploy. CORS is open by default; POST endpoints are rate-limited per IP in production.
