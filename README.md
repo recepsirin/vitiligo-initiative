@@ -398,25 +398,27 @@ These shape execution and must be resolved before some downstream decisions. Tra
 ### What exists
 
 - **Planning artifact** — this README.
-- **AI engine v0.2** — Python package (`vitiligo`) with:
+- **AI engine v0.3 — Evidence Engine, end-to-end:**
   - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
   - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
   - **Source-agnostic SQLite store** with bookkeeping for resumable, idempotent ingestion runs.
-  - **Embedding layer** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; vectors stored locally; brute-force cosine retrieval.
-  - **Semantic search CLI** — `vitiligo search "..."` returns ranked, cited hits over the corpus.
+  - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **12,053 vectors** for the entire corpus.
+  - **Semantic search** — sub-second ranked, cited retrieval; CLI and JSON API.
+  - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
+  - **Hypothesis generation** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates from the literature with mechanism, rationale, evidence strength, risks, and citations.
+  - **Web UI** (`vitiligo serve`) — FastAPI service + clean single-page Evidence Engine with Search / Ask / Hypothesize tabs; runs locally at `http://127.0.0.1:8765`.
   - **Typed CLI**, ruff-clean, pytest-passing, Apache-2.0 licensed.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. Add **ClinicalTrials.gov** ingestion (vitiligo trials with structured endpoints and outcomes).
-3. Add **Open Targets + DrugBank** ingestion (for the repurposing layer).
-4. Layer in **knowledge graph extraction** — LLM-assisted entity + relation extraction (drugs, targets, pathways, subtypes, outcomes).
-5. Build the **RAG + reasoning layer** — cited Q&A over the corpus with evidence levels.
-6. Build the **hypothesis-generation agent** — ranked candidate reports for spread arrest and repigmentation.
-7. Stand up the **public web UI** for the Evidence Engine.
-8. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
+2. Add **ClinicalTrials.gov + EU CTR + WHO ICTRP** ingestion (vitiligo trials with structured endpoints and outcomes — EU-aware from day one).
+3. Add **Open Targets + DrugBank** ingestion (drug/target/pathway priors for the hypothesis layer).
+4. Build **knowledge graph extraction** — LLM-assisted entities + relations across the corpus.
+5. Layer in **evidence-level tagging** per source (RCT / cohort / mouse / review) and surface it in answers.
+6. **Public deployment** of the Evidence Engine (Fly.io / Render) with rate limiting and telemetry.
+7. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
 ---
 

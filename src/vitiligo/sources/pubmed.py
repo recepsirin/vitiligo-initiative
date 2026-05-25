@@ -256,7 +256,7 @@ class PubMedClient:
     @staticmethod
     def _scope_by_year(query: str, year_start: int, year_end: int) -> str:
         """Wrap a query with a publication date range filter."""
-        return f"({query}) AND (\"{year_start}\"[PDAT] : \"{year_end}\"[PDAT])"
+        return f'({query}) AND ("{year_start}"[PDAT] : "{year_end}"[PDAT])'
 
     def fetch_by_ids(self, pmids: list[str]) -> list[Document]:
         """Fetch full records for an explicit list of PMIDs."""

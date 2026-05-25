@@ -31,7 +31,15 @@ vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
 vitiligo search "JAK inhibitors and repigmentation in segmental vitiligo" --show-abstract
 
-# 7. Inspect what we have
+# 7. (Optional) configure the LLM for ask/hypothesize
+# Edit .env and set ANTHROPIC_API_KEY=sk-ant-...
+vitiligo ask "What is the evidence for combining ruxolitinib with NB-UVB?"
+vitiligo hypothesize "stop spread of active non-segmental vitiligo"
+
+# 8. Run the Evidence Engine web UI
+vitiligo serve   # open http://127.0.0.1:8765
+
+# 9. Inspect what we have
 vitiligo db stats
 vitiligo embed stats
 vitiligo db sample -n 3
@@ -43,15 +51,21 @@ For smoke testing, every ingest command supports `--limit N`.
 
 ## Architecture
 
-Three layers, kept deliberately small:
+Five layers, all deliberately small and swappable:
 
 ```
-┌────────────────┐    ┌────────────────┐    ┌────────────────┐    ┌─────────────┐
-│ External       │ ─► │ Ingestion      │ ─► │ Document       │ ─► │ Embeddings  │
-│ sources        │    │ pipeline       │    │ store          │    │ + semantic  │
-│ (PubMed, PMC,  │    │ + bookkeeping  │    │ (SQLite via    │    │ search      │
-│  CT.gov, OT…)  │    │                │    │  SQLModel)     │    │ (fastembed) │
-└────────────────┘    └────────────────┘    └────────────────┘    └─────────────┘
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ External │ ─► │ Ingestion│ ─► │ Document │ ─► │ Embeddings│ ─► │ Reasoning│
+│ sources  │    │ pipeline │    │ store    │    │ + semantic│    │ (RAG +   │
+│ (PubMed, │    │ +        │    │ (SQLite) │    │ search    │    │ hypothesis│
+│  PMC, …) │    │ bookkeep │    │          │    │ fastembed)│    │ Anthropic)│
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+                                                                      │
+                                                                      ▼
+                                                              ┌──────────────┐
+                                                              │ FastAPI web  │
+                                                              │ + HTML UI    │
+                                                              └──────────────┘
 ```
 
 ### Source clients (`vitiligo.sources`)
@@ -107,6 +121,29 @@ we have a reason — not before.
 
 Brute-force cosine search is fine at this scale (a single matmul over <100k vectors). We move to a proper ANN index only when we outgrow it.
 
+### Reasoning layer (`vitiligo.reasoning`)
+
+Two LLM-backed pipelines built on top of search:
+
+- `ask_with_citations(question)` — RAG: retrieves the top-K papers and asks Claude to answer using only those, with bracketed numeric citations and explicit "evidence insufficient" handling.
+- `generate_hypotheses(intent)` — retrieves a wider net of papers and asks Claude to extract ranked therapeutic candidates (drugs / combinations / targets / mechanisms / biomarkers) with mechanism, rationale, evidence strength, risks, and citations. Returns structured JSON the UI consumes directly.
+
+Both default to `claude-sonnet-4-5` via the `anthropic` SDK. The model is configurable via `ANTHROPIC_MODEL`. If `ANTHROPIC_API_KEY` is not set, the calls raise `LLMUnavailable` with a clear message — no silent degraded mode. Search itself works without an API key.
+
+### Web service (`vitiligo.web`)
+
+A small FastAPI app exposing four endpoints plus a static HTML UI:
+
+| Method | Path | What |
+|---|---|---|
+| GET | `/` | Evidence Engine UI (single HTML page) |
+| GET | `/api/health` | `{status, version}` |
+| POST | `/api/search` | Semantic search results |
+| POST | `/api/ask` | RAG with citations (requires `ANTHROPIC_API_KEY`) |
+| POST | `/api/hypothesize` | Ranked candidates (requires `ANTHROPIC_API_KEY`) |
+
+The UI is intentionally a single static HTML file with vanilla CSS/JS — no build step, no framework, fast to iterate on, easy to deploy. CORS is open by default; this is a research tool, run it locally or behind your own auth.
+
 ### CLI (`vitiligo.cli`)
 
 Built on Typer. Commands:
@@ -131,6 +168,14 @@ vitiligo embed stats                                # coverage by model + scope
 
 # Semantic search
 vitiligo search "IFN-gamma CXCL10 axis in vitiligo" --top-k 10 --show-abstract
+
+# Reasoning (requires ANTHROPIC_API_KEY)
+vitiligo ask "What is the evidence for ruxolitinib + NB-UVB combinations?" -k 8
+vitiligo hypothesize "stop spread of active non-segmental vitiligo" -k 25
+
+# Web UI (Evidence Engine)
+vitiligo serve                                      # http://127.0.0.1:8765
+vitiligo serve --host 0.0.0.0 --port 8080           # bind to all interfaces
 ```
 
 ---
@@ -175,11 +220,12 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **ClinicalTrials.gov ingestion** — vitiligo trials with full metadata.
+1. **ClinicalTrials.gov + EU CTR + WHO ICTRP ingestion** — vitiligo trials with structured endpoints, outcomes, eligibility (EU-aware from day one).
 2. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
-3. **Full-text embedding scope** — embed PMC body sections, not just title + abstract.
-4. **Hybrid retrieval** — combine BM25 over MeSH/keywords with semantic vectors.
-5. **Knowledge graph extraction** — entities (drugs, targets, pathways, subtypes) and relations, LLM-assisted.
-6. **RAG with citations + evidence levels** — the Evidence Engine answer layer.
-7. **Hypothesis generation agent** — ranked candidate reports for spread arrest and repigmentation.
-8. **Web UI** — public Evidence Engine deployment.
+3. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
+4. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
+5. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
+6. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
+7. **Hypothesis-generation v2** — uses structured drug/target priors from Open Targets + trial outcomes, not just literature.
+8. **Public deployment** — host the Evidence Engine somewhere reachable (Fly.io / Render) with rate limiting + telemetry.
+9. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.

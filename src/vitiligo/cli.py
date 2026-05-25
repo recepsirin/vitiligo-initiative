@@ -15,6 +15,11 @@ from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
 from vitiligo.ingest import run_pmc_ingestion, run_pubmed_ingestion
 from vitiligo.logging import configure_logging, get_logger
+from vitiligo.reasoning import (
+    LLMUnavailable,
+    ask_with_citations,
+    generate_hypotheses,
+)
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.storage import Document, Embedding, IngestionRun, SourceKind, init_db, session_scope
@@ -299,6 +304,101 @@ def search_cmd(
             preview = doc.abstract[:400] + ("..." if len(doc.abstract) > 400 else "")
             console.print(preview)
         console.print()
+
+
+# --------------------------------------------------------------------- reasoning
+
+
+@app.command("ask")
+def ask_cmd(
+    question: str = typer.Argument(..., help="Research question."),
+    top_k: int = typer.Option(8, "--top-k", "-k", help="Sources to retrieve."),
+) -> None:
+    """Ask the corpus a question and print a cited answer (requires Anthropic API key)."""
+    console.rule(f"[bold]Ask[/bold] — [yellow]{question}[/yellow]")
+    try:
+        result = ask_with_citations(question=question, top_k=top_k)
+    except LLMUnavailable as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+
+    console.print(result.answer)
+    console.print()
+    console.rule("[bold]Sources[/bold]")
+    for c in result.citations:
+        bits = [c.title or "(no title)"]
+        meta = " ".join(
+            filter(None, [c.journal or "", str(c.year or ""), f"doi:{c.doi}" if c.doi else ""])
+        ).strip()
+        if meta:
+            bits.append(meta)
+        console.print(f"[cyan][{c.index}][/cyan] " + " — ".join(bits))
+
+
+@app.command("hypothesize")
+def hypothesize_cmd(
+    intent: str = typer.Argument(..., help="Research intent (e.g. 'stop spread')."),
+    top_k: int = typer.Option(25, "--top-k", "-k", help="Papers to retrieve."),
+) -> None:
+    """Generate ranked therapeutic candidates from the corpus (requires Anthropic API key)."""
+    console.rule(f"[bold]Hypothesize[/bold] — [yellow]{intent}[/yellow]")
+    try:
+        report = generate_hypotheses(intent=intent, top_k=top_k)
+    except LLMUnavailable as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+
+    if report.notes:
+        console.print(f"[dim]{report.notes}[/dim]")
+        console.print()
+
+    for idx, cand in enumerate(report.candidates, start=1):
+        console.rule(
+            f"[bold]#{idx}  {cand.name}[/bold]  [dim]{cand.kind}[/dim]  "
+            f"[magenta]{cand.evidence_strength}[/magenta]",
+            align="left",
+        )
+        if cand.mechanism:
+            console.print(f"[bold]Mechanism:[/bold] {cand.mechanism}")
+        if cand.rationale:
+            console.print(f"[bold]Rationale:[/bold] {cand.rationale}")
+        if cand.risks_or_caveats:
+            console.print(f"[bold]Risks/caveats:[/bold] {cand.risks_or_caveats}")
+        if cand.citation_indices:
+            console.print(f"[bold]Citations:[/bold] {cand.citation_indices}")
+        console.print()
+
+
+# --------------------------------------------------------------------- web
+
+
+@app.command("serve")
+def serve_cmd(
+    host: str = typer.Option(None, "--host", help="Override bind host."),
+    port: int = typer.Option(None, "--port", help="Override bind port."),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes (dev only)."),
+) -> None:
+    """Run the Evidence Engine web UI."""
+    settings = get_settings()
+    bind_host = host or settings.web_host
+    bind_port = port or settings.web_port
+
+    import uvicorn
+
+    console.rule("[bold]Vitiligo Initiative — Evidence Engine[/bold]")
+    console.print(f"Serving on [cyan]http://{bind_host}:{bind_port}[/cyan]")
+    if not settings.anthropic_api_key:
+        console.print(
+            "[yellow]Note: ANTHROPIC_API_KEY is not set — Search works, but Ask and Hypothesize will return 503.[/yellow]"
+        )
+
+    uvicorn.run(
+        "vitiligo.web.app:app",
+        host=bind_host,
+        port=bind_port,
+        reload=reload,
+        log_level=settings.log_level.lower(),
+    )
 
 
 if __name__ == "__main__":

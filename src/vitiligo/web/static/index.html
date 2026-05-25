@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitiligo Initiative — Evidence Engine</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div class="brand-text">
+          <h1>Vitiligo Initiative</h1>
+          <p>Evidence Engine — open, AI-native research for stopping spread and driving repigmentation.</p>
+        </div>
+      </div>
+      <nav class="tabs" id="tabs">
+        <button class="tab active" data-tab="search">Search</button>
+        <button class="tab" data-tab="ask">Ask</button>
+        <button class="tab" data-tab="hypothesize">Hypothesize</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- SEARCH -->
+    <section class="panel" id="panel-search">
+      <h2>Semantic search over the corpus</h2>
+      <p class="hint">Search by meaning, not keywords. Returns the most relevant papers from PubMed and PMC Open Access.</p>
+      <form id="form-search" class="row">
+        <input type="text" id="search-query" placeholder="e.g. JAK inhibitors and repigmentation in segmental vitiligo" required />
+        <select id="search-topk">
+          <option value="5">5 results</option>
+          <option value="10" selected>10 results</option>
+          <option value="20">20 results</option>
+          <option value="50">50 results</option>
+        </select>
+        <button type="submit">Search</button>
+      </form>
+      <div id="search-results" class="results"></div>
+    </section>
+
+    <!-- ASK -->
+    <section class="panel hidden" id="panel-ask">
+      <h2>Ask the corpus</h2>
+      <p class="hint">Ask a research question. Answers cite the retrieved papers inline. Requires an Anthropic API key configured server-side.</p>
+      <form id="form-ask" class="row">
+        <input type="text" id="ask-question" placeholder="e.g. What is the evidence for combining ruxolitinib with NB-UVB?" required />
+        <select id="ask-topk">
+          <option value="5">5 sources</option>
+          <option value="8" selected>8 sources</option>
+          <option value="15">15 sources</option>
+        </select>
+        <button type="submit">Ask</button>
+      </form>
+      <div id="ask-result" class="results"></div>
+    </section>
+
+    <!-- HYPOTHESIZE -->
+    <section class="panel hidden" id="panel-hypothesize">
+      <h2>Generate ranked candidates</h2>
+      <p class="hint">From a research intent, the engine retrieves and asks the LLM to extract ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations.</p>
+      <form id="form-hypothesize" class="row">
+        <input type="text" id="hyp-intent" placeholder="e.g. stop spread of active non-segmental vitiligo" required />
+        <select id="hyp-topk">
+          <option value="15">15 papers</option>
+          <option value="25" selected>25 papers</option>
+          <option value="40">40 papers</option>
+        </select>
+        <button type="submit">Hypothesize</button>
+      </form>
+      <div id="hyp-result" class="results"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <span>Open by default • Apache-2.0 • <a href="https://github.com/recepsirin/vitiligo-initiative" target="_blank">github.com/recepsirin/vitiligo-initiative</a></span>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -72,7 +72,9 @@ def test_parses_minimal_pmc_article() -> None:
     assert doc.doi == "10.1234/jid.2024.001"
     assert doc.journal == "Journal of Investigative Dermatology"
     assert doc.language == "en"
-    assert doc.abstract is not None and "autoimmune" not in doc.abstract  # abstract is the front one only
+    assert (
+        doc.abstract is not None and "autoimmune" not in doc.abstract
+    )  # abstract is the front one only
     assert doc.authors == [{"last": "Harris", "fore": "John"}]
     assert doc.keywords == ["JAK", "vitiligo"]
     assert doc.publication_types == ["research-article"]

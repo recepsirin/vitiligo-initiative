@@ -37,6 +37,9 @@ dependencies = [
     "lxml>=5.2",
     "numpy>=1.26",
     "fastembed>=0.3",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "anthropic>=0.39",
 ]
 
 [project.optional-dependencies]

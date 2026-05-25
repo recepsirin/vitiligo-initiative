@@ -35,6 +35,14 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
+    # LLM (reasoning layer)
+    anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
+    anthropic_model: str = Field(default="claude-sonnet-4-5", alias="ANTHROPIC_MODEL")
+
+    # Web UI
+    web_host: str = Field(default="127.0.0.1", alias="VITILIGO_WEB_HOST")
+    web_port: int = Field(default=8765, alias="VITILIGO_WEB_PORT")
+
     @property
     def resolved_db_path(self) -> Path:
         """Return absolute path to the SQLite database, ensuring parent exists."""
