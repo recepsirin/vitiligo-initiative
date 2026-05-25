@@ -6,13 +6,17 @@ store, and records an `IngestionRun` for auditability and resumability.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from sqlmodel import select
 
 from vitiligo.logging import get_logger
-from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY, PubMedClient
+from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
+from vitiligo.sources.pmc import PMCClient
+from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
+from vitiligo.sources.pubmed import PubMedClient
 from vitiligo.storage import (
     Document,
     IngestionRun,
@@ -37,26 +41,65 @@ class IngestionStats:
 
 
 def run_pubmed_ingestion(
-    query: str = DEFAULT_VITILIGO_QUERY,
+    query: str = PUBMED_DEFAULT_QUERY,
     batch_size: int = 200,
     limit: int | None = None,
     commit_every: int = 100,
 ) -> IngestionStats:
-    """Search PubMed and persist every matching record.
+    """Search PubMed and persist every matching record."""
 
-    Args:
-        query: PubMed search expression.
-        batch_size: Records per efetch call.
-        limit: Cap on total records (useful for smoke tests).
-        commit_every: Flush + commit cadence to keep memory bounded and progress
-            durable in the face of interruption.
+    def factory() -> tuple[Iterator[Document], int | None]:
+        client = PubMedClient()
+        handle = client.search(query)
+        return client.iter_documents(query=query, batch_size=batch_size, limit=limit), handle.total
+
+    return _run_ingestion(
+        source=SourceKind.PUBMED,
+        query=query,
+        factory=factory,
+        commit_every=commit_every,
+    )
+
+
+def run_pmc_ingestion(
+    query: str = PMC_DEFAULT_QUERY,
+    batch_size: int = 50,
+    limit: int | None = None,
+    commit_every: int = 25,
+) -> IngestionStats:
+    """Search PMC Open Access and persist every matching full-text record."""
+
+    def factory() -> tuple[Iterator[Document], int | None]:
+        client = PMCClient()
+        handle = client.search(query)
+        return client.iter_documents(query=query, batch_size=batch_size, limit=limit), handle.total
+
+    return _run_ingestion(
+        source=SourceKind.PMC,
+        query=query,
+        factory=factory,
+        commit_every=commit_every,
+    )
+
+
+def _run_ingestion(
+    source: SourceKind,
+    query: str,
+    factory: Callable[[], tuple[Iterator[Document], int | None]],
+    commit_every: int,
+) -> IngestionStats:
+    """Shared ingestion loop with upsert + bookkeeping.
+
+    `factory` returns (document_iterator, total_found_estimate). The
+    iterator is consumed inside a single session so we get batched
+    commits and bounded memory.
     """
     init_db()
 
-    run = IngestionRun(source=SourceKind.PUBMED, query=query)
-    with session_scope() as session:
-        session.add(run)
-        session.flush()
+    run = IngestionRun(source=source, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
         run_id = run.id
 
     fetched = 0
@@ -65,16 +108,16 @@ def run_pubmed_ingestion(
     total_found: int | None = None
 
     try:
-        with PubMedClient() as client, session_scope() as session:
-            handle = client.search(query)
-            total_found = handle.total
+        with session_scope() as session:
+            doc_iter, total_found = factory()
 
-            with session_scope() as run_session:
-                tracked = run_session.get(IngestionRun, run_id)
-                if tracked is not None:
-                    tracked.total_found = total_found
+            if total_found is not None:
+                with session_scope() as run_session:
+                    tracked = run_session.get(IngestionRun, run_id)
+                    if tracked is not None:
+                        tracked.total_found = total_found
 
-            for doc in client.iter_documents(query=query, batch_size=batch_size, limit=limit):
+            for doc in doc_iter:
                 fetched += 1
                 ins, upd = _upsert_document(session, doc)
                 inserted += ins
@@ -83,7 +126,8 @@ def run_pubmed_ingestion(
                 if fetched % commit_every == 0:
                     session.commit()
                     logger.info(
-                        "Progress: fetched=%d inserted=%d updated=%d",
+                        "Progress [%s]: fetched=%d inserted=%d updated=%d",
+                        source.value,
                         fetched,
                         inserted,
                         updated,
@@ -93,12 +137,12 @@ def run_pubmed_ingestion(
 
         _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
     except Exception as exc:
-        logger.exception("PubMed ingestion failed")
+        logger.exception("Ingestion failed for source=%s", source.value)
         _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
         raise
 
     return IngestionStats(
-        source=SourceKind.PUBMED,
+        source=source,
         total_found=total_found,
         fetched=fetched,
         inserted=inserted,

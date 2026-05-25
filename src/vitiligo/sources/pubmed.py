@@ -44,6 +44,10 @@ DEFAULT_VITILIGO_QUERY = '"vitiligo"[MeSH Terms] OR "vitiligo"[Title/Abstract]'
 # Fetch in modest batches to keep requests small and resumable.
 DEFAULT_BATCH_SIZE = 200
 
+# NCBI's history server returns 400 when retstart >= 10_000. Past that point
+# we fall back to fetching by explicit PMID list, which has no such limit.
+HISTORY_SERVER_LIMIT = 9_999
+
 
 @dataclass(frozen=True)
 class SearchHandle:
@@ -172,6 +176,102 @@ class PubMedClient:
         response = self._get(EFETCH_URL, params)
         return list(parse_pubmed_xml(response.content))
 
+    def search_count(self, query: str) -> int:
+        """Return the total number of PMIDs matching `query` without retrieving them."""
+        params: dict[str, Any] = {
+            "db": "pubmed",
+            "term": query,
+            "retmax": 0,
+            "retmode": "xml",
+            **self._identity_params(),
+        }
+        response = self._get(ESEARCH_URL, params)
+        root = etree.fromstring(response.content)
+        count_el = root.find("Count")
+        return int(count_el.text) if count_el is not None and count_el.text else 0
+
+    def list_pmids(self, query: str) -> list[str]:
+        """Return every PMID matching `query`.
+
+        NCBI's esearch caps a single search at 9_999 returned PMIDs regardless
+        of pagination. For larger result sets we recursively bisect the query
+        by publication date until each subset fits, then concatenate.
+        """
+        return self._list_pmids_recursive(query)
+
+    def _list_pmids_recursive(
+        self,
+        query: str,
+        year_start: int = 1900,
+        year_end: int = 2100,
+    ) -> list[str]:
+        scoped_query = self._scope_by_year(query, year_start, year_end)
+        total = self.search_count(scoped_query)
+
+        if total == 0:
+            return []
+        if total <= HISTORY_SERVER_LIMIT:
+            return self._list_pmids_flat(scoped_query, total)
+        if year_start == year_end:
+            # A single year already exceeds the cap: best we can do is fetch what
+            # esearch will give us and log a warning. Vanishingly rare for our queries.
+            logger.warning(
+                "Year %d alone has %d records; truncating to %d.",
+                year_start,
+                total,
+                HISTORY_SERVER_LIMIT,
+            )
+            return self._list_pmids_flat(scoped_query, HISTORY_SERVER_LIMIT)
+
+        mid = (year_start + year_end) // 2
+        left = self._list_pmids_recursive(query, year_start, mid)
+        right = self._list_pmids_recursive(query, mid + 1, year_end)
+        return left + right
+
+    def _list_pmids_flat(self, query: str, expected_total: int) -> list[str]:
+        """Paginated PMID retrieval for a query that fits inside the 9_999 cap."""
+        pmids: list[str] = []
+        retstart = 0
+        page_size = HISTORY_SERVER_LIMIT
+        while retstart < expected_total:
+            params: dict[str, Any] = {
+                "db": "pubmed",
+                "term": query,
+                "retstart": retstart,
+                "retmax": page_size,
+                "retmode": "xml",
+                **self._identity_params(),
+            }
+            response = self._get(ESEARCH_URL, params)
+            root = etree.fromstring(response.content)
+            page = [el.text for el in root.iterfind(".//IdList/Id") if el.text]
+            if not page:
+                break
+            pmids.extend(page)
+            retstart += len(page)
+            if len(page) < page_size:
+                break
+        return pmids
+
+    @staticmethod
+    def _scope_by_year(query: str, year_start: int, year_end: int) -> str:
+        """Wrap a query with a publication date range filter."""
+        return f"({query}) AND (\"{year_start}\"[PDAT] : \"{year_end}\"[PDAT])"
+
+    def fetch_by_ids(self, pmids: list[str]) -> list[Document]:
+        """Fetch full records for an explicit list of PMIDs."""
+        if not pmids:
+            return []
+        params: dict[str, Any] = {
+            "db": "pubmed",
+            "id": ",".join(pmids),
+            "retmode": "xml",
+            "rettype": "abstract",
+            **self._identity_params(),
+        }
+        response = self._get(EFETCH_URL, params)
+        return list(parse_pubmed_xml(response.content))
+
     def iter_documents(
         self,
         query: str = DEFAULT_VITILIGO_QUERY,
@@ -180,15 +280,43 @@ class PubMedClient:
     ) -> Iterator[Document]:
         """Yield all documents matching `query`, fetching in batches.
 
-        Args:
-            query: PubMed query expression.
-            batch_size: Number of records per efetch call (max 10_000).
-            limit: Optional cap on total documents (useful for smoke tests).
+        Strategy:
+          - For small result sets, use the history server (one esearch + paginated efetch).
+          - For result sets that would exceed the 9_999 retstart limit, fall back to
+            collecting all PMIDs upfront and efetching by explicit ID list.
         """
         handle = self.search(query)
         total = handle.total if limit is None else min(handle.total, limit)
-        retstart = 0
 
+        if total <= HISTORY_SERVER_LIMIT:
+            yield from self._iter_via_history(handle, total=total, batch_size=batch_size)
+            return
+
+        logger.info(
+            "Result set %d exceeds history server limit (%d); fetching by PMID list.",
+            total,
+            HISTORY_SERVER_LIMIT,
+        )
+        pmids = self.list_pmids(query)
+        if limit is not None:
+            pmids = pmids[:limit]
+        for chunk_start in range(0, len(pmids), batch_size):
+            chunk = pmids[chunk_start : chunk_start + batch_size]
+            logger.info(
+                "PubMed efetch by id chunk=%d-%d (of %d)",
+                chunk_start,
+                chunk_start + len(chunk),
+                len(pmids),
+            )
+            yield from self.fetch_by_ids(chunk)
+
+    def _iter_via_history(
+        self,
+        handle: SearchHandle,
+        total: int,
+        batch_size: int,
+    ) -> Iterator[Document]:
+        retstart = 0
         while retstart < total:
             this_batch = min(batch_size, total - retstart)
             logger.info(
@@ -197,8 +325,7 @@ class PubMedClient:
                 this_batch,
                 total,
             )
-            docs = self.fetch_batch(handle, retstart=retstart, retmax=this_batch)
-            yield from docs
+            yield from self.fetch_batch(handle, retstart=retstart, retmax=this_batch)
             retstart += this_batch
 
 

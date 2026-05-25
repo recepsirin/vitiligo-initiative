@@ -23,27 +23,35 @@ cp .env.example .env
 # 4. Initialize the local SQLite store
 vitiligo db init
 
-# 5. Smoke-test ingestion (fetches 5 vitiligo papers from PubMed)
-vitiligo ingest pubmed --limit 5
+# 5. Ingest the full vitiligo corpus
+vitiligo ingest pubmed             # ~11,000 papers (abstracts + metadata)
+vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 
-# 6. Inspect what we have
+# 6. Embed the corpus and run semantic search
+vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
+vitiligo search "JAK inhibitors and repigmentation in segmental vitiligo" --show-abstract
+
+# 7. Inspect what we have
 vitiligo db stats
+vitiligo embed stats
 vitiligo db sample -n 3
 ```
+
+For smoke testing, every ingest command supports `--limit N`.
 
 ---
 
 ## Architecture
 
-Two layers, kept deliberately small:
+Three layers, kept deliberately small:
 
 ```
-┌────────────────────┐      ┌────────────────────┐      ┌────────────────────┐
-│  External sources  │ ───► │  Ingestion         │ ───► │  Document store    │
-│  (PubMed, PMC,     │      │  pipeline          │      │  (SQLite via       │
-│   ClinicalTrials,  │      │  + bookkeeping     │      │   SQLModel)        │
-│   Open Targets…)   │      │                    │      │                    │
-└────────────────────┘      └────────────────────┘      └────────────────────┘
+┌────────────────┐    ┌────────────────┐    ┌────────────────┐    ┌─────────────┐
+│ External       │ ─► │ Ingestion      │ ─► │ Document       │ ─► │ Embeddings  │
+│ sources        │    │ pipeline       │    │ store          │    │ + semantic  │
+│ (PubMed, PMC,  │    │ + bookkeeping  │    │ (SQLite via    │    │ search      │
+│  CT.gov, OT…)  │    │                │    │  SQLModel)     │    │ (fastembed) │
+└────────────────┘    └────────────────┘    └────────────────┘    └─────────────┘
 ```
 
 ### Source clients (`vitiligo.sources`)
@@ -57,15 +65,15 @@ One submodule per external source. Each client:
 
 Currently shipped:
 
-| Module | Source | Identifier |
-|---|---|---|
-| `vitiligo.sources.pubmed` | NCBI PubMed via E-utilities | PMID |
+| Module | Source | Identifier | Notes |
+|---|---|---|---|
+| `vitiligo.sources.pubmed` | NCBI PubMed via E-utilities | PMID | Auto-splits queries by year when total > 9,999 (NCBI hard cap) |
+| `vitiligo.sources.pmc` | PubMed Central Open Access | PMCID | JATS XML → structured sections (intro / methods / results / discussion) |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| PMC OA | Full-text articles (~30% of vitiligo lit) | Same E-utilities, different db |
 | ClinicalTrials.gov | Trial designs, endpoints, outcomes | REST v2 API |
 | Open Targets | Disease–gene–drug associations | GraphQL |
 | DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
@@ -89,6 +97,16 @@ we have a reason — not before.
 - Records every run in `ingestion_runs` for auditability and resume.
 - Commits in batches (default every 100 records) so a Ctrl-C doesn't lose work.
 
+### Embeddings + search (`vitiligo.embed`)
+
+- Wraps [fastembed](https://github.com/qdrant/fastembed) (ONNX runtime, no torch dependency).
+- Default model: `BAAI/bge-small-en-v1.5` (384 dims, ~80 MB, strong general-purpose).
+- Vectors are L2-normalized at write time, so cosine reduces to a dot product.
+- Stored as `bytes` blobs in the `embeddings` table, keyed by `(document_id, model, scope)`.
+- `scope` lets us embed multiple views of the same document (e.g. `title_abstract`, `full_text`, `section:methods`) and pick the right one at query time.
+
+Brute-force cosine search is fine at this scale (a single matmul over <100k vectors). We move to a proper ANN index only when we outgrow it.
+
 ### CLI (`vitiligo.cli`)
 
 Built on Typer. Commands:
@@ -96,13 +114,23 @@ Built on Typer. Commands:
 ```bash
 vitiligo version
 
+# Storage
 vitiligo db init
 vitiligo db stats
 vitiligo db sample -n 5
 
-vitiligo ingest pubmed                         # full ingestion
-vitiligo ingest pubmed --limit 100             # smoke test
+# Ingestion
+vitiligo ingest pubmed                              # full ingestion
+vitiligo ingest pubmed --limit 100                  # smoke test
 vitiligo ingest pubmed --query 'vitiligo AND JAK'   # custom query
+vitiligo ingest pmc                                 # PMC Open Access full text
+
+# Embeddings
+vitiligo embed run                                  # encode every unembedded document
+vitiligo embed stats                                # coverage by model + scope
+
+# Semantic search
+vitiligo search "IFN-gamma CXCL10 axis in vitiligo" --top-k 10 --show-abstract
 ```
 
 ---
@@ -147,10 +175,11 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **PMC Open Access ingestion** — full text where available.
-2. **ClinicalTrials.gov ingestion** — vitiligo trials with full metadata.
-3. **Embeddings + vector store** — for semantic retrieval over abstracts and full text.
-4. **Knowledge graph extraction** — entities (drugs, targets, pathways, subtypes) and relations.
-5. **RAG layer + LLM reasoning** — cited Q&A over the corpus.
-6. **Hypothesis generation agent** — ranked candidate reports.
-7. **Web UI** — public Evidence Engine deployment.
+1. **ClinicalTrials.gov ingestion** — vitiligo trials with full metadata.
+2. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
+3. **Full-text embedding scope** — embed PMC body sections, not just title + abstract.
+4. **Hybrid retrieval** — combine BM25 over MeSH/keywords with semantic vectors.
+5. **Knowledge graph extraction** — entities (drugs, targets, pathways, subtypes) and relations, LLM-assisted.
+6. **RAG with citations + evidence levels** — the Evidence Engine answer layer.
+7. **Hypothesis generation agent** — ranked candidate reports for spread arrest and repigmentation.
+8. **Web UI** — public Evidence Engine deployment.

@@ -12,10 +12,12 @@ from sqlmodel import func, select
 
 from vitiligo import __version__
 from vitiligo.config import get_settings
-from vitiligo.ingest import run_pubmed_ingestion
+from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
+from vitiligo.ingest import run_pmc_ingestion, run_pubmed_ingestion
 from vitiligo.logging import configure_logging, get_logger
-from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY
-from vitiligo.storage import Document, IngestionRun, SourceKind, init_db, session_scope
+from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
+from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
+from vitiligo.storage import Document, Embedding, IngestionRun, SourceKind, init_db, session_scope
 
 app = typer.Typer(
     add_completion=False,
@@ -24,8 +26,10 @@ app = typer.Typer(
 )
 ingest_app = typer.Typer(help="Ingest documents from external sources.", no_args_is_help=True)
 db_app = typer.Typer(help="Inspect the local document store.", no_args_is_help=True)
+embed_app = typer.Typer(help="Generate and inspect embeddings.", no_args_is_help=True)
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(db_app, name="db")
+app.add_typer(embed_app, name="embed")
 
 console = Console()
 logger = get_logger(__name__)
@@ -52,10 +56,21 @@ def version_cmd() -> None:
 # --------------------------------------------------------------------- ingest
 
 
+def _print_ingest_stats(stats_obj: object) -> None:
+    table = Table(show_header=False, box=None)
+    table.add_row("Source", str(stats_obj.source.value))
+    table.add_row("Total found", str(stats_obj.total_found))
+    table.add_row("Fetched", str(stats_obj.fetched))
+    table.add_row("Inserted", str(stats_obj.inserted))
+    table.add_row("Updated", str(stats_obj.updated))
+    table.add_row("Run id", str(stats_obj.run_id))
+    console.print(table)
+
+
 @ingest_app.command("pubmed")
 def ingest_pubmed(
     query: str = typer.Option(
-        DEFAULT_VITILIGO_QUERY,
+        PUBMED_DEFAULT_QUERY,
         "--query",
         "-q",
         help="PubMed search expression.",
@@ -81,14 +96,34 @@ def ingest_pubmed(
 
     console.print()
     console.rule("[bold green]Done[/bold green]")
-    table = Table(show_header=False, box=None)
-    table.add_row("Source", str(stats.source.value))
-    table.add_row("Total found", str(stats.total_found))
-    table.add_row("Fetched", str(stats.fetched))
-    table.add_row("Inserted", str(stats.inserted))
-    table.add_row("Updated", str(stats.updated))
-    table.add_row("Run id", str(stats.run_id))
-    console.print(table)
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("pmc")
+def ingest_pmc(
+    query: str = typer.Option(
+        PMC_DEFAULT_QUERY,
+        "--query",
+        "-q",
+        help="PMC search expression (Open Access subset by default).",
+    ),
+    batch_size: int = typer.Option(50, "--batch-size", "-b", help="Records per efetch call."),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap total records."),
+) -> None:
+    """Search PMC Open Access and persist full-text records into the local store."""
+    settings = get_settings()
+    console.rule("[bold]PMC OA ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Query:    [yellow]{query}[/yellow]")
+    if limit:
+        console.print(f"Limit:    [magenta]{limit}[/magenta] (smoke test)")
+    console.print()
+
+    stats = run_pmc_ingestion(query=query, batch_size=batch_size, limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
 
 
 # --------------------------------------------------------------------- db
@@ -172,6 +207,97 @@ def db_sample(
         if doc.abstract:
             preview = doc.abstract[:400] + ("..." if len(doc.abstract) > 400 else "")
             console.print(f"[bold]Abstract:[/bold] {preview}")
+        console.print()
+
+
+# --------------------------------------------------------------------- embed
+
+
+@embed_app.command("run")
+def embed_run(
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="Embedding model identifier."),
+    scope: str = typer.Option("title_abstract", "--scope", "-s", help="Embedding scope name."),
+    batch_size: int = typer.Option(64, "--batch-size", "-b", help="Encode batch size."),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap documents to embed."),
+) -> None:
+    """Encode documents that don't yet have an embedding for (model, scope)."""
+    console.rule(
+        f"[bold]Embedding[/bold] — model=[cyan]{model}[/cyan] scope=[yellow]{scope}[/yellow]"
+    )
+    stats = embed_documents(model_name=model, scope=scope, batch_size=batch_size, limit=limit)
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    table = Table(show_header=False, box=None)
+    table.add_row("Model", stats.model)
+    table.add_row("Scope", stats.scope)
+    table.add_row("Embedded", str(stats.embedded))
+    table.add_row("Skipped (no text)", str(stats.skipped_no_text))
+    console.print(table)
+
+
+@embed_app.command("stats")
+def embed_stats() -> None:
+    """Show embedding coverage by model and scope."""
+    init_db()
+    with session_scope() as session:
+        rows = session.exec(
+            select(Embedding.model, Embedding.scope, func.count())
+            .group_by(Embedding.model, Embedding.scope)
+            .order_by(Embedding.model, Embedding.scope)
+        ).all()
+
+    if not rows:
+        console.print("[yellow]No embeddings stored yet. Run `vitiligo embed run`.[/yellow]")
+        return
+
+    table = Table(title="Embeddings", show_header=True, header_style="bold")
+    table.add_column("Model")
+    table.add_column("Scope")
+    table.add_column("Count", justify="right")
+    for model, scope, count in rows:
+        table.add_row(str(model), str(scope), str(count))
+    console.print(table)
+
+
+# --------------------------------------------------------------------- search
+
+
+@app.command("search")
+def search_cmd(
+    query: str = typer.Argument(..., help="Free-text search query."),
+    top_k: int = typer.Option(10, "--top-k", "-k", help="How many hits to return."),
+    model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="Embedding model identifier."),
+    scope: str = typer.Option("title_abstract", "--scope", "-s", help="Embedding scope to search."),
+    show_abstract: bool = typer.Option(
+        False,
+        "--show-abstract/--no-abstract",
+        help="Include a short abstract excerpt in the output.",
+    ),
+) -> None:
+    """Semantic search over the embedded corpus."""
+    console.rule(f"[bold]Search[/bold] — [yellow]{query}[/yellow]")
+    hits = semantic_search(query=query, top_k=top_k, model_name=model, scope=scope)
+    if not hits:
+        console.print("[yellow]No results.[/yellow]")
+        return
+
+    for rank, hit in enumerate(hits, start=1):
+        doc = hit.document
+        header = f"#{rank}  score={hit.score:.3f}  [cyan]{doc.source.value}:{doc.source_id}[/cyan]"
+        console.rule(header, align="left")
+        console.print(f"[bold]{doc.title}[/bold]")
+        meta_bits: list[str] = []
+        if doc.journal:
+            meta_bits.append(doc.journal)
+        if doc.year:
+            meta_bits.append(str(doc.year))
+        if doc.doi:
+            meta_bits.append(f"doi:{doc.doi}")
+        if meta_bits:
+            console.print("  ".join(meta_bits))
+        if show_abstract and doc.abstract:
+            preview = doc.abstract[:400] + ("..." if len(doc.abstract) > 400 else "")
+            console.print(preview)
         console.print()
 
 

@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, LargeBinary
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
 
@@ -62,6 +62,28 @@ class Document(SQLModel, table=True):
     raw_metadata: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
 
     retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
+
+
+class Embedding(SQLModel, table=True):
+    """Vector embedding for a document, identified by model + scope.
+
+    `scope` lets us embed different views of the same document (e.g.
+    "title_abstract", "full_text", "section:methods") and pick the
+    right one at query time.
+    """
+
+    __tablename__ = "embeddings"
+    __table_args__ = (UniqueConstraint("document_id", "model", "scope", name="uq_doc_model_scope"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="documents.id", index=True)
+    model: str = Field(
+        index=True, description="Embedding model identifier (e.g. BAAI/bge-small-en-v1.5)."
+    )
+    scope: str = Field(default="title_abstract", index=True)
+    dim: int
+    vector: bytes = Field(sa_column=Column(LargeBinary, nullable=False))
+    created_at: datetime = Field(default_factory=_utcnow)
 
 
 class IngestionRun(SQLModel, table=True):

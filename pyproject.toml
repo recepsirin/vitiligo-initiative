@@ -35,6 +35,8 @@ dependencies = [
     "python-dotenv>=1.0",
     "tenacity>=8.5",
     "lxml>=5.2",
+    "numpy>=1.26",
+    "fastembed>=0.3",
 ]
 
 [project.optional-dependencies]

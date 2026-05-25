@@ -398,20 +398,25 @@ These shape execution and must be resolved before some downstream decisions. Tra
 ### What exists
 
 - **Planning artifact** — this README.
-- **PubMed ingestion engine** — Python package (`vitiligo`) with a typed CLI, source-agnostic SQLite document store, and a working PubMed E-utilities client.
-  - Universe size confirmed: **~11,400 vitiligo papers in PubMed** as of May 2026.
-  - End-to-end pipeline verified with a 5-record smoke test.
+- **AI engine v0.2** — Python package (`vitiligo`) with:
+  - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
+  - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
+  - **Source-agnostic SQLite store** with bookkeeping for resumable, idempotent ingestion runs.
+  - **Embedding layer** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; vectors stored locally; brute-force cosine retrieval.
+  - **Semantic search CLI** — `vitiligo search "..."` returns ranked, cited hits over the corpus.
+  - **Typed CLI**, ruff-clean, pytest-passing, Apache-2.0 licensed.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. Run a **full PubMed ingestion** of all ~11,400 vitiligo records.
-3. Add **PMC Open Access** ingestion for full-text where available.
-4. Add **ClinicalTrials.gov** ingestion.
-5. Layer in **embeddings + semantic retrieval** over the corpus.
-6. Begin **knowledge graph extraction** (drugs, targets, pathways, subtypes, outcomes).
-7. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
+2. Add **ClinicalTrials.gov** ingestion (vitiligo trials with structured endpoints and outcomes).
+3. Add **Open Targets + DrugBank** ingestion (for the repurposing layer).
+4. Layer in **knowledge graph extraction** — LLM-assisted entity + relation extraction (drugs, targets, pathways, subtypes, outcomes).
+5. Build the **RAG + reasoning layer** — cited Q&A over the corpus with evidence levels.
+6. Build the **hypothesis-generation agent** — ranked candidate reports for spread arrest and repigmentation.
+7. Stand up the **public web UI** for the Evidence Engine.
+8. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
 ---
 
