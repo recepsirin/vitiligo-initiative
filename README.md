@@ -391,17 +391,27 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 ## Status
 
-**Current phase:** Phase 0 — Foundation
+**Current phase:** Phase 1 — Engine + First Public Artifact (in progress)
 **Last updated:** May 2026
-**Document version:** v0.1 (initial planning artifact)
+**Document version:** v0.2
+
+### What exists
+
+- **Planning artifact** — this README.
+- **PubMed ingestion engine** — Python package (`vitiligo`) with a typed CLI, source-agnostic SQLite document store, and a working PubMed E-utilities client.
+  - Universe size confirmed: **~11,400 vitiligo papers in PubMed** as of May 2026.
+  - End-to-end pipeline verified with a 5-record smoke test.
+- **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
-1. Resolve open questions (above).
-2. Write the **Scientific Brief** — vitiligo state-of-the-art and the specific gaps we'll attack.
-3. Write the **Governance & Ethics Brief** — IRB intent, data governance, consent model, regulatory posture.
-4. Write the **Strategic Plan** — detailed phase plan, with concrete first deliverables.
-5. Begin Phase 1 build: literature ingestion + knowledge graph + Evidence Engine.
+1. Resolve [open questions](#open-questions) (especially personal/strategic).
+2. Run a **full PubMed ingestion** of all ~11,400 vitiligo records.
+3. Add **PMC Open Access** ingestion for full-text where available.
+4. Add **ClinicalTrials.gov** ingestion.
+5. Layer in **embeddings + semantic retrieval** over the corpus.
+6. Begin **knowledge graph extraction** (drugs, targets, pathways, subtypes, outcomes).
+7. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
 ---
 
