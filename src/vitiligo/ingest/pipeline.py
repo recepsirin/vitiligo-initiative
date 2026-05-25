@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlmodel import select
 
@@ -17,6 +18,11 @@ from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.ctgov import CTGovClient
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
+from vitiligo.sources.ictrp import (
+    count_ictrp_records,
+    iter_ictrp_trials,
+    should_skip_ictrp_record,
+)
 from vitiligo.sources.opentargets import (
     DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY,
 )
@@ -53,7 +59,8 @@ class IngestionStats:
     fetched: int
     inserted: int
     updated: int
-    run_id: int | None
+    skipped: int = 0
+    run_id: int | None = None
 
 
 def run_pubmed_ingestion(
@@ -152,6 +159,104 @@ def run_euctr_ingestion(
         factory=factory,
         commit_every=commit_every,
     )
+
+
+def run_ictrp_ingestion(
+    file: Path,
+    skip_duplicates: bool = True,
+    limit: int | None = None,
+    commit_every: int = 50,
+) -> IngestionStats:
+    """Import trials from a WHO ICTRP XML export file.
+
+    Export from https://trialsearch.who.int/ (Export results to XML).
+    Records already present via ctgov/euctr ingestion are skipped by default.
+    """
+    if not file.is_file():
+        raise FileNotFoundError(f"ICTRP export not found: {file}")
+
+    init_db()
+    query = f"file:{file}"
+    total_found = count_ictrp_records(file)
+    if limit is not None:
+        total_found = min(total_found, limit)
+
+    run = IngestionRun(source=TrialSourceKind.ICTRP.value, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = 0
+    inserted = 0
+    updated = 0
+    skipped = 0
+
+    try:
+        with session_scope() as session:
+            tracked = session.get(IngestionRun, run_id)
+            if tracked is not None:
+                tracked.total_found = total_found
+
+            existing_keys = _load_trial_dedup_keys(session) if skip_duplicates else set()
+
+            for trial in iter_ictrp_trials(file, limit=limit):
+                fetched += 1
+                if should_skip_ictrp_record(
+                    trial,
+                    skip_duplicates=skip_duplicates,
+                    existing_keys=existing_keys,
+                ):
+                    skipped += 1
+                    continue
+
+                ins, upd = _upsert_trial(session, trial)
+                inserted += ins
+                updated += upd
+
+                if fetched % commit_every == 0:
+                    session.commit()
+                    logger.info(
+                        "Progress [ictrp]: fetched=%d inserted=%d updated=%d skipped=%d",
+                        fetched,
+                        inserted,
+                        updated,
+                        skipped,
+                    )
+
+            session.commit()
+
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=ictrp")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=TrialSourceKind.ICTRP.value,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
+def _load_trial_dedup_keys(session) -> set[tuple[str, str]]:  # type: ignore[no-untyped-def]
+    """Load (source, source_id) keys for ctgov/euctr trials already in the store."""
+    rows = session.exec(
+        select(Trial.source, Trial.source_id).where(
+            Trial.source.in_(  # type: ignore[attr-defined]
+                [TrialSourceKind.CTGOV, TrialSourceKind.EUCTR]
+            )
+        )
+    ).all()
+    out: set[tuple[str, str]] = set()
+    for source, source_id in rows:
+        src = source.value if hasattr(source, "value") else str(source)
+        out.add((src, source_id))
+    return out
 
 
 def _run_trial_ingestion(

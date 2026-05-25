@@ -5,6 +5,8 @@ Run `vitiligo --help` for available commands.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -16,6 +18,7 @@ from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
 from vitiligo.ingest import (
     run_ctgov_ingestion,
     run_euctr_ingestion,
+    run_ictrp_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
@@ -94,6 +97,9 @@ def _print_ingest_stats(stats_obj: object) -> None:
     table.add_row("Fetched", str(stats_obj.fetched))  # type: ignore[attr-defined]
     table.add_row("Inserted", str(stats_obj.inserted))  # type: ignore[attr-defined]
     table.add_row("Updated", str(stats_obj.updated))  # type: ignore[attr-defined]
+    skipped = getattr(stats_obj, "skipped", 0)
+    if skipped:
+        table.add_row("Skipped", str(skipped))
     table.add_row("Run id", str(stats_obj.run_id))  # type: ignore[attr-defined]
     console.print(table)
 
@@ -257,6 +263,45 @@ def ingest_opentargets(
 
     stats = run_opentargets_ingestion(
         query=query, efo_id=efo_id, target_limit=target_limit
+    )
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("ictrp")
+def ingest_ictrp(
+    file: str = typer.Argument(..., help="Path to an ICTRP XML export file."),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        "-l",
+        help="Cap total records (smoke testing).",
+    ),
+    keep_duplicates: bool = typer.Option(
+        False,
+        "--keep-duplicates/--skip-duplicates",
+        help="Keep trials that duplicate ctgov/euctr records (default: skip).",
+    ),
+) -> None:
+    """Import vitiligo trials from a WHO ICTRP XML export file.
+
+    Export from https://trialsearch.who.int/ → Export results to XML.
+    """
+    settings = get_settings()
+    xml_path = Path(file)
+    console.rule("[bold]WHO ICTRP (XML) ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"File:     [yellow]{xml_path}[/yellow]")
+    if limit:
+        console.print(f"Limit:    [magenta]{limit}[/magenta] (smoke test)")
+    console.print()
+
+    stats = run_ictrp_ingestion(
+        file=xml_path,
+        skip_duplicates=not keep_duplicates,
+        limit=limit,
     )
 
     console.print()

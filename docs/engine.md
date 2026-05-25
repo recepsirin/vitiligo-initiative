@@ -29,6 +29,7 @@ vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.gov
 vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
 vitiligo ingest opentargets        # ~37 drugs + 200 targets for vitiligo (EFO_0004208)
+vitiligo ingest ictrp --file export.xml   # WHO ICTRP XML export (see trialsearch.who.int)
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -93,12 +94,12 @@ Currently shipped:
 | `vitiligo.sources.ctgov` | ClinicalTrials.gov v2 REST API | NCT id | JSON; status, phase, conditions, interventions, sponsors, locations, eligibility, outcomes |
 | `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
 | `vitiligo.sources.opentargets` | Open Targets Platform GraphQL v4 | ChEMBL id (drugs) / Ensembl id (targets) | Disease resolution + drug candidates + associated targets; mechanism-of-action enrichment per drug |
+| `vitiligo.sources.ictrp` | WHO ICTRP search portal (XML export) | ICTRP TrialID | File import from https://trialsearch.who.int/; skips ctgov/euctr duplicates |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| WHO ICTRP | Global aggregator across registries | Bulk XML export from trialsearch.who.int (no free REST API) |
 | DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
 | GEO / ArrayExpress | Public omics datasets | E-utilities + REST |
 
@@ -173,6 +174,7 @@ vitiligo ingest pubmed --limit 100                  # smoke test
 vitiligo ingest pubmed --query 'vitiligo AND JAK'   # custom query
 vitiligo ingest pmc                                 # PMC Open Access full text
 vitiligo ingest opentargets                         # Open Targets drug + target priors
+vitiligo ingest ictrp --file export.xml              # WHO ICTRP XML export
 vitiligo ingest opentargets --target-limit 50       # smoke test (fewer targets)
 
 # Embeddings
@@ -237,11 +239,10 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **WHO ICTRP ingestion** — global aggregator under the same `TrialSourceKind` abstraction.
-2. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
-4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
-5. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
-6. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
-7. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
-8. **Public deployment** — host the Evidence Engine somewhere reachable (Fly.io / Render) with rate limiting + telemetry.
-9. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.
+1. **DrugBank ingestion** — open-subset drug mechanisms and repurposing priors.
+2. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
+3. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
+4. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
+5. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
+6. **Public deployment** — host the Evidence Engine somewhere reachable (Fly.io / Render) with rate limiting + telemetry.
+7. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.
