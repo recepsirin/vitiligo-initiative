@@ -312,7 +312,7 @@ Gate conditions:
 **Goal:** Working AI engine that generates ranked, cited candidates and answers — public and demonstrable.
 
 Gate conditions:
-- [ ] Literature corpus ingested (PubMed, PMC OA, ClinicalTrials.gov, Open Targets, DrugBank, GEO metadata)
+- [x] Literature corpus ingested (PubMed, PMC OA, ClinicalTrials.gov, Open Targets, DrugBank; GEO metadata via `vitiligo ingest geo`)
 - [x] Knowledge graph v1 built (structured seed from priors + trials; LLM extraction available)
 - [ ] Knowledge graph v1 expert-spot-checked
 - [ ] Evidence Engine v1 deployed at a public URL
@@ -402,6 +402,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
 - **AI engine v1.0 — Evidence Engine + Knowledge Graph:**
   - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
   - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
+  - **GEO ingestion** — NCBI GEO DataSets metadata (`vitiligo ingest geo`) for vitiligo-linked omics series (GSE accessions, summaries, organism, sample counts).
   - **ClinicalTrials.gov ingestion** — **320 vitiligo trials** with structured status, phase, conditions, interventions, sponsors, locations, eligibility, primary/secondary outcomes, enrollment, and dates.
   - **EU CTR (CTIS) ingestion** — **22 EU vitiligo trials** with normalized phases, statuses, sponsors, countries, full eligibility criteria, and trial objectives — including the active Phase 3 EU trials of ruxolitinib, povorcitinib, and upadacitinib in non-segmental vitiligo.
   - **Open Targets ingestion** — **237 drug/target priors** for vitiligo (`EFO_0004208`): 37 clinical drug candidates (ruxolitinib, povorcitinib, upadacitinib, ritlecitinib, …) plus top 200 associated gene targets with association scores and mechanism-of-action enrichment.
@@ -413,8 +414,8 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
-  - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Trials tabs; Docker + Fly.io (`ams`) + Render deploy configs with rate limiting and health checks. See [`docs/deploy.md`](docs/deploy.md).
-  - **Typed CLI**, ruff-clean, 48 tests passing, Apache-2.0 licensed.
+  - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
+  - **Typed CLI**, ruff-clean, 57 tests passing, Apache-2.0 licensed.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves

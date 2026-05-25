@@ -26,6 +26,7 @@ class SourceKind(StrEnum):
 
     PUBMED = "pubmed"
     PMC = "pmc"
+    GEO = "geo"
     CLINICALTRIALS = "clinicaltrials"
     OPENTARGETS = "opentargets"
     DRUGBANK = "drugbank"

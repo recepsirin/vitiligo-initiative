@@ -51,6 +51,9 @@ def evidence_level_label(level: EvidenceLevel | str) -> str:
 
 def classify_document(doc: Document) -> EvidenceLevel:
     """Classify a paper using PubMed publication types, MeSH, and title/abstract cues."""
+    if doc.journal == "NCBI GEO" or _source_value(doc) == "geo":
+        return _classify_geo_document(doc)
+
     types_text = " | ".join(doc.publication_types or []).lower()
     mesh_text = " | ".join(doc.mesh_terms or []).lower()
     title = (doc.title or "").lower()
@@ -88,6 +91,21 @@ def classify_trial(trial: Trial) -> EvidenceLevel:
     if study_type == "INTERVENTIONAL":
         return EvidenceLevel.CLINICAL_TRIAL
     return EvidenceLevel.UNKNOWN
+
+
+def _source_value(doc: Document) -> str:
+    src = doc.source
+    return src.value if hasattr(src, "value") else str(src)
+
+
+def _classify_geo_document(doc: Document) -> EvidenceLevel:
+    taxon = " ".join(doc.keywords or []).lower()
+    if "mus musculus" in taxon or "mouse" in taxon:
+        return EvidenceLevel.MOUSE
+    gdstype = " ".join(doc.publication_types or []).lower()
+    if "in vitro" in gdstype or "cell line" in gdstype:
+        return EvidenceLevel.IN_VITRO
+    return EvidenceLevel.OTHER
 
 
 def _is_rct(types_text: str, text: str) -> bool:

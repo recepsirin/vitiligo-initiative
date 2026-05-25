@@ -51,6 +51,8 @@ function metaBits(item) {
       bits.push(`<a href="https://pubmed.ncbi.nlm.nih.gov/${escapeHtml(item.source_id)}/" target="_blank">PMID ${escapeHtml(item.source_id)}</a>`);
     } else if (item.source === 'pmc') {
       bits.push(`<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/${escapeHtml(item.source_id)}/" target="_blank">${escapeHtml(item.source_id)}</a>`);
+    } else if (item.source === 'geo') {
+      bits.push(`<a href="https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${encodeURIComponent(item.source_id)}" target="_blank">${escapeHtml(item.source_id)}</a>`);
     }
   }
   return bits.join(' • ');

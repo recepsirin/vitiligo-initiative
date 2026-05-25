@@ -26,6 +26,8 @@ from vitiligo.sources.drugbank import (
 )
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
+from vitiligo.sources.geo import DEFAULT_VITILIGO_QUERY as GEO_DEFAULT_QUERY
+from vitiligo.sources.geo import GEOClient
 from vitiligo.sources.ictrp import (
     count_ictrp_records,
     iter_ictrp_trials,
@@ -108,6 +110,30 @@ def run_pmc_ingestion(
 
     return _run_ingestion(
         source=SourceKind.PMC.value,
+        query=query,
+        factory=factory,
+        commit_every=commit_every,
+    )
+
+
+def run_geo_ingestion(
+    query: str = GEO_DEFAULT_QUERY,
+    batch_size: int = 100,
+    limit: int | None = None,
+    commit_every: int = 50,
+) -> IngestionStats:
+    """Search NCBI GEO DataSets and persist series metadata."""
+
+    def factory() -> tuple[Iterator[Document], int | None]:
+        client = GEOClient()
+        handle = client.search(query)
+        return (
+            client.iter_documents(query=query, batch_size=batch_size, limit=limit),
+            handle.total,
+        )
+
+    return _run_ingestion(
+        source=SourceKind.GEO.value,
         query=query,
         factory=factory,
         commit_every=commit_every,

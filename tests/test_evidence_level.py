@@ -63,6 +63,17 @@ def test_classify_interventional_trial() -> None:
     assert classify_trial(trial) == EvidenceLevel.CLINICAL_TRIAL
 
 
+def test_classify_geo_human_series() -> None:
+    doc = Document(
+        source=SourceKind.GEO,
+        source_id="GSE1",
+        journal="NCBI GEO",
+        keywords=["Homo sapiens"],
+        publication_types=["GEO GSE"],
+    )
+    assert classify_document(doc) == EvidenceLevel.OTHER
+
+
 def test_evidence_level_label() -> None:
     assert evidence_level_label(EvidenceLevel.RCT) == "RCT"
     assert evidence_level_label("mouse") == "Mouse / animal"

@@ -92,6 +92,7 @@ Currently shipped:
 |---|---|---|---|
 | `vitiligo.sources.pubmed` | NCBI PubMed via E-utilities | PMID | Auto-splits queries by year when total > 9,999 (NCBI hard cap) |
 | `vitiligo.sources.pmc` | PubMed Central Open Access | PMCID | JATS XML → structured sections (intro / methods / results / discussion) |
+| `vitiligo.sources.geo` | NCBI GEO DataSets (`db=gds`) | GSE accession | Series metadata via esearch + esummary (title, summary, organism, sample count) |
 | `vitiligo.sources.ctgov` | ClinicalTrials.gov v2 REST API | NCT id | JSON; status, phase, conditions, interventions, sponsors, locations, eligibility, outcomes |
 | `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
 | `vitiligo.sources.opentargets` | Open Targets Platform GraphQL v4 | ChEMBL id (drugs) / Ensembl id (targets) | Disease resolution + drug candidates + associated targets; mechanism-of-action enrichment per drug |
@@ -205,6 +206,7 @@ vitiligo ingest pubmed                              # full ingestion
 vitiligo ingest pubmed --limit 100                  # smoke test
 vitiligo ingest pubmed --query 'vitiligo AND JAK'   # custom query
 vitiligo ingest pmc                                 # PMC Open Access full text
+vitiligo ingest geo                                 # NCBI GEO series metadata (GSE)
 vitiligo ingest opentargets                         # Open Targets drug + target priors
 vitiligo ingest ictrp --file export.xml              # WHO ICTRP XML export
 vitiligo ingest drugbank --file full_database.xml    # DrugBank academic XML (.zip ok)

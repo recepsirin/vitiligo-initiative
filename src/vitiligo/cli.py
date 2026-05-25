@@ -29,6 +29,7 @@ from vitiligo.ingest import (
     run_ctgov_ingestion,
     run_drugbank_ingestion,
     run_euctr_ingestion,
+    run_geo_ingestion,
     run_ictrp_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
@@ -44,6 +45,7 @@ from vitiligo.reasoning import (
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.drugbank import DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
+from vitiligo.sources.geo import DEFAULT_VITILIGO_QUERY as GEO_DEFAULT_QUERY
 from vitiligo.sources.opentargets import DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY
 from vitiligo.sources.opentargets import DEFAULT_TARGET_LIMIT
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
@@ -171,6 +173,33 @@ def ingest_pmc(
     console.print()
 
     stats = run_pmc_ingestion(query=query, batch_size=batch_size, limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("geo")
+def ingest_geo(
+    query: str = typer.Option(
+        GEO_DEFAULT_QUERY,
+        "--query",
+        "-q",
+        help="GEO DataSets search expression.",
+    ),
+    batch_size: int = typer.Option(100, "--batch-size", "-b", help="UIDs per esearch page."),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap total records."),
+) -> None:
+    """Search NCBI GEO and persist series metadata (GSE) into the local store."""
+    settings = get_settings()
+    console.rule("[bold]GEO ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Query:    [yellow]{query}[/yellow]")
+    if limit:
+        console.print(f"Limit:    [magenta]{limit}[/magenta] (smoke test)")
+    console.print()
+
+    stats = run_geo_ingestion(query=query, batch_size=batch_size, limit=limit)
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

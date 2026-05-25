@@ -7,6 +7,8 @@ The web UI is a FastAPI app (`vitiligo serve`) backed by a local SQLite corpus
 2. A **persistent disk** for `vitiligo.db` (not in git)
 3. **`ANTHROPIC_API_KEY`** for Ask / Hypothesize (Search and Trials work without it)
 
+Helper scripts live under [`scripts/deploy/`](../scripts/deploy/). See [`scripts/README.md`](../scripts/README.md).
+
 ---
 
 ## Fly.io (recommended — Amsterdam `ams` region)
@@ -19,39 +21,39 @@ The web UI is a FastAPI app (`vitiligo serve`) backed by a local SQLite corpus
 ### First deploy
 
 ```bash
-# From repo root — creates the app if missing (edit fly.toml app name first)
+# One-shot: app + volume + secrets + deploy
+export ANTHROPIC_API_KEY=sk-ant-...
+./scripts/deploy/fly-first-deploy.sh
+
+# Upload corpus + seed knowledge graph
+./scripts/deploy/fly-upload-db.sh
+./scripts/deploy/fly-seed-graph.sh
+```
+
+Manual equivalent:
+
+```bash
 fly launch --no-deploy --copy-config
-
-# Persistent volume for the SQLite DB + model cache
 fly volumes create vitiligo_data --region ams --size 1
-
-# Secrets
 fly secrets set ANTHROPIC_API_KEY=sk-ant-...
-
-# Build and deploy the container
 fly deploy
-
-# Upload the corpus to the mounted volume (one-time)
-fly ssh sftp shell
-# at sftp> prompt:
-put data/vitiligo.db /data/vitiligo.db
+fly ssh sftp shell   # put data/vitiligo.db /data/vitiligo.db
+fly ssh console -C "vitiligo graph seed"
 ```
 
 Verify:
 
 ```bash
 fly open /api/health
-# expect: "ready": true, documents > 0, graph_entities > 0 after seeding
-
-# One-time on the deployed machine (or locally before upload):
-fly ssh console -C "vitiligo graph seed"
+# expect: "ready": true, documents > 0, graph_entities > 0
 ```
 
 ### Updates
 
 ```bash
-fly deploy
-# Re-upload vitiligo.db only when the corpus changes
+./scripts/deploy/fly-redeploy.sh
+# Re-upload vitiligo.db only when the corpus changes:
+./scripts/deploy/fly-upload-db.sh
 ```
 
 ### Useful commands
@@ -78,6 +80,12 @@ Health check: `GET /api/health` (returns `degraded` until the DB is present).
 ## Docker (local smoke test)
 
 ```bash
+./scripts/deploy/docker-smoke.sh
+```
+
+Or manually:
+
+```bash
 docker build -t vitiligo-engine .
 docker run --rm -p 8765:8765 \
   -e ANTHROPIC_API_KEY \
@@ -99,6 +107,7 @@ Open http://127.0.0.1:8765
 | `VITILIGO_PREWARM_EMBEDDINGS` | `true` | Load fastembed model at startup |
 | `FASTEMBED_CACHE_PATH` | — | ONNX model cache directory |
 | `PORT` | — | Set by Fly/Render; overrides `VITILIGO_WEB_PORT` |
+| `FLY_APP` | `vitiligo-evidence-engine` | Override Fly app name in deploy scripts |
 
 ---
 
