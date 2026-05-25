@@ -5,7 +5,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | Script | Purpose |
 |--------|---------|
 | [`docker-entrypoint.sh`](docker-entrypoint.sh) | Container entrypoint (used by Dockerfile) |
-| [`lib/common.sh`](lib/common.sh) | Shared shell helpers |
+| [`deploy/common.sh`](deploy/common.sh) | Shared shell helpers |
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/fly-upload-db.sh`](deploy/fly-upload-db.sh) | Upload `data/vitiligo.db` to Fly volume |
