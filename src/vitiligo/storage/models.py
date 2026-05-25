@@ -86,13 +86,84 @@ class Embedding(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
 
+class TrialSourceKind(StrEnum):
+    """Known clinical-trial registries. Extend as new ingestion modules land."""
+
+    CTGOV = "ctgov"
+    EUCTR = "euctr"
+    ICTRP = "ictrp"
+
+
+class Trial(SQLModel, table=True):
+    """A clinical trial record from a registry.
+
+    Trials are stored separately from `documents` because their structure
+    is fundamentally different: operational metadata (status, phase,
+    locations, eligibility) drives a different set of queries than the
+    text-centric document table. Search over trials is structured-first;
+    semantic embedding can be layered later.
+    """
+
+    __tablename__ = "trials"
+    __table_args__ = (UniqueConstraint("source", "source_id", name="uq_trial_source_source_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    source: TrialSourceKind = Field(index=True)
+    source_id: str = Field(index=True, description="Registry identifier (e.g. NCT01234567).")
+
+    brief_title: str | None = Field(default=None)
+    official_title: str | None = Field(default=None)
+    summary: str | None = Field(default=None)
+
+    status: str | None = Field(default=None, index=True, description="Overall recruitment status.")
+    last_known_status: str | None = Field(default=None)
+    study_type: str | None = Field(default=None, index=True)
+    phases: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+    conditions: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    keywords: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+    interventions: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    arm_groups: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    sponsors: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    locations: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    countries: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+    primary_outcomes: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    secondary_outcomes: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+
+    enrollment_count: int | None = Field(default=None)
+    enrollment_type: str | None = Field(default=None)
+
+    eligibility_criteria: str | None = Field(default=None)
+    sex: str | None = Field(default=None)
+    minimum_age: str | None = Field(default=None)
+    maximum_age: str | None = Field(default=None)
+    healthy_volunteers: bool | None = Field(default=None)
+
+    start_date: str | None = Field(default=None)
+    primary_completion_date: str | None = Field(default=None)
+    completion_date: str | None = Field(default=None)
+    first_posted_date: str | None = Field(default=None)
+    last_update_date: str | None = Field(default=None)
+
+    has_results: bool = Field(default=False, index=True)
+
+    raw_metadata: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
+
+
 class IngestionRun(SQLModel, table=True):
     """Bookkeeping for a single ingestion run, so we can resume and audit."""
 
     __tablename__ = "ingestion_runs"
 
     id: int | None = Field(default=None, primary_key=True)
-    source: SourceKind = Field(index=True)
+    source: str = Field(
+        index=True,
+        description="String form of the source enum value — accommodates both document and trial sources.",
+    )
     query: str = Field(description="The query or filter expression used to fetch.")
     started_at: datetime = Field(default_factory=_utcnow)
     completed_at: datetime | None = Field(default=None)

@@ -26,6 +26,7 @@ vitiligo db init
 # 5. Ingest the full vitiligo corpus
 vitiligo ingest pubmed             # ~11,000 papers (abstracts + metadata)
 vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
+vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.gov
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -43,6 +44,8 @@ vitiligo serve   # open http://127.0.0.1:8765
 vitiligo db stats
 vitiligo embed stats
 vitiligo db sample -n 3
+vitiligo trials stats
+vitiligo trials search --status RECRUITING --phase PHASE2
 ```
 
 For smoke testing, every ingest command supports `--limit N`.
@@ -83,22 +86,25 @@ Currently shipped:
 |---|---|---|---|
 | `vitiligo.sources.pubmed` | NCBI PubMed via E-utilities | PMID | Auto-splits queries by year when total > 9,999 (NCBI hard cap) |
 | `vitiligo.sources.pmc` | PubMed Central Open Access | PMCID | JATS XML → structured sections (intro / methods / results / discussion) |
+| `vitiligo.sources.ctgov` | ClinicalTrials.gov v2 REST API | NCT id | JSON; status, phase, conditions, interventions, sponsors, locations, eligibility, outcomes |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| ClinicalTrials.gov | Trial designs, endpoints, outcomes | REST v2 API |
+| EU CTR (CTIS) | EU-side trial registrations and outcomes | Public CTIS search; EMA |
+| WHO ICTRP | Global aggregator across registries | Bulk XML feed |
 | Open Targets | Disease–gene–drug associations | GraphQL |
 | DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
 | GEO / ArrayExpress | Public omics datasets | E-utilities + REST |
 
 ### Storage (`vitiligo.storage`)
 
-- One canonical `documents` table, keyed by `(source, source_id)`.
-- Common normalized fields (title, abstract, year, doi, mesh_terms, etc.).
-- `raw_metadata` JSON field preserves source-specific data.
-- `ingestion_runs` table tracks every fetch: source, query, counts, status, errors.
+- `documents` table for papers and any other text-centric records, keyed by `(source, source_id)`.
+- `embeddings` table mapping `(document_id, model, scope)` → L2-normalized vector bytes.
+- `trials` table for clinical-trial registry records — separate from `documents` because their structure is operational (status / phase / locations / eligibility) rather than narrative. Keyed by `(source, source_id)` where source is `ctgov | euctr | ictrp`.
+- `raw_metadata` JSON field on both `documents` and `trials` preserves source-specific data, so we can re-derive structured fields without re-fetching.
+- `ingestion_runs` table tracks every fetch (papers and trials alike): source, query, counts, status, errors.
 
 Why SQLite for now: zero ops, single file, fast for read-heavy analytics
 at this scale (millions of rows is fine). Move to Postgres / DuckDB when
@@ -220,12 +226,12 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **ClinicalTrials.gov + EU CTR + WHO ICTRP ingestion** — vitiligo trials with structured endpoints, outcomes, eligibility (EU-aware from day one).
-2. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
-3. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
-4. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
-5. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
-6. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
-7. **Hypothesis-generation v2** — uses structured drug/target priors from Open Targets + trial outcomes, not just literature.
+1. **EU CTR (CTIS) + WHO ICTRP ingestion** — extend the trials registry beyond ClinicalTrials.gov; align trial schemas across sources.
+2. **Trials → Hypothesize** — feed structured trial evidence ("what's been tried, with what outcome") into the candidate-ranking prompt.
+3. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
+4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
+5. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
+6. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
+7. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
 8. **Public deployment** — host the Evidence Engine somewhere reachable (Fly.io / Render) with rate limiting + telemetry.
 9. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.

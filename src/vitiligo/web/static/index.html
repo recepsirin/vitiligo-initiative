@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="search">Search</button>
         <button class="tab" data-tab="ask">Ask</button>
         <button class="tab" data-tab="hypothesize">Hypothesize</button>
+        <button class="tab" data-tab="trials">Trials</button>
       </nav>
     </div>
   </header>
@@ -72,6 +73,49 @@
         <button type="submit">Hypothesize</button>
       </form>
       <div id="hyp-result" class="results"></div>
+    </section>
+
+    <!-- TRIALS -->
+    <section class="panel hidden" id="panel-trials">
+      <h2>Clinical trials</h2>
+      <p class="hint">Structured search over registered vitiligo trials. Source today: ClinicalTrials.gov (US NIH, includes global registrations). EU CTR / WHO ICTRP coming.</p>
+      <div id="trials-stats" class="trial-stats"></div>
+      <form id="form-trials" class="row trials-row">
+        <input type="text" id="trials-query" placeholder="title / summary / condition (optional)" />
+        <select id="trials-status">
+          <option value="">any status</option>
+          <option value="RECRUITING">Recruiting</option>
+          <option value="ACTIVE_NOT_RECRUITING">Active, not recruiting</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="NOT_YET_RECRUITING">Not yet recruiting</option>
+          <option value="TERMINATED">Terminated</option>
+          <option value="WITHDRAWN">Withdrawn</option>
+          <option value="UNKNOWN">Unknown</option>
+        </select>
+        <select id="trials-phase">
+          <option value="">any phase</option>
+          <option value="PHASE1">Phase 1</option>
+          <option value="PHASE2">Phase 2</option>
+          <option value="PHASE3">Phase 3</option>
+          <option value="PHASE4">Phase 4</option>
+          <option value="EARLY_PHASE1">Early Phase 1</option>
+          <option value="NA">N/A</option>
+        </select>
+        <input type="text" id="trials-country" placeholder="country (optional)" />
+        <select id="trials-has-results">
+          <option value="">any results</option>
+          <option value="true">has results</option>
+          <option value="false">no results yet</option>
+        </select>
+        <select id="trials-limit">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <button type="submit">Filter</button>
+      </form>
+      <div id="trials-results" class="results"></div>
     </section>
   </main>
 

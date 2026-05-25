@@ -5,6 +5,7 @@ const panels = {
   search: document.getElementById('panel-search'),
   ask: document.getElementById('panel-ask'),
   hypothesize: document.getElementById('panel-hypothesize'),
+  trials: document.getElementById('panel-trials'),
 };
 
 tabs.forEach(tab => {
@@ -13,6 +14,9 @@ tabs.forEach(tab => {
     tab.classList.add('active');
     Object.values(panels).forEach(p => p.classList.add('hidden'));
     panels[tab.dataset.tab].classList.remove('hidden');
+    if (tab.dataset.tab === 'trials' && !trialsStatsLoaded) {
+      loadTrialsStats();
+    }
   });
 });
 
@@ -187,6 +191,106 @@ function renderCandidate(c) {
       ${c.rationale ? `<div class="candidate-section"><div class="candidate-label">Rationale</div><div class="candidate-text">${escapeHtml(c.rationale)}</div></div>` : ''}
       ${c.risks_or_caveats ? `<div class="candidate-section"><div class="candidate-label">Risks &amp; caveats</div><div class="candidate-text">${escapeHtml(c.risks_or_caveats)}</div></div>` : ''}
       ${cites ? `<div class="candidate-citations">${cites}</div>` : ''}
+    </article>
+  `;
+}
+
+// ---- trials ---------------------------------------------------------
+
+let trialsStatsLoaded = false;
+
+async function loadTrialsStats() {
+  const out = document.getElementById('trials-stats');
+  out.innerHTML = '<span class="empty">Loading trial stats…</span>';
+  try {
+    const res = await fetch('/api/trials/stats');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const statusBadges = (data.by_status || []).slice(0, 6).map(r =>
+      `<span class="trial-stat"><strong>${r.count}</strong> ${escapeHtml(r.label)}</span>`
+    ).join('');
+    const resultsBadges = (data.by_results || []).map(r =>
+      `<span class="trial-stat"><strong>${r.count}</strong> ${escapeHtml(r.label)}</span>`
+    ).join('');
+    out.innerHTML = `
+      <span class="trial-stat trial-stat-total"><strong>${data.total}</strong> total trials</span>
+      ${statusBadges}
+      ${resultsBadges}
+    `;
+    trialsStatsLoaded = true;
+  } catch (err) {
+    out.innerHTML = `<span class="error">${escapeHtml(err.message)}</span>`;
+  }
+}
+
+document.getElementById('form-trials').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const out = document.getElementById('trials-results');
+  const payload = {
+    query: document.getElementById('trials-query').value.trim() || null,
+    status: document.getElementById('trials-status').value || null,
+    phase: document.getElementById('trials-phase').value || null,
+    country: document.getElementById('trials-country').value.trim() || null,
+    has_results: (() => {
+      const v = document.getElementById('trials-has-results').value || '';
+      if (v === 'true') return true;
+      if (v === 'false') return false;
+      return null;
+    })(),
+    limit: parseInt(document.getElementById('trials-limit').value, 10),
+    offset: 0,
+  };
+  showLoading(out, 'Filtering trials…');
+  try {
+    const data = await postJson('/api/trials/search', payload);
+    if (!data.results.length) {
+      out.innerHTML = '<div class="empty">No trials match the filters.</div>';
+      return;
+    }
+    const header = `<div class="trials-summary">Showing ${data.results.length} of ${data.total} matching trials</div>`;
+    out.innerHTML = header + data.results.map(renderTrial).join('');
+  } catch (err) {
+    showError(out, err.message);
+  }
+});
+
+function renderTrial(t) {
+  const ctgovUrl = t.source === 'ctgov'
+    ? `https://clinicaltrials.gov/study/${escapeHtml(t.source_id)}`
+    : null;
+  const phaseLabel = (t.phases && t.phases.length) ? t.phases.join(', ') : '—';
+  const interventions = (t.interventions || []).slice(0, 4).map(iv =>
+    `<span class="trial-iv"><span class="trial-iv-type">${escapeHtml(iv.type || '?')}</span> ${escapeHtml(iv.name || '?')}</span>`
+  ).join('');
+  const sponsors = (t.sponsors || []).slice(0, 2).map(s =>
+    `${escapeHtml(s.name || '?')}${s.role === 'lead' ? ' (lead)' : ''}`
+  ).join(' · ');
+  const countries = (t.countries || []).slice(0, 6).map(c =>
+    `<span class="tag">${escapeHtml(c)}</span>`
+  ).join('');
+  const conditions = (t.conditions || []).slice(0, 5).map(c =>
+    `<span class="tag">${escapeHtml(c)}</span>`
+  ).join('');
+  const status = (t.status || 'UNKNOWN').toLowerCase();
+  return `
+    <article class="trial">
+      <div class="trial-header">
+        <span class="trial-id">${ctgovUrl ? `<a href="${ctgovUrl}" target="_blank">${escapeHtml(t.source_id)}</a>` : escapeHtml(t.source_id)}</span>
+        <span class="trial-status status-${escapeHtml(status)}">${escapeHtml(t.status || 'UNKNOWN')}</span>
+        <span class="trial-phase">${escapeHtml(phaseLabel)}</span>
+        ${t.has_results ? '<span class="trial-results-badge">has results</span>' : ''}
+      </div>
+      <div class="trial-title">${escapeHtml(t.brief_title || t.official_title || '(no title)')}</div>
+      ${conditions ? `<div class="trial-section"><span class="trial-label">Conditions:</span> ${conditions}</div>` : ''}
+      ${interventions ? `<div class="trial-section"><span class="trial-label">Interventions:</span> ${interventions}</div>` : ''}
+      ${sponsors ? `<div class="trial-section"><span class="trial-label">Sponsors:</span> ${escapeHtml(sponsors)}</div>` : ''}
+      ${countries ? `<div class="trial-section"><span class="trial-label">Countries:</span> ${countries}</div>` : ''}
+      ${t.summary ? `<div class="trial-summary">${escapeHtml(truncate(t.summary, 600))}</div>` : ''}
+      <div class="trial-footer">
+        ${t.start_date ? `Started ${escapeHtml(t.start_date)}` : ''}
+        ${t.completion_date ? ` · Completion ${escapeHtml(t.completion_date)}` : ''}
+        ${t.enrollment_count ? ` · n=${t.enrollment_count}` : ''}
+      </div>
     </article>
   `;
 }
