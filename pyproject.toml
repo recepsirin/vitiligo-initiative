@@ -61,7 +61,7 @@ Repository = "https://github.com/recepsirin/vitiligo-initiative"
 where = ["src"]
 
 [tool.setuptools.package-data]
-vitiligo = ["py.typed"]
+vitiligo = ["py.typed", "web/static/*"]
 
 [tool.ruff]
 line-length = 100

@@ -823,8 +823,8 @@ def serve_cmd(
 ) -> None:
     """Run the Evidence Engine web UI."""
     settings = get_settings()
-    bind_host = host or settings.web_host
-    bind_port = port or settings.web_port
+    bind_host = host or settings.effective_web_host
+    bind_port = port or settings.effective_web_port
 
     import uvicorn
 

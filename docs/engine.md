@@ -145,17 +145,22 @@ Both default to `claude-sonnet-4-5` via the `anthropic` SDK. The model is config
 
 ### Web service (`vitiligo.web`)
 
-A small FastAPI app exposing four endpoints plus a static HTML UI:
+A small FastAPI app exposing JSON endpoints plus a static HTML UI:
 
 | Method | Path | What |
 |---|---|---|
 | GET | `/` | Evidence Engine UI (single HTML page) |
-| GET | `/api/health` | `{status, version}` |
+| GET | `/api/health` | Readiness + corpus counts + LLM configured |
+| GET | `/api/stats` | Corpus and trial breakdown for monitoring |
 | POST | `/api/search` | Semantic search results |
 | POST | `/api/ask` | RAG with citations (requires `ANTHROPIC_API_KEY`) |
 | POST | `/api/hypothesize` | Ranked candidates (requires `ANTHROPIC_API_KEY`) |
+| POST | `/api/trials/search` | Structured trial search |
+| GET | `/api/trials/stats` | Trial registry breakdown |
 
-The UI is intentionally a single static HTML file with vanilla CSS/JS — no build step, no framework, fast to iterate on, easy to deploy. CORS is open by default; this is a research tool, run it locally or behind your own auth.
+Production deployment: see [`docs/deploy.md`](deploy.md) (Dockerfile, `fly.toml` for Amsterdam, `render.yaml`, rate limiting, persistent volume for `vitiligo.db`).
+
+The UI is intentionally a single static HTML file with vanilla CSS/JS — no build step, no framework, fast to iterate on, easy to deploy. CORS is open by default; POST endpoints are rate-limited per IP in production.
 
 ### CLI (`vitiligo.cli`)
 
@@ -241,9 +246,9 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **Public deployment** — host the Evidence Engine (Fly.io / Render) with rate limiting + telemetry.
-2. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
-3. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
-4. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
-5. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
+1. **Public deploy** — `fly deploy` with corpus volume (see [`deploy.md`](deploy.md)).
+2. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
+3. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
+4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
+5. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
 6. **Authentication + tiered access** — public free read, controlled access for downloadable datasets.

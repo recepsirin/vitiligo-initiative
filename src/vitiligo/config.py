@@ -6,6 +6,7 @@ file). See `.env.example` for the full set of supported variables.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from pydantic import Field
@@ -39,9 +40,47 @@ class Settings(BaseSettings):
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-sonnet-4-5", alias="ANTHROPIC_MODEL")
 
-    # Web UI
+    # Web UI / deployment
     web_host: str = Field(default="127.0.0.1", alias="VITILIGO_WEB_HOST")
     web_port: int = Field(default=8765, alias="VITILIGO_WEB_PORT")
+    rate_limit_post_per_minute: int = Field(
+        default=30,
+        alias="VITILIGO_RATE_LIMIT_POST_PER_MINUTE",
+        description="Max POST /api/* requests per IP per minute (0 disables).",
+    )
+    prewarm_embeddings: bool = Field(
+        default=True,
+        alias="VITILIGO_PREWARM_EMBEDDINGS",
+        description="Load the embedding model at startup (recommended for production).",
+    )
+    fastembed_cache_path: Path | None = Field(
+        default=None,
+        alias="FASTEMBED_CACHE_PATH",
+        description="Optional cache directory for fastembed ONNX models.",
+    )
+
+    @property
+    def effective_web_host(self) -> str:
+        """Bind host; default to all interfaces when PORT is set (Fly/Render)."""
+        if os.environ.get("PORT") and self.web_host == "127.0.0.1":
+            return "0.0.0.0"
+        return self.web_host
+
+    @property
+    def effective_web_port(self) -> int:
+        """Listen port; Fly.io and Render inject PORT."""
+        if port := os.environ.get("PORT"):
+            return int(port)
+        return self.web_port
+
+    def apply_runtime_env(self) -> None:
+        """Apply deployment-related environment overrides."""
+        if self.fastembed_cache_path is not None:
+            cache = self.fastembed_cache_path
+            if not cache.is_absolute():
+                cache = PROJECT_ROOT / cache
+            cache.mkdir(parents=True, exist_ok=True)
+            os.environ.setdefault("FASTEMBED_CACHE_PATH", str(cache))
 
     @property
     def resolved_db_path(self) -> Path:
@@ -66,4 +105,5 @@ def get_settings() -> Settings:
     global _settings
     if _settings is None:
         _settings = Settings()
+        _settings.apply_runtime_env()
     return _settings

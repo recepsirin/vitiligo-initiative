@@ -1,16 +1,19 @@
 """FastAPI application exposing search, ask, and hypothesize endpoints.
 
-This is intentionally small: three JSON endpoints + one static HTML page.
-The HTML page (`static/index.html`) is the Evidence Engine UI; it talks
-to the JSON endpoints via fetch.
+This is intentionally small: JSON endpoints + one static HTML page.
+The HTML page (`static/index.html`) is the Evidence Engine UI.
 
-CORS is open by default — this is a research tool meant to run locally
-or behind a reverse proxy you control. Don't expose it directly to the
-public internet without auth + rate limiting.
+For public deployment (Fly.io / Render), configure:
+- ``VITILIGO_DB_PATH`` pointing at a persistent volume with the corpus DB
+- ``ANTHROPIC_API_KEY`` for Ask / Hypothesize
+- ``VITILIGO_RATE_LIMIT_POST_PER_MINUTE`` (default 30) for basic abuse protection
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
+from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -22,6 +25,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from vitiligo import __version__
+from vitiligo.config import get_settings
 from vitiligo.embed import semantic_search
 from vitiligo.reasoning import (
     LLMUnavailable,
@@ -32,8 +36,11 @@ from vitiligo.reasoning.hypothesize import report_to_dict
 from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
+from vitiligo.web.corpus_stats import get_corpus_stats
+from vitiligo.web.ratelimit import RateLimitMiddleware
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+logger = logging.getLogger(__name__)
 
 
 class SearchRequest(BaseModel):
@@ -88,14 +95,41 @@ def _trial_to_dict(trial: Any) -> dict[str, Any]:
     }
 
 
+def _prewarm_embeddings() -> None:
+    from vitiligo.embed.encoder import Encoder
+
+    logger.info("Prewarming embedding model...")
+    Encoder().encode(["vitiligo evidence engine warmup"])
+    logger.info("Embedding model ready.")
+
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    settings = get_settings()
+    if settings.prewarm_embeddings:
+        try:
+            await asyncio.to_thread(_prewarm_embeddings)
+        except Exception:
+            logger.exception("Embedding prewarm failed; first search may be slow.")
+    yield
+
+
 def create_app() -> FastAPI:
     init_db()
+    settings = get_settings()
 
     app = FastAPI(
         title="Vitiligo Initiative — Evidence Engine",
         version=__version__,
         description="Open, AI-native research engine for stopping vitiligo spread and driving repigmentation.",
+        lifespan=_lifespan,
     )
+
+    if settings.rate_limit_post_per_minute > 0:
+        app.add_middleware(
+            RateLimitMiddleware,
+            post_limit_per_minute=settings.rate_limit_post_per_minute,
+        )
 
     app.add_middleware(
         CORSMiddleware,
@@ -107,7 +141,30 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
-        return {"status": "ok", "version": __version__}
+        stats = get_corpus_stats()
+        ready = stats["database"]["exists"] and stats["documents"] > 0
+        return {
+            "status": "ok" if ready else "degraded",
+            "version": __version__,
+            "ready": ready,
+            "llm_configured": settings.anthropic_api_key is not None,
+            "corpus": stats,
+        }
+
+    @app.get("/api/stats")
+    def stats() -> dict[str, Any]:
+        corpus = get_corpus_stats()
+        trial_summary = summarize_trials()
+        return {
+            "corpus": corpus,
+            "trials": {
+                "total": trial_summary["total"][0].count if trial_summary["total"] else 0,
+                "by_source": [
+                    {"label": r.label, "count": r.count}
+                    for r in trial_summary.get("by_source", [])
+                ],
+            },
+        }
 
     @app.post("/api/search")
     def search(req: SearchRequest) -> dict[str, Any]:

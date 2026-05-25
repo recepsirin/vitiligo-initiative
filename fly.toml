@@ -1,0 +1,41 @@
+# Fly.io app configuration — Evidence Engine (EU-first: Amsterdam region).
+# See docs/deploy.md for first-time setup and database upload.
+
+app = "vitiligo-evidence-engine"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  VITILIGO_WEB_HOST = "0.0.0.0"
+  VITILIGO_DB_PATH = "/data/vitiligo.db"
+  FASTEMBED_CACHE_PATH = "/data/cache"
+  VITILIGO_PREWARM_EMBEDDINGS = "true"
+  VITILIGO_RATE_LIMIT_POST_PER_MINUTE = "30"
+  LOG_LEVEL = "INFO"
+
+[http_service]
+  internal_port = 8765
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "120s"
+    method = "GET"
+    path = "/api/health"
+
+[[mounts]]
+  source = "vitiligo_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[[vm]]
+  memory = "2gb"
+  cpu_kind = "shared"
+  cpus = 2
