@@ -13,7 +13,12 @@ from sqlmodel import func, select
 from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
-from vitiligo.ingest import run_ctgov_ingestion, run_pmc_ingestion, run_pubmed_ingestion
+from vitiligo.ingest import (
+    run_ctgov_ingestion,
+    run_euctr_ingestion,
+    run_pmc_ingestion,
+    run_pubmed_ingestion,
+)
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.reasoning import (
     LLMUnavailable,
@@ -21,6 +26,7 @@ from vitiligo.reasoning import (
     generate_hypotheses,
 )
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
+from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.storage import (
@@ -29,6 +35,7 @@ from vitiligo.storage import (
     IngestionRun,
     SourceKind,
     Trial,
+    TrialSourceKind,
     init_db,
     session_scope,
 )
@@ -169,6 +176,45 @@ def ingest_ctgov(
     console.print()
 
     stats = run_ctgov_ingestion(query=query, page_size=page_size, limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("euctr")
+def ingest_euctr(
+    query: str = typer.Option(
+        EUCTR_DEFAULT_QUERY,
+        "--query",
+        "-q",
+        help="EU CTR / CTIS medical-condition query.",
+    ),
+    page_size: int = typer.Option(50, "--page-size", "-p", help="Records per page."),
+    limit: int | None = typer.Option(
+        None, "--limit", "-l", help="Cap total trials (smoke testing)."
+    ),
+    skip_details: bool = typer.Option(
+        False,
+        "--skip-details/--with-details",
+        help="Skip the per-trial /retrieve detail call (faster but loses eligibility + objective).",
+    ),
+) -> None:
+    """Fetch vitiligo trials from the EU CTR (CTIS) public API and persist them."""
+    settings = get_settings()
+    console.rule("[bold]EU CTR (CTIS) ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Query:    [yellow]{query}[/yellow]")
+    if limit:
+        console.print(f"Limit:    [magenta]{limit}[/magenta] (smoke test)")
+    console.print()
+
+    stats = run_euctr_ingestion(
+        query=query,
+        page_size=page_size,
+        limit=limit,
+        with_details=not skip_details,
+    )
 
     console.print()
     console.rule("[bold green]Done[/bold green]")
@@ -384,11 +430,12 @@ def ask_cmd(
 def hypothesize_cmd(
     intent: str = typer.Argument(..., help="Research intent (e.g. 'stop spread')."),
     top_k: int = typer.Option(25, "--top-k", "-k", help="Papers to retrieve."),
+    top_trials: int = typer.Option(12, "--top-trials", help="Trials to retrieve."),
 ) -> None:
     """Generate ranked therapeutic candidates from the corpus (requires Anthropic API key)."""
     console.rule(f"[bold]Hypothesize[/bold] — [yellow]{intent}[/yellow]")
     try:
-        report = generate_hypotheses(intent=intent, top_k=top_k)
+        report = generate_hypotheses(intent=intent, top_k=top_k, top_trials=top_trials)
     except LLMUnavailable as exc:
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
@@ -396,6 +443,12 @@ def hypothesize_cmd(
     if report.notes:
         console.print(f"[dim]{report.notes}[/dim]")
         console.print()
+
+    console.print(
+        f"[dim]Evidence base: {len(report.citations)} papers, "
+        f"{len(report.trial_citations)} trials[/dim]"
+    )
+    console.print()
 
     for idx, cand in enumerate(report.candidates, start=1):
         console.rule(
@@ -410,7 +463,9 @@ def hypothesize_cmd(
         if cand.risks_or_caveats:
             console.print(f"[bold]Risks/caveats:[/bold] {cand.risks_or_caveats}")
         if cand.citation_indices:
-            console.print(f"[bold]Citations:[/bold] {cand.citation_indices}")
+            console.print(f"[bold]Papers:[/bold] {cand.citation_indices}")
+        if cand.trial_citation_indices:
+            console.print(f"[bold]Trials:[/bold] {[f'T{i}' for i in cand.trial_citation_indices]}")
         console.print()
 
 
@@ -428,9 +483,17 @@ def trials_stats() -> None:
 
     if total == 0:
         console.print(
-            "[yellow]No trials yet. Run `vitiligo ingest ctgov` to populate.[/yellow]"
+            "[yellow]No trials yet. Run `vitiligo ingest ctgov` or `vitiligo ingest euctr`.[/yellow]"
         )
         return
+
+    if summary.get("by_source"):
+        src_table = Table(title="By source", show_header=True, header_style="bold")
+        src_table.add_column("Source")
+        src_table.add_column("Count", justify="right")
+        for row in summary["by_source"]:
+            src_table.add_row(row.label, str(row.count))
+        console.print(src_table)
 
     if summary["by_status"]:
         status_table = Table(title="By status", show_header=True, header_style="bold")
@@ -493,6 +556,11 @@ def trials_search(
     status: str | None = typer.Option(None, "--status", help="Filter by overall status."),
     phase: str | None = typer.Option(None, "--phase", help="Filter by trial phase."),
     country: str | None = typer.Option(None, "--country", help="Filter by location country."),
+    source: str | None = typer.Option(
+        None,
+        "--source",
+        help="Restrict to a single registry: ctgov | euctr | ictrp.",
+    ),
     has_results: bool | None = typer.Option(
         None, "--has-results/--no-has-results", help="Only trials with reported results."
     ),
@@ -500,11 +568,21 @@ def trials_search(
 ) -> None:
     """Structured search over the trials table."""
     init_db()
+    if source:
+        try:
+            sources = (TrialSourceKind(source.lower()),)
+        except ValueError as exc:
+            console.print(f"[red]Unknown source '{source}'. Allowed: ctgov, euctr, ictrp.[/red]")
+            raise typer.Exit(code=2) from exc
+    else:
+        sources = tuple(TrialSourceKind)  # type: ignore[assignment]
+
     filt = TrialFilter(
         query=query,
         status=status,
         phase=phase,
         country=country,
+        sources=sources,
         has_results=has_results,
         limit=limit,
     )

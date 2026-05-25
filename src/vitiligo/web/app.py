@@ -29,7 +29,7 @@ from vitiligo.reasoning import (
     generate_hypotheses,
 )
 from vitiligo.reasoning.hypothesize import report_to_dict
-from vitiligo.storage import init_db
+from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
 
@@ -56,6 +56,7 @@ class TrialsSearchRequest(BaseModel):
     status: str | None = Field(None, description="Overall status (e.g. RECRUITING, COMPLETED).")
     phase: str | None = Field(None, description="Phase (e.g. PHASE2).")
     country: str | None = Field(None, description="Location country.")
+    source: str | None = Field(None, description="Restrict to a registry: ctgov | euctr | ictrp.")
     has_results: bool | None = Field(None, description="Restrict to trials with reported results.")
     limit: int = Field(25, ge=1, le=100)
     offset: int = Field(0, ge=0)
@@ -153,11 +154,23 @@ def create_app() -> FastAPI:
 
     @app.post("/api/trials/search")
     def trials_search(req: TrialsSearchRequest) -> dict[str, Any]:
+        if req.source:
+            try:
+                sources = (TrialSourceKind(req.source.lower()),)
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown source '{req.source}'. Allowed: ctgov, euctr, ictrp.",
+                ) from exc
+        else:
+            sources = tuple(TrialSourceKind)  # type: ignore[assignment]
+
         filt = TrialFilter(
             query=req.query,
             status=req.status,
             phase=req.phase,
             country=req.country,
+            sources=sources,
             has_results=req.has_results,
             limit=req.limit,
             offset=req.offset,
@@ -176,6 +189,9 @@ def create_app() -> FastAPI:
         summary = summarize_trials()
         return {
             "total": summary["total"][0].count if summary["total"] else 0,
+            "by_source": [
+                {"label": r.label, "count": r.count} for r in summary.get("by_source", [])
+            ],
             "by_status": [{"label": r.label, "count": r.count} for r in summary["by_status"]],
             "by_results": [{"label": r.label, "count": r.count} for r in summary["by_results"]],
         }

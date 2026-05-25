@@ -3,6 +3,7 @@
 from vitiligo.ingest.pipeline import (
     IngestionStats,
     run_ctgov_ingestion,
+    run_euctr_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
 )
@@ -10,6 +11,7 @@ from vitiligo.ingest.pipeline import (
 __all__ = [
     "IngestionStats",
     "run_ctgov_ingestion",
+    "run_euctr_ingestion",
     "run_pmc_ingestion",
     "run_pubmed_ingestion",
 ]

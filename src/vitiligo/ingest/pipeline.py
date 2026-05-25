@@ -15,6 +15,8 @@ from sqlmodel import select
 from vitiligo.logging import get_logger
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.ctgov import CTGovClient
+from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
+from vitiligo.sources.euctr import EUCTRClient
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pmc import PMCClient
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
@@ -93,9 +95,65 @@ def run_ctgov_ingestion(
     commit_every: int = 50,
 ) -> IngestionStats:
     """Search ClinicalTrials.gov and persist every matching trial."""
+
+    def factory() -> tuple[Iterator[Trial], int | None, Callable[[], None]]:
+        client = CTGovClient()
+        handle = client.search(query)
+        return (
+            client.iter_trials(query=query, page_size=page_size, limit=limit),
+            handle.total,
+            client.close,
+        )
+
+    return _run_trial_ingestion(
+        source=TrialSourceKind.CTGOV.value,
+        query=query,
+        factory=factory,
+        commit_every=commit_every,
+    )
+
+
+def run_euctr_ingestion(
+    query: str = EUCTR_DEFAULT_QUERY,
+    page_size: int = 50,
+    limit: int | None = None,
+    commit_every: int = 25,
+    with_details: bool = True,
+) -> IngestionStats:
+    """Search the EU CTR / CTIS public API and persist every matching trial."""
+
+    def factory() -> tuple[Iterator[Trial], int | None, Callable[[], None]]:
+        client = EUCTRClient()
+        handle = client.search(query)
+        return (
+            client.iter_trials(
+                query=query,
+                page_size=page_size,
+                limit=limit,
+                with_details=with_details,
+            ),
+            handle.total,
+            client.close,
+        )
+
+    return _run_trial_ingestion(
+        source=TrialSourceKind.EUCTR.value,
+        query=query,
+        factory=factory,
+        commit_every=commit_every,
+    )
+
+
+def _run_trial_ingestion(
+    source: str,
+    query: str,
+    factory: Callable[[], tuple[Iterator[Trial], int | None, Callable[[], None]]],
+    commit_every: int,
+) -> IngestionStats:
+    """Shared driver for trial ingestion across registries."""
     init_db()
 
-    run = IngestionRun(source=TrialSourceKind.CTGOV.value, query=query)
+    run = IngestionRun(source=source, query=query)
     with session_scope() as bookkeeping:
         bookkeeping.add(run)
         bookkeeping.flush()
@@ -107,11 +165,8 @@ def run_ctgov_ingestion(
     total_found: int | None = None
 
     try:
-        client = CTGovClient()
+        trial_iter, total_found, close = factory()
         try:
-            handle = client.search(query)
-            total_found = handle.total
-
             if total_found is not None:
                 with session_scope() as run_session:
                     tracked = run_session.get(IngestionRun, run_id)
@@ -119,7 +174,7 @@ def run_ctgov_ingestion(
                         tracked.total_found = total_found
 
             with session_scope() as session:
-                for trial in client.iter_trials(query=query, page_size=page_size, limit=limit):
+                for trial in trial_iter:
                     fetched += 1
                     ins, upd = _upsert_trial(session, trial)
                     inserted += ins
@@ -129,7 +184,7 @@ def run_ctgov_ingestion(
                         session.commit()
                         logger.info(
                             "Progress [%s]: fetched=%d inserted=%d updated=%d",
-                            TrialSourceKind.CTGOV.value,
+                            source,
                             fetched,
                             inserted,
                             updated,
@@ -137,16 +192,16 @@ def run_ctgov_ingestion(
 
                 session.commit()
         finally:
-            client.close()
+            close()
 
         _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
     except Exception as exc:
-        logger.exception("Ingestion failed for source=%s", TrialSourceKind.CTGOV.value)
+        logger.exception("Ingestion failed for source=%s", source)
         _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
         raise
 
     return IngestionStats(
-        source=TrialSourceKind.CTGOV.value,
+        source=source,
         total_found=total_found,
         fetched=fetched,
         inserted=inserted,

@@ -159,14 +159,26 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
   const out = document.getElementById('hyp-result');
   if (!intent) return;
 
-  showLoading(out, 'Generating ranked candidates… this may take 20–60s');
+  showLoading(out, 'Generating ranked candidates over papers + trials… this may take 30–60s');
   try {
     const data = await postJson('/api/hypothesize', { intent, top_k: topK });
     const candidatesHtml = (data.candidates || []).map(renderCandidate).join('');
     const citationsHtml = (data.citations || []).map(renderCitation).join('');
+    const trialCitationsHtml = (data.trial_citations || []).map(renderTrialCitation).join('');
+    const evidenceSummary = `
+      <div class="evidence-summary">
+        Evidence base: <strong>${data.citations ? data.citations.length : 0}</strong> papers,
+        <strong>${data.trial_citations ? data.trial_citations.length : 0}</strong> trials
+      </div>`;
     out.innerHTML = `
+      ${evidenceSummary}
       ${data.notes ? `<div class="hyp-notes">${escapeHtml(data.notes)}</div>` : ''}
       ${candidatesHtml || '<div class="empty">No candidates returned.</div>'}
+      ${trialCitationsHtml ? `
+        <div class="citations">
+          <h3>Retrieved trials (${data.trial_citations.length})</h3>
+          ${trialCitationsHtml}
+        </div>` : ''}
       <div class="citations">
         <h3>Retrieved papers (${data.citations ? data.citations.length : 0})</h3>
         ${citationsHtml}
@@ -177,9 +189,33 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
   }
 });
 
+function renderTrialCitation(t) {
+  const externalUrl = trialExternalUrl({ source: t.source, source_id: t.source_id });
+  const phase = (t.phases && t.phases.length) ? t.phases.join(', ') : '—';
+  const sponsors = (t.sponsors || []).slice(0, 2).join(' · ');
+  const countries = (t.countries || []).slice(0, 6).join(', ');
+  const idLink = externalUrl
+    ? `<a href="${externalUrl}" target="_blank">${escapeHtml(t.source_id)}</a>`
+    : escapeHtml(t.source_id);
+  return `
+    <div class="trial-citation" id="trial-cite-${t.index}">
+      <span class="citation-index">[T${t.index}]</span>
+      <span class="trial-source-tag source-${escapeHtml(t.source)}">${escapeHtml(sourceLabel(t.source))}</span>
+      <span class="trial-id-inline">${idLink}</span>
+      <span class="trial-status status-${escapeHtml((t.status || 'UNKNOWN').toLowerCase())}">${escapeHtml(t.status || 'UNKNOWN')}</span>
+      <span class="trial-phase">${escapeHtml(phase)}</span>
+      ${t.has_results ? '<span class="trial-results-badge">has results</span>' : ''}
+      <div class="trial-citation-title">${escapeHtml(t.title || '(no title)')}</div>
+      ${sponsors ? `<div class="citation-meta">Sponsors: ${escapeHtml(sponsors)}</div>` : ''}
+      ${countries ? `<div class="citation-meta">Countries: ${escapeHtml(countries)}</div>` : ''}
+    </div>
+  `;
+}
+
 function renderCandidate(c) {
   const evidenceClass = ['strong', 'moderate', 'weak', 'speculative'].includes(c.evidence_strength) ? c.evidence_strength : 'speculative';
   const cites = (c.citation_indices || []).map(i => `<a class="cite" href="#cite-${i}">[${i}]</a>`).join(' ');
+  const trialCites = (c.trial_citation_indices || []).map(i => `<a class="cite cite-trial" href="#trial-cite-${i}">[T${i}]</a>`).join(' ');
   return `
     <article class="candidate">
       <div class="candidate-header">
@@ -190,7 +226,7 @@ function renderCandidate(c) {
       ${c.mechanism ? `<div class="candidate-section"><div class="candidate-label">Mechanism</div><div class="candidate-text">${escapeHtml(c.mechanism)}</div></div>` : ''}
       ${c.rationale ? `<div class="candidate-section"><div class="candidate-label">Rationale</div><div class="candidate-text">${escapeHtml(c.rationale)}</div></div>` : ''}
       ${c.risks_or_caveats ? `<div class="candidate-section"><div class="candidate-label">Risks &amp; caveats</div><div class="candidate-text">${escapeHtml(c.risks_or_caveats)}</div></div>` : ''}
-      ${cites ? `<div class="candidate-citations">${cites}</div>` : ''}
+      ${(cites || trialCites) ? `<div class="candidate-citations">${cites}${cites && trialCites ? ' · ' : ''}${trialCites}</div>` : ''}
     </article>
   `;
 }
@@ -206,7 +242,10 @@ async function loadTrialsStats() {
     const res = await fetch('/api/trials/stats');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    const statusBadges = (data.by_status || []).slice(0, 6).map(r =>
+    const sourceBadges = (data.by_source || []).map(r =>
+      `<span class="trial-stat trial-stat-source"><strong>${r.count}</strong> ${escapeHtml(sourceLabel(r.label))}</span>`
+    ).join('');
+    const statusBadges = (data.by_status || []).slice(0, 5).map(r =>
       `<span class="trial-stat"><strong>${r.count}</strong> ${escapeHtml(r.label)}</span>`
     ).join('');
     const resultsBadges = (data.by_results || []).map(r =>
@@ -214,6 +253,7 @@ async function loadTrialsStats() {
     ).join('');
     out.innerHTML = `
       <span class="trial-stat trial-stat-total"><strong>${data.total}</strong> total trials</span>
+      ${sourceBadges}
       ${statusBadges}
       ${resultsBadges}
     `;
@@ -223,11 +263,25 @@ async function loadTrialsStats() {
   }
 }
 
+function sourceLabel(s) {
+  if (s === 'ctgov') return 'ClinicalTrials.gov';
+  if (s === 'euctr') return 'EU CTR (CTIS)';
+  if (s === 'ictrp') return 'WHO ICTRP';
+  return s;
+}
+
+function trialExternalUrl(t) {
+  if (t.source === 'ctgov') return `https://clinicaltrials.gov/study/${encodeURIComponent(t.source_id)}`;
+  if (t.source === 'euctr') return `https://euclinicaltrials.eu/ctis-public/view/${encodeURIComponent(t.source_id)}`;
+  return null;
+}
+
 document.getElementById('form-trials').addEventListener('submit', async (e) => {
   e.preventDefault();
   const out = document.getElementById('trials-results');
   const payload = {
     query: document.getElementById('trials-query').value.trim() || null,
+    source: document.getElementById('trials-source').value || null,
     status: document.getElementById('trials-status').value || null,
     phase: document.getElementById('trials-phase').value || null,
     country: document.getElementById('trials-country').value.trim() || null,
@@ -255,9 +309,8 @@ document.getElementById('form-trials').addEventListener('submit', async (e) => {
 });
 
 function renderTrial(t) {
-  const ctgovUrl = t.source === 'ctgov'
-    ? `https://clinicaltrials.gov/study/${escapeHtml(t.source_id)}`
-    : null;
+  const externalUrl = trialExternalUrl(t);
+  const sourceTag = `<span class="trial-source-tag source-${escapeHtml(t.source)}">${escapeHtml(sourceLabel(t.source))}</span>`;
   const phaseLabel = (t.phases && t.phases.length) ? t.phases.join(', ') : '—';
   const interventions = (t.interventions || []).slice(0, 4).map(iv =>
     `<span class="trial-iv"><span class="trial-iv-type">${escapeHtml(iv.type || '?')}</span> ${escapeHtml(iv.name || '?')}</span>`
@@ -265,7 +318,7 @@ function renderTrial(t) {
   const sponsors = (t.sponsors || []).slice(0, 2).map(s =>
     `${escapeHtml(s.name || '?')}${s.role === 'lead' ? ' (lead)' : ''}`
   ).join(' · ');
-  const countries = (t.countries || []).slice(0, 6).map(c =>
+  const countries = (t.countries || []).slice(0, 8).map(c =>
     `<span class="tag">${escapeHtml(c)}</span>`
   ).join('');
   const conditions = (t.conditions || []).slice(0, 5).map(c =>
@@ -275,7 +328,8 @@ function renderTrial(t) {
   return `
     <article class="trial">
       <div class="trial-header">
-        <span class="trial-id">${ctgovUrl ? `<a href="${ctgovUrl}" target="_blank">${escapeHtml(t.source_id)}</a>` : escapeHtml(t.source_id)}</span>
+        ${sourceTag}
+        <span class="trial-id">${externalUrl ? `<a href="${externalUrl}" target="_blank">${escapeHtml(t.source_id)}</a>` : escapeHtml(t.source_id)}</span>
         <span class="trial-status status-${escapeHtml(status)}">${escapeHtml(t.status || 'UNKNOWN')}</span>
         <span class="trial-phase">${escapeHtml(phaseLabel)}</span>
         ${t.has_results ? '<span class="trial-results-badge">has results</span>' : ''}

@@ -18,16 +18,18 @@ from sqlmodel import Session, select
 
 from vitiligo.storage import Trial, TrialSourceKind, get_engine
 
+_ALL_SOURCES: tuple[TrialSourceKind, ...] = tuple(TrialSourceKind)
+
 
 @dataclass(frozen=True)
 class TrialFilter:
     """Parameters for filtering the trials table."""
 
     query: str | None = None
-    status: str | None = None  # e.g. RECRUITING, COMPLETED
+    status: str | None = None  # e.g. RECRUITING, COMPLETED, AUTHORISED
     phase: str | None = None  # e.g. PHASE2
     country: str | None = None
-    sources: tuple[TrialSourceKind, ...] = (TrialSourceKind.CTGOV,)
+    sources: tuple[TrialSourceKind, ...] = _ALL_SOURCES
     has_results: bool | None = None
     limit: int = 50
     offset: int = 0
@@ -89,11 +91,91 @@ def count_trials(filt: TrialFilter) -> int:
         return int(session.exec(stmt).one() or 0)
 
 
+# Phases that lift a trial above pilot/early-stage, used as a quality
+# filter when retrieving trials as evidence for hypothesis generation.
+_HIGH_SIGNAL_PHASES: tuple[str, ...] = (
+    "PHASE2",
+    "PHASE3",
+    "PHASE4",
+    "PHASE2/PHASE3",
+)
+
+
+def retrieve_relevant_trials(
+    intent: str,
+    limit: int = 15,
+    require_high_signal: bool = True,
+) -> list[Trial]:
+    """Return trials most relevant to a research intent.
+
+    Until trials are embedded, "relevance" is the union of:
+    - free-text term match in title / summary / conditions, AND
+    - quality filter: high-signal phase (>=Phase 2) OR reported results.
+
+    Trials are ordered by last update date so the most current evidence
+    surfaces first.
+    """
+    intent = (intent or "").strip()
+    if not intent:
+        return []
+
+    # Pull a generous candidate set; we re-score and trim in Python so we
+    # can score by token overlap rather than relying solely on SQL LIKE.
+    candidates = list_trials(
+        TrialFilter(
+            query=intent,
+            sources=_ALL_SOURCES,
+            limit=limit * 4 if limit else 60,
+        )
+    )
+
+    if require_high_signal:
+        filtered = [
+            t
+            for t in candidates
+            if t.has_results
+            or any(p in _HIGH_SIGNAL_PHASES for p in (t.phases or []))
+        ]
+        # If the high-signal filter wipes out all candidates, fall back to
+        # the unfiltered list so the user always gets *something* back.
+        candidates = filtered or candidates
+
+    intent_tokens = {tok for tok in intent.lower().split() if len(tok) > 2}
+    if not intent_tokens:
+        return candidates[:limit]
+
+    def score(trial: Trial) -> tuple[int, int, int]:
+        haystack = " ".join(
+            filter(
+                None,
+                [
+                    (trial.brief_title or ""),
+                    (trial.official_title or ""),
+                    (trial.summary or ""),
+                    " ".join(trial.conditions or []),
+                    " ".join(trial.keywords or []),
+                    " ".join(
+                        (iv.get("name") or "") for iv in (trial.interventions or [])
+                    ),
+                ],
+            )
+        ).lower()
+        token_overlap = sum(1 for tok in intent_tokens if tok in haystack)
+        phase_bonus = sum(
+            1 for p in (trial.phases or []) if p in _HIGH_SIGNAL_PHASES
+        )
+        results_bonus = 1 if trial.has_results else 0
+        return (token_overlap, phase_bonus + results_bonus, trial.id or 0)
+
+    candidates.sort(key=score, reverse=True)
+    return candidates[:limit]
+
+
 def summarize_trials(
-    sources: Iterable[TrialSourceKind] = (TrialSourceKind.CTGOV,),
+    sources: Iterable[TrialSourceKind] | None = None,
 ) -> dict[str, list[TrialStatsRow]]:
-    """Return high-level stats: total, by status, by phase, by country."""
-    src_list = list(sources)
+    """Return high-level stats: total, by source, by status, by reported-results."""
+    src_list = list(sources) if sources is not None else list(TrialSourceKind)
 
     with Session(get_engine(), expire_on_commit=False) as session:
         total = int(
@@ -104,6 +186,13 @@ def summarize_trials(
             ).one()
             or 0
         )
+
+        source_rows = session.exec(
+            select(Trial.source, func.count())
+            .where(Trial.source.in_(src_list))  # type: ignore[attr-defined]
+            .group_by(Trial.source)
+            .order_by(desc(func.count()))
+        ).all()
 
         status_rows = session.exec(
             select(Trial.status, func.count())
@@ -121,6 +210,13 @@ def summarize_trials(
 
     return {
         "total": [TrialStatsRow(label="all", count=total)],
+        "by_source": [
+            TrialStatsRow(
+                label=str(src.value if hasattr(src, "value") else src),
+                count=int(count),
+            )
+            for src, count in source_rows
+        ],
         "by_status": [
             TrialStatsRow(label=str(status or "UNKNOWN"), count=int(count))
             for status, count in status_rows

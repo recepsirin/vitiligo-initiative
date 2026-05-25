@@ -27,6 +27,7 @@ vitiligo db init
 vitiligo ingest pubmed             # ~11,000 papers (abstracts + metadata)
 vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.gov
+vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -87,12 +88,12 @@ Currently shipped:
 | `vitiligo.sources.pubmed` | NCBI PubMed via E-utilities | PMID | Auto-splits queries by year when total > 9,999 (NCBI hard cap) |
 | `vitiligo.sources.pmc` | PubMed Central Open Access | PMCID | JATS XML → structured sections (intro / methods / results / discussion) |
 | `vitiligo.sources.ctgov` | ClinicalTrials.gov v2 REST API | NCT id | JSON; status, phase, conditions, interventions, sponsors, locations, eligibility, outcomes |
+| `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| EU CTR (CTIS) | EU-side trial registrations and outcomes | Public CTIS search; EMA |
 | WHO ICTRP | Global aggregator across registries | Bulk XML feed |
 | Open Targets | Disease–gene–drug associations | GraphQL |
 | DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
@@ -226,9 +227,8 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **EU CTR (CTIS) + WHO ICTRP ingestion** — extend the trials registry beyond ClinicalTrials.gov; align trial schemas across sources.
-2. **Trials → Hypothesize** — feed structured trial evidence ("what's been tried, with what outcome") into the candidate-ranking prompt.
-3. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
+1. **WHO ICTRP ingestion** — global aggregator under the same `TrialSourceKind` abstraction.
+2. **Open Targets + DrugBank ingestion** — drugs, targets, pathways for repurposing analysis.
 4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
 5. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.
 6. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.

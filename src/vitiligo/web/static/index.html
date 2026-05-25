@@ -78,19 +78,32 @@
     <!-- TRIALS -->
     <section class="panel hidden" id="panel-trials">
       <h2>Clinical trials</h2>
-      <p class="hint">Structured search over registered vitiligo trials. Source today: ClinicalTrials.gov (US NIH, includes global registrations). EU CTR / WHO ICTRP coming.</p>
+      <p class="hint">Structured search over registered vitiligo trials. Sources: ClinicalTrials.gov (US NIH) and EU CTR (CTIS, EMA). WHO ICTRP next.</p>
       <div id="trials-stats" class="trial-stats"></div>
       <form id="form-trials" class="row trials-row">
         <input type="text" id="trials-query" placeholder="title / summary / condition (optional)" />
+        <select id="trials-source">
+          <option value="">any source</option>
+          <option value="ctgov">ClinicalTrials.gov</option>
+          <option value="euctr">EU CTR (CTIS)</option>
+        </select>
         <select id="trials-status">
           <option value="">any status</option>
-          <option value="RECRUITING">Recruiting</option>
-          <option value="ACTIVE_NOT_RECRUITING">Active, not recruiting</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="NOT_YET_RECRUITING">Not yet recruiting</option>
-          <option value="TERMINATED">Terminated</option>
-          <option value="WITHDRAWN">Withdrawn</option>
-          <option value="UNKNOWN">Unknown</option>
+          <optgroup label="ClinicalTrials.gov">
+            <option value="RECRUITING">Recruiting</option>
+            <option value="ACTIVE_NOT_RECRUITING">Active, not recruiting</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="NOT_YET_RECRUITING">Not yet recruiting</option>
+            <option value="TERMINATED">Terminated</option>
+            <option value="WITHDRAWN">Withdrawn</option>
+            <option value="UNKNOWN">Unknown</option>
+          </optgroup>
+          <optgroup label="EU CTR (CTIS)">
+            <option value="AUTHORISED">Authorised</option>
+            <option value="ONGOING">Ongoing</option>
+            <option value="ENDED">Ended</option>
+            <option value="UNDER_EVALUATION">Under evaluation</option>
+          </optgroup>
         </select>
         <select id="trials-phase">
           <option value="">any phase</option>
