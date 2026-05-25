@@ -1,4 +1,4 @@
-"""Hypothesis generation: literature- and trial-grounded candidate proposals.
+"""Hypothesis generation: literature-, trial-, and prior-grounded candidate proposals.
 
 Given a research intent (e.g. "stop spread in active non-segmental
 vitiligo" or "drive repigmentation on acral skin"), this module:
@@ -7,16 +7,10 @@ vitiligo" or "drive repigmentation on acral skin"), this module:
 2. Retrieves the most relevant clinical trials from the trials store
    (ClinicalTrials.gov + EU CTR), preferring Phase 2/3 and trials with
    reported results.
-3. Asks the LLM to propose ranked therapeutic candidates that are
-   explicitly supported by either the papers, the trials, or both.
-4. Asks the LLM to score each candidate's evidence strength using the
-   trial layer to upgrade evidence (RCT → strong) and to surface
-   already-tried-but-failed candidates as caveats rather than novel ideas.
-
-Output is structured JSON so downstream tools (UI, reports, knowledge
-graph) can consume it directly. Once Open Targets / DrugBank are
-ingested, drug/target priors will be added to the prompt as a third
-evidence stream.
+3. Retrieves drug and target priors from Open Targets (and DrugBank later)
+   for mechanistic and clinical-stage context.
+4. Asks the LLM to propose ranked therapeutic candidates supported by
+   any of the three evidence streams.
 """
 
 from __future__ import annotations
@@ -27,9 +21,10 @@ from dataclasses import asdict, dataclass
 from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
 from vitiligo.logging import get_logger
+from vitiligo.priors import retrieve_priors_for_hypothesize
 from vitiligo.reasoning.llm import LLMClient
 from vitiligo.reasoning.rag import Citation, _hit_to_citation
-from vitiligo.storage import Trial
+from vitiligo.storage import Prior, Trial
 from vitiligo.trials import retrieve_relevant_trials
 
 logger = get_logger(__name__)
@@ -51,6 +46,21 @@ class TrialCitation:
 
 
 @dataclass
+class PriorCitation:
+    """A drug or target prior from a curated knowledge base."""
+
+    index: int  # cited as [P1], [P2], ...
+    kind: str  # drug | target
+    source: str
+    source_id: str
+    name: str
+    clinical_stage: str | None
+    score: float | None
+    mechanisms: list[str]
+    linked_trial_ids: list[str]
+
+
+@dataclass
 class Candidate:
     """A single proposed intervention with its rationale and evidence."""
 
@@ -62,6 +72,7 @@ class Candidate:
     risks_or_caveats: str
     citation_indices: list[int]
     trial_citation_indices: list[int]
+    prior_citation_indices: list[int]
 
 
 @dataclass
@@ -70,24 +81,26 @@ class HypothesisReport:
     candidates: list[Candidate]
     citations: list[Citation]
     trial_citations: list[TrialCitation]
+    prior_citations: list[PriorCitation]
     notes: str
     model: str
 
 
 _SYSTEM_PROMPT = """You are a careful biomedical research strategist for the Vitiligo Initiative.
 
-Your task: from a set of retrieved papers AND a set of registered clinical trials, propose ranked therapeutic candidates that could plausibly contribute to the user's research intent (e.g. stopping vitiligo spread, driving repigmentation, identifying novel targets).
+Your task: from retrieved papers, registered clinical trials, AND curated drug/target priors, propose ranked therapeutic candidates that could plausibly contribute to the user's research intent (e.g. stopping vitiligo spread, driving repigmentation, identifying novel targets).
 
-You see two evidence streams:
+You see three evidence streams:
 - PAPERS — peer-reviewed literature, cited as [1], [2], etc.
 - TRIALS — registered clinical trials from ClinicalTrials.gov and the EU CTR (CTIS), cited as [T1], [T2], etc.
+- PRIORS — Open Targets drug/target associations for vitiligo, cited as [P1], [P2], etc. Drug priors include clinical stage and mechanisms; target priors include association scores.
 
 STRICT RULES:
-1. Only propose candidates that are explicitly supported by the retrieved papers or trials. Do not invent drugs, targets, or mechanisms. Every candidate's `citation_indices` must reference papers in the provided list, and every `trial_citation_indices` must reference trials in the trials list.
-2. Use TRIALS to upgrade evidence strength. A drug currently in Phase 3 with vitiligo as the primary condition is "strong" evidence of clinical interest, even if its peer-reviewed literature is thin. A drug whose trial was TERMINATED or WITHDRAWN should be flagged in `risks_or_caveats`, not silently omitted.
-3. For each candidate, fill in mechanism (1-2 sentences), rationale (why this fits the intent — 2-3 sentences, referencing both papers and trials where available), evidence_strength ("strong" if backed by RCT/meta-analysis or active Phase 3 trial; "moderate" if cohort, translational, or active Phase 2 trial; "weak" if mouse model only or early-phase / terminated trial; "speculative" if hypothesis-only), and risks_or_caveats (safety, off-target, prior failures, regulatory hurdles).
-4. Prefer candidates with mechanistic novelty or strong repurposing potential. Deduplicate: if the same drug appears in multiple papers and multiple trials, output ONE candidate that lists all relevant indices.
-5. Output ONLY valid JSON. No prose before or after. Schema:
+1. Only propose candidates explicitly supported by the retrieved evidence. Do not invent drugs, targets, or mechanisms. Every candidate's indices must reference items in the provided lists only.
+2. Use TRIALS and PRIORS together to upgrade evidence strength. A drug in Phase 3 for vitiligo (trial or prior) is "strong" even if literature is thin. A high-scoring target (e.g. JAK3, PTPN22) with supporting papers is stronger than either alone.
+3. For each candidate: mechanism (1-2 sentences), rationale (2-3 sentences referencing all relevant streams), evidence_strength ("strong" | "moderate" | "weak" | "speculative"), risks_or_caveats.
+4. Deduplicate: same drug in papers, trials, and priors → ONE candidate with all relevant indices.
+5. Output ONLY valid JSON. Schema:
 
 {
   "candidates": [
@@ -98,14 +111,15 @@ STRICT RULES:
       "rationale": "string",
       "evidence_strength": "strong" | "moderate" | "weak" | "speculative",
       "risks_or_caveats": "string",
-      "citation_indices": [int, int, ...],
-      "trial_citation_indices": [int, int, ...]
+      "citation_indices": [int, ...],
+      "trial_citation_indices": [int, ...],
+      "prior_citation_indices": [int, ...]
     }
   ],
-  "notes": "string — caveats, gaps in literature, what the trials register reveals, what's missing to validate further"
+  "notes": "string"
 }
 
-6. Aim for 5-12 candidates ranked roughly by combined plausibility + cure-relevance.
+6. Aim for 5-12 candidates ranked by combined plausibility + cure-relevance.
 7. Never use marketing language. Stay scientific.
 """
 
@@ -116,7 +130,7 @@ def generate_hypotheses(
     top_trials: int = 12,
     llm: LLMClient | None = None,
 ) -> HypothesisReport:
-    """Retrieve papers and trials, then ask the LLM to extract ranked candidates."""
+    """Retrieve papers, trials, and priors; ask the LLM for ranked candidates."""
     hits = semantic_search(query=intent, top_k=top_k)
     if not hits:
         raise RuntimeError(
@@ -124,17 +138,19 @@ def generate_hypotheses(
         )
 
     trials = retrieve_relevant_trials(intent, limit=top_trials)
+    priors = retrieve_priors_for_hypothesize()
 
     citations = [_hit_to_citation(idx + 1, hit) for idx, hit in enumerate(hits)]
     trial_citations = [_trial_to_citation(idx + 1, t) for idx, t in enumerate(trials)]
+    prior_citations = [_prior_to_citation(idx + 1, p) for idx, p in enumerate(priors)]
 
-    user_prompt = _build_user_prompt(intent, hits, trials)
+    user_prompt = _build_user_prompt(intent, hits, trials, priors)
 
     client = llm or LLMClient()
     response = client.complete(
         system=_SYSTEM_PROMPT,
         user=user_prompt,
-        max_tokens=4500,
+        max_tokens=5000,
         temperature=0.3,
     )
 
@@ -148,6 +164,7 @@ def generate_hypotheses(
         candidates=candidates,
         citations=citations,
         trial_citations=trial_citations,
+        prior_citations=prior_citations,
         notes=notes,
         model=response.model,
     )
@@ -172,7 +189,33 @@ def _trial_to_citation(idx: int, trial: Trial) -> TrialCitation:
     )
 
 
-def _build_user_prompt(intent: str, hits: list[SearchHit], trials: list[Trial]) -> str:
+def _prior_to_citation(idx: int, prior: Prior) -> PriorCitation:
+    src = prior.source.value if hasattr(prior.source, "value") else str(prior.source)
+    kind = prior.kind.value if hasattr(prior.kind, "value") else str(prior.kind)
+    mechs = [
+        str(m.get("mechanism") or "")
+        for m in (prior.mechanisms or [])
+        if m.get("mechanism")
+    ][:5]
+    return PriorCitation(
+        index=idx,
+        kind=kind,
+        source=src,
+        source_id=prior.source_id,
+        name=prior.name,
+        clinical_stage=prior.clinical_stage,
+        score=prior.score,
+        mechanisms=mechs,
+        linked_trial_ids=list(prior.linked_trial_ids or [])[:8],
+    )
+
+
+def _build_user_prompt(
+    intent: str,
+    hits: list[SearchHit],
+    trials: list[Trial],
+    priors: list[Prior],
+) -> str:
     lines: list[str] = [f"RESEARCH INTENT: {intent}", "", "RETRIEVED PAPERS:", ""]
     for idx, hit in enumerate(hits, start=1):
         doc = hit.document
@@ -236,17 +279,46 @@ def _build_user_prompt(intent: str, hits: list[SearchHit], trials: list[Trial]) 
         lines.append("REGISTERED CLINICAL TRIALS: (none retrieved for this intent)")
         lines.append("")
 
+    if priors:
+        lines.append("DRUG & TARGET PRIORS (Open Targets):")
+        lines.append("")
+        for idx, prior in enumerate(priors, start=1):
+            kind = prior.kind.value if hasattr(prior.kind, "value") else str(prior.kind)
+            src = prior.source.value if hasattr(prior.source, "value") else str(prior.source)
+            lines.append(f"[P{idx}] {kind.upper()} {prior.name} ({src}:{prior.source_id})")
+            if kind == "drug":
+                stage = prior.clinical_stage or "unknown"
+                lines.append(f"    Clinical stage: {stage}")
+                if prior.mechanisms:
+                    mechs = "; ".join(
+                        str(m.get("mechanism") or "") for m in prior.mechanisms[:3]
+                    )
+                    lines.append(f"    Mechanisms: {mechs}")
+                if prior.linked_trial_ids:
+                    lines.append(f"    Linked trials: {', '.join(prior.linked_trial_ids[:6])}")
+            else:
+                score = prior.score if prior.score is not None else "—"
+                desc = prior.description or ""
+                lines.append(f"    Association score: {score}")
+                if desc:
+                    lines.append(f"    Gene: {desc}")
+            lines.append("")
+    else:
+        lines.append("DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets`)")
+        lines.append("")
+
     lines.append("---")
     lines.append(
         "Produce a ranked list of therapeutic candidates relevant to the research intent. "
-        "Use BOTH the papers and the trials as evidence. Output JSON only, matching the schema in the system prompt."
+        "Use papers, trials, AND priors as evidence. Output JSON only."
     )
     return "\n".join(lines)
 
 
 def _coerce_candidate(data: dict[str, object]) -> Candidate:
     citation_indices = _coerce_int_list(data.get("citation_indices"))
-    trial_citation_indices = _coerce_int_list(data.get("trial_citation_indices"))
+    trial_citation_indices = _coerce_int_list(data.get("trial_citation_indices"), prefix="T")
+    prior_citation_indices = _coerce_int_list(data.get("prior_citation_indices"), prefix="P")
     return Candidate(
         name=str(data.get("name", "")).strip() or "(unnamed)",
         kind=str(data.get("kind", "")).strip() or "unspecified",
@@ -256,10 +328,11 @@ def _coerce_candidate(data: dict[str, object]) -> Candidate:
         risks_or_caveats=str(data.get("risks_or_caveats", "")).strip(),
         citation_indices=citation_indices,
         trial_citation_indices=trial_citation_indices,
+        prior_citation_indices=prior_citation_indices,
     )
 
 
-def _coerce_int_list(value: object) -> list[int]:
+def _coerce_int_list(value: object, prefix: str = "") -> list[int]:
     out: list[int] = []
     if not isinstance(value, list):
         return out
@@ -268,9 +341,8 @@ def _coerce_int_list(value: object) -> list[int]:
             out.append(c)
         elif isinstance(c, str):
             stripped = c.strip().lstrip("[").rstrip("]")
-            # Allow either "1" or "T1" — strip a leading T for trial indices.
-            if stripped.upper().startswith("T"):
-                stripped = stripped[1:]
+            if prefix and stripped.upper().startswith(prefix.upper()):
+                stripped = stripped[len(prefix) :]
             if stripped.isdigit():
                 out.append(int(stripped))
     return out
@@ -302,4 +374,5 @@ def report_to_dict(report: HypothesisReport) -> dict[str, object]:
         "candidates": [asdict(c) for c in report.candidates],
         "citations": [asdict(c) for c in report.citations],
         "trial_citations": [asdict(c) for c in report.trial_citations],
+        "prior_citations": [asdict(c) for c in report.prior_citations],
     }

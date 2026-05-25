@@ -16,10 +16,12 @@ from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
 from vitiligo.ingest import (
     run_ctgov_ingestion,
     run_euctr_ingestion,
+    run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
 )
 from vitiligo.logging import configure_logging, get_logger
+from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
 from vitiligo.reasoning import (
     LLMUnavailable,
     ask_with_citations,
@@ -27,6 +29,8 @@ from vitiligo.reasoning import (
 )
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
+from vitiligo.sources.opentargets import DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY
+from vitiligo.sources.opentargets import DEFAULT_TARGET_LIMIT
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.storage import (
@@ -50,10 +54,12 @@ ingest_app = typer.Typer(help="Ingest documents and trials from external sources
 db_app = typer.Typer(help="Inspect the local document store.", no_args_is_help=True)
 embed_app = typer.Typer(help="Generate and inspect embeddings.", no_args_is_help=True)
 trials_app = typer.Typer(help="Browse the local clinical-trials store.", no_args_is_help=True)
+priors_app = typer.Typer(help="Browse drug/target priors from Open Targets.", no_args_is_help=True)
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(db_app, name="db")
 app.add_typer(embed_app, name="embed")
 app.add_typer(trials_app, name="trials")
+app.add_typer(priors_app, name="priors")
 
 console = Console()
 logger = get_logger(__name__)
@@ -214,6 +220,43 @@ def ingest_euctr(
         page_size=page_size,
         limit=limit,
         with_details=not skip_details,
+    )
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("opentargets")
+def ingest_opentargets(
+    query: str = typer.Option(
+        OPENTARGETS_DEFAULT_QUERY,
+        "--query",
+        "-q",
+        help="Disease query for Open Targets resolution.",
+    ),
+    efo_id: str | None = typer.Option(
+        None,
+        "--efo-id",
+        help="Skip resolution and use this EFO id directly (e.g. EFO_0004208).",
+    ),
+    target_limit: int = typer.Option(
+        DEFAULT_TARGET_LIMIT,
+        "--target-limit",
+        help="Max associated targets to persist (drugs are fetched in full).",
+    ),
+) -> None:
+    """Fetch vitiligo drug and target priors from Open Targets."""
+    settings = get_settings()
+    console.rule("[bold]Open Targets ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Query:    [yellow]{query}[/yellow]")
+    if efo_id:
+        console.print(f"EFO id:   [magenta]{efo_id}[/magenta]")
+    console.print()
+
+    stats = run_opentargets_ingestion(
+        query=query, efo_id=efo_id, target_limit=target_limit
     )
 
     console.print()
@@ -446,7 +489,8 @@ def hypothesize_cmd(
 
     console.print(
         f"[dim]Evidence base: {len(report.citations)} papers, "
-        f"{len(report.trial_citations)} trials[/dim]"
+        f"{len(report.trial_citations)} trials, "
+        f"{len(report.prior_citations)} priors[/dim]"
     )
     console.print()
 
@@ -466,7 +510,67 @@ def hypothesize_cmd(
             console.print(f"[bold]Papers:[/bold] {cand.citation_indices}")
         if cand.trial_citation_indices:
             console.print(f"[bold]Trials:[/bold] {[f'T{i}' for i in cand.trial_citation_indices]}")
+        if cand.prior_citation_indices:
+            console.print(f"[bold]Priors:[/bold] {[f'P{i}' for i in cand.prior_citation_indices]}")
         console.print()
+
+
+# --------------------------------------------------------------------- priors
+
+
+@priors_app.command("stats")
+def priors_stats() -> None:
+    """High-level statistics over the priors table."""
+    init_db()
+    summary = summarize_priors()
+    console.rule("[bold]Priors store[/bold]")
+    total = summary["total"][0].count if summary["total"] else 0
+    console.print(f"Total priors: [cyan]{total}[/cyan]")
+
+    if total == 0:
+        console.print(
+            "[yellow]No priors yet. Run `vitiligo ingest opentargets`.[/yellow]"
+        )
+        return
+
+    console.print()
+    console.print("[bold]By kind[/bold]")
+    for row in summary["by_kind"]:
+        console.print(f"  {row.label}: [cyan]{row.count}[/cyan]")
+
+    if summary.get("by_clinical_stage"):
+        console.print()
+        console.print("[bold]Drug clinical stages[/bold]")
+        for row in summary["by_clinical_stage"]:
+            console.print(f"  {row.label}: [cyan]{row.count}[/cyan]")
+
+
+@priors_app.command("sample")
+def priors_sample(
+    kind: str = typer.Option("drug", "--kind", help="drug | target"),
+    limit: int = typer.Option(10, "--limit", "-l"),
+) -> None:
+    """Show a sample of stored priors."""
+    init_db()
+    if kind == "drug":
+        rows = list_drug_priors(limit=limit)
+    elif kind == "target":
+        rows = list_target_priors(limit=limit)
+    else:
+        console.print("[red]kind must be 'drug' or 'target'[/red]")
+        raise typer.Exit(code=2)
+
+    if not rows:
+        console.print("[yellow]No priors found. Run `vitiligo ingest opentargets`.[/yellow]")
+        return
+
+    console.rule(f"[bold]Sample {kind} priors[/bold]")
+    for p in rows:
+        score = f" score={p.score:.3f}" if p.score is not None else ""
+        stage = f" stage={p.clinical_stage}" if p.clinical_stage else ""
+        console.print(
+            f"[cyan]{p.source_id}[/cyan] {p.name}{score}{stage}"
+        )
 
 
 # --------------------------------------------------------------------- trials

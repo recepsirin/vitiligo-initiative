@@ -393,30 +393,31 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 **Current phase:** Phase 1 — Engine + First Public Artifact (in progress)
 **Last updated:** May 2026
-**Document version:** v0.4
+**Document version:** v0.6
 
 ### What exists
 
 - **Planning artifact** — this README.
-- **AI engine v0.5 — Evidence Engine, end-to-end:**
+- **AI engine v0.6 — Evidence Engine, end-to-end:**
   - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
   - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
   - **ClinicalTrials.gov ingestion** — **320 vitiligo trials** with structured status, phase, conditions, interventions, sponsors, locations, eligibility, primary/secondary outcomes, enrollment, and dates.
-  - **EU CTR (CTIS) ingestion** — **22 EU vitiligo trials** with normalized phases, statuses, sponsors, countries, full eligibility criteria, and trial objectives — including the active Phase 3 EU trials of ruxolitinib, povorcitinib, and upadacitinib in non-segmental vitiligo. WHO ICTRP next.
-  - **Source-agnostic SQLite store** for documents, embeddings, and a structured `trials` table that spans multiple registries; bookkeeping for resumable, idempotent ingestion runs across all sources.
+  - **EU CTR (CTIS) ingestion** — **22 EU vitiligo trials** with normalized phases, statuses, sponsors, countries, full eligibility criteria, and trial objectives — including the active Phase 3 EU trials of ruxolitinib, povorcitinib, and upadacitinib in non-segmental vitiligo.
+  - **Open Targets ingestion** — **237 drug/target priors** for vitiligo (`EFO_0004208`): 37 clinical drug candidates (ruxolitinib, povorcitinib, upadacitinib, ritlecitinib, …) plus top 200 associated gene targets with association scores and mechanism-of-action enrichment.
+  - **Source-agnostic SQLite store** for documents, embeddings, trials, and priors; bookkeeping for resumable, idempotent ingestion runs across all sources.
   - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **12,053 vectors** for the entire corpus.
   - **Semantic search** over papers; **structured search** over trials with cross-registry filtering (source / status / phase / country / has-results / free-text).
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
-  - **Hypothesis generation with trial evidence** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over BOTH literature and registered clinical trials, with separate paper [n] and trial [Tn] citations. Active Phase 3 trials upgrade evidence strength; terminated/withdrawn trials surface as caveats rather than disappearing.
+  - **Hypothesis generation with three evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, AND Open Targets priors, with separate paper [n], trial [Tn], and prior [Pn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI service + clean single-page Evidence Engine with Search / Ask / Hypothesize / Trials tabs; runs locally at `http://127.0.0.1:8765`.
-  - **Typed CLI**, ruff-clean, 24 tests passing, Apache-2.0 licensed.
+  - **Typed CLI**, ruff-clean, 29 tests passing, Apache-2.0 licensed.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. Add **WHO ICTRP** ingestion under the same source-agnostic schema.
-3. Add **Open Targets + DrugBank** ingestion (drug/target/pathway priors for the hypothesis layer).
+2. Add **WHO ICTRP** ingestion via bulk XML export (no free public API).
+3. Add **DrugBank** ingestion (open subset) for mechanism/pathway priors.
 4. Build **knowledge graph extraction** — LLM-assisted entities + relations across the corpus.
 5. Layer in **evidence-level tagging** per source (RCT / cohort / mouse / review) and surface it in answers.
 6. **Public deployment** of the Evidence Engine (Fly.io / Render) with rate limiting and telemetry.

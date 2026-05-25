@@ -28,6 +28,7 @@ vitiligo ingest pubmed             # ~11,000 papers (abstracts + metadata)
 vitiligo ingest pmc                # ~2,500 Open Access articles (full text)
 vitiligo ingest ctgov              # ~320 vitiligo trials from ClinicalTrials.gov
 vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
+vitiligo ingest opentargets        # ~37 drugs + 200 targets for vitiligo (EFO_0004208)
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -47,6 +48,8 @@ vitiligo embed stats
 vitiligo db sample -n 3
 vitiligo trials stats
 vitiligo trials search --status RECRUITING --phase PHASE2
+vitiligo priors stats
+vitiligo priors sample --kind drug -l 5
 ```
 
 For smoke testing, every ingest command supports `--limit N`.
@@ -89,13 +92,13 @@ Currently shipped:
 | `vitiligo.sources.pmc` | PubMed Central Open Access | PMCID | JATS XML → structured sections (intro / methods / results / discussion) |
 | `vitiligo.sources.ctgov` | ClinicalTrials.gov v2 REST API | NCT id | JSON; status, phase, conditions, interventions, sponsors, locations, eligibility, outcomes |
 | `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
+| `vitiligo.sources.opentargets` | Open Targets Platform GraphQL v4 | ChEMBL id (drugs) / Ensembl id (targets) | Disease resolution + drug candidates + associated targets; mechanism-of-action enrichment per drug |
 
 Planned (in priority order):
 
 | Source | Why | Notes |
 |---|---|---|
-| WHO ICTRP | Global aggregator across registries | Bulk XML feed |
-| Open Targets | Disease–gene–drug associations | GraphQL |
+| WHO ICTRP | Global aggregator across registries | Bulk XML export from trialsearch.who.int (no free REST API) |
 | DrugBank (open subset) | Drug mechanisms, repurposing | XML download |
 | GEO / ArrayExpress | Public omics datasets | E-utilities + REST |
 
@@ -104,7 +107,8 @@ Planned (in priority order):
 - `documents` table for papers and any other text-centric records, keyed by `(source, source_id)`.
 - `embeddings` table mapping `(document_id, model, scope)` → L2-normalized vector bytes.
 - `trials` table for clinical-trial registry records — separate from `documents` because their structure is operational (status / phase / locations / eligibility) rather than narrative. Keyed by `(source, source_id)` where source is `ctgov | euctr | ictrp`.
-- `raw_metadata` JSON field on both `documents` and `trials` preserves source-specific data, so we can re-derive structured fields without re-fetching.
+- `priors` table for drug and target priors (Open Targets today; DrugBank later). Keyed by `(source, kind, source_id, disease_id)`.
+- `raw_metadata` JSON field on `documents`, `trials`, and `priors` preserves source-specific data, so we can re-derive structured fields without re-fetching.
 - `ingestion_runs` table tracks every fetch (papers and trials alike): source, query, counts, status, errors.
 
 Why SQLite for now: zero ops, single file, fast for read-heavy analytics
@@ -133,7 +137,7 @@ Brute-force cosine search is fine at this scale (a single matmul over <100k vect
 Two LLM-backed pipelines built on top of search:
 
 - `ask_with_citations(question)` — RAG: retrieves the top-K papers and asks Claude to answer using only those, with bracketed numeric citations and explicit "evidence insufficient" handling.
-- `generate_hypotheses(intent)` — retrieves a wider net of papers and asks Claude to extract ranked therapeutic candidates (drugs / combinations / targets / mechanisms / biomarkers) with mechanism, rationale, evidence strength, risks, and citations. Returns structured JSON the UI consumes directly.
+- `generate_hypotheses(intent)` — retrieves papers, relevant trials, and Open Targets priors, then asks Claude to extract ranked therapeutic candidates (drugs / combinations / targets / mechanisms / biomarkers) with mechanism, rationale, evidence strength, risks, and three citation streams: paper `[n]`, trial `[Tn]`, prior `[Pn]`. Returns structured JSON the UI consumes directly.
 
 Both default to `claude-sonnet-4-5` via the `anthropic` SDK. The model is configurable via `ANTHROPIC_MODEL`. If `ANTHROPIC_API_KEY` is not set, the calls raise `LLMUnavailable` with a clear message — no silent degraded mode. Search itself works without an API key.
 
@@ -168,6 +172,8 @@ vitiligo ingest pubmed                              # full ingestion
 vitiligo ingest pubmed --limit 100                  # smoke test
 vitiligo ingest pubmed --query 'vitiligo AND JAK'   # custom query
 vitiligo ingest pmc                                 # PMC Open Access full text
+vitiligo ingest opentargets                         # Open Targets drug + target priors
+vitiligo ingest opentargets --target-limit 50       # smoke test (fewer targets)
 
 # Embeddings
 vitiligo embed run                                  # encode every unembedded document
@@ -179,6 +185,10 @@ vitiligo search "IFN-gamma CXCL10 axis in vitiligo" --top-k 10 --show-abstract
 # Reasoning (requires ANTHROPIC_API_KEY)
 vitiligo ask "What is the evidence for ruxolitinib + NB-UVB combinations?" -k 8
 vitiligo hypothesize "stop spread of active non-segmental vitiligo" -k 25
+
+# Priors (Open Targets)
+vitiligo priors stats
+vitiligo priors sample --kind target -l 10
 
 # Web UI (Evidence Engine)
 vitiligo serve                                      # http://127.0.0.1:8765

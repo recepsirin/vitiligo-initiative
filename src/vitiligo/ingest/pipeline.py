@@ -17,6 +17,14 @@ from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.ctgov import CTGovClient
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
+from vitiligo.sources.opentargets import (
+    DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY,
+)
+from vitiligo.sources.opentargets import (
+    DEFAULT_TARGET_LIMIT,
+    DEFAULT_VITILIGO_EFO_ID,
+    OpenTargetsClient,
+)
 from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pmc import PMCClient
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
@@ -24,6 +32,8 @@ from vitiligo.sources.pubmed import PubMedClient
 from vitiligo.storage import (
     Document,
     IngestionRun,
+    Prior,
+    PriorSourceKind,
     SourceKind,
     Trial,
     TrialSourceKind,
@@ -208,6 +218,115 @@ def _run_trial_ingestion(
         updated=updated,
         run_id=run_id,
     )
+
+
+def run_opentargets_ingestion(
+    query: str = OPENTARGETS_DEFAULT_QUERY,
+    efo_id: str | None = None,
+    target_limit: int = DEFAULT_TARGET_LIMIT,
+    commit_every: int = 50,
+) -> IngestionStats:
+    """Fetch drug and target priors for a disease from Open Targets."""
+    init_db()
+
+    run = IngestionRun(source=PriorSourceKind.OPENTARGETS.value, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = 0
+    inserted = 0
+    updated = 0
+    total_found: int | None = None
+
+    try:
+        client = OpenTargetsClient()
+        try:
+            handle = client.resolve_disease(query) if efo_id is None else None
+            disease_efo = efo_id or (handle.efo_id if handle else DEFAULT_VITILIGO_EFO_ID)
+            disease_name = handle.name if handle else query
+
+            drug_iter = client.iter_drug_priors(disease_efo, disease_name)
+            target_iter = client.iter_target_priors(
+                disease_efo, disease_name, limit=target_limit
+            )
+
+            with session_scope() as session:
+                for prior in _chain_priors(drug_iter, target_iter):
+                    fetched += 1
+                    ins, upd = _upsert_prior(session, prior)
+                    inserted += ins
+                    updated += upd
+
+                    if fetched % commit_every == 0:
+                        session.commit()
+                        logger.info(
+                            "Progress [%s]: fetched=%d inserted=%d updated=%d",
+                            PriorSourceKind.OPENTARGETS.value,
+                            fetched,
+                            inserted,
+                            updated,
+                        )
+
+                session.commit()
+            total_found = fetched
+        finally:
+            client.close()
+
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=%s", PriorSourceKind.OPENTARGETS.value)
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=PriorSourceKind.OPENTARGETS.value,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        run_id=run_id,
+    )
+
+
+def _chain_priors(*iters: Iterator[Prior]) -> Iterator[Prior]:
+    for it in iters:
+        yield from it
+
+
+_PRIOR_UPSERT_FIELDS = (
+    "disease_id",
+    "disease_name",
+    "name",
+    "description",
+    "score",
+    "clinical_stage",
+    "synonyms",
+    "mechanisms",
+    "linked_trial_ids",
+    "linked_target_ids",
+    "raw_metadata",
+)
+
+
+def _upsert_prior(session, prior: Prior) -> tuple[int, int]:  # type: ignore[no-untyped-def]
+    statement = select(Prior).where(
+        Prior.source == prior.source,
+        Prior.kind == prior.kind,
+        Prior.source_id == prior.source_id,
+        Prior.disease_id == prior.disease_id,
+    )
+    existing = session.exec(statement).first()
+    if existing is None:
+        session.add(prior)
+        return 1, 0
+
+    for field in _PRIOR_UPSERT_FIELDS:
+        setattr(existing, field, getattr(prior, field))
+    existing.retrieved_at = datetime.now(UTC)
+    session.add(existing)
+    return 0, 1
 
 
 _TRIAL_UPSERT_FIELDS = (

@@ -159,21 +159,28 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
   const out = document.getElementById('hyp-result');
   if (!intent) return;
 
-  showLoading(out, 'Generating ranked candidates over papers + trials… this may take 30–60s');
+  showLoading(out, 'Generating ranked candidates over papers + trials + priors… this may take 30–60s');
   try {
     const data = await postJson('/api/hypothesize', { intent, top_k: topK });
     const candidatesHtml = (data.candidates || []).map(renderCandidate).join('');
     const citationsHtml = (data.citations || []).map(renderCitation).join('');
     const trialCitationsHtml = (data.trial_citations || []).map(renderTrialCitation).join('');
+    const priorCitationsHtml = (data.prior_citations || []).map(renderPriorCitation).join('');
     const evidenceSummary = `
       <div class="evidence-summary">
         Evidence base: <strong>${data.citations ? data.citations.length : 0}</strong> papers,
-        <strong>${data.trial_citations ? data.trial_citations.length : 0}</strong> trials
+        <strong>${data.trial_citations ? data.trial_citations.length : 0}</strong> trials,
+        <strong>${data.prior_citations ? data.prior_citations.length : 0}</strong> priors
       </div>`;
     out.innerHTML = `
       ${evidenceSummary}
       ${data.notes ? `<div class="hyp-notes">${escapeHtml(data.notes)}</div>` : ''}
       ${candidatesHtml || '<div class="empty">No candidates returned.</div>'}
+      ${priorCitationsHtml ? `
+        <div class="citations">
+          <h3>Drug &amp; target priors (${data.prior_citations.length})</h3>
+          ${priorCitationsHtml}
+        </div>` : ''}
       ${trialCitationsHtml ? `
         <div class="citations">
           <h3>Retrieved trials (${data.trial_citations.length})</h3>
@@ -212,10 +219,31 @@ function renderTrialCitation(t) {
   `;
 }
 
+function renderPriorCitation(p) {
+  const kindLabel = p.kind === 'target' ? 'Target' : 'Drug';
+  const stage = p.clinical_stage ? `<span class="prior-stage">${escapeHtml(p.clinical_stage)}</span>` : '';
+  const score = (p.kind === 'target' && p.score != null)
+    ? `<span class="prior-score">score ${Number(p.score).toFixed(3)}</span>`
+    : '';
+  const mechs = (p.mechanisms || []).slice(0, 2).join(' · ');
+  return `
+    <div class="prior-citation" id="prior-cite-${p.index}">
+      <span class="citation-index">[P${p.index}]</span>
+      <span class="prior-kind-tag">${escapeHtml(kindLabel)}</span>
+      <span class="prior-name">${escapeHtml(p.name || p.source_id)}</span>
+      ${stage}${score}
+      <div class="citation-meta">${escapeHtml(p.source)}:${escapeHtml(p.source_id)}</div>
+      ${mechs ? `<div class="citation-meta">Mechanisms: ${escapeHtml(mechs)}</div>` : ''}
+    </div>
+  `;
+}
+
 function renderCandidate(c) {
   const evidenceClass = ['strong', 'moderate', 'weak', 'speculative'].includes(c.evidence_strength) ? c.evidence_strength : 'speculative';
   const cites = (c.citation_indices || []).map(i => `<a class="cite" href="#cite-${i}">[${i}]</a>`).join(' ');
   const trialCites = (c.trial_citation_indices || []).map(i => `<a class="cite cite-trial" href="#trial-cite-${i}">[T${i}]</a>`).join(' ');
+  const priorCites = (c.prior_citation_indices || []).map(i => `<a class="cite cite-prior" href="#prior-cite-${i}">[P${i}]</a>`).join(' ');
+  const allCites = [cites, trialCites, priorCites].filter(Boolean).join(' · ');
   return `
     <article class="candidate">
       <div class="candidate-header">
@@ -226,7 +254,7 @@ function renderCandidate(c) {
       ${c.mechanism ? `<div class="candidate-section"><div class="candidate-label">Mechanism</div><div class="candidate-text">${escapeHtml(c.mechanism)}</div></div>` : ''}
       ${c.rationale ? `<div class="candidate-section"><div class="candidate-label">Rationale</div><div class="candidate-text">${escapeHtml(c.rationale)}</div></div>` : ''}
       ${c.risks_or_caveats ? `<div class="candidate-section"><div class="candidate-label">Risks &amp; caveats</div><div class="candidate-text">${escapeHtml(c.risks_or_caveats)}</div></div>` : ''}
-      ${(cites || trialCites) ? `<div class="candidate-citations">${cites}${cites && trialCites ? ' · ' : ''}${trialCites}</div>` : ''}
+      ${allCites ? `<div class="candidate-citations">${allCites}</div>` : ''}
     </article>
   `;
 }

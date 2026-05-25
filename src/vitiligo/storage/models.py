@@ -154,6 +154,59 @@ class Trial(SQLModel, table=True):
     retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
 
 
+class PriorKind(StrEnum):
+    """Kinds of structured biomedical priors used to ground hypothesis generation."""
+
+    DRUG = "drug"
+    TARGET = "target"
+
+
+class PriorSourceKind(StrEnum):
+    """Sources for drug/target priors. Extend as DrugBank and others land."""
+
+    OPENTARGETS = "opentargets"
+    DRUGBANK = "drugbank"
+
+
+class Prior(SQLModel, table=True):
+    """A drug or target prior linked to a disease, from a curated knowledge base.
+
+    Priors sit alongside papers and trials: they encode mechanistic and
+    clinical-stage knowledge (Open Targets associations, DrugBank mechanisms)
+    that literature search alone may miss or under-weight.
+    """
+
+    __tablename__ = "priors"
+    __table_args__ = (
+        UniqueConstraint("source", "kind", "source_id", "disease_id", name="uq_prior_key"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+
+    source: PriorSourceKind = Field(index=True)
+    kind: PriorKind = Field(index=True)
+    source_id: str = Field(index=True, description="Stable ID within source (e.g. CHEMBL id, Ensembl id).")
+
+    disease_id: str = Field(index=True, description="Disease identifier (e.g. EFO_0004208).")
+    disease_name: str | None = Field(default=None)
+
+    name: str = Field(index=True)
+    description: str | None = Field(default=None)
+
+    score: float | None = Field(default=None, index=True, description="Association score for targets.")
+    clinical_stage: str | None = Field(
+        default=None, index=True, description="Max clinical stage for drugs (e.g. PHASE_3, APPROVAL)."
+    )
+
+    synonyms: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    mechanisms: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    linked_trial_ids: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    linked_target_ids: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+    raw_metadata: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
+
+
 class IngestionRun(SQLModel, table=True):
     """Bookkeeping for a single ingestion run, so we can resume and audit."""
 

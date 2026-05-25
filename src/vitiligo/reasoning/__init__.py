@@ -3,6 +3,7 @@
 from vitiligo.reasoning.hypothesize import (
     Candidate,
     HypothesisReport,
+    PriorCitation,
     TrialCitation,
     generate_hypotheses,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "HypothesisReport",
     "LLMClient",
     "LLMUnavailable",
+    "PriorCitation",
     "RagAnswer",
     "TrialCitation",
     "ask_with_citations",
