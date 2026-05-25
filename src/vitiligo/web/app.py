@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import semantic_search
+from vitiligo.graph import get_neighbors, search_entities, summarize_graph
 from vitiligo.reasoning import (
     LLMUnavailable,
     ask_with_citations,
@@ -251,6 +252,62 @@ def create_app() -> FastAPI:
             ],
             "by_status": [{"label": r.label, "count": r.count} for r in summary["by_status"]],
             "by_results": [{"label": r.label, "count": r.count} for r in summary["by_results"]],
+        }
+
+    @app.get("/api/graph/stats")
+    def graph_stats() -> dict[str, Any]:
+        summary = summarize_graph()
+        return {
+            "total": [{"label": r.label, "count": r.count} for r in summary["total"]],
+            "by_kind": [{"label": r.label, "count": r.count} for r in summary["by_kind"]],
+            "by_predicate": [{"label": r.label, "count": r.count} for r in summary["by_predicate"]],
+            "by_method": [{"label": r.label, "count": r.count} for r in summary["by_method"]],
+        }
+
+    @app.get("/api/graph/search")
+    def graph_search(q: str, limit: int = 25) -> dict[str, Any]:
+        if not q.strip():
+            raise HTTPException(status_code=400, detail="Query parameter q is required.")
+        entities = search_entities(q.strip(), limit=min(limit, 100))
+        return {
+            "query": q,
+            "results": [
+                {
+                    "kind": e.kind.value if hasattr(e.kind, "value") else str(e.kind),
+                    "key": e.key,
+                    "name": e.name,
+                    "aliases": e.aliases,
+                    "external_ids": e.external_ids,
+                }
+                for e in entities
+            ],
+        }
+
+    @app.get("/api/graph/neighbors")
+    def graph_neighbors(
+        name: str,
+        hops: int = 1,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        if not name.strip():
+            raise HTTPException(status_code=400, detail="Query parameter name is required.")
+        edges = get_neighbors(name.strip(), hops=hops, limit=min(limit, 200))
+        return {
+            "name": name,
+            "hops": hops,
+            "results": [
+                {
+                    "subject_kind": e.subject_kind,
+                    "subject_name": e.subject_name,
+                    "predicate": e.predicate,
+                    "object_kind": e.object_kind,
+                    "object_name": e.object_name,
+                    "confidence": e.confidence,
+                    "extraction_method": e.extraction_method,
+                    "evidence_count": e.evidence_count,
+                }
+                for e in edges
+            ],
         }
 
     app.mount(

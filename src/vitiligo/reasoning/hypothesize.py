@@ -1,4 +1,4 @@
-"""Hypothesis generation: literature-, trial-, and prior-grounded candidate proposals.
+"""Hypothesis generation: literature-, trial-, prior-, and graph-grounded candidate proposals.
 
 Given a research intent (e.g. "stop spread in active non-segmental
 vitiligo" or "drive repigmentation on acral skin"), this module:
@@ -9,8 +9,9 @@ vitiligo" or "drive repigmentation on acral skin"), this module:
    reported results.
 3. Retrieves drug and target priors from Open Targets (and DrugBank later)
    for mechanistic and clinical-stage context.
-4. Asks the LLM to propose ranked therapeutic candidates supported by
-   any of the three evidence streams.
+4. Retrieves vitiligo-connected knowledge-graph edges (structured + LLM).
+5. Asks the LLM to propose ranked therapeutic candidates supported by
+   any of the four evidence streams.
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from dataclasses import asdict, dataclass
 
 from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
+from vitiligo.graph.query import GraphEdgeView, retrieve_graph_for_hypothesize
 from vitiligo.logging import get_logger
 from vitiligo.priors import retrieve_priors_for_hypothesize
 from vitiligo.reasoning.llm import LLMClient
@@ -61,6 +63,21 @@ class PriorCitation:
 
 
 @dataclass
+class GraphCitation:
+    """A knowledge-graph edge included in the Hypothesize prompt context."""
+
+    index: int  # cited as [G1], [G2], ...
+    subject_kind: str
+    subject_name: str
+    predicate: str
+    object_kind: str
+    object_name: str
+    confidence: float
+    extraction_method: str
+    evidence_count: int
+
+
+@dataclass
 class Candidate:
     """A single proposed intervention with its rationale and evidence."""
 
@@ -73,6 +90,7 @@ class Candidate:
     citation_indices: list[int]
     trial_citation_indices: list[int]
     prior_citation_indices: list[int]
+    graph_citation_indices: list[int]
 
 
 @dataclass
@@ -82,24 +100,26 @@ class HypothesisReport:
     citations: list[Citation]
     trial_citations: list[TrialCitation]
     prior_citations: list[PriorCitation]
+    graph_citations: list[GraphCitation]
     notes: str
     model: str
 
 
 _SYSTEM_PROMPT = """You are a careful biomedical research strategist for the Vitiligo Initiative.
 
-Your task: from retrieved papers, registered clinical trials, AND curated drug/target priors, propose ranked therapeutic candidates that could plausibly contribute to the user's research intent (e.g. stopping vitiligo spread, driving repigmentation, identifying novel targets).
+Your task: from retrieved papers, registered clinical trials, curated drug/target priors, AND knowledge-graph relations, propose ranked therapeutic candidates that could plausibly contribute to the user's research intent (e.g. stopping vitiligo spread, driving repigmentation, identifying novel targets).
 
-You see three evidence streams:
+You see four evidence streams:
 - PAPERS — peer-reviewed literature, cited as [1], [2], etc.
 - TRIALS — registered clinical trials from ClinicalTrials.gov and the EU CTR (CTIS), cited as [T1], [T2], etc.
 - PRIORS — Open Targets drug/target associations for vitiligo, cited as [P1], [P2], etc. Drug priors include clinical stage and mechanisms; target priors include association scores.
+- GRAPH — persisted entity relations (drug→target, drug→vitiligo, trial links), cited as [G1], [G2], etc. Prefer graph edges with higher confidence and structured extraction when weighing evidence.
 
 STRICT RULES:
 1. Only propose candidates explicitly supported by the retrieved evidence. Do not invent drugs, targets, or mechanisms. Every candidate's indices must reference items in the provided lists only.
-2. Use TRIALS and PRIORS together to upgrade evidence strength. A drug in Phase 3 for vitiligo (trial or prior) is "strong" even if literature is thin. A high-scoring target (e.g. JAK3, PTPN22) with supporting papers is stronger than either alone.
+2. Use TRIALS, PRIORS, and GRAPH together to upgrade evidence strength. A drug in Phase 3 for vitiligo (trial, prior, or graph) is "strong" even if literature is thin. A high-scoring target (e.g. JAK3, PTPN22) with supporting papers is stronger than either alone.
 3. For each candidate: mechanism (1-2 sentences), rationale (2-3 sentences referencing all relevant streams), evidence_strength ("strong" | "moderate" | "weak" | "speculative"), risks_or_caveats.
-4. Deduplicate: same drug in papers, trials, and priors → ONE candidate with all relevant indices.
+4. Deduplicate: same drug in papers, trials, priors, and graph → ONE candidate with all relevant indices.
 5. Output ONLY valid JSON. Schema:
 
 {
@@ -113,7 +133,8 @@ STRICT RULES:
       "risks_or_caveats": "string",
       "citation_indices": [int, ...],
       "trial_citation_indices": [int, ...],
-      "prior_citation_indices": [int, ...]
+      "prior_citation_indices": [int, ...],
+      "graph_citation_indices": [int, ...]
     }
   ],
   "notes": "string"
@@ -139,12 +160,14 @@ def generate_hypotheses(
 
     trials = retrieve_relevant_trials(intent, limit=top_trials)
     priors = retrieve_priors_for_hypothesize()
+    graph_edges = retrieve_graph_for_hypothesize(intent)
 
     citations = [_hit_to_citation(idx + 1, hit) for idx, hit in enumerate(hits)]
     trial_citations = [_trial_to_citation(idx + 1, t) for idx, t in enumerate(trials)]
     prior_citations = [_prior_to_citation(idx + 1, p) for idx, p in enumerate(priors)]
+    graph_citations = [_graph_to_citation(idx + 1, e) for idx, e in enumerate(graph_edges)]
 
-    user_prompt = _build_user_prompt(intent, hits, trials, priors)
+    user_prompt = _build_user_prompt(intent, hits, trials, priors, graph_edges)
 
     client = llm or LLMClient()
     response = client.complete(
@@ -165,6 +188,7 @@ def generate_hypotheses(
         citations=citations,
         trial_citations=trial_citations,
         prior_citations=prior_citations,
+        graph_citations=graph_citations,
         notes=notes,
         model=response.model,
     )
@@ -210,11 +234,26 @@ def _prior_to_citation(idx: int, prior: Prior) -> PriorCitation:
     )
 
 
+def _graph_to_citation(idx: int, edge: GraphEdgeView) -> GraphCitation:
+    return GraphCitation(
+        index=idx,
+        subject_kind=edge.subject_kind,
+        subject_name=edge.subject_name,
+        predicate=edge.predicate,
+        object_kind=edge.object_kind,
+        object_name=edge.object_name,
+        confidence=edge.confidence,
+        extraction_method=edge.extraction_method,
+        evidence_count=edge.evidence_count,
+    )
+
+
 def _build_user_prompt(
     intent: str,
     hits: list[SearchHit],
     trials: list[Trial],
     priors: list[Prior],
+    graph_edges: list[GraphEdgeView],
 ) -> str:
     lines: list[str] = [f"RESEARCH INTENT: {intent}", "", "RETRIEVED PAPERS:", ""]
     for idx, hit in enumerate(hits, start=1):
@@ -307,10 +346,29 @@ def _build_user_prompt(
         lines.append("DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)")
         lines.append("")
 
+    if graph_edges:
+        lines.append("KNOWLEDGE GRAPH (vitiligo-connected relations):")
+        lines.append("")
+        for idx, edge in enumerate(graph_edges, start=1):
+            lines.append(
+                f"[G{idx}] {edge.subject_name} ({edge.subject_kind}) "
+                f"—[{edge.predicate}]→ {edge.object_name} ({edge.object_kind})"
+            )
+            lines.append(
+                f"    confidence={edge.confidence:.2f} method={edge.extraction_method} "
+                f"evidence_sources={edge.evidence_count}"
+            )
+            lines.append("")
+    else:
+        lines.append(
+            "KNOWLEDGE GRAPH: (none — run `vitiligo graph seed` to build from priors and trials)"
+        )
+        lines.append("")
+
     lines.append("---")
     lines.append(
         "Produce a ranked list of therapeutic candidates relevant to the research intent. "
-        "Use papers, trials, AND priors as evidence. Output JSON only."
+        "Use papers, trials, priors, AND graph edges as evidence. Output JSON only."
     )
     return "\n".join(lines)
 
@@ -319,6 +377,7 @@ def _coerce_candidate(data: dict[str, object]) -> Candidate:
     citation_indices = _coerce_int_list(data.get("citation_indices"))
     trial_citation_indices = _coerce_int_list(data.get("trial_citation_indices"), prefix="T")
     prior_citation_indices = _coerce_int_list(data.get("prior_citation_indices"), prefix="P")
+    graph_citation_indices = _coerce_int_list(data.get("graph_citation_indices"), prefix="G")
     return Candidate(
         name=str(data.get("name", "")).strip() or "(unnamed)",
         kind=str(data.get("kind", "")).strip() or "unspecified",
@@ -329,6 +388,7 @@ def _coerce_candidate(data: dict[str, object]) -> Candidate:
         citation_indices=citation_indices,
         trial_citation_indices=trial_citation_indices,
         prior_citation_indices=prior_citation_indices,
+        graph_citation_indices=graph_citation_indices,
     )
 
 
@@ -375,4 +435,5 @@ def report_to_dict(report: HypothesisReport) -> dict[str, object]:
         "citations": [asdict(c) for c in report.citations],
         "trial_citations": [asdict(c) for c in report.trial_citations],
         "prior_citations": [asdict(c) for c in report.prior_citations],
+        "graph_citations": [asdict(c) for c in report.graph_citations],
     }

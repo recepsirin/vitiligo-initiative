@@ -139,9 +139,21 @@ Brute-force cosine search is fine at this scale (a single matmul over <100k vect
 Two LLM-backed pipelines built on top of search:
 
 - `ask_with_citations(question)` — RAG: retrieves the top-K papers and asks Claude to answer using only those, with bracketed numeric citations and explicit "evidence insufficient" handling.
-- `generate_hypotheses(intent)` — retrieves papers, relevant trials, and Open Targets priors, then asks Claude to extract ranked therapeutic candidates (drugs / combinations / targets / mechanisms / biomarkers) with mechanism, rationale, evidence strength, risks, and three citation streams: paper `[n]`, trial `[Tn]`, prior `[Pn]`. Returns structured JSON the UI consumes directly.
+- `generate_hypotheses(intent)` — retrieves papers, relevant trials, Open Targets priors, and vitiligo-connected knowledge-graph edges, then asks Claude to extract ranked therapeutic candidates (drugs / combinations / targets / mechanisms / biomarkers) with mechanism, rationale, evidence strength, risks, and four citation streams: paper `[n]`, trial `[Tn]`, prior `[Pn]`, graph `[Gn]`. Returns structured JSON the UI consumes directly.
 
 Both default to `claude-sonnet-4-5` via the `anthropic` SDK. The model is configurable via `ANTHROPIC_MODEL`. If `ANTHROPIC_API_KEY` is not set, the calls raise `LLMUnavailable` with a clear message — no silent degraded mode. Search itself works without an API key.
+
+### Knowledge graph (`vitiligo.graph`)
+
+A persisted entity–relation graph for vitiligo, grounded in structured sources first and optionally enriched by LLM extraction:
+
+- **Entities** — drugs, targets, diseases, trials, interventions, pathways, mechanisms, biomarkers (`graph_entities` table).
+- **Edges** — directed relations (`treats`, `targets`, `inhibits`, `activates`, `associated_with`, `tested_in`, `investigates`) with confidence scores and provenance (`graph_edges` table).
+- **Seeding** — `vitiligo graph seed` builds the graph deterministically from Open Targets priors and clinical trials (no hallucination risk).
+- **LLM extraction** — `vitiligo graph extract` parses paper abstracts into entities/relations; progress tracked in `graph_extractions`.
+- **Query** — search entities, traverse neighbors, retrieve vitiligo-connected edges for Hypothesize.
+
+On the local corpus (May 2026): **1,044 entities**, **1,643 edges** after structured seed.
 
 ### Web service (`vitiligo.web`)
 
@@ -157,6 +169,9 @@ A small FastAPI app exposing JSON endpoints plus a static HTML UI:
 | POST | `/api/hypothesize` | Ranked candidates (requires `ANTHROPIC_API_KEY`) |
 | POST | `/api/trials/search` | Structured trial search |
 | GET | `/api/trials/stats` | Trial registry breakdown |
+| GET | `/api/graph/stats` | Knowledge graph breakdown |
+| GET | `/api/graph/search?q=` | Entity search |
+| GET | `/api/graph/neighbors?name=` | Adjacent edges |
 
 Production deployment: see [`docs/deploy.md`](deploy.md) (Dockerfile, `fly.toml` for Amsterdam, `render.yaml`, rate limiting, persistent volume for `vitiligo.db`).
 
@@ -198,6 +213,14 @@ vitiligo hypothesize "stop spread of active non-segmental vitiligo" -k 25
 # Priors (Open Targets)
 vitiligo priors stats
 vitiligo priors sample --kind target -l 10
+
+# Knowledge graph
+vitiligo graph seed                                  # deterministic seed from priors + trials
+vitiligo graph extract --limit 50                    # LLM extraction (requires API key)
+vitiligo graph build --extract --extract-limit 50    # seed + extract
+vitiligo graph stats
+vitiligo graph search ruxolitinib
+vitiligo graph neighbors vitiligo
 
 # Web UI (Evidence Engine)
 vitiligo serve                                      # http://127.0.0.1:8765
@@ -247,7 +270,7 @@ other or share state beyond `storage` and `config`.
 In rough priority order:
 
 1. **Public deploy** — `fly deploy` with corpus volume (see [`deploy.md`](deploy.md)).
-2. **Knowledge graph extraction** — LLM-assisted entities + relations across the corpus, persisted as a queryable graph.
+2. **Knowledge graph LLM enrichment** — run `vitiligo graph extract` on the full abstract corpus; expert spot-check.
 3. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
 4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.
 5. **Hybrid retrieval** — BM25 over MeSH/keywords combined with semantic vectors; reranker layer.

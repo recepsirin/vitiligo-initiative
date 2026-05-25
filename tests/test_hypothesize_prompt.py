@@ -9,9 +9,11 @@ guard the trials-into-Hypothesize plumbing without needing a live LLM.
 from __future__ import annotations
 
 from vitiligo.embed.search import SearchHit
+from vitiligo.graph.query import GraphEdgeView
 from vitiligo.reasoning.hypothesize import (
     _build_user_prompt,
     _coerce_candidate,
+    _graph_to_citation,
     _prior_to_citation,
     _trial_to_citation,
 )
@@ -92,7 +94,7 @@ def _prior(
 def test_user_prompt_lists_papers_and_trials_separately() -> None:
     hit = SearchHit(document=_doc(), score=0.91)
     trial = _trial()
-    prompt = _build_user_prompt(intent="stop spread", hits=[hit], trials=[trial], priors=[])
+    prompt = _build_user_prompt(intent="stop spread", hits=[hit], trials=[trial], priors=[], graph_edges=[])
 
     assert "RESEARCH INTENT: stop spread" in prompt
     assert "RETRIEVED PAPERS:" in prompt
@@ -121,6 +123,7 @@ def test_user_prompt_lists_priors() -> None:
         hits=[hit],
         trials=[],
         priors=[drug, target],
+        graph_edges=[],
     )
     assert "DRUG & TARGET PRIORS (Open Targets + DrugBank):" in prompt
     assert "[P1] DRUG RUXOLITINIB (opentargets:CHEMBL1789941)" in prompt
@@ -131,7 +134,7 @@ def test_user_prompt_lists_priors() -> None:
 
 def test_user_prompt_handles_no_trials() -> None:
     hit = SearchHit(document=_doc(), score=0.91)
-    prompt = _build_user_prompt(intent="repigmentation", hits=[hit], trials=[], priors=[])
+    prompt = _build_user_prompt(intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[])
     assert "REGISTERED CLINICAL TRIALS: (none retrieved for this intent)" in prompt
 
 
@@ -143,6 +146,7 @@ def test_user_prompt_truncates_long_trial_summary() -> None:
         hits=[SearchHit(document=_doc(), score=0.5)],
         trials=[trial],
         priors=[],
+        graph_edges=[],
     )
     assert " ..." in prompt
     # Make sure the verbatim 1500-character blob is NOT in the prompt.
@@ -183,6 +187,7 @@ def test_coerce_candidate_handles_both_index_lists() -> None:
             "citation_indices": [1, "[3]"],
             "trial_citation_indices": ["T2", 5],
             "prior_citation_indices": ["P1", 3],
+            "graph_citation_indices": ["G2", 4],
         }
     )
     assert candidate.name == "ruxolitinib"
@@ -192,6 +197,47 @@ def test_coerce_candidate_handles_both_index_lists() -> None:
     assert candidate.citation_indices == [1, 3]
     assert candidate.trial_citation_indices == [2, 5]
     assert candidate.prior_citation_indices == [1, 3]
+    assert candidate.graph_citation_indices == [2, 4]
+
+
+def test_user_prompt_lists_graph_edges() -> None:
+    hit = SearchHit(document=_doc(), score=0.91)
+    edge = GraphEdgeView(
+        id=1,
+        subject_kind="drug",
+        subject_name="RUXOLITINIB",
+        subject_key="ruxolitinib",
+        predicate="treats",
+        object_kind="disease",
+        object_name="Vitiligo",
+        object_key="vitiligo",
+        confidence=0.88,
+        extraction_method="structured",
+        evidence_count=1,
+    )
+    prompt = _build_user_prompt(intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[edge])
+    assert "KNOWLEDGE GRAPH (vitiligo-connected relations):" in prompt
+    assert "[G1] RUXOLITINIB (drug) —[treats]→ Vitiligo (disease)" in prompt
+
+
+def test_graph_to_citation() -> None:
+    edge = GraphEdgeView(
+        id=7,
+        subject_kind="target",
+        subject_name="JAK1",
+        subject_key="jak1",
+        predicate="associated_with",
+        object_kind="disease",
+        object_name="Vitiligo",
+        object_key="vitiligo",
+        confidence=0.72,
+        extraction_method="structured",
+        evidence_count=2,
+    )
+    citation = _graph_to_citation(2, edge)
+    assert citation.index == 2
+    assert citation.subject_name == "JAK1"
+    assert citation.evidence_count == 2
 
 
 def test_coerce_candidate_drops_invalid_indices() -> None:
@@ -205,3 +251,4 @@ def test_coerce_candidate_drops_invalid_indices() -> None:
     assert candidate.citation_indices == [7]
     assert candidate.trial_citation_indices == []
     assert candidate.prior_citation_indices == []
+    assert candidate.graph_citation_indices == []

@@ -313,7 +313,8 @@ Gate conditions:
 
 Gate conditions:
 - [ ] Literature corpus ingested (PubMed, PMC OA, ClinicalTrials.gov, Open Targets, DrugBank, GEO metadata)
-- [ ] Knowledge graph v1 built and expert-spot-checked
+- [x] Knowledge graph v1 built (structured seed from priors + trials; LLM extraction available)
+- [ ] Knowledge graph v1 expert-spot-checked
 - [ ] Evidence Engine v1 deployed at a public URL
 - [ ] Hypothesis-generation layer producing ranked candidate reports
 - [ ] First KOL advisor meeting held *with the tool in hand*
@@ -393,12 +394,12 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 **Current phase:** Phase 1 — Engine + First Public Artifact (in progress)
 **Last updated:** May 2026
-**Document version:** v0.9
+**Document version:** v1.0
 
 ### What exists
 
 - **Planning artifact** — this README.
-- **AI engine v0.6 — Evidence Engine, end-to-end:**
+- **AI engine v1.0 — Evidence Engine + Knowledge Graph:**
   - **PubMed ingestion** — full vitiligo corpus, **11,356 records** with abstracts, MeSH terms, authors, DOIs. Auto-handles NCBI's 9,999-result query cap by year-bisection.
   - **PMC Open Access ingestion** — **2,578 full-text articles** with structured sections (intro / methods / results / discussion).
   - **ClinicalTrials.gov ingestion** — **320 vitiligo trials** with structured status, phase, conditions, interventions, sponsors, locations, eligibility, primary/secondary outcomes, enrollment, and dates.
@@ -410,15 +411,16 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **12,053 vectors** for the entire corpus.
   - **Semantic search** over papers; **structured search** over trials with cross-registry filtering (source / status / phase / country / has-results / free-text).
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
-  - **Hypothesis generation with three evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, AND Open Targets priors, with separate paper [n], trial [Tn], and prior [Pn] citations.
+  - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
+  - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Trials tabs; Docker + Fly.io (`ams`) + Render deploy configs with rate limiting and health checks. See [`docs/deploy.md`](docs/deploy.md).
-  - **Typed CLI**, ruff-clean, 39 tests passing, Apache-2.0 licensed.
+  - **Typed CLI**, ruff-clean, 48 tests passing, Apache-2.0 licensed.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. Build **knowledge graph extraction** — LLM-assisted entities + relations across the corpus.
+2. **Expert-spot-check** the knowledge graph v1 (`vitiligo graph stats`, `vitiligo graph neighbors vitiligo`).
 3. Layer in **evidence-level tagging** per source (RCT / cohort / mouse / review) and surface it in answers.
 4. **Deploy** the Evidence Engine publicly (see [`docs/deploy.md`](docs/deploy.md)) and attach the corpus volume.
 5. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.

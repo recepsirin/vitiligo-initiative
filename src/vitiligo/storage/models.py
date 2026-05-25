@@ -207,6 +207,85 @@ class Prior(SQLModel, table=True):
     retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
 
 
+class EntityKind(StrEnum):
+    """Node types in the vitiligo knowledge graph."""
+
+    DRUG = "drug"
+    TARGET = "target"
+    DISEASE = "disease"
+    PATHWAY = "pathway"
+    MECHANISM = "mechanism"
+    BIOMARKER = "biomarker"
+    INTERVENTION = "intervention"
+    TRIAL = "trial"
+
+
+class RelationKind(StrEnum):
+    """Edge types in the vitiligo knowledge graph."""
+
+    TREATS = "treats"
+    TARGETS = "targets"
+    INHIBITS = "inhibits"
+    ACTIVATES = "activates"
+    ASSOCIATED_WITH = "associated_with"
+    TESTED_IN = "tested_in"
+    INVESTIGATES = "investigates"
+
+
+class GraphEntity(SQLModel, table=True):
+    """A canonical entity node in the knowledge graph."""
+
+    __tablename__ = "graph_entities"
+    __table_args__ = (UniqueConstraint("kind", "key", name="uq_graph_entity_kind_key"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    kind: EntityKind = Field(index=True)
+    key: str = Field(index=True, description="Normalized identifier within kind.")
+    name: str = Field(index=True, description="Preferred display label.")
+    aliases: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    external_ids: dict[str, str] = Field(default_factory=dict, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class GraphEdge(SQLModel, table=True):
+    """A directed relation between two graph entities with provenance."""
+
+    __tablename__ = "graph_edges"
+    __table_args__ = (
+        UniqueConstraint("subject_id", "predicate", "object_id", name="uq_graph_edge_triple"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    subject_id: int = Field(foreign_key="graph_entities.id", index=True)
+    predicate: RelationKind = Field(index=True)
+    object_id: int = Field(foreign_key="graph_entities.id", index=True)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    extraction_method: str = Field(
+        default="structured",
+        index=True,
+        description="structured | llm | mesh",
+    )
+    evidence: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class GraphExtraction(SQLModel, table=True):
+    """Tracks LLM graph extraction status per document."""
+
+    __tablename__ = "graph_extractions"
+    __table_args__ = (UniqueConstraint("document_id", name="uq_graph_extraction_document"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="documents.id", index=True)
+    status: str = Field(default="completed", description="completed | failed | skipped")
+    entity_count: int = Field(default=0)
+    edge_count: int = Field(default=0)
+    error: str | None = Field(default=None)
+    extracted_at: datetime = Field(default_factory=_utcnow)
+
+
 class IngestionRun(SQLModel, table=True):
     """Bookkeeping for a single ingestion run, so we can resume and audit."""
 

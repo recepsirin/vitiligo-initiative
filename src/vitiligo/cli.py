@@ -15,6 +15,15 @@ from sqlmodel import func, select
 from vitiligo import __version__
 from vitiligo.config import get_settings
 from vitiligo.embed import DEFAULT_MODEL, embed_documents, semantic_search
+from vitiligo.graph import (
+    get_neighbors,
+    run_graph_build,
+    search_entities,
+    summarize_graph,
+)
+from vitiligo.graph.build import GraphBuildStats
+from vitiligo.graph.extract import extract_graph_from_documents
+from vitiligo.graph.seed import seed_graph_from_structured_sources
 from vitiligo.ingest import (
     run_ctgov_ingestion,
     run_drugbank_ingestion,
@@ -60,11 +69,13 @@ db_app = typer.Typer(help="Inspect the local document store.", no_args_is_help=T
 embed_app = typer.Typer(help="Generate and inspect embeddings.", no_args_is_help=True)
 trials_app = typer.Typer(help="Browse the local clinical-trials store.", no_args_is_help=True)
 priors_app = typer.Typer(help="Browse drug/target priors from Open Targets.", no_args_is_help=True)
+graph_app = typer.Typer(help="Build and query the vitiligo knowledge graph.", no_args_is_help=True)
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(db_app, name="db")
 app.add_typer(embed_app, name="embed")
 app.add_typer(trials_app, name="trials")
 app.add_typer(priors_app, name="priors")
+app.add_typer(graph_app, name="graph")
 
 console = Console()
 logger = get_logger(__name__)
@@ -585,7 +596,8 @@ def hypothesize_cmd(
     console.print(
         f"[dim]Evidence base: {len(report.citations)} papers, "
         f"{len(report.trial_citations)} trials, "
-        f"{len(report.prior_citations)} priors[/dim]"
+        f"{len(report.prior_citations)} priors, "
+        f"{len(report.graph_citations)} graph edges[/dim]"
     )
     console.print()
 
@@ -607,7 +619,142 @@ def hypothesize_cmd(
             console.print(f"[bold]Trials:[/bold] {[f'T{i}' for i in cand.trial_citation_indices]}")
         if cand.prior_citation_indices:
             console.print(f"[bold]Priors:[/bold] {[f'P{i}' for i in cand.prior_citation_indices]}")
+        if cand.graph_citation_indices:
+            console.print(f"[bold]Graph:[/bold] {[f'G{i}' for i in cand.graph_citation_indices]}")
         console.print()
+
+
+# --------------------------------------------------------------------- graph
+
+
+@graph_app.command("seed")
+def graph_seed_cmd() -> None:
+    """Seed the knowledge graph from priors and trials (no LLM)."""
+    init_db()
+    console.rule("[bold]Knowledge graph — seed[/bold]")
+    stats = seed_graph_from_structured_sources()
+    table = Table(show_header=False, box=None)
+    table.add_row("Entities", str(stats.entities))
+    table.add_row("Edges inserted", str(stats.edges_inserted))
+    table.add_row("Edges merged", str(stats.edges_merged))
+    console.print(table)
+
+
+@graph_app.command("extract")
+def graph_extract_cmd(
+    limit: int = typer.Option(50, "--limit", "-l", help="Max documents to extract."),
+) -> None:
+    """Run LLM extraction over document abstracts (requires Anthropic API key)."""
+    init_db()
+    console.rule(f"[bold]Knowledge graph — extract[/bold] (limit={limit})")
+    try:
+        stats = extract_graph_from_documents(limit=limit)
+    except LLMUnavailable as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+
+    table = Table(show_header=False, box=None)
+    table.add_row("Processed", str(stats.documents_processed))
+    table.add_row("Failed", str(stats.documents_failed))
+    table.add_row("Skipped", str(stats.documents_skipped))
+    table.add_row("Entities added", str(stats.entities_added))
+    table.add_row("Edges inserted", str(stats.edges_inserted))
+    table.add_row("Edges merged", str(stats.edges_merged))
+    console.print(table)
+
+
+@graph_app.command("build")
+def graph_build_cmd(
+    no_seed: bool = typer.Option(False, "--no-seed", help="Skip structured seeding."),
+    extract: bool = typer.Option(False, "--extract", help="Run LLM extraction after seed."),
+    extract_limit: int = typer.Option(50, "--extract-limit", help="Documents for LLM extract."),
+) -> None:
+    """Seed structured sources and optionally run LLM extraction."""
+    console.rule("[bold]Knowledge graph — build[/bold]")
+    try:
+        stats: GraphBuildStats = run_graph_build(
+            seed=not no_seed,
+            extract=extract,
+            extract_limit=extract_limit,
+        )
+    except LLMUnavailable as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+
+    if stats.seed:
+        console.print(
+            f"[green]Seed:[/green] {stats.seed.entities} entities, "
+            f"{stats.seed.edges_inserted} edges inserted, "
+            f"{stats.seed.edges_merged} merged"
+        )
+    if stats.extract:
+        console.print(
+            f"[green]Extract:[/green] {stats.extract.documents_processed} docs, "
+            f"{stats.extract.edges_inserted + stats.extract.edges_merged} edges"
+        )
+
+
+@graph_app.command("stats")
+def graph_stats_cmd() -> None:
+    """Show knowledge graph statistics."""
+    init_db()
+    summary = summarize_graph()
+    total = summary["total"]
+    entities = next((r.count for r in total if r.label == "entities"), 0)
+    edges = next((r.count for r in total if r.label == "edges"), 0)
+    console.rule("[bold]Knowledge graph[/bold]")
+    console.print(f"Entities: [cyan]{entities}[/cyan]  Edges: [cyan]{edges}[/cyan]")
+    if summary["by_kind"]:
+        kind_table = Table(title="Entities by kind", show_header=True, header_style="bold")
+        kind_table.add_column("Kind")
+        kind_table.add_column("Count", justify="right")
+        for row in summary["by_kind"]:
+            kind_table.add_row(row.label, str(row.count))
+        console.print(kind_table)
+    if summary["by_predicate"]:
+        pred_table = Table(title="Edges by predicate", show_header=True, header_style="bold")
+        pred_table.add_column("Predicate")
+        pred_table.add_column("Count", justify="right")
+        for row in summary["by_predicate"]:
+            pred_table.add_row(row.label, str(row.count))
+        console.print(pred_table)
+
+
+@graph_app.command("search")
+def graph_search_cmd(
+    query: str = typer.Argument(..., help="Entity name or fragment."),
+    limit: int = typer.Option(20, "--limit", "-l"),
+) -> None:
+    """Search graph entities by name."""
+    init_db()
+    rows = search_entities(query, limit=limit)
+    if not rows:
+        console.print("[yellow]No entities match.[/yellow]")
+        return
+    for entity in rows:
+        kind = entity.kind.value if hasattr(entity.kind, "value") else str(entity.kind)
+        console.print(f"[cyan]{kind}[/cyan]:{entity.key} — [bold]{entity.name}[/bold]")
+
+
+@graph_app.command("neighbors")
+def graph_neighbors_cmd(
+    name_or_key: str = typer.Argument(..., help="Entity name or normalized key."),
+    hops: int = typer.Option(1, "--hops", "-h", min=1, max=2),
+    limit: int = typer.Option(30, "--limit", "-l"),
+) -> None:
+    """Show edges adjacent to an entity."""
+    init_db()
+    edges = get_neighbors(name_or_key, hops=hops, limit=limit)
+    if not edges:
+        console.print("[yellow]No neighbors found (try `vitiligo graph seed` first).[/yellow]")
+        return
+    for edge in edges:
+        console.print(
+            f"[bold]{edge.subject_name}[/bold] ({edge.subject_kind}) "
+            f"—[{edge.predicate}]→ "
+            f"[bold]{edge.object_name}[/bold] ({edge.object_kind}) "
+            f"[dim]conf={edge.confidence:.2f} {edge.extraction_method}[/dim]"
+        )
 
 
 # --------------------------------------------------------------------- priors

@@ -9,6 +9,7 @@ from sqlmodel import Session, func, select
 
 from vitiligo.config import get_settings
 from vitiligo.storage import Document, Embedding, Prior, Trial, get_engine
+from vitiligo.storage.models import GraphEdge, GraphEntity
 
 
 def get_corpus_stats() -> dict[str, Any]:
@@ -29,6 +30,8 @@ def get_corpus_stats() -> dict[str, Any]:
             "embeddings": 0,
             "trials": 0,
             "priors": 0,
+            "graph_entities": 0,
+            "graph_edges": 0,
         }
 
     with Session(get_engine(), expire_on_commit=False) as session:
@@ -36,6 +39,8 @@ def get_corpus_stats() -> dict[str, Any]:
         embeddings = int(session.exec(select(func.count()).select_from(Embedding)).one() or 0)
         trials = int(session.exec(select(func.count()).select_from(Trial)).one() or 0)
         priors = int(session.exec(select(func.count()).select_from(Prior)).one() or 0)
+        graph_entities = int(session.exec(select(func.count()).select_from(GraphEntity)).one() or 0)
+        graph_edges = int(session.exec(select(func.count()).select_from(GraphEdge)).one() or 0)
 
     return {
         "database": {
@@ -47,4 +52,6 @@ def get_corpus_stats() -> dict[str, Any]:
         "embeddings": embeddings,
         "trials": trials,
         "priors": priors,
+        "graph_entities": graph_entities,
+        "graph_edges": graph_edges,
     }
