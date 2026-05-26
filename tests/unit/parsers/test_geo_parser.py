@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.geo import parse_geo_summary
 from vitiligo.storage.models import SourceKind
 
-FIXTURE = Path(__file__).resolve().parent / "fixtures" / "geo_summary_sample.json"
+FIXTURE = FIXTURES_DIR / "geo_summary_sample.json"
 
 
 def test_parse_geo_summary_maps_fields() -> None:

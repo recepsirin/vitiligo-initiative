@@ -48,7 +48,7 @@ else
 fi
 
 echo "==> Candidate confidence (full corpus)"
-if "${ROOT}/.venv/bin/pytest" tests/test_confidence_corpus.py -q; then pass "test_confidence_corpus.py"; else fail "test_confidence_corpus.py"; fi
+if "${ROOT}/.venv/bin/pytest" tests/confidence/test_confidence_corpus.py -q; then pass "test_confidence_corpus.py"; else fail "test_confidence_corpus.py"; fi
 
 echo "==> API smoke (pytest)"
 if "${ROOT}/.venv/bin/pytest" tests/ -q -m smoke; then pass "pytest -m smoke"; else fail "pytest -m smoke"; fi

@@ -7,7 +7,8 @@ public JSON API. Both the search shape and the retrieve shape are tested.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.euctr import (
     _normalize_phase,
@@ -17,7 +18,7 @@ from vitiligo.sources.euctr import (
 )
 from vitiligo.storage.models import TrialSourceKind
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_DIR = FIXTURES_DIR
 SEARCH = FIXTURE_DIR / "euctr_search_sample.json"
 RETRIEVE = FIXTURE_DIR / "euctr_retrieve_sample.json"
 

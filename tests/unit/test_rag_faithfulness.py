@@ -2,23 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 import pytest
+from tests.helpers.fake_llm import CapturingLLM
 
 from vitiligo.embed.search import SearchHit
-from vitiligo.reasoning.llm import LLMResponse
 from vitiligo.reasoning.rag import ask_with_citations
 from vitiligo.storage import Document, SourceKind
-
-
-@dataclass
-class _CapturingLLM:
-    captured_user: str = ""
-
-    def complete(self, *, system: str, user: str, max_tokens: int = 2048, temperature: float = 0.2) -> LLMResponse:
-        self.captured_user = user
-        return LLMResponse(text="Answer with [1].", model="fake", input_tokens=1, output_tokens=1)
 
 
 def test_ask_prompt_includes_every_retrieved_title(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -27,7 +16,7 @@ def test_ask_prompt_includes_every_retrieved_title(monkeypatch: pytest.MonkeyPat
         Document(source=SourceKind.PUBMED, source_id="2", title="Paper B on NB-UVB"),
     ]
     hits = [SearchHit(document=d, score=0.9 - i * 0.01) for i, d in enumerate(docs)]
-    llm = _CapturingLLM()
+    llm = CapturingLLM(response_text="Answer with [1].")
 
     monkeypatch.setattr("vitiligo.reasoning.rag.semantic_search", lambda **_: hits)
 
@@ -48,7 +37,7 @@ def test_ask_answer_references_citation_metadata(monkeypatch: pytest.MonkeyPatch
         year=2022,
     )
     hits = [SearchHit(document=doc, score=0.92)]
-    llm = _CapturingLLM()
+    llm = CapturingLLM(response_text="Answer with [1].")
     monkeypatch.setattr("vitiligo.reasoning.rag.semantic_search", lambda **_: hits)
 
     answer = ask_with_citations("Combination therapy?", top_k=1, llm=llm)

@@ -253,7 +253,7 @@ vitiligo serve --host 0.0.0.0 --port 8080           # bind to all interfaces
 3. Add a pipeline function in `vitiligo.ingest.pipeline` modeled on
    `run_pubmed_ingestion`.
 4. Add a CLI subcommand under `vitiligo ingest`.
-5. Add parser tests in `tests/test_<name>_parser.py` (offline, using a
+5. Add parser tests in `tests/unit/parsers/test_<name>_parser.py` (offline, using a
    captured sample response).
 
 Keep new source clients **independent**: they should not import each

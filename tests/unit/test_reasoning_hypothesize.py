@@ -16,7 +16,9 @@ from vitiligo.storage import Document, SourceKind
 
 @dataclass
 class _FakeLLM:
-    def complete(self, *, system: str, user: str, max_tokens: int = 2048, temperature: float = 0.2) -> LLMResponse:
+    def complete(
+        self, *, system: str, user: str, max_tokens: int = 2048, temperature: float = 0.2
+    ) -> LLMResponse:
         payload = {
             "candidates": [
                 {

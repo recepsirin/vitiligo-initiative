@@ -9,7 +9,7 @@ import pytest
 
 
 def main() -> int:
-    return pytest.main(["-q", "-m", "smoke", "tests/test_smoke_api.py"])
+    return pytest.main(["-q", "-m", "smoke", "tests/smoke/test_smoke_api.py"])
 
 
 if __name__ == "__main__":

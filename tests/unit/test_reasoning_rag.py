@@ -17,7 +17,9 @@ from vitiligo.storage import Document, SourceKind
 class _FakeLLM:
     last_user: str | None = None
 
-    def complete(self, *, system: str, user: str, max_tokens: int = 2048, temperature: float = 0.2) -> LLMResponse:
+    def complete(
+        self, *, system: str, user: str, max_tokens: int = 2048, temperature: float = 0.2
+    ) -> LLMResponse:
         self.last_user = user
         return LLMResponse(text="Grounded answer.", model="fake", input_tokens=1, output_tokens=2)
 

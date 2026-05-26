@@ -139,5 +139,121 @@
     "has_results": false,
     "last_update_date": "2026-04-28",
     "study_type": "INTERVENTIONAL"
+  },
+  {
+    "source": "ctgov",
+    "source_id": "NCT06109649",
+    "brief_title": "A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo",
+    "official_title": "A Double-Arm, Open Label, Phase III Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet B (NB-UVB) Light Versus NB-UVB Light Alone in the Treatment of Vitiligo",
+    "summary": "The CUV105 study will assess the efficacy and safety of afamelanotide and NB-UVB light in patients with vitiligo on the body and face versus NB-UVB light alone.",
+    "status": "ACTIVE_NOT_RECRUITING",
+    "phases": [
+      "PHASE3"
+    ],
+    "conditions": [
+      "Vitiligo"
+    ],
+    "keywords": [],
+    "interventions": [
+      {
+        "type": "DRUG",
+        "name": "Afamelanotide and NB-UVB Light",
+        "description": "Patients will receive combination of NB-UVB twice weekly and afamelanotide every 3 weeks for 20 weeks.",
+        "other_names": []
+      },
+      {
+        "type": "PROCEDURE",
+        "name": "NB-UVB Light",
+        "description": "Patients will receive NB-UVB light twice per week for 20 weeks. Upon study completion, NB-UVB Light Arm participants will have the opportunity to enroll in an open-label extension phase of the study. In this extension phase, participants will undergo the same evaluations and assessments as the ones performed in the main part of the study under Afamelanotide and NB-UVB Light Arm.",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "France",
+      "Kenya",
+      "United Kingdom",
+      "United States"
+    ],
+    "has_results": false,
+    "last_update_date": "2025-07-08",
+    "study_type": "INTERVENTIONAL"
+  },
+  {
+    "source": "ctgov",
+    "source_id": "NCT06548360",
+    "brief_title": "A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream in Pediatric Participants With Nonsegmental Vitiligo",
+    "official_title": "A Phase 3, Randomized, Double-Blind, Safety, and Efficacy Study of Ruxolitinib Cream in Pediatric Participants With Nonsegmental Vitiligo",
+    "summary": "The purpose of this study is to to evaluate the safety and efficacy of ruxolitinib cream in pediatric participants with nonsegmental vitiligo.",
+    "status": "RECRUITING",
+    "phases": [
+      "PHASE3"
+    ],
+    "conditions": [
+      "NonSegmental Vitiligo"
+    ],
+    "keywords": [
+      "NonSegmental Vitiligo",
+      "pediatric"
+    ],
+    "interventions": [
+      {
+        "type": "DRUG",
+        "name": "Ruxolitinib Cream",
+        "description": "Ruxolitinib cream applied topically to the affected area as a thin film twice daily.",
+        "other_names": [
+          "INCB018424 Phosphate Cream"
+        ]
+      },
+      {
+        "type": "DRUG",
+        "name": "Vehicle Cream",
+        "description": "Matching vehicle cream applied topically to the affected area as a thin film twice daily.",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "Canada",
+      "United States"
+    ],
+    "has_results": false,
+    "last_update_date": "2025-12-18",
+    "study_type": "INTERVENTIONAL"
+  },
+  {
+    "source": "ctgov",
+    "source_id": "NCT03155698",
+    "brief_title": "Treatment of Acral Vitiligo : Narrowband Ultraviolet-B and Microneedling With and Without Platelet Rich Plasma",
+    "official_title": "Treatment of Acral Vitiligo : Narrowband Ultraviolet-B and Microneedling With and Without Platelet Rich Plasma",
+    "summary": "Vitiligo is a relatively common acquired chronic disorder of pigmentation characterized by the development of white macules on the skin due to loss of epidermal melanocytes .Affecting approximately 0.5%-2% of general population worldwide, without predilection for sex or race.",
+    "status": "UNKNOWN",
+    "phases": [
+      "NA"
+    ],
+    "conditions": [
+      "Vitiligo"
+    ],
+    "keywords": [],
+    "interventions": [
+      {
+        "type": "COMBINATION_PRODUCT",
+        "name": "microneedling and Platelet rich plasma",
+        "description": "Patient's skin is first cleaned with ethyl alcohol. Topical anaesthetic cream is then applied to skin for 30 min. Once anaesthesias is fully developed, Dermapen will be applied on the lesional skin in four direction, vertical, horizontal and the two diagonal until pin point bleeding occur which will be gently massaged.\n\n* After ten minutes the prepared platelet rich plasma will be applied topically and after about 2 minutes. Occlusive dressing will be done and kept for 1 day then the patient will use topical antibiotic. The procedure will be repeated every 15 days.",
+        "other_names": [
+          "dermapen+ topical PRP"
+        ]
+      },
+      {
+        "type": "RADIATION",
+        "name": "NB-UVB phototherapy",
+        "description": "All patients will receive NB-UVB twice weekly for maximum 6 months, starting with a dose of 0.21 J/cm\u00b2 independent of skin type and increased by 20% every session until we reach the minimal erythema dose",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "Egypt"
+    ],
+    "has_results": false,
+    "last_update_date": "2021-07-07",
+    "study_type": "INTERVENTIONAL"
   }
 ]

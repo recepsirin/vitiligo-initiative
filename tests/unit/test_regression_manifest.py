@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-EVAL_QUERIES = Path(__file__).resolve().parents[1] / "docs" / "eval-queries.json"
-MANIFEST = Path(__file__).resolve().parent / "fixtures" / "regression_expectations.json"
+from tests.helpers.paths import FIXTURES_DIR, PROJECT_ROOT
+
+EVAL_QUERIES = PROJECT_ROOT / "docs" / "eval-queries.json"
+MANIFEST = FIXTURES_DIR / "regression_expectations.json"
 
 
 def test_regression_manifest_structure() -> None:
@@ -24,6 +25,13 @@ def test_regression_manifest_structure() -> None:
     for case in spec.get("retrieval_negative", []):
         assert case["query"].strip()
         assert int(case["top_k"]) >= int(case.get("top_n", 1))
+        if case.get("must_not_include_source_ids"):
+            assert case["top_n"] >= 1
+
+    for intent_case in spec.get("candidate_intents", {}).get("intents", []):
+        assert intent_case["id"]
+        assert intent_case["must_include_tokens"]
+        assert intent_case["rank1_token"] in intent_case["must_include_tokens"]
 
     for case in spec["trials"]:
         assert case["must_include_source_ids"]
@@ -32,6 +40,19 @@ def test_regression_manifest_structure() -> None:
     candidates = spec["candidates"]
     assert candidates["must_include_tokens"]
     assert candidates["rank1_token"] in candidates["must_include_tokens"]
+
+    for case in spec.get("ask", []):
+        assert case["id"]
+        assert case["question"].strip()
+        assert case["must_include_citation_source_ids"]
+        assert int(case["top_k"]) >= len(case["must_include_citation_source_ids"])
+
+    for case in spec.get("hypothesize", []):
+        assert case["id"]
+        assert case["intent"].strip()
+        assert case["must_include_citation_source_ids"]
+        assert case["must_include_candidate_names"]
+        assert int(case["top_k"]) >= 1
 
 
 def test_eval_queries_file_is_valid() -> None:
@@ -48,12 +69,15 @@ def test_eval_queries_file_is_valid() -> None:
 
 
 def test_confidence_retrieval_cases_map_to_eval_queries() -> None:
-    """Every automated retrieval case should trace to an expert eval query."""
+    """Every eval query must have a matching automated retrieval case."""
     eval_ids = {q["id"] for q in json.loads(EVAL_QUERIES.read_text())["queries"]}
     manifest = json.loads(MANIFEST.read_text())
-    missing: list[str] = []
-    for case in manifest["retrieval"]:
-        eval_id = case.get("eval_query_id", case["id"])
-        if eval_id not in eval_ids:
-            missing.append(f"{case['id']} -> {eval_id}")
-    assert not missing, f"retrieval cases without eval-queries.json entry: {missing}"
+    covered = {case.get("eval_query_id", case["id"]) for case in manifest["retrieval"]}
+    missing = sorted(eval_ids - covered)
+    assert not missing, f"eval queries without retrieval confidence case: {missing}"
+
+
+def test_confidence_retrieval_covers_all_eval_queries() -> None:
+    eval_ids = {q["id"] for q in json.loads(EVAL_QUERIES.read_text())["queries"]}
+    manifest = json.loads(MANIFEST.read_text())
+    assert len(manifest["retrieval"]) == len(eval_ids)

@@ -13,10 +13,24 @@ import numpy as np
 from sqlmodel import select
 
 from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder, get_encoder
+from vitiligo.evidence import EvidenceLevel, classify_document
 from vitiligo.logging import get_logger
 from vitiligo.storage import Document, Embedding, init_db, session_scope
 
 logger = get_logger(__name__)
+
+# Subtracted from cosine similarity so preclinical hits rank below human clinical
+# evidence when embeddings are similarly relevant.
+_EVIDENCE_SCORE_PENALTY: dict[EvidenceLevel, float] = {
+    EvidenceLevel.MOUSE: 0.08,
+    EvidenceLevel.IN_VITRO: 0.05,
+}
+
+
+def evidence_adjusted_score(cosine: float, document: Document) -> float:
+    """Apply a small penalty for animal/in-vitro papers after cosine similarity."""
+    level = classify_document(document)
+    return cosine - _EVIDENCE_SCORE_PENALTY.get(level, 0.0)
 
 
 @dataclass
@@ -58,18 +72,30 @@ def semantic_search(
         query_vec = encoder.encode([query])[0]
 
         scores = matrix @ query_vec  # all vectors are L2-normalized
-        top_idx = np.argsort(-scores)[:top_k]
 
         documents = {
             d.id: d
             for d in session.exec(
-                select(Document).where(Document.id.in_([doc_ids[i] for i in top_idx]))
-            ).all()  # type: ignore[union-attr]
+                select(Document).where(Document.id.in_(doc_ids))  # type: ignore[union-attr]
+            ).all()
         }
+
+        ranked: list[tuple[float, float, int]] = []
+        for i, doc_id in enumerate(doc_ids):
+            doc = documents.get(doc_id)
+            if doc is None:
+                continue
+            raw = float(scores[i])
+            adjusted = evidence_adjusted_score(raw, doc)
+            ranked.append((adjusted, raw, i))
+
+        ranked.sort(key=lambda item: (-item[0], -item[1]))
+        top_ranked = ranked[:top_k]
+
         hits: list[SearchHit] = []
-        for i in top_idx:
+        for adjusted, _raw, i in top_ranked:
             doc = documents.get(doc_ids[i])
             if doc is None:
                 continue
-            hits.append(SearchHit(document=doc, score=float(scores[i])))
+            hits.append(SearchHit(document=doc, score=adjusted))
         return hits

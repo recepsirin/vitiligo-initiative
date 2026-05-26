@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from sqlmodel import Session
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.ictrp import iter_ictrp_trials
 from vitiligo.storage import get_engine
@@ -17,7 +18,7 @@ from vitiligo.trials import TrialFilter, list_trials
 
 pytestmark = pytest.mark.integration
 
-ICTRP_FIXTURE = Path(__file__).parent / "fixtures" / "ictrp_vitiligo_sample.xml"
+ICTRP_FIXTURE = FIXTURES_DIR / "ictrp_vitiligo_sample.xml"
 
 
 @pytest.fixture
@@ -45,7 +46,5 @@ def test_ingested_ictrp_tacrolimus_findable_by_intervention(ictrp_trials_db) -> 
 def test_ingested_ictrp_filter_by_source(ictrp_trials_db) -> None:
     from vitiligo.storage import TrialSourceKind
 
-    hits = list_trials(
-        TrialFilter(query="vitiligo", sources=(TrialSourceKind.ICTRP,), limit=10)
-    )
+    hits = list_trials(TrialFilter(query="vitiligo", sources=(TrialSourceKind.ICTRP,), limit=10))
     assert len(hits) == 3

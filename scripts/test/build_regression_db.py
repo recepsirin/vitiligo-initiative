@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Build a minimal SQLite corpus for CI confidence regression tests.
 
-Reads ``tests/fixtures/regression/documents.json`` and ``trials.json``,
-creates a fresh database, and embeds all documents. The result is small
-enough to build on every CI run (~8 papers + 3 trials + embeddings).
+Reads ``tests/fixtures/regression/*.json`` (documents, trials, priors, graph),
+creates a fresh database, and embeds all documents. Small enough to build on
+every CI run (~24 papers + 5 trials + priors/graph seed + embeddings).
 
 Usage:
     python scripts/test/build_regression_db.py
@@ -30,6 +30,13 @@ def _load_json(name: str) -> list[dict]:
     return json.loads(path.read_text())
 
 
+def _load_object(name: str) -> dict:
+    path = FIXTURE_DIR / name
+    if not path.is_file():
+        raise SystemExit(f"fixture missing: {path}")
+    return json.loads(path.read_text())
+
+
 def build_regression_db(output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.is_file():
@@ -47,13 +54,24 @@ def build_regression_db(output: Path) -> None:
     from sqlmodel import Session
 
     from vitiligo.embed import embed_documents
-    from vitiligo.storage import Document, Trial, TrialSourceKind, init_db, get_engine
-    from vitiligo.storage.models import SourceKind
+    from vitiligo.storage import Document, Trial, TrialSourceKind, get_engine, init_db
+    from vitiligo.storage.models import (
+        EntityKind,
+        GraphEdge,
+        GraphEntity,
+        Prior,
+        PriorKind,
+        PriorSourceKind,
+        RelationKind,
+        SourceKind,
+    )
 
     init_db()
 
     doc_rows = _load_json("documents.json")
     trial_rows = _load_json("trials.json")
+    prior_rows = _load_json("priors.json") if (FIXTURE_DIR / "priors.json").is_file() else []
+    graph_spec = _load_object("graph.json") if (FIXTURE_DIR / "graph.json").is_file() else {}
 
     with Session(get_engine(), expire_on_commit=False) as session:
         for row in doc_rows:
@@ -90,11 +108,59 @@ def build_regression_db(output: Path) -> None:
                     study_type=row.get("study_type"),
                 )
             )
+        for row in prior_rows:
+            session.add(
+                Prior(
+                    source=PriorSourceKind(row["source"]),
+                    kind=PriorKind(row["kind"]),
+                    source_id=row["source_id"],
+                    disease_id=row["disease_id"],
+                    disease_name=row.get("disease_name"),
+                    name=row["name"],
+                    description=row.get("description"),
+                    score=row.get("score"),
+                    clinical_stage=row.get("clinical_stage"),
+                    synonyms=row.get("synonyms") or [],
+                    mechanisms=row.get("mechanisms") or [],
+                    linked_trial_ids=row.get("linked_trial_ids") or [],
+                    linked_target_ids=row.get("linked_target_ids") or [],
+                    raw_metadata=row.get("raw_metadata") or {},
+                )
+            )
+
+        entity_ids: dict[tuple[str, str], int] = {}
+        for row in graph_spec.get("entities", []):
+            entity = GraphEntity(
+                kind=EntityKind(row["kind"]),
+                key=row["key"],
+                name=row["name"],
+                aliases=row.get("aliases") or [],
+                external_ids=row.get("external_ids") or {},
+            )
+            session.add(entity)
+            session.flush()
+            entity_ids[(row["kind"], row["key"])] = entity.id or 0
+
+        for row in graph_spec.get("edges", []):
+            subject_id = entity_ids[(row["subject_kind"], row["subject_key"])]
+            object_id = entity_ids[(row["object_kind"], row["object_key"])]
+            session.add(
+                GraphEdge(
+                    subject_id=subject_id,
+                    predicate=RelationKind(row["predicate"]),
+                    object_id=object_id,
+                    confidence=float(row.get("confidence", 0.5)),
+                    extraction_method=row.get("extraction_method") or "structured",
+                )
+            )
         session.commit()
 
     stats = embed_documents()
+    graph_entities = len(graph_spec.get("entities", []))
+    graph_edges = len(graph_spec.get("edges", []))
     print(
         f"Built {output} — {len(doc_rows)} documents, {len(trial_rows)} trials, "
+        f"{len(prior_rows)} priors, {graph_entities} graph entities, {graph_edges} edges, "
         f"{stats.embedded} embeddings",
         file=sys.stderr,
     )

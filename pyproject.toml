@@ -46,6 +46,7 @@ dependencies = [
 dev = [
     "pytest>=8.2",
     "pytest-cov>=5.0",
+    "hypothesis>=6.98",
     "ruff>=0.5",
     "mypy>=1.10",
     "types-lxml>=2024.4",
@@ -105,5 +106,5 @@ markers = [
     "smoke: thin end-to-end checks over the full corpus (run locally)",
     "confidence: curated retrieval/trial scenarios on the minimal regression corpus (runs in CI)",
 ]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 addopts = "-ra --strict-markers"

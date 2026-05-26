@@ -1,0 +1,617 @@
+[
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL2105759",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "BARICITINIB",
+    "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 3 approved and 31 investigational indications.",
+    "score": null,
+    "clinical_stage": "PHASE_2",
+    "synonyms": [
+      "Baricitinib",
+      "Baricitinib phosphate",
+      "Baricitinib phosphate salt",
+      "INCB-028050",
+      "INCB028050",
+      "Incb-28050",
+      "LY-3009104",
+      "LY3009104"
+    ],
+    "mechanisms": [
+      {
+        "mechanism": "Tyrosine-protein kinase JAK1 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK1",
+        "targets": [
+          {
+            "id": "ENSG00000162434",
+            "symbol": "JAK1",
+            "name": "Janus kinase 1"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase JAK2 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK2",
+        "targets": [
+          {
+            "id": "ENSG00000096968",
+            "symbol": "JAK2",
+            "name": "Janus kinase 2"
+          }
+        ]
+      }
+    ],
+    "linked_trial_ids": [
+      "nct04822584"
+    ],
+    "linked_target_ids": [
+      "ENSG00000162434",
+      "ENSG00000096968"
+    ],
+    "raw_metadata": {
+      "row": {
+        "id": "9a800619bb2b4ed0c9a194dbfcbbc9dc50f3a8fd40e0f6f4ce01c50128964933",
+        "maxClinicalStage": "PHASE_2",
+        "drug": {
+          "id": "CHEMBL2105759",
+          "name": "BARICITINIB",
+          "maximumClinicalStage": "APPROVAL",
+          "synonyms": [
+            "Baricitinib",
+            "Baricitinib phosphate",
+            "Baricitinib phosphate salt",
+            "INCB-028050",
+            "INCB028050",
+            "Incb-28050",
+            "LY-3009104",
+            "LY3009104"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 3 approved and 31 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "nct04822584"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL2105759",
+        "name": "BARICITINIB",
+        "maximumClinicalStage": "APPROVAL",
+        "synonyms": [
+          "Baricitinib",
+          "Baricitinib phosphate",
+          "Baricitinib phosphate salt",
+          "INCB-028050",
+          "INCB028050",
+          "Incb-28050",
+          "LY-3009104",
+          "LY3009104"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 3 approved and 31 investigational indications."
+      }
+    }
+  },
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL5095079",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "POVORCITINIB",
+    "description": "Small molecule drug with a maximum clinical stage of Phase 3 (across all indications), with 5 investigational indications.",
+    "score": null,
+    "clinical_stage": "PHASE_3",
+    "synonyms": [
+      "INCB-054707",
+      "INCB054707",
+      "Incb054707",
+      "Povorcitinib"
+    ],
+    "mechanisms": [],
+    "linked_trial_ids": [
+      "nct06113445",
+      "nct06113471",
+      "nct04818346",
+      "povorcitinib"
+    ],
+    "linked_target_ids": [],
+    "raw_metadata": {
+      "row": {
+        "id": "baba9377f3c8f3751959b3f1f2ab6eb2a149901d5d5aa62ddb3a7bb7738f0a3f",
+        "maxClinicalStage": "PHASE_3",
+        "drug": {
+          "id": "CHEMBL5095079",
+          "name": "POVORCITINIB",
+          "maximumClinicalStage": "PHASE_3",
+          "synonyms": [
+            "INCB-054707",
+            "INCB054707",
+            "Incb054707",
+            "Povorcitinib"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Phase 3 (across all indications), with 5 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "nct06113445"
+          },
+          {
+            "id": "nct06113471"
+          },
+          {
+            "id": "nct04818346"
+          },
+          {
+            "id": "povorcitinib"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL5095079",
+        "name": "POVORCITINIB",
+        "maximumClinicalStage": "PHASE_3",
+        "synonyms": [
+          "INCB-054707",
+          "INCB054707",
+          "Incb054707",
+          "Povorcitinib"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Phase 3 (across all indications), with 5 investigational indications."
+      }
+    }
+  },
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL1789941",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "RUXOLITINIB",
+    "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 5 approved and 59 investigational indications.",
+    "score": null,
+    "clinical_stage": "APPROVAL",
+    "synonyms": [
+      "INC-424",
+      "INC424",
+      "INCB-018424",
+      "INCB-18424",
+      "INCB018424",
+      "Ruxolitinib",
+      "Ruxolitinib, s-",
+      "S-ruxolitinib"
+    ],
+    "mechanisms": [
+      {
+        "mechanism": "Tyrosine-protein kinase JAK1 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK1",
+        "targets": [
+          {
+            "id": "ENSG00000162434",
+            "symbol": "JAK1",
+            "name": "Janus kinase 1"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase TYK2 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Non-receptor tyrosine-protein kinase TYK2",
+        "targets": [
+          {
+            "id": "ENSG00000105397",
+            "symbol": "TYK2",
+            "name": "tyrosine kinase 2"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase JAK2 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK2",
+        "targets": [
+          {
+            "id": "ENSG00000096968",
+            "symbol": "JAK2",
+            "name": "Janus kinase 2"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase JAK3 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK3",
+        "targets": [
+          {
+            "id": "ENSG00000105639",
+            "symbol": "JAK3",
+            "name": "Janus kinase 3"
+          }
+        ]
+      }
+    ],
+    "linked_trial_ids": [
+      "emea/h/c/005843",
+      "nct06719024",
+      "nct02809976",
+      "nct03099304",
+      "nct04896385",
+      "nct05247489",
+      "nct05750823",
+      "nct05872477",
+      "d04lks/vitiligo",
+      "nct07153666"
+    ],
+    "linked_target_ids": [
+      "ENSG00000162434",
+      "ENSG00000105397",
+      "ENSG00000096968",
+      "ENSG00000105639"
+    ],
+    "raw_metadata": {
+      "row": {
+        "id": "2c337e7e8f1d2b6fdb1db056d164269c2837e313c5b5cd45092a63be07cb6c3a",
+        "maxClinicalStage": "APPROVAL",
+        "drug": {
+          "id": "CHEMBL1789941",
+          "name": "RUXOLITINIB",
+          "maximumClinicalStage": "APPROVAL",
+          "synonyms": [
+            "INC-424",
+            "INC424",
+            "INCB-018424",
+            "INCB-18424",
+            "INCB018424",
+            "Ruxolitinib",
+            "Ruxolitinib, s-",
+            "S-ruxolitinib"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 5 approved and 59 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "emea/h/c/005843"
+          },
+          {
+            "id": "nct06719024"
+          },
+          {
+            "id": "nct02809976"
+          },
+          {
+            "id": "nct03099304"
+          },
+          {
+            "id": "nct04896385"
+          },
+          {
+            "id": "nct05247489"
+          },
+          {
+            "id": "nct05750823"
+          },
+          {
+            "id": "nct05872477"
+          },
+          {
+            "id": "d04lks/vitiligo"
+          },
+          {
+            "id": "nct07153666"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL1789941",
+        "name": "RUXOLITINIB",
+        "maximumClinicalStage": "APPROVAL",
+        "synonyms": [
+          "INC-424",
+          "INC424",
+          "INCB-018424",
+          "INCB-18424",
+          "INCB018424",
+          "Ruxolitinib",
+          "Ruxolitinib, s-",
+          "S-ruxolitinib"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 5 approved and 59 investigational indications."
+      }
+    }
+  },
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL1200686",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "PIMECROLIMUS",
+    "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for atopic eczema and eczematoid dermatitis and 10 investigational indications.",
+    "score": null,
+    "clinical_stage": "PHASE_2",
+    "synonyms": [
+      "(-)-pimecrolimus",
+      "Pimecrolimus",
+      "SDZ ASM 981",
+      "SDZ ASM-981",
+      "SDZ-ASM 981",
+      "SDZ-ASM-981"
+    ],
+    "mechanisms": [
+      {
+        "mechanism": "FK506-binding protein 1A inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Peptidyl-prolyl cis-trans isomerase FKBP1A",
+        "targets": [
+          {
+            "id": "ENSG00000088832",
+            "symbol": "FKBP1A",
+            "name": "FKBP prolyl isomerase 1A"
+          }
+        ]
+      }
+    ],
+    "linked_trial_ids": [
+      "nct00372307"
+    ],
+    "linked_target_ids": [
+      "ENSG00000088832"
+    ],
+    "raw_metadata": {
+      "row": {
+        "id": "745f04a9b82323a106cf12814dea76a6c20ab07d8a88dd0fd68d581237563886",
+        "maxClinicalStage": "PHASE_2",
+        "drug": {
+          "id": "CHEMBL1200686",
+          "name": "PIMECROLIMUS",
+          "maximumClinicalStage": "APPROVAL",
+          "synonyms": [
+            "(-)-pimecrolimus",
+            "Pimecrolimus",
+            "SDZ ASM 981",
+            "SDZ ASM-981",
+            "SDZ-ASM 981",
+            "SDZ-ASM-981"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for atopic eczema and eczematoid dermatitis and 10 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "nct00372307"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL1200686",
+        "name": "PIMECROLIMUS",
+        "maximumClinicalStage": "APPROVAL",
+        "synonyms": [
+          "(-)-pimecrolimus",
+          "Pimecrolimus",
+          "SDZ ASM 981",
+          "SDZ ASM-981",
+          "SDZ-ASM 981",
+          "SDZ-ASM-981"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for atopic eczema and eczematoid dermatitis and 10 investigational indications."
+      }
+    }
+  },
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL3622821",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "UPADACITINIB",
+    "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for rheumatoid arthritis and 14 investigational indications.",
+    "score": null,
+    "clinical_stage": "PHASE_3",
+    "synonyms": [
+      "ABT-494",
+      "Upadacitinib",
+      "Upadacitinib anhydrous"
+    ],
+    "mechanisms": [
+      {
+        "mechanism": "Tyrosine-protein kinase JAK1 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK1",
+        "targets": [
+          {
+            "id": "ENSG00000162434",
+            "symbol": "JAK1",
+            "name": "Janus kinase 1"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase JAK2 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK2",
+        "targets": [
+          {
+            "id": "ENSG00000096968",
+            "symbol": "JAK2",
+            "name": "Janus kinase 2"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase TYK2 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Non-receptor tyrosine-protein kinase TYK2",
+        "targets": [
+          {
+            "id": "ENSG00000105397",
+            "symbol": "TYK2",
+            "name": "tyrosine kinase 2"
+          }
+        ]
+      },
+      {
+        "mechanism": "Tyrosine-protein kinase JAK3 inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Tyrosine-protein kinase JAK3",
+        "targets": [
+          {
+            "id": "ENSG00000105639",
+            "symbol": "JAK3",
+            "name": "Janus kinase 3"
+          }
+        ]
+      }
+    ],
+    "linked_trial_ids": [
+      "nct06118411",
+      "nct04927975",
+      "nct06454461"
+    ],
+    "linked_target_ids": [
+      "ENSG00000162434",
+      "ENSG00000096968",
+      "ENSG00000105397",
+      "ENSG00000105639"
+    ],
+    "raw_metadata": {
+      "row": {
+        "id": "41a3fd53a9ca41ee9d21c72ca9a4224a01f53d9812154384e82c70d3d059099b",
+        "maxClinicalStage": "PHASE_3",
+        "drug": {
+          "id": "CHEMBL3622821",
+          "name": "UPADACITINIB",
+          "maximumClinicalStage": "APPROVAL",
+          "synonyms": [
+            "ABT-494",
+            "Upadacitinib",
+            "Upadacitinib anhydrous"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for rheumatoid arthritis and 14 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "nct06118411"
+          },
+          {
+            "id": "nct04927975"
+          },
+          {
+            "id": "nct06454461"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL3622821",
+        "name": "UPADACITINIB",
+        "maximumClinicalStage": "APPROVAL",
+        "synonyms": [
+          "ABT-494",
+          "Upadacitinib",
+          "Upadacitinib anhydrous"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with an approval for rheumatoid arthritis and 14 investigational indications."
+      }
+    }
+  },
+  {
+    "source": "opentargets",
+    "kind": "drug",
+    "source_id": "CHEMBL269732",
+    "disease_id": "EFO_0004208",
+    "disease_name": "Vitiligo",
+    "name": "TACROLIMUS ANHYDROUS",
+    "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 50 investigational indications.",
+    "score": null,
+    "clinical_stage": "PHASE_3",
+    "synonyms": [
+      "104987-11-3",
+      "Anhydrous tacrolimus",
+      "Fujimycin",
+      "Prograph",
+      "Tacro",
+      "Tacrolimus anhydrous",
+      "Tacrolimus, anhydrous",
+      "Tsukubaenolide"
+    ],
+    "mechanisms": [
+      {
+        "mechanism": "FK506-binding protein 1A inhibitor",
+        "action_type": "INHIBITOR",
+        "target_name": "Peptidyl-prolyl cis-trans isomerase FKBP1A",
+        "targets": [
+          {
+            "id": "ENSG00000088832",
+            "symbol": "FKBP1A",
+            "name": "FKBP prolyl isomerase 1A"
+          }
+        ]
+      }
+    ],
+    "linked_trial_ids": [
+      "nct00807690",
+      "nct02466997",
+      "nct01841008",
+      "nct05577637"
+    ],
+    "linked_target_ids": [
+      "ENSG00000088832"
+    ],
+    "raw_metadata": {
+      "row": {
+        "id": "37a0e3bda4bcd8b76e5360dea30f4a4ffaf2c276b80de59a705b4615799d9166",
+        "maxClinicalStage": "PHASE_3",
+        "drug": {
+          "id": "CHEMBL269732",
+          "name": "TACROLIMUS ANHYDROUS",
+          "maximumClinicalStage": "APPROVAL",
+          "synonyms": [
+            "104987-11-3",
+            "Anhydrous tacrolimus",
+            "Fujimycin",
+            "Prograph",
+            "Tacro",
+            "Tacrolimus anhydrous",
+            "Tacrolimus, anhydrous",
+            "Tsukubaenolide"
+          ],
+          "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 50 investigational indications."
+        },
+        "clinicalReports": [
+          {
+            "id": "nct00807690"
+          },
+          {
+            "id": "nct02466997"
+          },
+          {
+            "id": "nct01841008"
+          },
+          {
+            "id": "nct05577637"
+          }
+        ]
+      },
+      "drug": {
+        "id": "CHEMBL269732",
+        "name": "TACROLIMUS ANHYDROUS",
+        "maximumClinicalStage": "APPROVAL",
+        "synonyms": [
+          "104987-11-3",
+          "Anhydrous tacrolimus",
+          "Fujimycin",
+          "Prograph",
+          "Tacro",
+          "Tacrolimus anhydrous",
+          "Tacrolimus, anhydrous",
+          "Tsukubaenolide"
+        ],
+        "description": "Small molecule drug with a maximum clinical stage of Approval (across all indications), with 50 investigational indications."
+      }
+    }
+  }
+]

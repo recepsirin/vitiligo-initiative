@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from vitiligo.reports.candidates import (
@@ -46,7 +44,9 @@ def test_evidence_strength_thresholds(score: int, label: str) -> None:
 
 
 def test_load_intents_file() -> None:
-    path = Path(__file__).resolve().parents[1] / "docs" / "candidate-intents.json"
+    from tests.helpers.paths import PROJECT_ROOT
+
+    path = PROJECT_ROOT / "docs" / "candidate-intents.json"
     intents = load_intents(path)
     assert len(intents) >= 5
     assert intents[0].id
