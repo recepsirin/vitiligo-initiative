@@ -48,6 +48,26 @@
       "min_top_score": 0.85
     }
   ],
+  "retrieval_negative": [
+    {
+      "id": "treat_jak_oral_not_mouse_top",
+      "scenario": "Oral JAK query should not rank animal models first",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 5,
+      "top_n": 3,
+      "max_mouse_in_top": 0,
+      "top_hit_must_not_be_mouse": true
+    },
+    {
+      "id": "treat_rux_uvb_not_mouse_top",
+      "scenario": "Ruxolitinib clinical query should not rank animal models first",
+      "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "top_k": 5,
+      "top_n": 3,
+      "max_mouse_in_top": 0,
+      "top_hit_must_not_be_mouse": true
+    }
+  ],
   "trials": [
     {
       "id": "tacrolimus_intervention_only",

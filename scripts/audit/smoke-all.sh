@@ -40,7 +40,15 @@ run_cli trials search tacrolimus --limit 5
 run_cli graph search ruxolitinib --limit 3
 
 echo "==> Confidence regression (pytest)"
-if "${ROOT}/.venv/bin/pytest" tests/ -q -m confidence; then pass "pytest -m confidence"; else fail "pytest -m confidence"; fi
+if "${ROOT}/.venv/bin/python" "${ROOT}/scripts/test/build_regression_db.py" --output /tmp/vitiligo-regression-audit.db \
+  && VITILIGO_REGRESSION_DB=/tmp/vitiligo-regression-audit.db "${ROOT}/.venv/bin/pytest" tests/ -q -m confidence; then
+  pass "pytest -m confidence"
+else
+  fail "pytest -m confidence"
+fi
+
+echo "==> Candidate confidence (full corpus)"
+if "${ROOT}/.venv/bin/pytest" tests/test_confidence_corpus.py -q; then pass "test_confidence_corpus.py"; else fail "test_confidence_corpus.py"; fi
 
 echo "==> API smoke (pytest)"
 if "${ROOT}/.venv/bin/pytest" tests/ -q -m smoke; then pass "pytest -m smoke"; else fail "pytest -m smoke"; fi

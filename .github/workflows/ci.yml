@@ -24,3 +24,11 @@ jobs:
 
       - name: Pytest (unit + integration)
         run: pytest tests/ -q -m "not corpus and not smoke and not confidence"
+
+      - name: Build regression corpus
+        run: python scripts/test/build_regression_db.py --output /tmp/vitiligo-regression.db
+
+      - name: Pytest (confidence regression)
+        env:
+          VITILIGO_REGRESSION_DB: /tmp/vitiligo-regression.db
+        run: pytest tests/ -q -m confidence
