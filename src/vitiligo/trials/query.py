@@ -2,9 +2,7 @@
 
 Trials are queried structurally rather than semantically: status, phase,
 country, intervention name. A free-text term is matched against title,
-summary, and conditions with simple SQL `LIKE`. This is honest about what
-the data is — operational metadata, not narrative — and avoids pretending
-embeddings are doing useful retrieval where they aren't.
+summary, conditions, keywords, and intervention names with simple SQL `LIKE`.
 """
 
 from __future__ import annotations
@@ -67,6 +65,7 @@ def _apply_filter(stmt: Any, filt: TrialFilter) -> Any:
             | (func.lower(func.coalesce(Trial.summary, "")).like(like))
             | (func.lower(cast(Trial.conditions, String)).like(like))
             | (func.lower(cast(Trial.keywords, String)).like(like))
+            | (func.lower(cast(Trial.interventions, String)).like(like))
         )
     return stmt
 
@@ -109,7 +108,7 @@ def retrieve_relevant_trials(
     """Return trials most relevant to a research intent.
 
     Until trials are embedded, "relevance" is the union of:
-    - free-text term match in title / summary / conditions, AND
+    - free-text term match in title / summary / conditions / interventions, AND
     - quality filter: high-signal phase (>=Phase 2) OR reported results.
 
     Trials are ordered by last update date so the most current evidence

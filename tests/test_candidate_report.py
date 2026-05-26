@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from vitiligo.reports.candidates import (
     IntentSpec,
     ScoreBreakdown,
@@ -62,7 +64,8 @@ def test_load_intents_file() -> None:
     assert intents[0].query
 
 
-def test_build_candidate_report_on_local_corpus() -> None:
+@pytest.mark.integration
+def test_build_candidate_report_on_local_corpus(require_local_corpus) -> None:
     init_db()
     report = build_candidate_report(top_n=5)
     assert report.global_top

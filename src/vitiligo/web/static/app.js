@@ -64,6 +64,20 @@ function metaBits(item) {
   return bits.join(' • ');
 }
 
+function formatApiError(detail) {
+  if (detail == null) return '';
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail.map(item => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object' && item.msg) return item.msg;
+      return JSON.stringify(item);
+    }).join('; ');
+  }
+  if (typeof detail === 'object') return JSON.stringify(detail);
+  return String(detail);
+}
+
 async function postJson(url, payload) {
   const res = await fetch(url, {
     method: 'POST',
@@ -74,7 +88,7 @@ async function postJson(url, payload) {
     let detail = `HTTP ${res.status}`;
     try {
       const data = await res.json();
-      if (data.detail) detail = data.detail;
+      if (data.detail) detail = formatApiError(data.detail);
     } catch { /* ignore */ }
     throw new Error(detail);
   }
@@ -121,7 +135,12 @@ function truncate(s, n) {
 
 function renderNotesBlock(notes, className) {
   if (!notes) return '';
-  const items = Array.isArray(notes) ? notes : [String(notes)];
+  let items;
+  if (Array.isArray(notes)) {
+    items = notes;
+  } else {
+    items = String(notes).split(/\n+/);
+  }
   const cleaned = items.map(item => String(item).trim()).filter(Boolean);
   if (!cleaned.length) return '';
   return `<ul class="${className}">${cleaned.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
@@ -489,15 +508,16 @@ document.getElementById('form-graph').addEventListener('submit', async (e) => {
       out.innerHTML = '<div class="empty">No entities match. Run <code>vitiligo graph seed</code> first.</div>';
       return;
     }
+    const entities = data.results;
     out.innerHTML = `
-      <h3>Entities (${data.results.length})</h3>
-      ${data.results.map(entity => `
+      <h3>Entities (${entities.length})</h3>
+      ${entities.map((entity, idx) => `
         <article class="hit graph-entity-hit">
           <div class="hit-header">
             <span class="hit-source">${escapeHtml(entity.kind)}:${escapeHtml(entity.key)}</span>
           </div>
           <div class="hit-title">
-            <button type="button" class="link-button graph-entity-link" data-name="${encodeURIComponent(entity.name)}">
+            <button type="button" class="link-button graph-entity-link" data-idx="${idx}">
               ${escapeHtml(entity.name)}
             </button>
           </div>
@@ -506,7 +526,9 @@ document.getElementById('form-graph').addEventListener('submit', async (e) => {
       `).join('')}
     `;
     out.querySelectorAll('.graph-entity-link').forEach(btn => {
-      btn.addEventListener('click', () => loadGraphNeighbors(decodeURIComponent(btn.dataset.name || '')));
+      const idx = Number(btn.dataset.idx);
+      const name = entities[idx]?.name;
+      if (name) btn.addEventListener('click', () => loadGraphNeighbors(name));
     });
   } catch (err) {
     showError(out, err.message);
@@ -555,6 +577,9 @@ function sourceLabel(s) {
 function trialExternalUrl(t) {
   if (t.source === 'ctgov') return `https://clinicaltrials.gov/study/${encodeURIComponent(t.source_id)}`;
   if (t.source === 'euctr') return `https://euclinicaltrials.eu/ctis-public/view/${encodeURIComponent(t.source_id)}`;
+  if (t.source === 'ictrp') {
+    return `https://trialsearch.who.int/Trial2.aspx?TrialID=${encodeURIComponent(t.source_id)}`;
+  }
   return null;
 }
 
@@ -597,8 +622,8 @@ function renderTrial(t) {
   const interventions = (t.interventions || []).slice(0, 4).map(iv =>
     `<span class="trial-iv"><span class="trial-iv-type">${escapeHtml(iv.type || '?')}</span> ${escapeHtml(iv.name || '?')}</span>`
   ).join('');
-  const sponsors = (t.sponsors || []).slice(0, 2).map(s =>
-    `${escapeHtml(s.name || '?')}${s.role === 'lead' ? ' (lead)' : ''}`
+  const sponsorText = (t.sponsors || []).slice(0, 2).map(s =>
+    `${s.name || '?'}${s.role === 'lead' ? ' (lead)' : ''}`
   ).join(' · ');
   const countries = (t.countries || []).slice(0, 8).map(c =>
     `<span class="tag">${escapeHtml(c)}</span>`
@@ -619,7 +644,7 @@ function renderTrial(t) {
       <div class="trial-title">${escapeHtml(t.brief_title || t.official_title || '(no title)')}</div>
       ${conditions ? `<div class="trial-section"><span class="trial-label">Conditions:</span> ${conditions}</div>` : ''}
       ${interventions ? `<div class="trial-section"><span class="trial-label">Interventions:</span> ${interventions}</div>` : ''}
-      ${sponsors ? `<div class="trial-section"><span class="trial-label">Sponsors:</span> ${escapeHtml(sponsors)}</div>` : ''}
+      ${sponsorText ? `<div class="trial-section"><span class="trial-label">Sponsors:</span> ${escapeHtml(sponsorText)}</div>` : ''}
       ${countries ? `<div class="trial-section"><span class="trial-label">Countries:</span> ${countries}</div>` : ''}
       ${t.summary ? `<div class="trial-summary">${escapeHtml(truncate(t.summary, 600))}</div>` : ''}
       <div class="trial-footer">

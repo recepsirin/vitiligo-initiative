@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
 
-from vitiligo.storage import init_db
 from vitiligo.web.app import create_app
 
 
-def test_report_candidates_endpoint_returns_ranked_list() -> None:
-    init_db()
+@pytest.mark.integration
+def test_report_candidates_endpoint_returns_ranked_list(require_local_corpus) -> None:
     client = TestClient(create_app())
     resp = client.get("/api/report/candidates?top_n=3")
     assert resp.status_code == 200
