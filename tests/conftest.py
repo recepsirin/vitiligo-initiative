@@ -5,12 +5,14 @@ Test pyramid (Martin Fowler / Mike Cohn):
 - **integration** — real SQLite on a seeded temp file (fast; runs in CI)
 - **corpus** — requires full local ``data/vitiligo.db`` (skip in CI)
 - **smoke** — thin end-to-end checks over the full corpus (run locally)
-- **confidence** — curated research scenarios with expected outcomes (local quality gate)
+- **confidence** — curated research scenarios on the minimal regression corpus (CI + local)
 """
 
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -21,6 +23,10 @@ import vitiligo.config as cfg
 import vitiligo.storage.db as dbmod
 from vitiligo.storage import Trial, TrialSourceKind, init_db
 from vitiligo.web.app import create_app
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+REGRESSION_DIR = Path(__file__).resolve().parent / "fixtures" / "regression"
+REGRESSION_DB = REGRESSION_DIR / "vitiligo-regression.db"
 
 
 def _corpus_path() -> Path:
@@ -46,6 +52,23 @@ def require_local_corpus() -> None:
     path = _corpus_path()
     if not path.is_file() or path.stat().st_size < 10_000_000:
         pytest.skip("requires local data/vitiligo.db corpus")
+    _reset_engine()
+    init_db()
+
+
+@pytest.fixture
+def require_regression_corpus(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Minimal regression corpus from ``tests/fixtures/regression/*.json``."""
+    db_path = Path(os.environ.get("VITILIGO_REGRESSION_DB", REGRESSION_DB))
+    build_script = PROJECT_ROOT / "scripts" / "test" / "build_regression_db.py"
+    if not db_path.is_file():
+        subprocess.run(
+            [sys.executable, str(build_script), "--output", str(db_path)],
+            check=True,
+            cwd=PROJECT_ROOT,
+        )
+    monkeypatch.setenv("VITILIGO_DB_PATH", str(db_path))
+    monkeypatch.setenv("VITILIGO_PREWARM_EMBEDDINGS", "false")
     _reset_engine()
     init_db()
 

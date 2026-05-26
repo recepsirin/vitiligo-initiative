@@ -1,0 +1,143 @@
+[
+  {
+    "source": "ctgov",
+    "source_id": "NCT01082393",
+    "brief_title": "Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis)",
+    "official_title": "Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis)",
+    "summary": "We will investigate the process of vitiligo induction and the influence of different commonly used cream treatments on this process. Studies comparing different treatments for vitiligo in the induction stage of the disease are still missing. The study hypothesis = cream treatment can stop actively spreading vitiligo lesions during the early induction stage of the disease.",
+    "status": "COMPLETED",
+    "phases": [
+      "PHASE4"
+    ],
+    "conditions": [
+      "Vitiligo"
+    ],
+    "keywords": [
+      "vitiligo"
+    ],
+    "interventions": [
+      {
+        "type": "DRUG",
+        "name": "topical tacrolimus treatment",
+        "description": "4 applications (day 1,day 3, day 6 and day10)",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "topical pimecrolimus treatment",
+        "description": "4 applications (day 1, day 3, day 6 and day 10)",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "local mometasone furoate treatment",
+        "description": "4 applications (day 1, day 3, day 6 and day 10)",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "cold cream",
+        "description": "4 applications (day 1, day 3, day 6 and day 10)",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "Belgium"
+    ],
+    "has_results": false,
+    "last_update_date": "2022-12-08",
+    "study_type": "INTERVENTIONAL"
+  },
+  {
+    "source": "ctgov",
+    "source_id": "NCT03365141",
+    "brief_title": "Efficacy of Intralesional Triamcinolone Injection in the Treatment of Vitiligo",
+    "official_title": "Efficacy of Intralesional Triamcinolone Injection in the Treatment of Vitiligo",
+    "summary": "A randomized split-body pilot study was planned to confirm efficacy of intralesiona triamcinolone injection in patients with vitiligo",
+    "status": "UNKNOWN",
+    "phases": [
+      "NA"
+    ],
+    "conditions": [
+      "Vitiligo",
+      "Treatment",
+      "Intralesional Injection",
+      "Corticosteroid"
+    ],
+    "keywords": [
+      "vitiligo",
+      "intralesional injection",
+      "corticosteroid",
+      "triamcinolone"
+    ],
+    "interventions": [
+      {
+        "type": "DRUG",
+        "name": "Triamcinolone acetonide 0.4mg/cc",
+        "description": "* Intralesional injection of dilute triamcinolone acetonide with 2% lidocaine (400mg/20 mL) would be performed to reduce pain when injecting the drug.\n* Once weekly, for a total of 12 weeks",
+        "other_names": []
+      },
+      {
+        "type": "DEVICE",
+        "name": "Phototherapy (NBUVB or excimer laser)",
+        "description": "NBUVB or excimer laser treatment weekly",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "Topical tacrolimus",
+        "description": "Application of topical tacrolimus ointment twice a day",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "South Korea"
+    ],
+    "has_results": false,
+    "last_update_date": "2017-12-07",
+    "study_type": "INTERVENTIONAL"
+  },
+  {
+    "source": "ctgov",
+    "source_id": "NCT07554222",
+    "brief_title": "Study to Evaluate the Safety, Tolerability and How IBI3013 is Taken up and Processed by the Body in Healthy Volunteers After Single-dose Administration, and in Non-segmental Vitiligo Patients and Alopecia Areata Patients After Multiple-dose Administration",
+    "official_title": "Evaluation of the Safety, Tolerability, and Pharmacokinetics of Single-dose Administration of IBI3013 in Healthy Adult Trial Participants and Multiple-dose Administration in Active Non-segmental Vitiligo Trial Participants and Severe Alopecia Areata Trial Participants - a Randomized, Double-blind, Placebo-controlled, Dose-escalation Study",
+    "summary": "A multicenter clinical study to evaluate the safety, PK characteristics, immunogenicity characteristics, and PD characteristics of IBI3013 in healthy trial participants and active non-segmental vitiligo trial participants and severe alopecia areata trial participants. The study is divided into 2 parts, with Part 1 involving healthy trial participants lasting up to 24 weeks, and Part 2 involving active non-segmental vitiligo trial participants and severe alopecia areata trial participants lasting up to 48 weeks.",
+    "status": "RECRUITING",
+    "phases": [
+      "PHASE1"
+    ],
+    "conditions": [
+      "Healthy",
+      "Active Non-segmental Vitiligo",
+      "Severe Alopecia Areata"
+    ],
+    "keywords": [],
+    "interventions": [
+      {
+        "type": "DRUG",
+        "name": "placebo",
+        "description": "placebo",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "Baricitinib tablets",
+        "description": "Baricitinib tablets",
+        "other_names": []
+      },
+      {
+        "type": "DRUG",
+        "name": "IBI3013",
+        "description": "Recombinant anti-Interleukin-15 (IL-15) monoclonal antibody injection",
+        "other_names": []
+      }
+    ],
+    "countries": [
+      "China"
+    ],
+    "has_results": false,
+    "last_update_date": "2026-04-28",
+    "study_type": "INTERVENTIONAL"
+  }
+]
