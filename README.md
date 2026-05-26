@@ -421,10 +421,10 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 ### Immediate next moves
 
-1. **Deploy** — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` and `./scripts/deploy/verify-public.sh` ([`docs/deploy.md`](docs/deploy.md)).
-2. **Schedule KOL meeting** — `./scripts/review/kol-share-pack.sh`, then email via [`docs/advisor-outreach.md`](docs/advisor-outreach.md).
-3. **Methods preprint** — expand [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md) after advisor evaluation set.
-4. Resolve remaining [open questions](#open-questions) (legal structure, launch posture).
+1. **Deploy** — follow [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md): `fly auth login` → `./scripts/deploy/fly-deploy-all.sh` → `./scripts/deploy/verify-public.sh`
+2. **Schedule KOL meeting** — `./scripts/review/kol-share-pack.sh`, then [`docs/advisor-outreach.md`](docs/advisor-outreach.md)
+3. **Confirm strategy defaults** — review [`docs/open-questions-resolutions.md`](docs/open-questions-resolutions.md)
+4. **Methods preprint** — expand [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md) after advisor labels retrieval eval
 
 ## How to Read This Document
 
