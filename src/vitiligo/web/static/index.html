@@ -12,7 +12,7 @@
       <div class="brand">
         <span class="brand-mark"></span>
         <div class="brand-text">
-          <h1>Vitiligo Initiative</h1>
+          <h1>Vitiligo Initiative <span class="beta-badge">Beta</span></h1>
           <p>Evidence Engine — open, AI-native research for stopping spread and driving repigmentation.</p>
         </div>
       </div>
@@ -27,6 +27,12 @@
   </header>
 
   <main class="container">
+    <div class="disclaimer-banner" role="note">
+      <strong>Research tool only — not medical advice.</strong>
+      AI answers may be incomplete or wrong; verify cited sources. Discuss treatment with a clinician.
+      <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
+    </div>
+
     <!-- SEARCH -->
     <section class="panel" id="panel-search">
       <h2>Semantic search over the corpus</h2>
@@ -47,7 +53,7 @@
     <!-- ASK -->
     <section class="panel hidden" id="panel-ask">
       <h2>Ask the corpus</h2>
-      <p class="hint">Ask a research question. Answers cite the retrieved papers inline. Requires an Anthropic API key configured server-side.</p>
+      <p class="hint">Ask a research question. Answers cite the retrieved papers inline. Requires an Anthropic API key configured server-side. Not for clinical decision-making.</p>
       <form id="form-ask" class="row">
         <input type="text" id="ask-question" placeholder="e.g. What is the evidence for combining ruxolitinib with NB-UVB?" required />
         <select id="ask-topk">
@@ -63,7 +69,7 @@
     <!-- HYPOTHESIZE -->
     <section class="panel hidden" id="panel-hypothesize">
       <h2>Generate ranked candidates</h2>
-      <p class="hint">From a research intent, the engine retrieves papers, trials, priors, and knowledge-graph relations, then asks the LLM for ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations.</p>
+      <p class="hint">From a research intent, the engine retrieves papers, trials, priors, and knowledge-graph relations, then asks the LLM for ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations. Hypotheses require expert validation — not treatment recommendations.</p>
       <form id="form-hypothesize" class="row">
         <input type="text" id="hyp-intent" placeholder="e.g. stop spread of active non-segmental vitiligo" required />
         <select id="hyp-topk">
@@ -147,8 +153,9 @@
   </main>
 
   <footer class="footer">
-    <div class="container">
-      <span>Open by default • Apache-2.0 • <a href="https://github.com/recepsirin/vitiligo-initiative" target="_blank">github.com/recepsirin/vitiligo-initiative</a></span>
+    <div class="container footer-inner">
+      <span>Open by default • Apache-2.0 • <a href="https://github.com/recepsirin/vitiligo-initiative" target="_blank">GitHub</a></span>
+      <span><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="mailto:contact@vitiligo-initiative.org">Contact</a></span>
     </div>
   </footer>
 
