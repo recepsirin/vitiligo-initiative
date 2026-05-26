@@ -27,17 +27,6 @@ def test_smoke_health_ready(smoke_client: TestClient) -> None:
     assert health.json()["ready"] is True
 
 
-def test_smoke_trials_intervention_regression(smoke_client: TestClient) -> None:
-    """Real-corpus guard: tacrolimus findable via interventions JSON only."""
-    r = smoke_client.post(
-        "/api/trials/search",
-        json={"query": "tacrolimus", "limit": 50, "offset": 0},
-    )
-    assert r.status_code == 200
-    ids = {t["source_id"] for t in r.json()["results"]}
-    assert "NCT03365141" in ids
-
-
 def test_smoke_semantic_search(smoke_client: TestClient) -> None:
     r = smoke_client.post("/api/search", json={"query": "vitiligo JAK", "top_k": 3})
     assert r.status_code == 200

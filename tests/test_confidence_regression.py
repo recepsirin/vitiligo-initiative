@@ -52,6 +52,12 @@ class TestRetrievalConfidence:
             f"{case['id']}: top score {top.score:.4f} below minimum {min_score} — retrieval quality degraded"
         )
 
+        if expected_top := case.get("expected_top_source_id"):
+            assert top.document.source_id == expected_top, (
+                f"{case['id']}: top hit {top.document.source_id} != expected {expected_top} "
+                f"({top.document.title!r})"
+            )
+
 
 class TestRetrievalNegativeConfidence:
     """Clinical queries must not rank animal-only evidence at the top."""
