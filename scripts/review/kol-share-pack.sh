@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bundle materials for KOL advisor review (graph export, briefs, spot-check, retrieval eval).
+# Bundle materials for KOL advisor review (graph export, briefs, spot-check, retrieval eval, candidate report).
 #
 # Usage:
 #   ./scripts/review/kol-share-pack.sh
@@ -30,6 +30,12 @@ vitiligo_run graph export -o "$OUT/graph-review.json"
 vitiligo_info "Retrieval evaluation"
 OUTPUT="$OUT/retrieval-eval.json" "$SCRIPT_DIR/run-eval-retrieval.sh"
 
+vitiligo_info "Candidate report"
+vitiligo_run report candidates \
+  --json "$OUT/candidate-report.json" \
+  --markdown "$OUT/candidate-report-v1.md"
+cp docs/candidate-intents.json "$OUT/"
+
 vitiligo_info "Copy briefs"
 cp docs/scientific-brief.md docs/kol-meeting-prep.md docs/eval-queries.json "$OUT/"
 
@@ -37,17 +43,21 @@ cat >"$OUT/README.txt" <<EOF
 Vitiligo Initiative — KOL review pack (${STAMP})
 
 Contents:
-  scientific-brief.md     — disease + engine context
-  kol-meeting-prep.md     — meeting agenda and demo script
-  graph-review.json       — full knowledge graph export for edge review
-  spotcheck.log           — automated graph invariant checks (should pass)
-  retrieval-eval.json     — 20 semantic search queries + top-5 hits each
-  eval-queries.json       — query definitions (for methods paper evaluation)
+  scientific-brief.md       — disease + engine context
+  kol-meeting-prep.md       — meeting agenda and demo script
+  graph-review.json         — full knowledge graph export for edge review
+  spotcheck.log             — automated graph invariant checks (should pass)
+  retrieval-eval.json       — 20 semantic search queries + top-5 hits each
+  eval-queries.json         — query definitions (for methods paper evaluation)
+  candidate-report-v1.md    — evidence-scored therapeutic candidate rankings
+  candidate-report.json     — machine-readable candidate report
+  candidate-intents.json    — research intents used for per-intent rankings
 
 Advisor tasks:
   1. Skim graph-review.json for drug→vitiligo and target→vitiligo edges
   2. Label retrieval-eval.json hits (advisor_relevance 1–5, advisor_comments)
-  3. Note any missing Phase 3 drugs or pivotal trials
+  3. Review candidate-report-v1.md — validate top 10 rankings and missing drugs
+  4. Note any missing Phase 3 drugs or pivotal trials
 
 Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Engine version: $(vitiligo_run version 2>/dev/null | tail -1 || echo unknown)
