@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "description": "Canonical research intents for evidence-based candidate ranking (deterministic layer).",
+  "intents": [
+    {
+      "id": "spread_arrest_nsv",
+      "title": "Stop spread — active non-segmental vitiligo",
+      "query": "stop spread active non-segmental vitiligo JAK inhibitor",
+      "goal": "spread_arrest"
+    },
+    {
+      "id": "repigmentation_nsv",
+      "title": "Drive repigmentation — non-segmental vitiligo",
+      "query": "repigmentation non-segmental vitiligo ruxolitinib phototherapy",
+      "goal": "repigmentation"
+    },
+    {
+      "id": "jak_combination",
+      "title": "JAK inhibitor + NB-UVB combination",
+      "query": "topical ruxolitinib narrowband UVB combination vitiligo",
+      "goal": "combination"
+    },
+    {
+      "id": "acral_recalcitrant",
+      "title": "Acral / recalcitrant site repigmentation",
+      "query": "acral vitiligo hands feet repigmentation treatment",
+      "goal": "repigmentation"
+    },
+    {
+      "id": "facial_vitiligo",
+      "title": "Facial vitiligo repigmentation",
+      "query": "facial vitiligo repigmentation treatment face",
+      "goal": "repigmentation"
+    }
+  ]
+}
