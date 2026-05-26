@@ -25,6 +25,7 @@ from vitiligo.evidence import classify_document, classify_trial, evidence_level_
 from vitiligo.graph.query import GraphEdgeView, retrieve_graph_for_hypothesize
 from vitiligo.logging import get_logger
 from vitiligo.priors import retrieve_priors_for_hypothesize
+from vitiligo.reasoning.exceptions import CorpusUnavailable
 from vitiligo.reasoning.llm import LLMClient
 from vitiligo.reasoning.rag import Citation, _hit_to_citation
 from vitiligo.storage import Prior, Trial
@@ -157,7 +158,7 @@ def generate_hypotheses(
     """Retrieve papers, trials, and priors; ask the LLM for ranked candidates."""
     hits = semantic_search(query=intent, top_k=top_k)
     if not hits:
-        raise RuntimeError(
+        raise CorpusUnavailable(
             "No embeddings stored yet. Run `vitiligo embed run` to index the corpus first."
         )
 

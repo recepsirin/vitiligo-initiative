@@ -77,3 +77,42 @@ def test_classify_geo_human_series() -> None:
 def test_evidence_level_label() -> None:
     assert evidence_level_label(EvidenceLevel.RCT) == "RCT"
     assert evidence_level_label("mouse") == "Mouse / animal"
+
+
+def test_classify_document_with_no_metadata_returns_unknown() -> None:
+    doc = Document(source=SourceKind.PUBMED, source_id="empty", title=None)
+    assert classify_document(doc) == EvidenceLevel.UNKNOWN
+
+
+def test_classify_observational_trial_as_cohort() -> None:
+    trial = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000099",
+        study_type="OBSERVATIONAL",
+    )
+    assert classify_trial(trial) == EvidenceLevel.COHORT
+
+
+def test_classify_trial_unknown_study_type() -> None:
+    trial = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000100",
+        study_type=None,
+    )
+    assert classify_trial(trial) == EvidenceLevel.UNKNOWN
+
+
+def test_evidence_level_label_passthrough_unknown_string() -> None:
+    assert evidence_level_label("not-a-real-level") == "not-a-real-level"
+
+
+def test_rct_in_title_without_publication_type_is_not_rct() -> None:
+    """Avoid false positives: title mention alone should not classify as RCT."""
+    doc = Document(
+        source=SourceKind.PUBMED,
+        source_id="5",
+        title="Lessons from a randomized design in mouse vitiligo models",
+        publication_types=["Journal Article"],
+        abstract="We discuss randomized block design in animal experiments.",
+    )
+    assert classify_document(doc) == EvidenceLevel.MOUSE

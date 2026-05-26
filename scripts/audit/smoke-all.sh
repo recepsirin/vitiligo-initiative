@@ -39,8 +39,11 @@ run_cli search "JAK inhibitor vitiligo" --top-k 3
 run_cli trials search tacrolimus --limit 5
 run_cli graph search ruxolitinib --limit 3
 
-echo "==> API smoke (TestClient)"
-if "$PY" "$SCRIPT_DIR/api_smoke.py"; then pass "api_smoke.py"; else fail "api_smoke.py"; fi
+echo "==> Confidence regression (pytest)"
+if "${ROOT}/.venv/bin/pytest" tests/ -q -m confidence; then pass "pytest -m confidence"; else fail "pytest -m confidence"; fi
+
+echo "==> API smoke (pytest)"
+if "${ROOT}/.venv/bin/pytest" tests/ -q -m smoke; then pass "pytest -m smoke"; else fail "pytest -m smoke"; fi
 
 if [[ "$FAIL" -ne 0 ]]; then
   echo "audit: failures detected" >&2

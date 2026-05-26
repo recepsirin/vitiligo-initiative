@@ -31,6 +31,7 @@ from vitiligo.embed import semantic_search
 from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import export_graph_snapshot, get_neighbors, search_entities, summarize_graph
 from vitiligo.reasoning import (
+    CorpusUnavailable,
     LLMUnavailable,
     ask_with_citations,
     generate_hypotheses,
@@ -198,7 +199,7 @@ def create_app() -> FastAPI:
     def ask(req: AskRequest) -> dict[str, Any]:
         try:
             answer = ask_with_citations(question=req.question, top_k=req.top_k)
-        except LLMUnavailable as exc:
+        except (LLMUnavailable, CorpusUnavailable) as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         return {
             "question": answer.question,
@@ -211,7 +212,7 @@ def create_app() -> FastAPI:
     def hypothesize(req: HypothesizeRequest) -> dict[str, Any]:
         try:
             report = generate_hypotheses(intent=req.intent, top_k=req.top_k)
-        except LLMUnavailable as exc:
+        except (LLMUnavailable, CorpusUnavailable) as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         return hypothesize_report_to_dict(report)
 

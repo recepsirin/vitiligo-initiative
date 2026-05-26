@@ -24,6 +24,19 @@ def test_rate_limit_blocks_excess_post_requests() -> None:
     assert "Retry-After" in blocked.headers
 
 
+def test_health_post_is_not_limited() -> None:
+    app = FastAPI()
+    app.add_middleware(RateLimitMiddleware, post_limit_per_minute=1, window_seconds=60)
+
+    @app.post("/api/health")
+    def health_post() -> dict[str, str]:
+        return {"status": "ok"}
+
+    client = TestClient(app)
+    for _ in range(5):
+        assert client.post("/api/health").status_code == 200
+
+
 def test_get_requests_are_not_limited() -> None:
     app = FastAPI()
     app.add_middleware(RateLimitMiddleware, post_limit_per_minute=1, window_seconds=60)

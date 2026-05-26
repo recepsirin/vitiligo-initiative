@@ -27,3 +27,14 @@ def test_coerce_relation_kind() -> None:
     assert coerce_relation_kind("treats") == RelationKind.TREATS
     assert coerce_relation_kind("associated-with") == RelationKind.ASSOCIATED_WITH
     assert coerce_relation_kind("nonsense") is None
+
+
+def test_normalize_entity_key_empty_and_punctuation() -> None:
+    assert normalize_entity_key("") == "unknown"
+    assert normalize_entity_key("---") == "unknown"
+    assert normalize_entity_key("IL-17A") == "il_17a"
+
+
+def test_coerce_entity_kind_empty_and_whitespace() -> None:
+    assert coerce_entity_kind("") is None
+    assert coerce_entity_kind("   ") is None

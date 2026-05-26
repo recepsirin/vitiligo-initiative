@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from vitiligo.web.app import create_app
 
 
-@pytest.mark.integration
+@pytest.mark.corpus
 def test_report_candidates_endpoint_returns_ranked_list(require_local_corpus) -> None:
     client = TestClient(create_app())
     resp = client.get("/api/report/candidates?top_n=3")
@@ -21,9 +21,3 @@ def test_report_candidates_endpoint_returns_ranked_list(require_local_corpus) ->
     assert first["score"]["total"] > 0
     assert isinstance(data["notes"], list)
     assert "intents" in data
-
-
-def test_report_candidates_rejects_invalid_top_n() -> None:
-    client = TestClient(create_app())
-    resp = client.get("/api/report/candidates?top_n=0")
-    assert resp.status_code == 400

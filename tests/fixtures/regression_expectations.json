@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "description": "Curated regression expectations for the Vitiligo Evidence Engine. Each case encodes a research scenario we must not break. Update only after verifying against data/vitiligo.db and documenting why.",
+  "retrieval": [
+    {
+      "id": "treat_rux_uvb",
+      "scenario": "Clinician asks about ruxolitinib + NB-UVB combination for NSV",
+      "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "top_k": 10,
+      "must_include_source_ids": ["35787401", "33248492"],
+      "top_hit_title_must_contain_any": ["ruxolitinib", "Ruxolitinib"],
+      "min_top_score": 0.85
+    },
+    {
+      "id": "treat_jak_oral",
+      "scenario": "Researcher searches for oral JAK inhibitor trial evidence",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 10,
+      "must_include_source_ids": ["37027285"],
+      "top_hit_title_must_contain_any": ["JAK", "jak"],
+      "min_top_score": 0.85
+    },
+    {
+      "id": "mech_jak_ifn",
+      "scenario": "Mechanism query for IFN-gamma / CXCL10 / JAK-STAT axis",
+      "query": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
+      "top_k": 10,
+      "must_include_source_ids": ["26734651", "26046061"],
+      "top_hit_title_must_contain_any": ["CXCL10", "IFN", "interferon"],
+      "min_top_score": 0.82
+    },
+    {
+      "id": "trial_nb_uvb",
+      "scenario": "NB-UVB randomized trial literature",
+      "query": "narrowband ultraviolet B vitiligo randomized controlled trial",
+      "top_k": 10,
+      "must_include_source_ids": ["20199553"],
+      "top_hit_title_must_contain_any": ["narrow", "NB-UVB", "ultraviolet"],
+      "min_top_score": 0.88
+    },
+    {
+      "id": "combo_microneedling",
+      "scenario": "Procedural combo: microneedling + tacrolimus",
+      "query": "microneedling topical tacrolimus vitiligo repigmentation",
+      "top_k": 10,
+      "must_include_source_ids": ["32030880", "32041441"],
+      "top_hit_title_must_contain_any": ["tacrolimus", "microneedling"],
+      "min_top_score": 0.85
+    }
+  ],
+  "trials": [
+    {
+      "id": "tacrolimus_intervention_only",
+      "scenario": "Drug appears only under interventions JSON, not title (audit regression)",
+      "query": "tacrolimus",
+      "limit": 50,
+      "must_include_source_ids": ["NCT03365141"]
+    },
+    {
+      "id": "baricitinib_vitiligo",
+      "scenario": "Baricitinib vitiligo trial findable",
+      "query": "baricitinib",
+      "limit": 20,
+      "must_include_source_ids": ["NCT07554222"]
+    },
+    {
+      "id": "pimecrolimus_intervention",
+      "scenario": "Pimecrolimus intervention-only match",
+      "query": "pimecrolimus",
+      "limit": 50,
+      "must_include_source_ids": ["NCT01082393"]
+    }
+  ],
+  "candidates": {
+    "scenario": "Deterministic candidate report ranks approved JAKs and tacrolimus",
+    "top_n": 10,
+    "must_include_tokens": [
+      "ruxolitinib",
+      "upadacitinib",
+      "povorcitinib",
+      "tacrolimus",
+      "baricitinib"
+    ],
+    "rank1_token": "ruxolitinib",
+    "min_rank1_score": 70
+  }
+}

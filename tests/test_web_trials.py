@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from vitiligo.web.app import create_app
 
 
-@pytest.mark.integration
+@pytest.mark.corpus
 def test_trials_search_ictrp_source_filter(require_local_corpus) -> None:
     client = TestClient(create_app())
     r = client.post(

@@ -64,7 +64,7 @@ def test_load_intents_file() -> None:
     assert intents[0].query
 
 
-@pytest.mark.integration
+@pytest.mark.corpus
 def test_build_candidate_report_on_local_corpus(require_local_corpus) -> None:
     init_db()
     report = build_candidate_report(top_n=5)
@@ -79,6 +79,18 @@ def test_build_candidate_report_on_local_corpus(require_local_corpus) -> None:
     if rux is not None:
         assert rux.score.trials > 0
         assert rux.trial_refs
+
+
+def test_normalize_drug_token_empty() -> None:
+    assert normalize_drug_token("") == ""
+
+
+def test_evidence_strength_boundaries() -> None:
+    assert _evidence_strength(70) == "strong"
+    assert _evidence_strength(69) == "moderate"
+    assert _evidence_strength(45) == "moderate"
+    assert _evidence_strength(25) == "weak"
+    assert _evidence_strength(24) == "speculative"
 
 
 def test_score_breakdown_total() -> None:
