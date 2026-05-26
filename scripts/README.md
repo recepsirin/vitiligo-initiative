@@ -7,6 +7,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`docker-entrypoint.sh`](docker-entrypoint.sh) | Container entrypoint (used by Dockerfile) |
 | [`deploy/common.sh`](deploy/common.sh) | Shared shell helpers |
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
+| [`deploy/fly-deploy-all.sh`](deploy/fly-deploy-all.sh) | One-shot Fly deploy (prepare → deploy → upload → seed → health) |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
 | [`review/graph-spotcheck.sh`](review/graph-spotcheck.sh) | Automated KG v1 spot-check |
@@ -27,7 +28,11 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 ./scripts/deploy/prepare-db.sh
 ./scripts/deploy/prepare-db.sh --gzip
 
-# Fly.io (requires flyctl + ANTHROPIC_API_KEY)
+# Fly.io (requires: fly auth login, ANTHROPIC_API_KEY, data/vitiligo.db)
+export ANTHROPIC_API_KEY=sk-ant-...
+./scripts/deploy/fly-deploy-all.sh
+
+# Or step-by-step:
 ./scripts/deploy/fly-first-deploy.sh
 ./scripts/deploy/fly-upload-db.sh
 ./scripts/deploy/fly-seed-graph.sh

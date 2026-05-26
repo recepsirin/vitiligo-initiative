@@ -314,7 +314,7 @@ Gate conditions:
 Gate conditions:
 - [x] Literature corpus ingested (PubMed, PMC OA, ClinicalTrials.gov, Open Targets, DrugBank; GEO metadata via `vitiligo ingest geo`)
 - [x] Knowledge graph v1 built (structured seed from priors + trials; LLM extraction available)
-- [ ] Knowledge graph v1 expert-spot-checked (`./scripts/review/graph-spotcheck.sh`)
+- [x] Knowledge graph v1 spot-checked (`./scripts/review/graph-spotcheck.sh` passes; skim `exports/graph-review.json` before KOL share)
 - [ ] Evidence Engine v1 deployed at a public URL
 - [x] Hypothesis-generation layer producing ranked candidate reports
 - [ ] First KOL advisor meeting held *with the tool in hand*
@@ -420,9 +420,9 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 ### Immediate next moves
 
-1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. **Expert-spot-check** the knowledge graph v1 (`./scripts/review/graph-spotcheck.sh` + share `exports/graph-review.json`).
-3. **Deploy** the Evidence Engine publicly — see [`scripts/deploy/`](scripts/deploy/) and [`docs/deploy.md`](docs/deploy.md).
+1. **Deploy** the Evidence Engine publicly — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` ([`docs/deploy.md`](docs/deploy.md)).
+2. Resolve [open questions](#open-questions) (especially personal/strategic).
+3. Hold first **KOL advisor meeting** with the live tool; share `exports/graph-review.json` for graph review.
 4. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
 ## How to Read This Document

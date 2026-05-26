@@ -21,17 +21,23 @@ Helper scripts live under [`scripts/deploy/`](../scripts/deploy/). See [`scripts
 ### First deploy
 
 ```bash
-# Verify local corpus (optional)
-./scripts/deploy/prepare-db.sh
-
-# One-shot: app + volume + secrets + deploy
+fly auth login
 export ANTHROPIC_API_KEY=sk-ant-...
-./scripts/deploy/fly-first-deploy.sh
 
-# Upload corpus + seed knowledge graph
+# One-shot (recommended): prepare → deploy → upload → seed → health check
+./scripts/deploy/fly-deploy-all.sh
+```
+
+Step-by-step equivalent:
+
+```bash
+./scripts/deploy/prepare-db.sh
+./scripts/deploy/fly-first-deploy.sh
 ./scripts/deploy/fly-upload-db.sh
 ./scripts/deploy/fly-seed-graph.sh
 ```
+
+Non-interactive CI/automation: set `FLY_ACCESS_TOKEN` instead of `fly auth login`.
 
 Manual equivalent:
 
