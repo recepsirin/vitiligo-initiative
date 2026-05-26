@@ -173,6 +173,8 @@ def create_app() -> FastAPI:
 
     @app.post("/api/search")
     def search(req: SearchRequest) -> dict[str, Any]:
+        """Semantic search. Each result ``score`` is cosine similarity minus a small
+        evidence-level penalty (mouse −0.08, in-vitro −0.05), not raw embedding similarity."""
         hits = semantic_search(query=req.query, top_k=req.top_k)
         results = []
         for rank, hit in enumerate(hits, start=1):

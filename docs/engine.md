@@ -175,7 +175,7 @@ A small FastAPI app exposing JSON endpoints plus a static HTML UI:
 | GET | `/` | Evidence Engine UI (single HTML page) |
 | GET | `/api/health` | Readiness + corpus counts + LLM configured |
 | GET | `/api/stats` | Corpus and trial breakdown for monitoring |
-| POST | `/api/search` | Semantic search results |
+| POST | `/api/search` | Semantic search results (`score` = evidence-adjusted cosine; mouse −0.08, in-vitro −0.05) |
 | POST | `/api/ask` | RAG with citations (requires `ANTHROPIC_API_KEY`) |
 | POST | `/api/hypothesize` | Ranked candidates (requires `ANTHROPIC_API_KEY`) |
 | POST | `/api/trials/search` | Structured trial search |
