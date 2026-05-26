@@ -302,8 +302,8 @@ We move agilely. Phases are sequenced by dependency, not calendar — each gates
 
 Gate conditions:
 - [ ] Mission and objectives document finalized (this README is v0)
-- [ ] Scientific brief on vitiligo state-of-the-art completed
-- [ ] Governance and ethics brief drafted
+- [x] Scientific brief on vitiligo state-of-the-art completed ([`docs/scientific-brief.md`](docs/scientific-brief.md) — draft v0.1)
+- [x] Governance and ethics brief drafted ([`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md) — draft v0.1)
 - [ ] Strategic plan finalized
 - [ ] Open questions resolved (see [Open Questions](#open-questions))
 
@@ -417,13 +417,14 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
   - **Typed CLI**, ruff-clean, 58 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
+- **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md) (drafts for advisor review).
 
 ### Immediate next moves
 
 1. **Deploy** the Evidence Engine publicly — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` ([`docs/deploy.md`](docs/deploy.md)).
-2. Resolve [open questions](#open-questions) (especially personal/strategic).
-3. Hold first **KOL advisor meeting** with the live tool; share `exports/graph-review.json` for graph review.
-4. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
+2. **Schedule KOL meeting** using [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md) (live tool + `exports/graph-review.json`).
+3. Resolve remaining [open questions](#open-questions) (personal/strategic, legal structure).
+4. Advisor review of briefs → v1.0; then draft **methods preprint** outline.
 
 ## How to Read This Document
 
