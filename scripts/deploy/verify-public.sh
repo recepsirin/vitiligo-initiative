@@ -36,7 +36,27 @@ check() {
 
 vitiligo_info "Verifying public deploy at $BASE_URL"
 
-check "health" "$BASE_URL/api/health" '"ready"'
+check_health() {
+  vitiligo_info "GET $BASE_URL/api/health"
+  if ! body="$(curl -fsS "$BASE_URL/api/health")"; then
+    echo "  FAIL: health request failed" >&2
+    FAIL=1
+    return
+  fi
+  if ! grep -qE '"ready"[[:space:]]*:[[:space:]]*true' <<<"$body"; then
+    echo "  FAIL: health.ready is not true" >&2
+    FAIL=1
+    return
+  fi
+  if ! grep -qE '"graph_entities"[[:space:]]*:[[:space:]]*[1-9][0-9]*' <<<"$body"; then
+    echo "  FAIL: graph_entities missing or zero (run fly-seed-graph?)" >&2
+    FAIL=1
+    return
+  fi
+  echo "  OK"
+}
+
+check_health
 check "index" "$BASE_URL/" "Vitiligo Initiative"
 check "privacy" "$BASE_URL/privacy" "Privacy Policy"
 check "terms" "$BASE_URL/terms" "Not medical advice"
