@@ -30,6 +30,7 @@ vitiligo serve &
 
 ```bash
 fly auth login
+./scripts/deploy/auth-check.sh
 export ANTHROPIC_API_KEY=sk-ant-...
 ./scripts/deploy/fly-deploy-all.sh
 ./scripts/deploy/verify-public.sh

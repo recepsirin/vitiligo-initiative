@@ -9,6 +9,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
 | [`deploy/fly-deploy-all.sh`](deploy/fly-deploy-all.sh) | One-shot Fly deploy (prepare → deploy → upload → seed → health) |
 | [`deploy/verify-public.sh`](deploy/verify-public.sh) | Post-deploy smoke test (health, legal pages, search API) |
+| [`deploy/auth-check.sh`](deploy/auth-check.sh) | Verify Fly login + print deploy commands |
 | [`deploy/verify-local.sh`](deploy/verify-local.sh) | Same checks against local `vitiligo serve` |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
