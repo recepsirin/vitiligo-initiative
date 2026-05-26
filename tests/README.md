@@ -44,9 +44,17 @@ Candidate ranking confidence (`test_confidence_corpus.py`) still requires the fu
 ## Adding a regression case
 
 1. Fix a bug or get advisor validation on a query
-2. Add the case to `regression_expectations.json` with `must_include_source_ids`
+2. Add the case to `regression_expectations.json` with `must_include_source_ids` and optional `eval_query_id`
 3. If new papers/trials are needed, add rows to `tests/fixtures/regression/*.json`
 4. Rebuild: `python scripts/test/build_regression_db.py`
 5. Run: `pytest -m confidence`
 
 Every production bug in search/trials should add a confidence case.
+
+## Trimmed / consolidated (intentionally)
+
+- Empty graph/trials API checks live in `test_web_graph.py` only (not duplicated in validation tests)
+- Smoke no longer repeats tacrolimus trial regression (`confidence` covers it)
+- Internal scoring cap helpers removed from unit tests; ranking quality is covered by `confidence` + `corpus`
+- `test_eval_queries.py` merged into `test_regression_manifest.py`
+- Middleware rate-limit tests kept minimal; app-level limits are in `test_web_ratelimit.py`

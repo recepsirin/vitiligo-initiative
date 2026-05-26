@@ -4,15 +4,18 @@
   "retrieval": [
     {
       "id": "treat_rux_uvb",
+      "eval_query_id": "treat_rux_uvb",
       "scenario": "Clinician asks about ruxolitinib + NB-UVB combination for NSV",
       "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
       "top_k": 10,
       "must_include_source_ids": ["35787401", "33248492"],
+      "expected_top_source_id": "35787401",
       "top_hit_title_must_contain_any": ["ruxolitinib", "Ruxolitinib"],
       "min_top_score": 0.85
     },
     {
       "id": "treat_jak_oral",
+      "eval_query_id": "treat_jak_oral",
       "scenario": "Researcher searches for oral JAK inhibitor trial evidence",
       "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
       "top_k": 10,
@@ -22,6 +25,7 @@
     },
     {
       "id": "mech_jak_ifn",
+      "eval_query_id": "mech_jak_ifn",
       "scenario": "Mechanism query for IFN-gamma / CXCL10 / JAK-STAT axis",
       "query": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
       "top_k": 10,
@@ -31,6 +35,7 @@
     },
     {
       "id": "trial_nb_uvb",
+      "eval_query_id": "trial_nb_uvb",
       "scenario": "NB-UVB randomized trial literature",
       "query": "narrowband ultraviolet B vitiligo randomized controlled trial",
       "top_k": 10,
@@ -40,6 +45,7 @@
     },
     {
       "id": "combo_microneedling",
+      "eval_query_id": "combo_microneedling",
       "scenario": "Procedural combo: microneedling + tacrolimus",
       "query": "microneedling topical tacrolimus vitiligo repigmentation",
       "top_k": 10,

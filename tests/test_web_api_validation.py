@@ -131,31 +131,6 @@ def test_health_reports_degraded_on_empty_db(api_client: TestClient) -> None:
     assert data["corpus"]["documents"] == 0
 
 
-def test_trials_search_returns_empty_on_empty_db(api_client: TestClient) -> None:
-    resp = api_client.post(
-        "/api/trials/search",
-        json={"query": "tacrolimus", "limit": 10, "offset": 0},
-    )
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["total"] == 0
-    assert data["results"] == []
-
-
-def test_trials_stats_empty_on_empty_db(api_client: TestClient) -> None:
-    resp = api_client.get("/api/trials/stats")
-    assert resp.status_code == 200
-    data = resp.json()
-    assert data["total"] == 0
-    assert data["by_source"] == []
-
-
-def test_graph_search_returns_empty_on_empty_db(api_client: TestClient) -> None:
-    resp = api_client.get("/api/graph/search", params={"q": "vitiligo", "limit": 5})
-    assert resp.status_code == 200
-    assert resp.json()["results"] == []
-
-
 def test_search_returns_empty_results_when_corpus_not_indexed(api_client: TestClient) -> None:
     """Semantic search degrades gracefully (empty list) unlike Ask/Hypothesize."""
     resp = api_client.post("/api/search", json={"query": "vitiligo JAK", "top_k": 5})

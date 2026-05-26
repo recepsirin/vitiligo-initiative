@@ -11,7 +11,6 @@ from vitiligo.reports.candidates import (
     ScoreBreakdown,
     _best_stage,
     _evidence_strength,
-    _graph_points,
     _stage_points,
     build_candidate_report,
     load_intents,
@@ -30,30 +29,20 @@ def test_stage_and_strength_helpers() -> None:
     assert _stage_points("PHASE_3") == 30
     assert _stage_points("UNKNOWN") == 0
     assert _best_stage(["PHASE_2", "PHASE_3"]) == "PHASE_3"
-    assert _evidence_strength(75) == "strong"
-    assert _evidence_strength(30) == "weak"
 
 
-def test_graph_and_trial_points_cap() -> None:
-    from vitiligo.graph.query import GraphEdgeView
-
-    edges = [
-        GraphEdgeView(
-            id=1,
-            subject_kind="drug",
-            subject_name="Ruxolitinib",
-            subject_key="rux",
-            predicate="treats",
-            object_kind="disease",
-            object_name="Vitiligo",
-            object_key="vitiligo",
-            confidence=0.95,
-            extraction_method="structured",
-            evidence_count=1,
-        )
-    ]
-    assert _graph_points(edges) == 23
-    assert _graph_points(edges * 10) <= 40
+@pytest.mark.parametrize(
+    ("score", "label"),
+    [
+        (70, "strong"),
+        (69, "moderate"),
+        (45, "moderate"),
+        (25, "weak"),
+        (24, "speculative"),
+    ],
+)
+def test_evidence_strength_thresholds(score: int, label: str) -> None:
+    assert _evidence_strength(score) == label
 
 
 def test_load_intents_file() -> None:
@@ -83,14 +72,6 @@ def test_build_candidate_report_on_local_corpus(require_local_corpus) -> None:
 
 def test_normalize_drug_token_empty() -> None:
     assert normalize_drug_token("") == ""
-
-
-def test_evidence_strength_boundaries() -> None:
-    assert _evidence_strength(70) == "strong"
-    assert _evidence_strength(69) == "moderate"
-    assert _evidence_strength(45) == "moderate"
-    assert _evidence_strength(25) == "weak"
-    assert _evidence_strength(24) == "speculative"
 
 
 def test_score_breakdown_total() -> None:
