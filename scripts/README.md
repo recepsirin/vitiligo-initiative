@@ -9,6 +9,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
+| [`review/graph-spotcheck.sh`](review/graph-spotcheck.sh) | Automated KG v1 spot-check |
 | [`deploy/fly-upload-db.sh`](deploy/fly-upload-db.sh) | Upload `data/vitiligo.db` to Fly volume |
 | [`deploy/fly-seed-graph.sh`](deploy/fly-seed-graph.sh) | Run `vitiligo graph seed` on Fly |
 | [`deploy/fly-redeploy.sh`](deploy/fly-redeploy.sh) | Redeploy container only |
@@ -40,6 +41,7 @@ FLY_APP=my-engine ./scripts/deploy/fly-redeploy.sh
 WITH_GEO=0 ./scripts/ingest/sync-engine.sh   # graph seed + embed only
 ./scripts/ingest/sync-engine.sh        # GEO + graph + embed + stats
 vitiligo graph export -o exports/graph-review.json
+./scripts/review/graph-spotcheck.sh
 ```
 
 See [`docs/deploy.md`](../docs/deploy.md) for full deployment documentation.

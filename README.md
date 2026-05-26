@@ -314,9 +314,9 @@ Gate conditions:
 Gate conditions:
 - [x] Literature corpus ingested (PubMed, PMC OA, ClinicalTrials.gov, Open Targets, DrugBank; GEO metadata via `vitiligo ingest geo`)
 - [x] Knowledge graph v1 built (structured seed from priors + trials; LLM extraction available)
-- [ ] Knowledge graph v1 expert-spot-checked
+- [ ] Knowledge graph v1 expert-spot-checked (`./scripts/review/graph-spotcheck.sh`)
 - [ ] Evidence Engine v1 deployed at a public URL
-- [ ] Hypothesis-generation layer producing ranked candidate reports
+- [x] Hypothesis-generation layer producing ranked candidate reports
 - [ ] First KOL advisor meeting held *with the tool in hand*
 
 ### Phase 2 — Validation Path
@@ -415,13 +415,13 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
-  - **Typed CLI**, ruff-clean, 57 tests passing, Apache-2.0 licensed.
+  - **Typed CLI**, ruff-clean, 58 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 
 ### Immediate next moves
 
 1. Resolve [open questions](#open-questions) (especially personal/strategic).
-2. **Expert-spot-check** the knowledge graph v1 (`vitiligo graph stats`, `vitiligo graph neighbors vitiligo`).
+2. **Expert-spot-check** the knowledge graph v1 (`./scripts/review/graph-spotcheck.sh` + share `exports/graph-review.json`).
 3. **Deploy** the Evidence Engine publicly — see [`scripts/deploy/`](scripts/deploy/) and [`docs/deploy.md`](docs/deploy.md).
 4. In parallel: draft the **Scientific Brief** and the **Governance & Ethics Brief**.
 
