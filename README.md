@@ -417,14 +417,14 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
   - **Typed CLI**, ruff-clean, 60 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
-- **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md) (drafts for advisor review).
+- **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md), [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md) (drafts for advisor review).
 
 ### Immediate next moves
 
 1. **Deploy** — follow [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md): `fly auth login` → `./scripts/deploy/fly-deploy-all.sh` → `./scripts/deploy/verify-public.sh`
 2. **Schedule KOL meeting** — `./scripts/review/kol-share-pack.sh`, then [`docs/advisor-outreach.md`](docs/advisor-outreach.md)
 3. **Confirm strategy defaults** — review [`docs/open-questions-resolutions.md`](docs/open-questions-resolutions.md)
-4. **Methods preprint** — expand [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md) after advisor labels retrieval eval
+4. **Methods preprint** — Abstract + Introduction in [`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md); complete Methods after advisor labels retrieval eval
 
 ## How to Read This Document
 
