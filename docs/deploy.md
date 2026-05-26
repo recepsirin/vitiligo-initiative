@@ -1,17 +1,35 @@
-# Deploy the Evidence Engine (Fly.io or Render)
+# Deploy & hosting
 
-The web UI is a FastAPI app (`vitiligo serve`) backed by a local SQLite corpus
-(~250 MB with full PubMed + PMC embeddings). Production deployment needs:
+## Current posture (May 2026)
 
-1. A container image (Dockerfile included)
-2. A **persistent disk** for `vitiligo.db` (not in git)
-3. **`ANTHROPIC_API_KEY`** for Ask / Hypothesize (Search and Trials work without it)
+**Local-first.** Run the Evidence Engine on your machine for development, advisor demos, and KOL review:
 
-Helper scripts live under [`scripts/deploy/`](../scripts/deploy/). See [`scripts/README.md`](../scripts/README.md).
+```bash
+vitiligo serve                    # http://127.0.0.1:8765
+./scripts/deploy/verify-local.sh  # smoke test
+./scripts/review/kol-share-pack.sh   # advisor materials (no public URL required)
+```
+
+Share with advisors via **screen share** + the KOL pack tarball — not a public URL.
 
 ---
 
-## Fly.io (recommended — Amsterdam `ams` region)
+## Planned public hosting: DigitalOcean
+
+When a public URL is needed, the target platform is **DigitalOcean** (likely a Droplet or App Platform with a persistent volume for `vitiligo.db`). Rationale: predictable pricing, full control over SQLite + FastAPI + fastembed, no vendor lock-in to edge/serverless constraints.
+
+**Not yet implemented** — deploy scripts for DO will replace the Fly.io tooling below.
+
+Rough cost expectation: ~$12–24/mo for a small always-on instance + block storage (similar to prior Fly estimates).
+
+---
+
+## Deprecated: Fly.io (will be removed)
+
+Fly.io configs and scripts under `fly.toml` and `scripts/deploy/fly-*.sh` are **deprecated** and scheduled for removal. Do not use for new deployments.
+
+<details>
+<summary>Legacy Fly.io instructions (reference only)</summary>
 
 ### Prerequisites
 
@@ -23,67 +41,22 @@ Helper scripts live under [`scripts/deploy/`](../scripts/deploy/). See [`scripts
 ```bash
 fly auth login
 export ANTHROPIC_API_KEY=sk-ant-...
-
-# One-shot (recommended): prepare → deploy → upload → seed → health check
 ./scripts/deploy/fly-deploy-all.sh
 ```
 
-Step-by-step equivalent:
+Verify: `./scripts/deploy/verify-public.sh`
 
-```bash
-./scripts/deploy/prepare-db.sh
-./scripts/deploy/fly-first-deploy.sh
-./scripts/deploy/fly-upload-db.sh
-./scripts/deploy/fly-seed-graph.sh
-```
-
-Non-interactive CI/automation: set `FLY_ACCESS_TOKEN` instead of `fly auth login`.
-
-Manual equivalent:
-
-```bash
-fly launch --no-deploy --copy-config
-fly volumes create vitiligo_data --region ams --size 1
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
-fly deploy
-fly ssh sftp shell   # put data/vitiligo.db /data/vitiligo.db
-fly ssh console -C "vitiligo graph seed"
-```
-
-Verify:
-
-```bash
-./scripts/deploy/verify-public.sh
-# or: fly open /api/health
-# expect: "ready": true, documents > 0, graph_entities > 0
-```
-
-### Updates
-
-```bash
-./scripts/deploy/fly-redeploy.sh
-# Re-upload vitiligo.db only when the corpus changes:
-./scripts/deploy/fly-upload-db.sh
-```
-
-### Useful commands
-
-```bash
-fly logs
-fly status
-fly ssh console -C "ls -lh /data"
-```
+</details>
 
 ---
 
-## Render
+## Render (optional alternative)
+
+`render.yaml` remains as an optional blueprint. Same SQLite-on-disk requirement as DigitalOcean. Lower priority than DO path.
 
 1. Connect the GitHub repo in Render → **New Blueprint** → select `render.yaml`
-2. Set `ANTHROPIC_API_KEY` in the dashboard (sync: false in blueprint)
-3. After first deploy, upload `vitiligo.db` to the attached disk at `/var/data/vitiligo.db`
-   (Render shell or one-off job)
-
-Health check: `GET /api/health` (returns `degraded` until the DB is present).
+2. Set `ANTHROPIC_API_KEY` in the dashboard
+3. Upload `vitiligo.db` to the attached disk at `/var/data/vitiligo.db`
 
 ---
 
@@ -105,6 +78,8 @@ docker run --rm -p 8765:8765 \
 
 Open http://127.0.0.1:8765
 
+Helper scripts: [`scripts/deploy/`](../scripts/deploy/) (Fly scripts deprecated; `docker-smoke.sh`, `verify-local.sh`, `prepare-db.sh` still useful locally).
+
 ---
 
 ## Environment variables
@@ -116,8 +91,7 @@ Open http://127.0.0.1:8765
 | `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` | `30` | Per-IP POST limit (`0` = off) |
 | `VITILIGO_PREWARM_EMBEDDINGS` | `true` | Load fastembed model at startup |
 | `FASTEMBED_CACHE_PATH` | — | ONNX model cache directory |
-| `PORT` | — | Set by Fly/Render; overrides `VITILIGO_WEB_PORT` |
-| `FLY_APP` | `vitiligo-evidence-engine` | Override Fly app name in deploy scripts |
+| `PORT` | — | Host platform port override |
 
 ---
 
@@ -126,8 +100,7 @@ Open http://127.0.0.1:8765
 - **`GET /api/health`** — readiness, version, LLM configured, corpus counts
 - **`GET /api/stats`** — documents, embeddings, trials breakdown
 
-Rate-limited clients receive **HTTP 429** with a `Retry-After` header on excess
-POST requests to `/api/*`.
+Rate-limited clients receive **HTTP 429** with a `Retry-After` header on excess POST requests to `/api/*`.
 
 ---
 

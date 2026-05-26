@@ -1,5 +1,7 @@
+# DEPRECATED — Fly.io config scheduled for removal. Public hosting will move to DigitalOcean.
+# See docs/deploy.md. Do not use for new deployments.
+
 # Fly.io app configuration — Evidence Engine (EU-first: Amsterdam region).
-# See docs/deploy.md for first-time setup and database upload.
 
 app = "vitiligo-evidence-engine"
 primary_region = "ams"

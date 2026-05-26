@@ -414,7 +414,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
-  - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
+  - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs. **Local-first for now** (`vitiligo serve` + KOL screen share). Public hosting planned on **DigitalOcean** — see [`docs/deploy.md`](docs/deploy.md). Fly.io configs are **deprecated** and will be removed.
   - **Typed CLI**, ruff-clean, 66 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
   - **Candidate report v1** — evidence-scored rankings: [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md) (`vitiligo report candidates`).
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
@@ -424,7 +424,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
 
 1. **KOL meeting** — `./scripts/review/kol-share-pack.sh` + share [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md); [`docs/advisor-outreach.md`](docs/advisor-outreach.md)
 2. **Advisor review** — label `exports/retrieval-eval.json`; validate candidate rankings
-3. **Deploy** (when ready) — [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md)
+3. **Local demo** — `vitiligo serve` for screen-share sessions (no public deploy yet)
 4. **Methods preprint** — complete Methods section after advisor feedback
 
 ## How to Read This Document
