@@ -82,7 +82,10 @@ def test_seed_graph_from_priors_and_trials(tmp_path, monkeypatch) -> None:
     assert edge_count >= 4
 
     vitiligo_neighbors = get_neighbors("vitiligo", hops=1, limit=20)
-    assert any("ruxolitinib" in e.subject_name.lower() or "ruxolitinib" in e.object_name.lower() for e in vitiligo_neighbors)
+    assert any(
+        "ruxolitinib" in e.subject_name.lower() or "ruxolitinib" in e.object_name.lower()
+        for e in vitiligo_neighbors
+    )
 
     graph_hits = retrieve_graph_for_hypothesize("stop spread vitiligo")
     assert graph_hits

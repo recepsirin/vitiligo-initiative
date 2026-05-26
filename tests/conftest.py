@@ -21,11 +21,11 @@ from fastapi.testclient import TestClient
 
 import vitiligo.config as cfg
 import vitiligo.storage.db as dbmod
+from tests.helpers.paths import FIXTURES_DIR, PROJECT_ROOT
 from vitiligo.storage import Trial, TrialSourceKind, init_db
 from vitiligo.web.app import create_app
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REGRESSION_DIR = Path(__file__).resolve().parent / "fixtures" / "regression"
+REGRESSION_DIR = FIXTURES_DIR / "regression"
 REGRESSION_DB = REGRESSION_DIR / "vitiligo-regression.db"
 
 
@@ -177,3 +177,9 @@ def api_client_rate_limited(test_db_path: Path, monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("VITILIGO_RATE_LIMIT_POST_PER_MINUTE", "2")
     _reset_engine()
     return TestClient(create_app(), raise_server_exceptions=False)
+
+
+@pytest.fixture
+def regression_api_client(require_regression_corpus) -> TestClient:
+    """FastAPI TestClient backed by the minimal regression corpus."""
+    return TestClient(create_app())

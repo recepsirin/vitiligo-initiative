@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.drugbank import (
     count_drugbank_drugs,
@@ -11,7 +11,7 @@ from vitiligo.sources.drugbank import (
 )
 from vitiligo.storage.models import PriorKind, PriorSourceKind
 
-FIXTURE = Path(__file__).parent / "fixtures" / "drugbank_vitiligo_sample.xml"
+FIXTURE = FIXTURES_DIR / "drugbank_vitiligo_sample.xml"
 
 
 def test_count_drugs_in_fixture() -> None:

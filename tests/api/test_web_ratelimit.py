@@ -9,14 +9,20 @@ from fastapi.testclient import TestClient
 
 
 def test_create_app_rate_limits_post_routes(api_client_rate_limited: TestClient) -> None:
-    assert api_client_rate_limited.post(
-        "/api/trials/search",
-        json={"query": "vitiligo", "limit": 5},
-    ).status_code == 200
-    assert api_client_rate_limited.post(
-        "/api/trials/search",
-        json={"query": "vitiligo", "limit": 5},
-    ).status_code == 200
+    assert (
+        api_client_rate_limited.post(
+            "/api/trials/search",
+            json={"query": "vitiligo", "limit": 5},
+        ).status_code
+        == 200
+    )
+    assert (
+        api_client_rate_limited.post(
+            "/api/trials/search",
+            json={"query": "vitiligo", "limit": 5},
+        ).status_code
+        == 200
+    )
     blocked = api_client_rate_limited.post(
         "/api/trials/search",
         json={"query": "vitiligo", "limit": 5},
@@ -45,7 +51,10 @@ def test_rate_limit_disabled_when_configured_zero(
 
     client = TestClient(create_app(), raise_server_exceptions=False)
     for _ in range(5):
-        assert client.post(
-            "/api/trials/search",
-            json={"query": "vitiligo", "limit": 5},
-        ).status_code == 200
+        assert (
+            client.post(
+                "/api/trials/search",
+                json={"query": "vitiligo", "limit": 5},
+            ).status_code
+            == 200
+        )

@@ -59,7 +59,9 @@ def _trial(
         study_type="INTERVENTIONAL",
         conditions=["Vitiligo"],
         keywords=[],
-        interventions=[{"type": "DRUG", "name": "LY4005130", "description": None, "other_names": []}],
+        interventions=[
+            {"type": "DRUG", "name": "LY4005130", "description": None, "other_names": []}
+        ],
         sponsors=[{"role": "lead", "name": "Eli Lilly", "class": "Pharmaceutical company"}],
         countries=["United States", "Netherlands"],
         primary_outcomes=[],
@@ -95,7 +97,9 @@ def _prior(
 def test_user_prompt_lists_papers_and_trials_separately() -> None:
     hit = SearchHit(document=_doc(), score=0.91)
     trial = _trial()
-    prompt = _build_user_prompt(intent="stop spread", hits=[hit], trials=[trial], priors=[], graph_edges=[])
+    prompt = _build_user_prompt(
+        intent="stop spread", hits=[hit], trials=[trial], priors=[], graph_edges=[]
+    )
 
     assert "RESEARCH INTENT: stop spread" in prompt
     assert "RETRIEVED PAPERS:" in prompt
@@ -107,7 +111,10 @@ def test_user_prompt_lists_papers_and_trials_separately() -> None:
     assert "Phase: PHASE2" in prompt
     assert "Sponsors: Eli Lilly" in prompt
     assert "Interventions: LY4005130" in prompt
-    assert "DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)" in prompt
+    assert (
+        "DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)"
+        in prompt
+    )
 
 
 def test_user_prompt_lists_priors() -> None:
@@ -136,7 +143,9 @@ def test_user_prompt_lists_priors() -> None:
 
 def test_user_prompt_handles_no_trials() -> None:
     hit = SearchHit(document=_doc(), score=0.91)
-    prompt = _build_user_prompt(intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[])
+    prompt = _build_user_prompt(
+        intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[]
+    )
     assert "REGISTERED CLINICAL TRIALS: (none retrieved for this intent)" in prompt
 
 
@@ -219,7 +228,9 @@ def test_user_prompt_lists_graph_edges() -> None:
         extraction_method="structured",
         evidence_count=1,
     )
-    prompt = _build_user_prompt(intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[edge])
+    prompt = _build_user_prompt(
+        intent="repigmentation", hits=[hit], trials=[], priors=[], graph_edges=[edge]
+    )
     assert "KNOWLEDGE GRAPH (vitiligo-connected relations):" in prompt
     assert "[G1] RUXOLITINIB (drug) —[treats]→ Vitiligo (disease)" in prompt
 

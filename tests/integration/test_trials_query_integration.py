@@ -28,14 +28,10 @@ def test_list_trials_matches_intervention_name_only(seeded_trial_db) -> None:
 
 
 def test_list_trials_filters_by_source(seeded_trial_db) -> None:
-    ictrp = list_trials(
-        TrialFilter(query=None, sources=(TrialSourceKind.ICTRP,), limit=50)
-    )
+    ictrp = list_trials(TrialFilter(query=None, sources=(TrialSourceKind.ICTRP,), limit=50))
     assert _ids(ictrp) == {"ICTRP-001"}
 
-    ctgov = list_trials(
-        TrialFilter(query="vitiligo", sources=(TrialSourceKind.CTGOV,), limit=50)
-    )
+    ctgov = list_trials(TrialFilter(query="vitiligo", sources=(TrialSourceKind.CTGOV,), limit=50))
     assert _ids(ctgov) == {"NCT00000001", "NCT00000002"}
 
 

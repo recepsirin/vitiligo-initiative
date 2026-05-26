@@ -78,6 +78,8 @@ for item in spec["queries"]:
                     "evidence_level_label": evidence_level_label(
                         classify_document(hit.document)
                     ),
+                    "advisor_relevance": None,
+                    "advisor_comments": "",
                 }
                 for rank, hit in enumerate(hits, start=1)
             ],

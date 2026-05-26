@@ -8,12 +8,13 @@ looks like.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.ctgov import parse_ctgov_study
 from vitiligo.storage.models import TrialSourceKind
 
-FIXTURE = Path(__file__).parent / "fixtures" / "ctgov_sample.json"
+FIXTURE = FIXTURES_DIR / "ctgov_sample.json"
 
 
 def _load_studies() -> list[dict]:

@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 import httpx
+from tests.helpers.paths import FIXTURES_DIR
 
 from vitiligo.sources.opentargets import OpenTargetsClient
 from vitiligo.storage.models import PriorKind, PriorSourceKind
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures"
+FIXTURE_DIR = FIXTURES_DIR
 
 
 def _load(name: str) -> dict[str, Any]:

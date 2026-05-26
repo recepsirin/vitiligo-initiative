@@ -10,8 +10,6 @@ from vitiligo.trials import TrialFilter, list_trials
 
 @pytest.mark.corpus
 def test_list_trials_still_matches_title_fields_on_local_corpus(require_local_corpus) -> None:
-    rux = list_trials(
-        TrialFilter(query="ruxolitinib", sources=(TrialSourceKind.CTGOV,), limit=5)
-    )
+    rux = list_trials(TrialFilter(query="ruxolitinib", sources=(TrialSourceKind.CTGOV,), limit=5))
     assert rux
     assert any("ruxolitinib" in (t.brief_title or t.summary or "").lower() for t in rux)

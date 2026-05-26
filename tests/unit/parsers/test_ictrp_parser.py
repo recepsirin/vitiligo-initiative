@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tests.helpers.paths import FIXTURES_DIR
+
 from vitiligo.sources.ictrp import (
     count_ictrp_records,
     extract_cross_registry_keys,
@@ -13,7 +15,7 @@ from vitiligo.sources.ictrp import (
 )
 from vitiligo.storage.models import TrialSourceKind
 
-FIXTURE = Path(__file__).parent / "fixtures" / "ictrp_vitiligo_sample.xml"
+FIXTURE = FIXTURES_DIR / "ictrp_vitiligo_sample.xml"
 
 
 def test_count_and_iter_fixture() -> None:
