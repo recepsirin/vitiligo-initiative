@@ -417,14 +417,14 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
   - **Typed CLI**, ruff-clean, 59 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
-- **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md) (drafts for advisor review).
+- **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md) (drafts for advisor review).
 
 ### Immediate next moves
 
-1. **Deploy** the Evidence Engine publicly — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` ([`docs/deploy.md`](docs/deploy.md)).
-2. **Schedule KOL meeting** using [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md) (live tool + `exports/graph-review.json`).
-3. Resolve remaining [open questions](#open-questions) (personal/strategic, legal structure).
-4. Advisor review of briefs → v1.0; then draft **methods preprint** outline.
+1. **Deploy** — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` and `./scripts/deploy/verify-public.sh` ([`docs/deploy.md`](docs/deploy.md)).
+2. **Schedule KOL meeting** — email template in [`docs/advisor-outreach.md`](docs/advisor-outreach.md); agenda in [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md).
+3. **Methods preprint** — expand [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md) after advisor evaluation set.
+4. Resolve remaining [open questions](#open-questions) (legal structure, launch posture).
 
 ## How to Read This Document
 

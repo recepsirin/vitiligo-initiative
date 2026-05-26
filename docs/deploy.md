@@ -53,7 +53,8 @@ fly ssh console -C "vitiligo graph seed"
 Verify:
 
 ```bash
-fly open /api/health
+./scripts/deploy/verify-public.sh
+# or: fly open /api/health
 # expect: "ready": true, documents > 0, graph_entities > 0
 ```
 

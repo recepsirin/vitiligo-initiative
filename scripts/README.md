@@ -8,6 +8,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/common.sh`](deploy/common.sh) | Shared shell helpers |
 | [`deploy/docker-smoke.sh`](deploy/docker-smoke.sh) | Build image + run local smoke test |
 | [`deploy/fly-deploy-all.sh`](deploy/fly-deploy-all.sh) | One-shot Fly deploy (prepare → deploy → upload → seed → health) |
+| [`deploy/verify-public.sh`](deploy/verify-public.sh) | Post-deploy smoke test (health, legal pages, search API) |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
 | [`review/graph-spotcheck.sh`](review/graph-spotcheck.sh) | Automated KG v1 spot-check |
@@ -31,6 +32,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 # Fly.io (requires: fly auth login, ANTHROPIC_API_KEY, data/vitiligo.db)
 export ANTHROPIC_API_KEY=sk-ant-...
 ./scripts/deploy/fly-deploy-all.sh
+./scripts/deploy/verify-public.sh
 
 # Or step-by-step:
 ./scripts/deploy/fly-first-deploy.sh
