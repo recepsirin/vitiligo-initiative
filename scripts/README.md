@@ -11,6 +11,8 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/verify-public.sh`](deploy/verify-public.sh) | Post-deploy smoke test (health, legal pages, search API) |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
+| [`review/kol-share-pack.sh`](review/kol-share-pack.sh) | Bundle advisor review materials (graph + briefs + retrieval eval) |
+| [`review/run-eval-retrieval.sh`](review/run-eval-retrieval.sh) | Run 20-query semantic search evaluation set |
 | [`review/graph-spotcheck.sh`](review/graph-spotcheck.sh) | Automated KG v1 spot-check |
 | [`deploy/fly-upload-db.sh`](deploy/fly-upload-db.sh) | Upload `data/vitiligo.db` to Fly volume |
 | [`deploy/fly-seed-graph.sh`](deploy/fly-seed-graph.sh) | Run `vitiligo graph seed` on Fly |
@@ -49,6 +51,7 @@ WITH_GEO=0 ./scripts/ingest/sync-engine.sh   # graph seed + embed only
 ./scripts/ingest/sync-engine.sh        # GEO + graph + embed + stats
 vitiligo graph export -o exports/graph-review.json
 ./scripts/review/graph-spotcheck.sh
+./scripts/review/kol-share-pack.sh   # advisor email attachment
 ```
 
 See [`docs/deploy.md`](../docs/deploy.md) for full deployment documentation.

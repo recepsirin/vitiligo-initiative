@@ -29,8 +29,8 @@ Would you have **60–90 minutes** in the next few weeks for a structured review
 4. **Launch posture** — public beta vs closed advisor access first?
 
 **Materials attached / linked:**
-- One-page scientific brief  
-- Graph export JSON for offline skim (`exports/graph-review.json`)  
+- Advisor pack: run `./scripts/review/kol-share-pack.sh` → attach `exports/kol-share-YYYYMMDD.tar.gz`
+- Or individually: scientific brief, graph export, retrieval eval JSON
 - Live demo: [URL or "happy to screen-share locally"]
 
 I'm not asking for endorsement — only honest feedback on errors, gaps, and what would make this useful (or not) for researchers and clinicians you respect.

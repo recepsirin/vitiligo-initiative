@@ -415,14 +415,14 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
-  - **Typed CLI**, ruff-clean, 59 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
+  - **Typed CLI**, ruff-clean, 60 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 - **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md) (drafts for advisor review).
 
 ### Immediate next moves
 
 1. **Deploy** — `fly auth login`, then `./scripts/deploy/fly-deploy-all.sh` and `./scripts/deploy/verify-public.sh` ([`docs/deploy.md`](docs/deploy.md)).
-2. **Schedule KOL meeting** — email template in [`docs/advisor-outreach.md`](docs/advisor-outreach.md); agenda in [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md).
+2. **Schedule KOL meeting** — `./scripts/review/kol-share-pack.sh`, then email via [`docs/advisor-outreach.md`](docs/advisor-outreach.md).
 3. **Methods preprint** — expand [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md) after advisor evaluation set.
 4. Resolve remaining [open questions](#open-questions) (legal structure, launch posture).
 
