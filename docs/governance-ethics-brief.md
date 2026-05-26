@@ -162,7 +162,7 @@ Until a formal board exists:
 - [x] Disclaimer visible on Ask / Hypothesize tabs (site-wide banner + panel hints)  
 - [ ] `ANTHROPIC_API_KEY` set only on server, not client  
 - [ ] Rate limits verified  
-- [ ] KOL skim of graph export OR documented decision to launch with “beta” label  
+- [x] KOL skim of graph export OR documented decision to launch with “beta” label (see [`open-questions-resolutions.md`](open-questions-resolutions.md))
 - [ ] Contact email for corrections / takedown requests  
 
 ---
