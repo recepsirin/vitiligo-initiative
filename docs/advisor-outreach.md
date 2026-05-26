@@ -19,18 +19,18 @@ Dear Dr [Name],
 
 I'm building the **Vitiligo Initiative**, a non-profit, open-source **Evidence Engine** that unifies vitiligo literature, trial registries (ClinicalTrials.gov + EU CTR), Open Targets genetics priors, and a structured knowledge graph — to support cited Q&A and ranked therapeutic hypothesis generation.
 
-**Current corpus (May 2026):** ~11k PubMed records, ~2.6k PMC full-text articles, 344 registered trials, and a 1k-node graph seeded from priors and trials. The tool is **research-only** (not medical advice); we're seeking advisor input before wider public release.
+**Current corpus (May 2026):** ~14k indexed documents (PubMed + PMC + others), 344 registered trials, and a 1k-node graph seeded from priors and trials. The tool is **research-only** (not medical advice); we're seeking advisor input before wider public release.
 
 Would you have **60–90 minutes** in the next few weeks for a structured review? I'd like your help with:
 
 1. **Clinical credibility** — does the demo behave sensibly on JAK/UVB/combination questions?  
 2. **Graph sanity check** — are Phase 3 drugs (ruxolitinib, povorcitinib, upadacitinib) correctly linked to vitiligo?  
-3. **Prioritization** — which 3–5 hypotheses merit first lab validation outreach?  
+3. **Prioritization** — review [`candidate-report-v1.md`](candidate-report-v1.md): do the top 10 evidence-scored candidates match your clinical intuition? Which 3–5 merit first lab validation outreach?  
 4. **Launch posture** — public beta vs closed advisor access first?
 
 **Materials attached / linked:**
-- Advisor pack: run `./scripts/review/kol-share-pack.sh` → attach `exports/kol-share-YYYYMMDD.tar.gz`
-- Or individually: scientific brief, graph export, retrieval eval JSON
+- Advisor pack: run `./scripts/review/kol-share-pack.sh` → attach `exports/kol-share-YYYYMMDD.tar.gz` (includes candidate report + graph + retrieval eval)
+- Or individually: scientific brief, [`candidate-report-v1.md`](candidate-report-v1.md), graph export, retrieval eval JSON
 - Live demo: [URL or "happy to screen-share locally"]
 
 I'm not asking for endorsement — only honest feedback on errors, gaps, and what would make this useful (or not) for researchers and clinicians you respect.

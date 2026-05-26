@@ -2,7 +2,7 @@
 
 **Purpose:** First structured session with a vitiligo specialist advisor, **with the Evidence Engine live** (local or public URL).  
 **Duration:** 60–90 minutes  
-**Materials to send 48h ahead:** this doc, [`scientific-brief.md`](scientific-brief.md), `exports/graph-review.json`
+**Materials to send 48h ahead:** this doc, [`scientific-brief.md`](scientific-brief.md), [`candidate-report-v1.md`](candidate-report-v1.md), `exports/graph-review.json` (or full KOL pack from `./scripts/review/kol-share-pack.sh`)
 
 ---
 
@@ -37,7 +37,7 @@ Share URL: `https://vitiligo-evidence-engine.fly.dev` (after deploy) or a schedu
 | 0–10 min | Mission, non-goals, what we are / are not claiming |
 | 10–25 min | **Live demo:** Search → Ask → Hypothesize → Graph → Trials |
 | 25–40 min | **Graph review:** vitiligo neighbors, JAK drugs, top targets |
-| 40–55 min | **Hypothesis prioritization:** which candidates deserve lab validation first? |
+| 40–55 min | **Candidate report review:** top 10 from [`candidate-report-v1.md`](candidate-report-v1.md) — agree/disagree with rankings |
 | 55–70 min | **Governance:** disclaimers, launch posture, advisor role |
 | 70–90 min | Next steps: intro to translational labs, methods paper co-authorship interest |
 
