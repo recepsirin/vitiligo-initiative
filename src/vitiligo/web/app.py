@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 
 from vitiligo import __version__
 from vitiligo.config import get_settings
+from vitiligo.corpus_stats import get_corpus_stats
 from vitiligo.embed import semantic_search
 from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import export_graph_snapshot, get_neighbors, search_entities, summarize_graph
@@ -40,7 +41,6 @@ from vitiligo.reports import report_to_dict as candidate_report_to_dict
 from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
-from vitiligo.web.corpus_stats import get_corpus_stats
 from vitiligo.web.ratelimit import RateLimitMiddleware
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -100,10 +100,10 @@ def _trial_to_dict(trial: Any) -> dict[str, Any]:
 
 
 def _prewarm_embeddings() -> None:
-    from vitiligo.embed.encoder import Encoder
+    from vitiligo.embed.encoder import get_encoder
 
     logger.info("Prewarming embedding model...")
-    Encoder().encode(["vitiligo evidence engine warmup"])
+    get_encoder().encode(["vitiligo evidence engine warmup"])
     logger.info("Embedding model ready.")
 
 

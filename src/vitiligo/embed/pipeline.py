@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from sqlmodel import Session, and_, select
 
-from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder
+from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder, get_encoder
 from vitiligo.logging import get_logger
 from vitiligo.storage import Document, Embedding, init_db, session_scope
 
@@ -45,7 +45,7 @@ def embed_documents(
 ) -> EmbeddingStats:
     """Encode every document that doesn't yet have an embedding for (model, scope)."""
     init_db()
-    encoder = Encoder(model_name=model_name)
+    encoder = get_encoder(model_name=model_name)
 
     embedded = 0
     skipped = 0

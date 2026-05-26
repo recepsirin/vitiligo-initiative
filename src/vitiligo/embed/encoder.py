@@ -18,6 +18,17 @@ logger = get_logger(__name__)
 
 DEFAULT_MODEL = "BAAI/bge-small-en-v1.5"
 
+_encoders: dict[str, Encoder] = {}
+
+
+def get_encoder(model_name: str = DEFAULT_MODEL) -> Encoder:
+    """Return a process-wide cached ``Encoder`` for ``model_name``."""
+    encoder = _encoders.get(model_name)
+    if encoder is None:
+        encoder = Encoder(model_name=model_name)
+        _encoders[model_name] = encoder
+    return encoder
+
 
 class Encoder:
     """Lazy-loading text encoder.

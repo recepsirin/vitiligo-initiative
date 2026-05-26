@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from vitiligo import __version__
+from vitiligo.corpus_stats import get_corpus_stats
 from vitiligo.embed import semantic_search
 from vitiligo.graph.query import GraphEdgeView, get_neighbors, search_entities
 from vitiligo.priors import list_drug_priors
@@ -456,8 +457,6 @@ def build_candidate_report(
     include_llm: bool = False,
 ) -> CandidateReport:
     """Build a reproducible candidate report from structured evidence."""
-    from vitiligo.web.corpus_stats import get_corpus_stats
-
     intents = load_intents(intents_path)
     bundles = _collect_drug_bundles()
     corpus = get_corpus_stats()
