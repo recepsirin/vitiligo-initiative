@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vitiligo"
-version = "0.1.0"
+version = "1.0.0"
 description = "Vitiligo Initiative — AI-native research engine for stopping spread and driving repigmentation."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -99,5 +99,8 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: tests that require the full local vitiligo.db corpus",
+]
 pythonpath = ["src"]
 addopts = "-ra --strict-markers"

@@ -23,4 +23,4 @@ jobs:
         run: ruff check src tests
 
       - name: Pytest
-        run: pytest tests/ -q
+        run: pytest tests/ -q -m "not integration"
