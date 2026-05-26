@@ -13,6 +13,7 @@ Operational helpers for the Vitiligo Initiative engine. Run from the repository 
 | [`deploy/verify-local.sh`](deploy/verify-local.sh) | Same checks against local `vitiligo serve` |
 | [`deploy/fly-first-deploy.sh`](deploy/fly-first-deploy.sh) | First-time Fly.io app, volume, secrets, deploy |
 | [`deploy/prepare-db.sh`](deploy/prepare-db.sh) | Verify DB + stats before Fly upload |
+| [`review/generate-candidate-report.sh`](review/generate-candidate-report.sh) | Evidence-first candidate rankings (JSON + Markdown) |
 | [`review/kol-share-pack.sh`](review/kol-share-pack.sh) | Bundle advisor review materials (graph + briefs + retrieval eval) |
 | [`review/run-eval-retrieval.sh`](review/run-eval-retrieval.sh) | Run 20-query semantic search evaluation set |
 | [`review/graph-spotcheck.sh`](review/graph-spotcheck.sh) | Automated KG v1 spot-check |

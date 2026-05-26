@@ -5,6 +5,7 @@ Run `vitiligo --help` for available commands.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -43,6 +44,11 @@ from vitiligo.reasoning import (
     ask_with_citations,
     generate_hypotheses,
 )
+from vitiligo.reports import (
+    build_candidate_report,
+    render_candidate_report_markdown,
+    report_to_dict,
+)
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.drugbank import DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY
 from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
@@ -74,12 +80,14 @@ embed_app = typer.Typer(help="Generate and inspect embeddings.", no_args_is_help
 trials_app = typer.Typer(help="Browse the local clinical-trials store.", no_args_is_help=True)
 priors_app = typer.Typer(help="Browse drug/target priors from Open Targets.", no_args_is_help=True)
 graph_app = typer.Typer(help="Build and query the vitiligo knowledge graph.", no_args_is_help=True)
+report_app = typer.Typer(help="Generate reproducible research reports.", no_args_is_help=True)
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(db_app, name="db")
 app.add_typer(embed_app, name="embed")
 app.add_typer(trials_app, name="trials")
 app.add_typer(priors_app, name="priors")
 app.add_typer(graph_app, name="graph")
+app.add_typer(report_app, name="report")
 
 console = Console()
 logger = get_logger(__name__)
@@ -1027,6 +1035,81 @@ def trials_search(
 
 
 # --------------------------------------------------------------------- web
+
+
+@report_app.command("candidates")
+def report_candidates_cmd(
+    json_out: str | None = typer.Option(
+        None,
+        "--json",
+        help="Write machine-readable report JSON (e.g. exports/candidate-report.json).",
+    ),
+    markdown_out: str | None = typer.Option(
+        None,
+        "--markdown",
+        help="Write human-readable Markdown (e.g. docs/candidate-report-v1.md).",
+    ),
+    intents: str | None = typer.Option(
+        None,
+        "--intents",
+        help="Path to candidate-intents.json (default: docs/candidate-intents.json).",
+    ),
+    top_n: int = typer.Option(10, "--top-n", "-n", help="Candidates per intent / global list."),
+    llm: bool = typer.Option(
+        False,
+        "--llm",
+        help="Attach LLM rationale when ANTHROPIC_API_KEY is set (advisory only).",
+    ),
+) -> None:
+    """Build an evidence-first ranked candidate report (deterministic, reproducible)."""
+    init_db()
+    console.rule("[bold]Candidate report[/bold] — evidence-first ranking")
+    report = build_candidate_report(
+        intents_path=Path(intents) if intents else None,
+        top_n=top_n,
+        include_llm=llm,
+    )
+
+    console.print(
+        f"[dim]Corpus: {report.corpus.get('documents', 0):,} docs, "
+        f"{report.corpus.get('trials', 0)} trials, "
+        f"{len(report.global_top)} global candidates[/dim]"
+    )
+    console.print()
+
+    table = Table(title="Global top candidates")
+    table.add_column("#", style="cyan")
+    table.add_column("Name")
+    table.add_column("Strength")
+    table.add_column("Score", justify="right")
+    table.add_column("Stage")
+    for cand in report.global_top:
+        table.add_row(
+            str(cand.rank),
+            cand.name,
+            cand.evidence_strength,
+            str(cand.score.total),
+            cand.clinical_stage or "—",
+        )
+    console.print(table)
+
+    if json_out:
+        json_path = Path(json_out)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(report_to_dict(report), indent=2) + "\n")
+        console.print(f"\n[green]Wrote[/green] {json_path}")
+
+    if markdown_out:
+        md_path = Path(markdown_out)
+        md_path.parent.mkdir(parents=True, exist_ok=True)
+        md_path.write_text(render_candidate_report_markdown(report))
+        console.print(f"[green]Wrote[/green] {md_path}")
+
+    if not json_out and not markdown_out:
+        console.print(
+            "\n[dim]Tip: pass --json exports/candidate-report.json "
+            "--markdown docs/candidate-report-v1.md[/dim]"
+        )
 
 
 @app.command("serve")
