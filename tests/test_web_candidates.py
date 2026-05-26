@@ -19,6 +19,7 @@ def test_report_candidates_endpoint_returns_ranked_list() -> None:
     first = data["global_top"][0]
     assert first["rank"] == 1
     assert first["score"]["total"] > 0
+    assert isinstance(data["notes"], list)
     assert "intents" in data
 
 

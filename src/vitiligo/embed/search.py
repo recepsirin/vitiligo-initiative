@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import numpy as np
 from sqlmodel import select
 
-from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder
+from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder, get_encoder
 from vitiligo.logging import get_logger
 from vitiligo.storage import Document, Embedding, init_db, session_scope
 
@@ -54,7 +54,7 @@ def semantic_search(
             matrix[idx] = Encoder.vector_from_bytes(emb.vector, dim)
             doc_ids.append(emb.document_id)
 
-        encoder = Encoder(model_name=model_name)
+        encoder = get_encoder(model_name=model_name)
         query_vec = encoder.encode([query])[0]
 
         scores = matrix @ query_vec  # all vectors are L2-normalized

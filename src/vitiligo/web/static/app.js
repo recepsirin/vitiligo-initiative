@@ -119,6 +119,14 @@ function truncate(s, n) {
   return s.length > n ? s.slice(0, n) + '…' : s;
 }
 
+function renderNotesBlock(notes, className) {
+  if (!notes) return '';
+  const items = Array.isArray(notes) ? notes : [String(notes)];
+  const cleaned = items.map(item => String(item).trim()).filter(Boolean);
+  if (!cleaned.length) return '';
+  return `<ul class="${className}">${cleaned.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
+}
+
 // ---- ask ------------------------------------------------------------
 
 document.getElementById('form-ask').addEventListener('submit', async (e) => {
@@ -193,7 +201,7 @@ document.getElementById('form-hypothesize').addEventListener('submit', async (e)
       </div>`;
     out.innerHTML = `
       ${evidenceSummary}
-      ${data.notes ? `<div class="hyp-notes">${escapeHtml(data.notes)}</div>` : ''}
+      ${data.notes ? renderNotesBlock(data.notes, 'hyp-notes') : ''}
       ${candidatesHtml || '<div class="empty">No candidates returned.</div>'}
       ${graphCitationsHtml ? `
         <div class="citations">
@@ -344,7 +352,7 @@ async function loadCandidatesReport() {
       return;
     }
     out.innerHTML = `
-      <div class="report-notes">${escapeHtml(data.notes || '')}</div>
+      ${renderNotesBlock(data.notes, 'report-notes')}
       ${data.global_top.map(renderReportCandidate).join('')}
     `;
   } catch (err) {

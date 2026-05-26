@@ -409,9 +409,12 @@ button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
   background: var(--bg-elev);
   border: 1px dashed var(--border);
   border-radius: 6px;
-  padding: 10px 14px;
+  padding: 10px 14px 10px 2rem;
   margin-bottom: 14px;
+  line-height: 1.5;
 }
+
+.hyp-notes li { margin-bottom: 4px; }
 
 .candidate {
   background: var(--bg-elev);
@@ -517,9 +520,12 @@ button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
 .report-notes {
   font-size: 13px;
   color: var(--text-dim);
-  margin-bottom: 12px;
+  margin: 0 0 12px 1.1rem;
+  padding: 0;
   font-style: italic;
 }
+
+.report-notes li { margin-bottom: 4px; }
 
 #btn-candidates-load {
   background: var(--accent);
