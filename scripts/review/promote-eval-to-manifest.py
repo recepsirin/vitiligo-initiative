@@ -29,11 +29,11 @@ def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text())
 
 
-def _high_relevance_hits(run: dict[str, Any]) -> list[dict[str, Any]]:
-    hits = [row for row in run.get("results", []) if int(row.get("advisor_relevance") or 0) >= MIN_RELEVANCE]
+def _high_relevance_hits(run: dict[str, Any], *, min_relevance: int) -> list[dict[str, Any]]:
+    hits = [row for row in run.get("results", []) if int(row.get("advisor_relevance") or 0) >= min_relevance]
     if hits:
         return hits
-    if int(run.get("advisor_relevance") or 0) >= MIN_RELEVANCE:
+    if int(run.get("advisor_relevance") or 0) >= min_relevance:
         return list(run.get("results", [])[:3])
     return []
 
@@ -100,8 +100,6 @@ def main() -> int:
         help="Minimum advisor relevance (1-5) to promote a hit (default: 4)",
     )
     args = parser.parse_args()
-    global MIN_RELEVANCE
-    MIN_RELEVANCE = args.min_relevance
 
     export = _load_json(args.eval_export.resolve())
     manifest = _load_json(args.manifest.resolve())
@@ -109,7 +107,7 @@ def main() -> int:
     proposals: list[dict[str, Any]] = []
     skipped: list[str] = []
     for run in export.get("runs", []):
-        hits = _high_relevance_hits(run)
+        hits = _high_relevance_hits(run, min_relevance=args.min_relevance)
         if not hits:
             skipped.append(str(run.get("id", "")))
             continue
