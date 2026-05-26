@@ -22,5 +22,5 @@ jobs:
       - name: Ruff
         run: ruff check src tests
 
-      - name: Pytest
-        run: pytest tests/ -q -m "not integration"
+      - name: Pytest (unit + integration)
+        run: pytest tests/ -q -m "not corpus and not smoke and not confidence"

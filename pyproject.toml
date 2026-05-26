@@ -100,7 +100,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "integration: tests that require the full local vitiligo.db corpus",
+    "integration: real SQLite on a seeded temp file (fast; runs in CI)",
+    "corpus: requires the full local vitiligo.db corpus",
+    "smoke: thin end-to-end checks over the full corpus (run locally)",
+    "confidence: curated research scenarios with expected papers/trials/rankings (requires full corpus + embeddings)",
 ]
 pythonpath = ["src"]
 addopts = "-ra --strict-markers"

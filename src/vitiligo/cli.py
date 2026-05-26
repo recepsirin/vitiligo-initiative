@@ -40,6 +40,7 @@ from vitiligo.ingest import (
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
 from vitiligo.reasoning import (
+    CorpusUnavailable,
     LLMUnavailable,
     ask_with_citations,
     generate_hypotheses,
@@ -599,7 +600,7 @@ def ask_cmd(
     console.rule(f"[bold]Ask[/bold] — [yellow]{question}[/yellow]")
     try:
         result = ask_with_citations(question=question, top_k=top_k)
-    except LLMUnavailable as exc:
+    except (LLMUnavailable, CorpusUnavailable) as exc:
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
 
@@ -626,7 +627,7 @@ def hypothesize_cmd(
     console.rule(f"[bold]Hypothesize[/bold] — [yellow]{intent}[/yellow]")
     try:
         report = generate_hypotheses(intent=intent, top_k=top_k, top_trials=top_trials)
-    except LLMUnavailable as exc:
+    except (LLMUnavailable, CorpusUnavailable) as exc:
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
 

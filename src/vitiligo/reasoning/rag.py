@@ -12,6 +12,7 @@ from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
 from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.logging import get_logger
+from vitiligo.reasoning.exceptions import CorpusUnavailable
 from vitiligo.reasoning.llm import LLMClient
 
 logger = get_logger(__name__)
@@ -63,7 +64,7 @@ def ask_with_citations(
     """Run retrieval over the embedded corpus, then call the LLM with the hits as context."""
     hits = semantic_search(query=question, top_k=top_k)
     if not hits:
-        raise RuntimeError(
+        raise CorpusUnavailable(
             "No embeddings stored yet. Run `vitiligo embed run` to index the corpus first."
         )
 

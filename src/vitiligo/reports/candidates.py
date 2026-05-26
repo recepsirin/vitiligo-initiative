@@ -500,10 +500,10 @@ def build_candidate_report(
 
 def _attach_llm_rationale(intent: IntentSpec, candidates: list[RankedCandidate]) -> None:
     try:
-        from vitiligo.reasoning import LLMUnavailable, generate_hypotheses
+        from vitiligo.reasoning import CorpusUnavailable, LLMUnavailable, generate_hypotheses
 
         report = generate_hypotheses(intent=intent.query)
-    except (LLMUnavailable, RuntimeError):
+    except (LLMUnavailable, CorpusUnavailable):
         return
 
     by_token = {normalize_drug_token(c.name): c for c in report.candidates}

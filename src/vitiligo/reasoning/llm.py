@@ -12,12 +12,9 @@ from dataclasses import dataclass
 
 from vitiligo.config import Settings, get_settings
 from vitiligo.logging import get_logger
+from vitiligo.reasoning.exceptions import LLMUnavailable
 
 logger = get_logger(__name__)
-
-
-class LLMUnavailable(RuntimeError):  # noqa: N818 — name reads better without "Error" suffix
-    """Raised when no LLM credentials are configured."""
 
 
 @dataclass
