@@ -1,11 +1,11 @@
 # Release Checklist — Evidence Engine v1.0.0
 
-**Goal:** Public URL live, advisor-ready, methods evaluation in flight.  
-**Target app:** `vitiligo-evidence-engine` (Fly.io `ams`)
+**Goal:** Advisor-ready engine with reproducible evidence outputs; public URL deferred.  
+**Hosting:** **Local-first** (May 2026). Fly.io deprecated. **DigitalOcean** planned for public deploy.
 
 ---
 
-## Pre-deploy (local)
+## Pre-release (local)
 
 ```bash
 ./scripts/deploy/prepare-db.sh
@@ -14,7 +14,7 @@
 .venv/bin/pytest tests/ -q
 .venv/bin/ruff check src tests
 
-# Optional: local UI smoke
+# Local UI smoke
 vitiligo serve &
 ./scripts/deploy/verify-local.sh
 ```
@@ -22,35 +22,42 @@ vitiligo serve &
 - [ ] `data/vitiligo.db` present (~273 MB, 14k+ docs)
 - [ ] Graph spot-check passes
 - [ ] KOL pack generated (`exports/kol-share-*.tar.gz`)
-- [ ] 60 tests green
+- [ ] Candidate report in pack (`candidate-report-v1.md`)
+- [ ] 66 tests green
+- [ ] Local demo verified (`verify-local.sh`)
 
 ---
 
-## Deploy (Fly.io)
+## Advisor outreach (no public URL required)
 
 ```bash
-fly auth login
-./scripts/deploy/auth-check.sh
-export ANTHROPIC_API_KEY=sk-ant-...
-./scripts/deploy/fly-deploy-all.sh
-./scripts/deploy/verify-public.sh
+./scripts/review/kol-share-pack.sh
+vitiligo serve   # screen-share demo
 ```
 
-- [ ] `fly auth whoami` succeeds
-- [ ] `ANTHROPIC_API_KEY` set via `fly secrets` (not in repo)
-- [ ] `/api/health` → `"ready": true`, documents > 0, graph stats > 0
-- [ ] `/privacy` and `/terms` load
-- [ ] Search API returns results
-- [ ] Ask + Hypothesize work (LLM configured)
+- [ ] KOL email sent with share pack ([`advisor-outreach.md`](advisor-outreach.md))
+- [ ] First advisor session scheduled or held
+- [ ] `retrieval-eval.json` relevance labels started
 
 ---
 
-## Post-deploy (same day)
+## Public deploy (deferred — DigitalOcean)
 
-- [ ] Update README Status with public URL
+When ready for a public URL, implement DO deploy per [`deploy.md`](deploy.md). **Do not use Fly.io.**
+
+- [ ] DigitalOcean Droplet or App Platform + persistent volume
+- [ ] `ANTHROPIC_API_KEY` in host secrets (not in repo)
+- [ ] `/api/health` → `"ready": true`, documents > 0, graph stats > 0
+- [ ] `/privacy` and `/terms` load
+- [ ] `./scripts/deploy/verify-public.sh` against public URL
+
+---
+
+## Post-release
+
+- [ ] Update README with public URL (when DO deploy exists)
 - [ ] Git tag `v1.0.0` + GitHub release notes (see [`CHANGELOG.md`](../CHANGELOG.md))
 - [ ] Zenodo DOI *optional for v1.0.0; target for methods preprint*
-- [ ] Send KOL email with live URL + share pack ([`advisor-outreach.md`](advisor-outreach.md))
 - [ ] Log launch decision in [`open-questions-resolutions.md`](open-questions-resolutions.md)
 
 ---
@@ -59,23 +66,14 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 | Gate | Done when |
 |------|-----------|
-| Public deploy | URL verified above |
-| KOL meeting | First session held with live tool |
+| Advisor-ready engine | KOL pack + local demo verified |
+| KOL meeting | First session held |
 | Methods path | Advisor labels `retrieval-eval.json`; expand preprint draft |
+| Public deploy | DigitalOcean URL live *(deferred)* |
 
 ---
 
-## Rollback
+## Cost sanity check (when on DigitalOcean)
 
-```bash
-fly releases -a vitiligo-evidence-engine
-fly deploy --image <previous-image> -a vitiligo-evidence-engine
-# DB on volume is unchanged unless re-uploaded
-```
-
----
-
-## Cost sanity check (Fly.io)
-
-- 2 shared CPU, 2 GB RAM, 1 GB volume — review Fly dashboard after first week
-- `auto_stop_machines = false` in `fly.toml` — expect always-on cost
+- Small Droplet + block storage — budget ~$12–24/mo always-on
+- Anthropic API usage separate — monitor Ask/Hypothesize volume
