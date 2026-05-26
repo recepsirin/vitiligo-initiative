@@ -10,6 +10,7 @@ from tests.helpers.fake_llm import install_capturing_llm
 from tests.helpers.paths import FIXTURES_DIR
 from tests.helpers.rag_expectations import assert_answer_cites_only_retrieved
 from tests.helpers.retrieval_expectations import (
+    assert_retrieval_exclusions,
     assert_retrieval_expectations,
     hits_from_api_results,
 )
@@ -45,6 +46,49 @@ class TestApiSearchConfidence:
             assert row["source_id"]
             assert "evidence_level" in row
             assert "evidence_level_label" in row
+
+
+class TestApiRetrievalNegativeConfidence:
+    """Clinical queries via POST /api/search must not rank animal-only evidence at the top."""
+
+    @pytest.mark.parametrize(
+        "case",
+        _EXPECTATIONS.get("retrieval_negative", []),
+        ids=lambda c: c["id"],
+    )
+    def test_clinical_queries_are_not_animal_dominated_via_api(
+        self,
+        case: dict,
+        regression_api_client: TestClient,
+    ) -> None:
+        resp = regression_api_client.post(
+            "/api/search",
+            json={"query": case["query"], "top_k": int(case["top_k"])},
+        )
+        assert resp.status_code == 200, resp.text
+        results = resp.json()["results"]
+        views = hits_from_api_results(results)
+        assert views, f"{case['id']}: no results"
+
+        if case.get("must_not_include_source_ids"):
+            assert_retrieval_exclusions(case, views, label="API")
+
+        if "max_mouse_in_top" not in case and not case.get("top_hit_must_not_be_mouse"):
+            return
+
+        top_n = int(case.get("top_n", 3))
+        levels = [row["evidence_level"] for row in results[:top_n]]
+        mouse_count = sum(1 for level in levels if level == "mouse")
+        max_mouse = int(case.get("max_mouse_in_top", 0))
+        assert mouse_count <= max_mouse, (
+            f"{case['id']}: {mouse_count}/{top_n} top hits are mouse/animal "
+            f"(max {max_mouse}). Levels: {levels}"
+        )
+
+        if case.get("top_hit_must_not_be_mouse"):
+            assert levels[0] != "mouse", (
+                f"{case['id']}: top hit is animal model: {results[0].get('title')!r}"
+            )
 
 
 class TestApiAskCitationConfidence:

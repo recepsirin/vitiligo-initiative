@@ -115,7 +115,7 @@ document.getElementById('form-search').addEventListener('submit', async (e) => {
       <article class="hit">
         <div class="hit-header">
           <span class="hit-rank">#${r.rank}</span>
-          <span class="hit-score">score ${r.score.toFixed(3)}</span>
+          <span class="hit-score" title="Evidence-adjusted cosine similarity (mouse −0.08, in vitro −0.05)">score ${r.score.toFixed(3)}</span>
           <span class="hit-source">${escapeHtml(r.source)}:${escapeHtml(r.source_id)}</span>
         </div>
         <div class="hit-title">${escapeHtml(r.title || '(no title)')}</div>

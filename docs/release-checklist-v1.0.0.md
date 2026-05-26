@@ -14,6 +14,9 @@
 .venv/bin/pytest tests/ -q
 .venv/bin/ruff check src tests
 
+# Local release gate (full corpus + smoke)
+./scripts/audit/smoke-all.sh
+
 # Local UI smoke
 vitiligo serve &
 ./scripts/deploy/verify-local.sh
@@ -23,7 +26,7 @@ vitiligo serve &
 - [ ] Graph spot-check passes
 - [ ] KOL pack generated (`exports/kol-share-*.tar.gz`)
 - [ ] Candidate report in pack (`candidate-report-v1.md`)
-- [ ] 74 tests green (69 unit in CI; 5 integration require local corpus)
+- [ ] 244 tests green (CI: ~156 fast + ~76 confidence; corpus (7) and smoke (5) local-only)
 - [ ] Local demo verified (`verify-local.sh`)
 
 ---
@@ -37,7 +40,9 @@ vitiligo serve   # screen-share demo
 
 - [ ] KOL email sent with share pack ([`advisor-outreach.md`](advisor-outreach.md))
 - [ ] First advisor session scheduled or held
-- [ ] `retrieval-eval.json` relevance labels started
+- [ ] `retrieval-eval.json` relevance labels started (workflow: `./scripts/review/run-eval-retrieval.sh` → label → `promote-eval-to-manifest.py` → `build_regression_db.py` → `pytest -m confidence`)
+
+Semantic search applies evidence-adjusted scores after cosine similarity (mouse −0.08, in-vitro −0.05); `/api/search` returns the adjusted score.
 
 ---
 
