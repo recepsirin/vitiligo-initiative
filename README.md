@@ -415,7 +415,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs; deploy scripts under `scripts/deploy/`; Fly.io (`ams`) + Render configs. See [`docs/deploy.md`](docs/deploy.md).
-  - **Typed CLI**, ruff-clean, 58 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
+  - **Typed CLI**, ruff-clean, 59 tests passing, Apache-2.0 licensed; GitHub Actions CI on push.
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 - **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md) (drafts for advisor review).
 

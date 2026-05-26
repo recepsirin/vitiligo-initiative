@@ -158,8 +158,8 @@ Until a formal board exists:
 ## Checklist before public URL goes live
 
 - [ ] Fly deploy complete; `/api/health` shows `ready: true`  
-- [ ] Privacy Policy + Terms linked from footer  
-- [ ] Disclaimer visible on Ask / Hypothesize tabs  
+- [x] Privacy Policy + Terms linked from footer (`/privacy`, `/terms`)  
+- [x] Disclaimer visible on Ask / Hypothesize tabs (site-wide banner + panel hints)  
 - [ ] `ANTHROPIC_API_KEY` set only on server, not client  
 - [ ] Rate limits verified  
 - [ ] KOL skim of graph export OR documented decision to launch with “beta” label  
