@@ -81,3 +81,23 @@ def test_build_candidate_report_on_local_corpus() -> None:
 def test_score_breakdown_total() -> None:
     sb = ScoreBreakdown(prior_stage=30, graph=20, trials=10, literature=8)
     assert sb.total == 68
+
+
+def test_report_to_dict_includes_score_total() -> None:
+    from vitiligo.reports.candidates import RankedCandidate, _candidate_dict
+
+    cand = RankedCandidate(
+        rank=1,
+        name="Test",
+        canonical_token="test",
+        clinical_stage="PHASE_2",
+        evidence_strength="moderate",
+        score=ScoreBreakdown(prior_stage=20, graph=10, trials=5, literature=4),
+        mechanisms=[],
+        prior_source_id=None,
+        graph_refs=[],
+        trial_refs=[],
+        literature_refs=[],
+        caveats=[],
+    )
+    assert _candidate_dict(cand)["score"]["total"] == 39

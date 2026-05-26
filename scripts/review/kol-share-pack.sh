@@ -38,6 +38,10 @@ cp docs/candidate-intents.json "$OUT/"
 
 vitiligo_info "Copy briefs"
 cp docs/scientific-brief.md docs/kol-meeting-prep.md docs/eval-queries.json "$OUT/"
+if [[ -d docs/validation-proposals ]]; then
+  mkdir -p "$OUT/validation-proposals"
+  cp docs/validation-proposals/*.md "$OUT/validation-proposals/"
+fi
 
 cat >"$OUT/README.txt" <<EOF
 Vitiligo Initiative — KOL review pack (${STAMP})
@@ -52,6 +56,7 @@ Contents:
   candidate-report-v1.md    — evidence-scored therapeutic candidate rankings
   candidate-report.json     — machine-readable candidate report
   candidate-intents.json    — research intents used for per-intent rankings
+  validation-proposals/     — lab outreach one-pagers (top 3 candidates)
 
 Advisor tasks:
   1. Skim graph-review.json for drug→vitiligo and target→vitiligo edges

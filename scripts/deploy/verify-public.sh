@@ -77,6 +77,21 @@ else
   FAIL=1
 fi
 
+if [[ "${SKIP_CANDIDATES_CHECK:-0}" != "1" ]]; then
+  vitiligo_info "GET /api/report/candidates smoke (top_n=3, may take ~30s)"
+  if candidates_resp="$(curl -fsS --max-time 120 "$BASE_URL/api/report/candidates?top_n=3")"; then
+    if grep -q '"global_top"' <<<"$candidates_resp"; then
+      echo "  OK"
+    else
+      echo "  FAIL: unexpected candidates response" >&2
+      FAIL=1
+    fi
+  else
+    echo "  FAIL: candidates request failed or timed out" >&2
+    FAIL=1
+  fi
+fi
+
 if [[ "$FAIL" -ne 0 ]]; then
   echo "verify-public: one or more checks failed" >&2
   exit 1

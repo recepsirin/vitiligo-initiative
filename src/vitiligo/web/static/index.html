@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="search">Search</button>
         <button class="tab" data-tab="ask">Ask</button>
         <button class="tab" data-tab="hypothesize">Hypothesize</button>
+        <button class="tab" data-tab="candidates">Candidates</button>
         <button class="tab" data-tab="graph">Graph</button>
         <button class="tab" data-tab="trials">Trials</button>
       </nav>
@@ -80,6 +81,22 @@
         <button type="submit">Hypothesize</button>
       </form>
       <div id="hyp-result" class="results"></div>
+    </section>
+
+    <!-- CANDIDATES -->
+    <section class="panel hidden" id="panel-candidates">
+      <h2>Evidence-scored candidates</h2>
+      <p class="hint">Deterministic rankings from Open Targets priors, registered trials, knowledge graph, and semantic literature — same engine as <code>vitiligo report candidates</code>. No LLM; fully reproducible from the local corpus. Not treatment recommendations.</p>
+      <div class="row">
+        <select id="candidates-topn">
+          <option value="5">Top 5</option>
+          <option value="10" selected>Top 10</option>
+          <option value="15">Top 15</option>
+        </select>
+        <button type="button" id="btn-candidates-load">Load report</button>
+      </div>
+      <div id="candidates-meta" class="trial-stats"></div>
+      <div id="candidates-results" class="results"></div>
     </section>
 
     <!-- GRAPH -->
