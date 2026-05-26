@@ -35,11 +35,12 @@ Share URL: `https://vitiligo-evidence-engine.fly.dev` (after deploy) or a schedu
 | Time | Topic |
 |------|-------|
 | 0–10 min | Mission, non-goals, what we are / are not claiming |
-| 10–25 min | **Live demo:** Search → Ask → Hypothesize → Graph → Trials |
+| 10–25 min | **Live demo:** Search → Ask → Hypothesize → **Candidates** → Graph → Trials |
 | 25–40 min | **Graph review:** vitiligo neighbors, JAK drugs, top targets |
-| 40–55 min | **Candidate report review:** top 10 from [`candidate-report-v1.md`](candidate-report-v1.md) — agree/disagree with rankings |
-| 55–70 min | **Governance:** disclaimers, launch posture, advisor role |
-| 70–90 min | Next steps: intro to translational labs, methods paper co-authorship interest |
+| 40–55 min | **Candidate report review:** top 10 from **Candidates** tab or [`candidate-report-v1.md`](candidate-report-v1.md) |
+| 55–65 min | **Validation proposals:** skim [`validation-proposals/`](validation-proposals/) one-pagers |
+| 65–75 min | **Governance:** disclaimers, launch posture, advisor role |
+| 75–90 min | Next steps: intro to translational labs, methods paper co-authorship interest |
 
 ---
 
@@ -50,8 +51,9 @@ Use these in order so evidence streams are visible:
 1. **Search:** `JAK inhibitor repigmentation non-segmental vitiligo`  
 2. **Ask:** `What is the evidence for combining topical ruxolitinib with NB-UVB?`  
 3. **Hypothesize:** `Stop spread of active non-segmental vitiligo`  
-4. **Graph:** search `ruxolitinib`, browse neighbors; search `JAK1`  
-5. **Trials:** filter `RECRUITING` + Phase 3  
+4. **Candidates:** open **Candidates** tab — review deterministic top 10 (same as [`candidate-report-v1.md`](candidate-report-v1.md))  
+5. **Graph:** search `ruxolitinib`, browse neighbors; search `JAK1`  
+6. **Trials:** filter `RECRUITING` + Phase 3  
 
 Ask advisor to note: wrong citations, missing pivotal trials, overconfident LLM text.
 

@@ -23,7 +23,6 @@ from vitiligo.graph.query import GraphEdgeView, get_neighbors, search_entities
 from vitiligo.priors import list_drug_priors
 from vitiligo.storage import Prior, Trial
 from vitiligo.trials import TrialFilter, list_trials, retrieve_relevant_trials
-from vitiligo.web.corpus_stats import get_corpus_stats
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_INTENTS_PATH = _PROJECT_ROOT / "docs" / "candidate-intents.json"
@@ -457,6 +456,8 @@ def build_candidate_report(
     include_llm: bool = False,
 ) -> CandidateReport:
     """Build a reproducible candidate report from structured evidence."""
+    from vitiligo.web.corpus_stats import get_corpus_stats
+
     intents = load_intents(intents_path)
     bundles = _collect_drug_bundles()
     corpus = get_corpus_stats()
@@ -521,6 +522,12 @@ _METHODOLOGY = (
 )
 
 
+def _candidate_dict(candidate: RankedCandidate) -> dict[str, Any]:
+    data = asdict(candidate)
+    data["score"]["total"] = candidate.score.total
+    return data
+
+
 def report_to_dict(report: CandidateReport) -> dict[str, Any]:
     return {
         "generated_at": report.generated_at,
@@ -528,11 +535,11 @@ def report_to_dict(report: CandidateReport) -> dict[str, Any]:
         "methodology": report.methodology,
         "corpus": report.corpus,
         "notes": report.notes,
-        "global_top": [asdict(c) for c in report.global_top],
+        "global_top": [_candidate_dict(c) for c in report.global_top],
         "intents": [
             {
                 "intent": asdict(ir.intent),
-                "candidates": [asdict(c) for c in ir.candidates],
+                "candidates": [_candidate_dict(c) for c in ir.candidates],
             }
             for ir in report.intents
         ],

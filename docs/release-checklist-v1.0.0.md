@@ -23,7 +23,7 @@ vitiligo serve &
 - [ ] Graph spot-check passes
 - [ ] KOL pack generated (`exports/kol-share-*.tar.gz`)
 - [ ] Candidate report in pack (`candidate-report-v1.md`)
-- [ ] 66 tests green
+- [ ] 69 tests green
 - [ ] Local demo verified (`verify-local.sh`)
 
 ---

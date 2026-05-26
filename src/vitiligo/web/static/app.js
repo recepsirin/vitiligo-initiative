@@ -5,9 +5,12 @@ const panels = {
   search: document.getElementById('panel-search'),
   ask: document.getElementById('panel-ask'),
   hypothesize: document.getElementById('panel-hypothesize'),
+  candidates: document.getElementById('panel-candidates'),
   graph: document.getElementById('panel-graph'),
   trials: document.getElementById('panel-trials'),
 };
+
+let candidatesLoaded = false;
 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -20,6 +23,9 @@ tabs.forEach(tab => {
     }
     if (tab.dataset.tab === 'graph' && !graphStatsLoaded) {
       loadGraphStats();
+    }
+    if (tab.dataset.tab === 'candidates' && !candidatesLoaded) {
+      loadCandidatesReport();
     }
   });
 });
@@ -297,6 +303,96 @@ function renderCandidate(c) {
       ${c.rationale ? `<div class="candidate-section"><div class="candidate-label">Rationale</div><div class="candidate-text">${escapeHtml(c.rationale)}</div></div>` : ''}
       ${c.risks_or_caveats ? `<div class="candidate-section"><div class="candidate-label">Risks &amp; caveats</div><div class="candidate-text">${escapeHtml(c.risks_or_caveats)}</div></div>` : ''}
       ${allCites ? `<div class="candidate-citations">${allCites}</div>` : ''}
+    </article>
+  `;
+}
+
+// ---- candidates (deterministic report) ------------------------------
+
+document.getElementById('btn-candidates-load').addEventListener('click', () => {
+  candidatesLoaded = false;
+  loadCandidatesReport();
+});
+
+async function loadCandidatesReport() {
+  const topN = parseInt(document.getElementById('candidates-topn').value, 10);
+  const meta = document.getElementById('candidates-meta');
+  const out = document.getElementById('candidates-results');
+  showLoading(out, `Building evidence-scored candidate report (top ${topN})… this may take 20–40s`);
+  meta.innerHTML = '';
+  try {
+    const res = await fetch(`/api/report/candidates?top_n=${topN}`);
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        if (data.detail) detail = data.detail;
+      } catch { /* ignore */ }
+      throw new Error(detail);
+    }
+    const data = await res.json();
+    candidatesLoaded = true;
+    const corpus = data.corpus || {};
+    meta.innerHTML = `
+      <span class="trial-stat trial-stat-total"><strong>${(corpus.documents || 0).toLocaleString()}</strong> documents</span>
+      <span class="trial-stat"><strong>${corpus.trials || 0}</strong> trials</span>
+      <span class="trial-stat"><strong>${corpus.graph_entities || 0}</strong> graph entities</span>
+      <span class="trial-stat">Engine v${escapeHtml(data.engine_version || '?')}</span>
+    `;
+    if (!data.global_top || !data.global_top.length) {
+      out.innerHTML = '<div class="empty">No candidates returned.</div>';
+      return;
+    }
+    out.innerHTML = `
+      <div class="report-notes">${escapeHtml(data.notes || '')}</div>
+      ${data.global_top.map(renderReportCandidate).join('')}
+    `;
+  } catch (err) {
+    showError(out, err.message);
+  }
+}
+
+function renderReportCandidate(c) {
+  const evidenceClass = ['strong', 'moderate', 'weak', 'speculative'].includes(c.evidence_strength)
+    ? c.evidence_strength : 'speculative';
+  const score = c.score || {};
+  const scoreLine = `prior ${score.prior_stage || 0} + graph ${score.graph || 0} + trials ${score.trials || 0} + literature ${score.literature || 0}`;
+  const mechs = (c.mechanisms || []).slice(0, 3).join(' · ');
+  const trials = (c.trial_refs || []).slice(0, 4).map(t => {
+    const url = trialExternalUrl(t);
+    const id = url
+      ? `<a href="${url}" target="_blank">${escapeHtml(t.source_id)}</a>`
+      : escapeHtml(t.source_id);
+    const phase = (t.phases && t.phases.length) ? t.phases.join(', ') : '—';
+    return `<li>${escapeHtml(t.source)}:${id} — ${escapeHtml(t.status || '?')}, ${escapeHtml(phase)}${t.has_results ? ', results' : ''}</li>`;
+  }).join('');
+  const graph = (c.graph_refs || []).slice(0, 3).map(g =>
+    `<li>${escapeHtml(g.subject_name)} —[${escapeHtml(g.predicate)}]→ ${escapeHtml(g.object_name)} (conf=${Number(g.confidence).toFixed(2)})</li>`
+  ).join('');
+  const papers = (c.literature_refs || []).slice(0, 3).map(p => {
+    let link = `${escapeHtml(p.source)}:${escapeHtml(p.source_id)}`;
+    if (p.source === 'pubmed') {
+      link = `<a href="https://pubmed.ncbi.nlm.nih.gov/${escapeHtml(p.source_id)}/" target="_blank">PMID ${escapeHtml(p.source_id)}</a>`;
+    } else if (p.source === 'pmc') {
+      link = `<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/${escapeHtml(p.source_id)}/" target="_blank">${escapeHtml(p.source_id)}</a>`;
+    }
+    return `<li>${link} — ${escapeHtml(truncate(p.title || '(no title)', 120))} (${escapeHtml(String(p.year || '?'))})</li>`;
+  }).join('');
+  const caveats = (c.caveats || []).map(x => `<li>${escapeHtml(x)}</li>`).join('');
+  return `
+    <article class="candidate report-candidate">
+      <div class="candidate-header">
+        <span class="candidate-rank">#${c.rank}</span>
+        <span class="candidate-name">${escapeHtml(c.name || '(unnamed)')}</span>
+        <span class="evidence ${evidenceClass}">${escapeHtml(c.evidence_strength || 'speculative')}</span>
+        <span class="report-score">score ${score.total || 0}</span>
+      </div>
+      <div class="score-breakdown">${escapeHtml(scoreLine)} · stage ${escapeHtml(c.clinical_stage || '—')}</div>
+      ${mechs ? `<div class="candidate-section"><div class="candidate-label">Mechanisms</div><div class="candidate-text">${escapeHtml(mechs)}</div></div>` : ''}
+      ${trials ? `<div class="candidate-section"><div class="candidate-label">Trials</div><ul class="report-list">${trials}</ul></div>` : ''}
+      ${graph ? `<div class="candidate-section"><div class="candidate-label">Graph</div><ul class="report-list">${graph}</ul></div>` : ''}
+      ${papers ? `<div class="candidate-section"><div class="candidate-label">Literature</div><ul class="report-list">${papers}</ul></div>` : ''}
+      ${caveats ? `<div class="candidate-section"><div class="candidate-label">Caveats</div><ul class="report-list report-caveats">${caveats}</ul></div>` : ''}
     </article>
   `;
 }

@@ -34,7 +34,9 @@ from vitiligo.reasoning import (
     ask_with_citations,
     generate_hypotheses,
 )
-from vitiligo.reasoning.hypothesize import report_to_dict
+from vitiligo.reasoning.hypothesize import report_to_dict as hypothesize_report_to_dict
+from vitiligo.reports import build_candidate_report
+from vitiligo.reports import report_to_dict as candidate_report_to_dict
 from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
@@ -211,7 +213,15 @@ def create_app() -> FastAPI:
             report = generate_hypotheses(intent=req.intent, top_k=req.top_k)
         except LLMUnavailable as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
-        return report_to_dict(report)
+        return hypothesize_report_to_dict(report)
+
+    @app.get("/api/report/candidates")
+    async def report_candidates(top_n: int = 10) -> dict[str, Any]:
+        """Deterministic evidence-scored candidate rankings (no LLM)."""
+        if top_n < 1 or top_n > 20:
+            raise HTTPException(status_code=400, detail="top_n must be between 1 and 20.")
+        report = await asyncio.to_thread(build_candidate_report, top_n=top_n)
+        return candidate_report_to_dict(report)
 
     @app.post("/api/trials/search")
     def trials_search(req: TrialsSearchRequest) -> dict[str, Any]:
