@@ -215,7 +215,9 @@ def _trial_matches_drug(trial: Trial, token: str) -> bool:
                 trial.official_title or "",
                 trial.summary or "",
                 " ".join(
-                    (iv.get("name") or "") for iv in (trial.interventions or []) if isinstance(iv, dict)
+                    (iv.get("name") or "")
+                    for iv in (trial.interventions or [])
+                    if isinstance(iv, dict)
                 ),
             ],
         )
@@ -320,7 +322,9 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
 
     all_trials: list[Trial] = []
     for intent in load_intents():
-        all_trials.extend(retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True))
+        all_trials.extend(
+            retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
+        )
     seen_trial: set[tuple[str, str]] = set()
     unique_trials: list[Trial] = []
     for trial in all_trials:
@@ -382,7 +386,9 @@ def _rank_candidates_for_intent(
     ranked: list[RankedCandidate] = []
 
     for token, bundle in bundles.items():
-        stage = bundle.prior.clinical_stage if bundle.prior else _best_stage_from_trials(bundle.trials)
+        stage = (
+            bundle.prior.clinical_stage if bundle.prior else _best_stage_from_trials(bundle.trials)
+        )
 
         graph_pts = _graph_points(bundle.graph_edges)
         trial_pts = _trial_points(bundle.trials)

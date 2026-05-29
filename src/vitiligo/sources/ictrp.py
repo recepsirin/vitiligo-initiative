@@ -124,9 +124,7 @@ def parse_ictrp_record(root: Element) -> Trial | None:
         for text in (_text(el, "Condition_FreeText") for el in root.iter("Health_condition"))
         if text
     ]
-    keywords = [
-        text for text in (_text(el, "Keyword") for el in root.iter("Keyword")) if text
-    ]
+    keywords = [text for text in (_text(el, "Keyword") for el in root.iter("Keyword")) if text]
 
     interventions: list[dict[str, Any]] = []
     for el in root.iter("Intervention"):

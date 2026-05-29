@@ -58,7 +58,9 @@ def parse_llm_extraction(text: str) -> tuple[list[dict[str, object]], list[dict[
     entities = payload.get("entities", [])
     relations = payload.get("relations", [])
     entity_rows = [e for e in entities if isinstance(e, dict) and e.get("name")]
-    relation_rows = [r for r in relations if isinstance(r, dict) and r.get("subject") and r.get("object")]
+    relation_rows = [
+        r for r in relations if isinstance(r, dict) and r.get("subject") and r.get("object")
+    ]
     return entity_rows, relation_rows
 
 
@@ -129,7 +131,9 @@ def _pending_documents(session: Session, *, limit: int) -> list[Document]:
     return list(session.exec(stmt).all())
 
 
-def _extract_one(client: LLMClient, doc: Document) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+def _extract_one(
+    client: LLMClient, doc: Document
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     src = doc.source.value if hasattr(doc.source, "value") else str(doc.source)
     user = (
         f"SOURCE: {src}:{doc.source_id}\n"

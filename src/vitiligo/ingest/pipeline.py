@@ -388,9 +388,7 @@ def run_opentargets_ingestion(
             disease_name = handle.name if handle else query
 
             drug_iter = client.iter_drug_priors(disease_efo, disease_name)
-            target_iter = client.iter_target_priors(
-                disease_efo, disease_name, limit=target_limit
-            )
+            target_iter = client.iter_target_priors(disease_efo, disease_name, limit=target_limit)
 
             with session_scope() as session:
                 for prior in _chain_priors(drug_iter, target_iter):

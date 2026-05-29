@@ -6,7 +6,9 @@ import importlib.util
 from pathlib import Path
 from typing import Any
 
-_PROMOTE_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "review" / "promote-eval-to-manifest.py"
+_PROMOTE_SCRIPT = (
+    Path(__file__).resolve().parents[2] / "scripts" / "review" / "promote-eval-to-manifest.py"
+)
 
 
 def _promote_module():

@@ -94,12 +94,7 @@ def _seed_prior(session: Session, prior: Prior, vitiligo: GraphEntity) -> tuple[
             action = str(mech.get("action_type") or "").upper()
             predicate = _action_to_predicate(action)
             for target in mech.get("targets") or []:
-                target_name = (
-                    target.get("symbol")
-                    or target.get("name")
-                    or target.get("id")
-                    or ""
-                )
+                target_name = target.get("symbol") or target.get("name") or target.get("id") or ""
                 if not target_name:
                     continue
                 target_entity = upsert_entity(
@@ -185,7 +180,11 @@ def _seed_trial(session: Session, trial: Trial, vitiligo: GraphEntity) -> tuple[
         name = (iv.get("name") or "").strip()
         if not name:
             continue
-        kind = EntityKind.DRUG if str(iv.get("type", "")).upper() == "DRUG" else EntityKind.INTERVENTION
+        kind = (
+            EntityKind.DRUG
+            if str(iv.get("type", "")).upper() == "DRUG"
+            else EntityKind.INTERVENTION
+        )
         intervention = upsert_entity(
             session,
             kind=kind,

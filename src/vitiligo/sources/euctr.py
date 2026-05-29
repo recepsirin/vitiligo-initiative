@@ -381,16 +381,11 @@ def _interventions_from_detail(detail: dict[str, Any] | None) -> list[dict[str, 
     if not detail:
         return []
     products = (
-        detail.get("authorizedApplication", {})
-        .get("authorizedPartI", {})
-        .get("products")
-        or []
+        detail.get("authorizedApplication", {}).get("authorizedPartI", {}).get("products") or []
     )
     out: list[dict[str, Any]] = []
     for p in products:
-        name = _coerce_str(p.get("productName")) or _coerce_str(
-            p.get("otherMedicinalProduct")
-        )
+        name = _coerce_str(p.get("productName")) or _coerce_str(p.get("otherMedicinalProduct"))
         substances = p.get("jsonActiveSubstanceNames") or []
         if isinstance(substances, str):
             substances = [substances]
@@ -424,16 +419,11 @@ def _sponsors_from_record(
 
     if detail:
         all_sponsors = (
-            detail.get("authorizedApplication", {})
-            .get("authorizedPartI", {})
-            .get("sponsors")
-            or []
+            detail.get("authorizedApplication", {}).get("authorizedPartI", {}).get("sponsors") or []
         )
         for s in all_sponsors:
-            org = (s.get("organisation") or {})
-            name = _coerce_str(org.get("organisationName")) or _coerce_str(
-                org.get("organisation")
-            )
+            org = s.get("organisation") or {}
+            name = _coerce_str(org.get("organisationName")) or _coerce_str(org.get("organisation"))
             if not name or any(name == existing["name"] for existing in out):
                 continue
             out.append(

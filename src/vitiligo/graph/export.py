@@ -17,17 +17,11 @@ from vitiligo.storage.models import GraphEdge, GraphEntity
 def export_graph_snapshot(*, edge_limit: int | None = None) -> dict[str, Any]:
     """Return the full graph (entities + edges) as a JSON-serializable dict."""
     summary = summarize_graph()
-    stats = {
-        row.label: row.count
-        for group in summary.values()
-        for row in group
-    }
+    stats = {row.label: row.count for group in summary.values() for row in group}
 
     with Session(get_engine(), expire_on_commit=False) as session:
         entities = list(
-            session.exec(
-                select(GraphEntity).order_by(GraphEntity.kind, GraphEntity.name)
-            ).all()
+            session.exec(select(GraphEntity).order_by(GraphEntity.kind, GraphEntity.name)).all()
         )
         stmt = select(GraphEdge).order_by(desc(GraphEdge.confidence), GraphEdge.id)
         if edge_limit is not None:

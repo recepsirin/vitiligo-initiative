@@ -261,7 +261,9 @@ def _parse_drug_element(drug_el: etree._Element) -> dict[str, Any] | None:
     if not drugbank_id or not name:
         return None
 
-    groups = [g.text.strip() for g in drug_el.findall(f"{{{DB_NS}}}groups/{{{DB_NS}}}group") if g.text]
+    groups = [
+        g.text.strip() for g in drug_el.findall(f"{{{DB_NS}}}groups/{{{DB_NS}}}group") if g.text
+    ]
     clinical_stage = _groups_to_stage(groups)
 
     synonyms = [
@@ -287,7 +289,8 @@ def _parse_drug_element(drug_el: etree._Element) -> dict[str, Any] | None:
         "drugbank_id": drugbank_id,
         "name": name,
         "drug_type": drug_el.get("type"),
-        "description": _child_text(drug_el, "description") or _child_text(drug_el, "simple-description"),
+        "description": _child_text(drug_el, "description")
+        or _child_text(drug_el, "simple-description"),
         "indication": _child_text(drug_el, "indication"),
         "mechanism": _child_text(drug_el, "mechanism-of-action"),
         "groups": groups,

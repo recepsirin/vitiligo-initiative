@@ -173,9 +173,7 @@ class OpenTargetsClient:
 
             mechanisms = self._fetch_drug_mechanisms(chembl_id)
             trial_ids = [
-                str(r.get("id")).lower()
-                for r in (row.get("clinicalReports") or [])
-                if r.get("id")
+                str(r.get("id")).lower() for r in (row.get("clinicalReports") or []) if r.get("id")
             ]
 
             yield Prior(
