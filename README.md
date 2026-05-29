@@ -2,12 +2,30 @@
 
 > **Stop the spread of vitiligo and restore pigmentation to affected skin — by using AI to systematically identify, prioritize, and partner to validate the most promising therapeutic candidates, combinations, and protocols, and by deploying the patient and clinician tools that compound that work.**
 
-This is a living planning document for a non-profit, AI-native vitiligo research initiative. It captures mission, objectives, strategy, deliverables, and outcomes as we currently understand them. Everything here is open to challenge and revision.
+## About this repository
+
+**What it is:** The **Vitiligo Initiative Evidence Engine** — open-source Python software (CLI + FastAPI UI) to ingest public vitiligo literature and trial registries, index them for semantic search, and optionally run citation-grounded Q&A and hypothesis ranking when an Anthropic API key is configured on the server.
+
+**What it is not:** Medical advice, diagnosis, or treatment guidance for individual patients. Outputs are for **research and education** only; verify cited sources and discuss care with a qualified clinician.
+
+**Corpus not in git:** This repository does **not** ship `vitiligo.db`. Build the SQLite corpus locally ([`docs/engine.md`](docs/engine.md): `vitiligo ingest`, `vitiligo embed run`, `vitiligo graph seed`) or use a corpus artifact from a [GitHub release](https://github.com/recepsirin/vitiligo-initiative/releases) when published. Never commit `.env` or API keys.
+
+| | |
+|---|---|
+| **Run locally** | [`docs/engine.md`](docs/engine.md) quickstart → `vitiligo serve` at http://127.0.0.1:8765 |
+| **Architecture** | [`docs/architecture.md`](docs/architecture.md) |
+| **Deploy** | [`docs/deploy.md`](docs/deploy.md) (Render / Docker; static corpus on disk) |
+| **License** | [Apache 2.0](LICENSE) · third-party [NOTICE](NOTICE) |
+| **Security** | [SECURITY.md](SECURITY.md) |
+| **Contact** | **Parked** — domain not purchased yet. Security: [SECURITY.md](SECURITY.md) (GitHub for now). Planned: `contact@` / `privacy@` on `vitiligo-initiative.org` |
+
+Below this section, the README remains a **living planning document** for the broader non-profit initiative (mission, strategy, phases). Everything is open to challenge and revision.
 
 ---
 
 ## Table of Contents
 
+- [About this repository](#about-this-repository)
 - [Mission](#mission)
 - [Strategic Objectives](#strategic-objectives)
 - [Non-Goals](#non-goals)
