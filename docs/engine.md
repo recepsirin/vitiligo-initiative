@@ -69,22 +69,7 @@ For smoke testing, every ingest command supports `--limit N`.
 
 ## Architecture
 
-Five layers, all deliberately small and swappable:
-
-```
-┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ External │ ─► │ Ingestion│ ─► │ Document │ ─► │ Embeddings│ ─► │ Reasoning│
-│ sources  │    │ pipeline │    │ store    │    │ + semantic│    │ (RAG +   │
-│ (PubMed, │    │ +        │    │ (SQLite) │    │ search    │    │ hypothesis│
-│  PMC, …) │    │ bookkeep │    │          │    │ fastembed)│    │ Anthropic)│
-└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
-                                                                      │
-                                                                      ▼
-                                                              ┌──────────────┐
-                                                              │ FastAPI web  │
-                                                              │ + HTML UI    │
-                                                              └──────────────┘
-```
+Five layers, all deliberately small and swappable. **Diagrams (Mermaid):** [`architecture.md`](architecture.md) — high-level data flow, layer stack, hypothesize streams, deployment.
 
 ### Source clients (`vitiligo.sources`)
 
@@ -194,7 +179,7 @@ A small FastAPI app exposing JSON endpoints plus a static HTML UI:
 
 The UI includes a **Graph** tab for entity search and neighbor browsing (spot-checking the knowledge graph without the CLI).
 
-Production deployment: see [`docs/deploy.md`](deploy.md) (Dockerfile, `fly.toml` for Amsterdam, `render.yaml`, rate limiting, persistent volume for `vitiligo.db`).
+Production deployment: see [`deploy.md`](deploy.md) and [`architecture.md`](architecture.md#deployment-and-runtime) (Docker, rate limiting, persistent volume for `vitiligo.db`).
 
 The UI is intentionally a single static HTML file with vanilla CSS/JS — no build step, no framework, fast to iterate on, easy to deploy. CORS is open by default; POST endpoints are rate-limited per IP in production.
 

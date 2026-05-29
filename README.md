@@ -418,7 +418,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Typed CLI**, ruff-clean, **250 tests** (CI: ~158 fast + ~76 confidence; corpus + smoke local-only), Apache-2.0 licensed; GitHub Actions CI on push.
   - **Candidate report v1** — evidence-scored rankings: [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md) (`vitiligo report candidates`); **Candidates** tab in web UI.
   - **Validation proposals** — lab outreach one-pagers: [`docs/validation-proposals/`](docs/validation-proposals/).
-- **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
+- **Engineering docs** — [`docs/engine.md`](docs/engine.md) (quickstart); [`docs/architecture.md`](docs/architecture.md) (system diagrams).
 - **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md), [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md) (drafts for advisor review).
 
 ### Release & advisor demo (v1.0.0 local-first)

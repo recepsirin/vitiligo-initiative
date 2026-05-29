@@ -53,7 +53,7 @@ We describe and release an open, reproducible pipeline that unifies vitiligo lit
 ## 2. Methods (~2,500 words)
 
 ### 2.1 System overview
-- Reference architecture diagram from [`engine.md`](engine.md)  
+- Reference architecture diagram from [`architecture.md`](architecture.md)  
 - Design principles: small swappable layers, idempotent ingestion, source-agnostic schema, open licenses  
 
 ### 2.2 Document corpus
@@ -235,7 +235,7 @@ We describe and release an open, reproducible pipeline that unifies vitiligo lit
 
 - [ ] Finalize author list and affiliations  
 - [ ] Run evaluation set (retrieval + Ask faithfulness)  
-- [ ] Generate architecture figures from mermaid in README  
+- [ ] Export Fig 1 from Mermaid in [`architecture.md`](architecture.md) for preprint (GitHub renders in-repo)  
 - [ ] Add 2–3 paragraphs on EU CTR vitiligo Phase 3 trials (ruxolitinib, povorcitinib, upadacitinib) as motivating example  
 - [ ] Legal review of Privacy/Terms before citing public URL in preprint  
 
