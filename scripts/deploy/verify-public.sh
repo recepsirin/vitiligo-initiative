@@ -2,16 +2,15 @@
 # Verify a deployed Evidence Engine (health, legal pages, core API smoke).
 #
 # Usage:
-#   ./scripts/deploy/verify-public.sh
-#   BASE_URL=https://vitiligo-evidence-engine.fly.dev ./scripts/deploy/verify-public.sh
+#   BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/deploy/common.sh
 source "$SCRIPT_DIR/common.sh"
 
-APP="$(vitiligo_fly_app)"
-BASE_URL="${BASE_URL:-https://${APP}.fly.dev}"
+BASE_URL="${BASE_URL:?Set BASE_URL to the deployed Evidence Engine origin (e.g. https://engine.example.com)}"
+BASE_URL="${BASE_URL%/}"
 FAIL=0
 
 vitiligo_require_cmd curl "Install curl"
@@ -49,7 +48,7 @@ check_health() {
     return
   fi
   if ! grep -qE '"graph_entities"[[:space:]]*:[[:space:]]*[1-9][0-9]*' <<<"$body"; then
-    echo "  FAIL: graph_entities missing or zero (run fly-seed-graph?)" >&2
+    echo "  FAIL: graph_entities missing or zero (run vitiligo graph seed on the host?)" >&2
     FAIL=1
     return
   fi

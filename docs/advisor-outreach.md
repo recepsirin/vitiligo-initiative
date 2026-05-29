@@ -61,7 +61,7 @@ Best,
 
 1. Send calendar invite with agenda from [`kol-meeting-prep.md`](kol-meeting-prep.md)  
 2. Run `./scripts/review/graph-spotcheck.sh` and `vitiligo graph export` fresh  
-3. Confirm demo URL works (`./scripts/deploy/verify-public.sh` if deployed)  
+3. Confirm demo URL works (`BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh` if deployed)  
 4. Collect COI disclosure verbally; note in meeting capture table  
 
 ---

@@ -26,10 +26,6 @@ vitiligo_default_db_path() {
   printf '%s' "${VITILIGO_DB_PATH:-data/vitiligo.db}"
 }
 
-vitiligo_fly_app() {
-  printf '%s' "${FLY_APP:-vitiligo-evidence-engine}"
-}
-
 vitiligo_info() {
   echo "==> $*"
 }

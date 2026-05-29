@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verify the local corpus DB and prepare it for Fly.io upload.
+# Verify the local corpus DB and prepare it for upload to a public host volume.
 #
 # Usage:
 #   ./scripts/deploy/prepare-db.sh           # inspect + checklist
@@ -62,11 +62,10 @@ fi
 
 cat <<EOF
 
-Ready for deploy:
-  1. ./scripts/deploy/fly-first-deploy.sh     (once)
-  2. ./scripts/deploy/fly-upload-db.sh        (uploads $DB)
-  3. ./scripts/deploy/fly-seed-graph.sh
-  4. fly open /api/health -a $(vitiligo_fly_app)
+Ready for public deploy (see docs/deploy.md):
+  1. Upload $DB to the host persistent volume (or use --gzip output)
+  2. On the host: vitiligo graph seed && vitiligo graph stats
+  3. BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh
 
 Expert graph review (local):
   vitiligo graph export -o exports/graph-$(date +%Y%m%d).json

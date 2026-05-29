@@ -1,7 +1,7 @@
 # Release Checklist — Evidence Engine v1.0.0
 
 **Goal:** Advisor-ready engine with reproducible evidence outputs; public URL deferred.  
-**Hosting:** **Local-first** (May 2026). Fly.io deprecated. **DigitalOcean** planned for public deploy.
+**Hosting:** **Local-first** (May 2026). **DigitalOcean** planned for public deploy.
 
 ---
 
@@ -48,13 +48,13 @@ Semantic search applies evidence-adjusted scores after cosine similarity (mouse 
 
 ## Public deploy (deferred — DigitalOcean)
 
-When ready for a public URL, implement DO deploy per [`deploy.md`](deploy.md). **Do not use Fly.io.**
+When ready for a public URL, implement DO deploy per [`deploy.md`](deploy.md).
 
 - [ ] DigitalOcean Droplet or App Platform + persistent volume
 - [ ] `ANTHROPIC_API_KEY` in host secrets (not in repo)
 - [ ] `/api/health` → `"ready": true`, documents > 0, graph stats > 0
 - [ ] `/privacy` and `/terms` load
-- [ ] `./scripts/deploy/verify-public.sh` against public URL
+- [ ] `BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh`
 
 ---
 

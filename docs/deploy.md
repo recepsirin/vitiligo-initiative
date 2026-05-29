@@ -18,35 +18,17 @@ Share with advisors via **screen share** + the KOL pack tarball — not a public
 
 When a public URL is needed, the target platform is **DigitalOcean** (likely a Droplet or App Platform with a persistent volume for `vitiligo.db`). Rationale: predictable pricing, full control over SQLite + FastAPI + fastembed, no vendor lock-in to edge/serverless constraints.
 
-**Not yet implemented** — deploy scripts for DO will replace the Fly.io tooling below.
+**Not yet implemented** — add DO-specific deploy scripts when you are ready for a public URL.
 
-Rough cost expectation: ~$12–24/mo for a small always-on instance + block storage (similar to prior Fly estimates).
+Rough cost expectation: ~$12–24/mo for a small always-on instance + block storage.
 
----
-
-## Deprecated: Fly.io (will be removed)
-
-Fly.io configs and scripts under `fly.toml` and `scripts/deploy/fly-*.sh` are **deprecated** and scheduled for removal. Do not use for new deployments.
-
-<details>
-<summary>Legacy Fly.io instructions (reference only)</summary>
-
-### Prerequisites
-
-- [Fly CLI](https://fly.io/docs/hands-on/install-flyctl/)
-- A built corpus at `data/vitiligo.db` locally
-
-### First deploy
+After deploy, verify with:
 
 ```bash
-fly auth login
-export ANTHROPIC_API_KEY=sk-ant-...
-./scripts/deploy/fly-deploy-all.sh
+BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh
 ```
 
-Verify: `./scripts/deploy/verify-public.sh`
-
-</details>
+Use `./scripts/deploy/prepare-db.sh` (optionally `--gzip`) to validate the corpus before uploading `vitiligo.db` to the host volume. Seed the graph on the server with `vitiligo graph seed` if `/api/health` shows zero graph entities.
 
 ---
 
@@ -78,7 +60,7 @@ docker run --rm -p 8765:8765 \
 
 Open http://127.0.0.1:8765
 
-Helper scripts: [`scripts/deploy/`](../scripts/deploy/) (Fly scripts deprecated; `docker-smoke.sh`, `verify-local.sh`, `prepare-db.sh` still useful locally).
+Helper scripts: [`scripts/deploy/`](../scripts/deploy/) — `docker-smoke.sh`, `verify-local.sh`, `verify-public.sh`, `prepare-db.sh`.
 
 ---
 

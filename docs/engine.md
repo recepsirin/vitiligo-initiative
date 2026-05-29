@@ -277,7 +277,7 @@ other or share state beyond `storage` and `config`.
 
 In rough priority order:
 
-1. **Public deploy** — `fly deploy` with corpus volume (see [`deploy.md`](deploy.md)).
+1. **Public deploy** — DigitalOcean (or Render) with corpus on a persistent volume (see [`deploy.md`](deploy.md)).
 2. **Knowledge graph LLM enrichment** — run `vitiligo graph extract` on the full abstract corpus; expert spot-check.
 3. **Better citation discipline** — evidence-level tagging per source (RCT / cohort / case series / mouse / review), surfaced in answers.
 4. **Full-text embedding scope** — embed PMC body sections, not just title + abstract; chunked retrieval.

@@ -1,7 +1,7 @@
 """Simple in-memory rate limiting for public deployments.
 
 Uses a sliding window per client IP. Sufficient for a single-process
-Fly.io / Render instance; swap for Redis if we scale horizontally.
+Single-instance deployment; swap for Redis if we scale horizontally.
 """
 
 from __future__ import annotations

@@ -18,7 +18,7 @@ We describe and release an open, reproducible pipeline that unifies vitiligo lit
 - **Background:** Vitiligo evidence is fragmented across PubMed, full-text archives, trial registries, genetics platforms, and omics repositories; manual synthesis is slow and rarely links trials to mechanisms systematically.  
 - **Methods:** We built the Vitiligo Initiative Evidence Engine: idempotent ingestion into SQLite, ONNX embeddings (`BAAI/bge-small-en-v1.5`), cross-registry trial normalization, Open Targets / DrugBank priors, deterministic knowledge-graph seeding from priors + trials, RAG-based Q&A, and four-stream hypothesis generation (papers, trials, priors, graph) via Claude.  
 - **Corpus (May 2026):** 14,245 documents (11,356 PubMed, 2,578 PMC OA, 311 GEO); 14,242 embeddings; 344 trials (CT.gov, EU CTR, ICTRP); 237 priors; 1,044 graph entities / 1,643 edges.  
-- **Availability:** Apache-2.0 code, CLI + FastAPI UI, Fly.io deploy scripts, graph JSON export, GitHub Actions CI.  
+- **Availability:** Apache-2.0 code, CLI + FastAPI UI, Docker deploy tooling, graph JSON export, GitHub Actions CI.  
 - **Conclusion:** Open infrastructure for vitiligo evidence synthesis; not a clinical decision system — expert validation required before therapeutic claims.
 
 ---
@@ -125,8 +125,8 @@ We describe and release an open, reproducible pipeline that unifies vitiligo lit
 - FastAPI + static UI (Search / Ask / Hypothesize / Graph / Trials)  
 - Rate limiting; health endpoint with corpus stats  
 - Privacy / Terms / disclaimer (beta)  
-- Fly.io Amsterdam region; persistent volume for SQLite  
-- Docker image; `scripts/deploy/fly-deploy-all.sh`  
+- Docker image; persistent volume for SQLite on host (DigitalOcean / Render planned)  
+- `scripts/deploy/verify-public.sh` with `BASE_URL`  
 
 ### 2.10 Evaluation plan (to execute before submission)
 
@@ -178,7 +178,7 @@ We describe and release an open, reproducible pipeline that unifies vitiligo lit
 ## 5. Data and code availability
 
 - GitHub: `recepsirin/vitiligo-initiative` (Apache 2.0)  
-- Public URL: `https://vitiligo-evidence-engine.fly.dev` (post-deploy)  
+- Public URL: TBD (DigitalOcean or Render; local-first v1.0.0)  
 - Graph export + ingestion run logs (no patient data)  
 - Zenodo DOI: *to mint at first release*  
 - Anthropic API required for Ask/Hypothesize (not bundled)  

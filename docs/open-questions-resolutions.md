@@ -23,7 +23,7 @@ Use this doc to unblock deploy, outreach, and incorporation. Update README open 
 |----------|-----------|---------|
 | Time commitment | **Defer formal answer** — ship Phase 1 on evenings/part-time; revisit at first lab partnership | [ ] |
 | Co-founders | **Start solo** with 1–2 KOL advisors (not co-founders yet); add technical co-founder only if corpus/engine maintenance exceeds capacity | [ ] |
-| Geography / base | **EU-aware, global mission** — **local-first for now**; public hosting planned on **DigitalOcean** (Fly.io deprecated) | [x] |
+| Geography / base | **EU-aware, global mission** — **local-first for now**; public hosting planned on **DigitalOcean** | [x] |
 | Personal connection | **Confirm in private** — authentic patient/clinician/family link informs outreach tone; not required in public repo | [ ] |
 | Financial runway | **Bootstrap Phase 1** (~API costs only while local; DO ~$12–24/mo when public); apply for VR Foundation / NIAMS / CZI once methods preprint + advisor letter exist | [ ] |
 
@@ -43,7 +43,7 @@ Use this doc to unblock deploy, outreach, and incorporation. Update README open 
 1. **Local demo + KOL pack** — `vitiligo serve` + [`kol-share-pack.sh`](../scripts/review/kol-share-pack.sh) (no public URL required for first advisor sessions)
 2. Email 2–3 advisors with share pack output
 3. Fix graph/prompt issues from feedback within 2 weeks
-4. **Public URL (later)** — DigitalOcean deploy when advisor feedback warrants it; Fly.io will not be used
+4. **Public URL (later)** — DigitalOcean deploy when advisor feedback warrants it
 
 ---
 
@@ -73,7 +73,7 @@ These can wait until after Evidence Engine v1.0 public:
 | Date | Decision | Notes |
 |------|----------|-------|
 | 2026-05 | Hybrid AI + lab model | README working assumption |
-| 2026-05 | Hosting | **Local-first**; Fly.io deprecated; DigitalOcean planned |
+| 2026-05 | Hosting | **Local-first**; DigitalOcean planned for public URL |
 | | Public beta URL | Deferred until DO deploy |
 | | Legal structure | Pending founder + counsel |
 

@@ -217,7 +217,7 @@ Exposed as `vitiligo report candidates` and `GET /api/report/candidates` (web en
 
 ## Deployment and runtime
 
-Default posture is **local-first** (`vitiligo serve` + `data/vitiligo.db`). Optional public hosting uses Docker with a persistent volume for the corpus and embedding cache. **`fly.toml` exists but Fly.io is deprecated** — see [`deploy.md`](deploy.md).
+Default posture is **local-first** (`vitiligo serve` + `data/vitiligo.db`). Optional public hosting uses Docker with a persistent volume for the corpus and embedding cache — see [`deploy.md`](deploy.md) (DigitalOcean or Render).
 
 ```mermaid
 flowchart LR

@@ -108,8 +108,8 @@ Not live yet; governance requirements documented early to avoid rework.
 
 ## Security baseline (production)
 
-- HTTPS only (Fly.io / Render enforce TLS)  
-- Secrets in platform vault (`ANTHROPIC_API_KEY` via `fly secrets`, not in repo)  
+- HTTPS only (host platform enforces TLS — e.g. Render, DigitalOcean, reverse proxy)  
+- Secrets in platform vault (`ANTHROPIC_API_KEY` in host env/secrets, not in repo)  
 - Database on private volume; no public SQLite download endpoint  
 - Dependency scanning via GitHub Actions (CI: pytest + ruff; extend with Dependabot as needed)  
 - Incident response: document owner contact; ability to rotate API keys and take app offline  
@@ -157,7 +157,7 @@ Until a formal board exists:
 
 ## Checklist before public URL goes live
 
-- [ ] Fly deploy complete; `/api/health` shows `ready: true`  
+- [ ] Public deploy complete; `/api/health` shows `ready: true`  
 - [x] Privacy Policy + Terms linked from footer (`/privacy`, `/terms`)  
 - [x] Disclaimer visible on Ask / Hypothesize tabs (site-wide banner + panel hints)  
 - [ ] `ANTHROPIC_API_KEY` set only on server, not client  

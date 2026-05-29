@@ -26,7 +26,7 @@ vitiligo graph export -o exports/graph-review.json
 vitiligo serve   # http://127.0.0.1:8765
 ```
 
-Share URL: `https://vitiligo-evidence-engine.fly.dev` (after deploy) or a scheduled screen share.
+Share URL: public host TBD (DigitalOcean) or a scheduled screen share with `vitiligo serve` locally.
 
 ---
 

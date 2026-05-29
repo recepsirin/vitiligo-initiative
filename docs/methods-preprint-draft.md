@@ -13,11 +13,11 @@
 
 **Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, and optional XML imports from WHO ICTRP and DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) retrieval-augmented question answering and four-stream therapeutic hypothesis generation using Anthropic Claude, with separate citation channels for papers, trials, priors, and graph relations; and (7) a FastAPI web interface with deployment tooling for EU-region hosting.
 
-**Results.** The May 2026 local corpus contains 14,245 documents (11,356 PubMed, 2,578 PMC, 311 GEO), 14,242 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,044 entities and 1,643 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker and Fly.io with privacy disclaimers and rate limiting.
+**Results.** The May 2026 local corpus contains 14,245 documents (11,356 PubMed, 2,578 PMC, 311 GEO), 14,242 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,044 entities and 1,643 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
 
 **Conclusions.** We release reproducible infrastructure for vitiligo evidence synthesis and hypothesis exploration. The engine is intended for research and education, not clinical decision-making; LLM-generated outputs require expert validation. Future work includes hybrid retrieval, full-text chunk embeddings, omics re-analysis, and prospective evaluation of hypothesis usefulness with vitiligo specialists.
 
-**Availability.** Source code: https://github.com/recepsirin/vitiligo-initiative. Public deployment: [URL pending Fly.io release].
+**Availability.** Source code: https://github.com/recepsirin/vitiligo-initiative. Public deployment: [URL pending — DigitalOcean or Render].
 
 ---
 
