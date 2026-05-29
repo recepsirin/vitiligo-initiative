@@ -22,12 +22,12 @@ vitiligo serve &
 ./scripts/deploy/verify-local.sh
 ```
 
-- [ ] `data/vitiligo.db` present (~273 MB, 14k+ docs)
-- [ ] Graph spot-check passes
-- [ ] KOL pack generated (`exports/kol-share-*.tar.gz`)
-- [ ] Candidate report in pack (`candidate-report-v1.md`)
-- [ ] 244 tests green (CI: ~156 fast + ~76 confidence; corpus (7) and smoke (5) local-only)
-- [ ] Local demo verified (`verify-local.sh`)
+- [x] `data/vitiligo.db` present (~273 MB, 14k+ docs)
+- [x] Graph spot-check passes
+- [x] KOL pack generated (`exports/kol-share-*.tar.gz`)
+- [x] Candidate report in pack (`candidate-report-v1.md`)
+- [x] 250 tests green (CI: ~158 fast + ~76 confidence; corpus (11) and smoke (5) local-only)
+- [x] Local demo verified (`verify-local.sh`)
 
 ---
 
@@ -40,9 +40,9 @@ vitiligo serve   # screen-share demo
 
 - [ ] KOL email sent with share pack ([`advisor-outreach.md`](advisor-outreach.md))
 - [ ] First advisor session scheduled or held
-- [ ] `retrieval-eval.json` relevance labels started (workflow: `./scripts/review/run-eval-retrieval.sh` → label → `promote-eval-to-manifest.py` → `build_regression_db.py` → `pytest -m confidence`)
+- [x] `retrieval-eval.json` exported (label with `advisor_relevance` 1-5, then `promote-eval-to-manifest.py --update --apply` → `build_regression_db.py` → `pytest -m confidence`)
 
-Semantic search applies evidence-adjusted scores after cosine similarity (mouse −0.08, in-vitro −0.05); `/api/search` returns the adjusted score.
+Semantic search applies evidence-adjusted scores after cosine similarity (mouse -0.08, in-vitro -0.05); `/api/search` returns the adjusted score.
 
 ---
 
@@ -61,7 +61,7 @@ When ready for a public URL, implement DO deploy per [`deploy.md`](deploy.md). *
 ## Post-release
 
 - [ ] Update README with public URL (when DO deploy exists)
-- [ ] Git tag `v1.0.0` + GitHub release notes (see [`CHANGELOG.md`](../CHANGELOG.md))
+- [x] Git tag `v1.0.0` pushed (GitHub Release: push future `v*` tags or run [`scripts/release/create-github-release.sh`](../scripts/release/create-github-release.sh); workflow [`.github/workflows/release.yml`](../.github/workflows/release.yml))
 - [ ] Zenodo DOI *optional for v1.0.0; target for methods preprint*
 - [ ] Log launch decision in [`open-questions-resolutions.md`](open-questions-resolutions.md)
 

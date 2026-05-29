@@ -410,22 +410,42 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **DrugBank ingestion (XML file import)** — vitiligo-filtered drug/target priors with mechanisms from a local full-database XML export (academic license); seeds from Open Targets drug names by default.
   - **Source-agnostic SQLite store** for documents, embeddings, trials, and priors; bookkeeping for resumable, idempotent ingestion runs across all sources.
   - **Embeddings** — fastembed (ONNX, no torch) with `BAAI/bge-small-en-v1.5`; **14,242 vectors** across PubMed, PMC, and GEO.
-  - **Semantic search** over papers; **structured search** over trials with cross-registry filtering (source / status / phase / country / has-results / free-text).
+  - **Semantic search** over papers with evidence-level tagging and evidence-adjusted ranking (mouse/in-vitro downrank); **structured search** over trials with cross-registry filtering (source / status / phase / country / has-results / free-text).
   - **RAG with citations** (`vitiligo ask`) — Claude-backed answers with bracketed numeric citations into the retrieved papers; refuses to invent facts.
   - **Knowledge graph v1** (`vitiligo graph`) — persisted entity–relation store seeded deterministically from Open Targets priors and clinical trials (1,044 entities, 1,643 edges on the local corpus); optional LLM extraction from paper abstracts; queryable via CLI and `/api/graph/*`; fourth Hypothesize evidence stream with `[Gn]` graph citations.
   - **Hypothesis generation with four evidence streams** (`vitiligo hypothesize`) — Claude-backed extraction of ranked therapeutic candidates over literature, registered clinical trials, Open Targets priors, AND knowledge-graph relations, with separate paper [n], trial [Tn], prior [Pn], and graph [Gn] citations.
   - **Web UI** (`vitiligo serve`) — FastAPI Evidence Engine with Search / Ask / Hypothesize / Graph / Trials tabs. **Local-first for now** (`vitiligo serve` + KOL screen share). Public hosting planned on **DigitalOcean** — see [`docs/deploy.md`](docs/deploy.md). Fly.io configs are **deprecated** and will be removed.
-  - **Typed CLI**, ruff-clean, 74 tests passing (68 unit + 6 integration), Apache-2.0 licensed; GitHub Actions CI on push.
+  - **Typed CLI**, ruff-clean, **250 tests** (CI: ~158 fast + ~76 confidence; corpus + smoke local-only), Apache-2.0 licensed; GitHub Actions CI on push.
   - **Candidate report v1** — evidence-scored rankings: [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md) (`vitiligo report candidates`); **Candidates** tab in web UI.
   - **Validation proposals** — lab outreach one-pagers: [`docs/validation-proposals/`](docs/validation-proposals/).
 - **Engineering docs** — see [`docs/engine.md`](docs/engine.md) for quickstart and architecture.
 - **Planning briefs** — [`docs/scientific-brief.md`](docs/scientific-brief.md), [`docs/governance-ethics-brief.md`](docs/governance-ethics-brief.md), [`docs/kol-meeting-prep.md`](docs/kol-meeting-prep.md), [`docs/methods-preprint-outline.md`](docs/methods-preprint-outline.md), [`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md), [`docs/advisor-outreach.md`](docs/advisor-outreach.md), [`docs/release-checklist-v1.0.0.md`](docs/release-checklist-v1.0.0.md) (drafts for advisor review).
 
+### Release & advisor demo (v1.0.0 local-first)
+
+Tagged release **v1.0.0** — local-first, no public URL required for advisor review.
+
+```bash
+# Full local release gate (ruff + all tests + confidence + smoke)
+./scripts/audit/smoke-all.sh
+
+# Advisor share pack → exports/kol-share-YYYYMMDD.tar.gz
+./scripts/review/kol-share-pack.sh
+
+# Screen-share demo
+vitiligo serve &
+./scripts/deploy/verify-local.sh
+```
+
+**GitHub releases:** push an annotated `v*` tag — [`.github/workflows/release.yml`](.github/workflows/release.yml) publishes automatically. Local fallback: `./scripts/release/create-github-release.sh vX.Y.Z` (requires `gh`).
+
+**Advisor labels → CI manifest:** label `exports/retrieval-eval.json`, then `python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --update --apply`, rebuild regression DB, `pytest -m confidence`. See [`tests/README.md`](tests/README.md).
+
 ### Immediate next moves
 
-1. **KOL meeting** — `./scripts/review/kol-share-pack.sh` + share [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md); [`docs/advisor-outreach.md`](docs/advisor-outreach.md)
-2. **Advisor review** — label `exports/retrieval-eval.json`; validate candidate rankings
-3. **Local demo** — `vitiligo serve` for screen-share sessions (no public deploy yet)
+1. **KOL meeting** — attach `exports/kol-share-*.tar.gz` from `./scripts/review/kol-share-pack.sh`; [`docs/advisor-outreach.md`](docs/advisor-outreach.md)
+2. **Advisor review** — label `retrieval-eval.json`; promote with `--update --apply` when expectations change
+3. **Local demo** — `vitiligo serve` + `./scripts/deploy/verify-local.sh` for screen-share sessions
 4. **Methods preprint** — complete Methods section after advisor feedback
 
 ## How to Read This Document
