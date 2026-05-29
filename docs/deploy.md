@@ -56,7 +56,7 @@ Verify: `./scripts/deploy/verify-public.sh`
 
 1. Connect the GitHub repo in Render → **New Blueprint** → select `render.yaml`
 2. Set `ANTHROPIC_API_KEY` in the dashboard
-3. Upload `vitiligo.db` to the attached disk at `/var/data/vitiligo.db`
+3. Upload `vitiligo.db` to the attached disk at `/var/data/vitiligo.db` (restart the service afterward so the in-process embedding index reloads; mtime changes also trigger reload on the next search)
 
 ---
 

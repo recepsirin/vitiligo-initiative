@@ -101,11 +101,13 @@ def _trial_to_dict(trial: Any) -> dict[str, Any]:
 
 
 def _prewarm_embeddings() -> None:
+    from vitiligo.embed.cache import warm_embedding_index
     from vitiligo.embed.encoder import get_encoder
 
     logger.info("Prewarming embedding model...")
     get_encoder().encode(["vitiligo evidence engine warmup"])
-    logger.info("Embedding model ready.")
+    count = warm_embedding_index()
+    logger.info("Embedding model ready (index vectors=%d).", count)
 
 
 @asynccontextmanager

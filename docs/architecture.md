@@ -131,8 +131,12 @@ flowchart TB
 
   subgraph index [Search index]
     Fastembed[fastembed ONNX]
+    Cache[in-process embedding matrix cache]
     Search[semantic_search + vitiligo.evidence]
   end
+  EmbTbl --> Cache
+  Cache --> Search
+  Fastembed --> Search
 
   subgraph reason [Reasoning]
     RAG[ask_with_citations]
@@ -151,7 +155,6 @@ flowchart TB
   Docs --> EmbedRun --> Fastembed --> EmbTbl
   Priors & TrialTbl --> GraphSeed --> GraphTbl
   Docs --> GraphExtract --> GraphTbl
-  EmbTbl --> Search
   Docs --> Search
   Search --> RAG
   Search --> Hypo

@@ -34,8 +34,11 @@ def _corpus_path() -> Path:
 
 
 def _reset_engine() -> None:
+    from vitiligo.embed.cache import clear_embedding_index_cache
+
     cfg._settings = None
     dbmod._engine = None
+    clear_embedding_index_cache()
 
 
 @pytest.fixture(autouse=True)
