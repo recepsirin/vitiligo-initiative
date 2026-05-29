@@ -2,20 +2,21 @@
 
 Brute-force cosine similarity is fine at our scale (tens of thousands of
 docs). Vectors are stored normalized, so cosine reduces to a single
-dense matmul.
+dense matmul. The embedding matrix is cached in-process (see
+``vitiligo.embed.cache``) and invalidated when the SQLite file changes.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 from sqlmodel import select
 
-from vitiligo.embed.encoder import DEFAULT_MODEL, Encoder, get_encoder
+from vitiligo.embed.cache import get_embedding_index
+from vitiligo.embed.encoder import DEFAULT_MODEL, get_encoder
 from vitiligo.evidence import EvidenceLevel, classify_document
 from vitiligo.logging import get_logger
-from vitiligo.storage import Document, Embedding, init_db, session_scope
+from vitiligo.storage import Document, init_db, session_scope
 
 logger = get_logger(__name__)
 
@@ -48,40 +49,29 @@ def semantic_search(
     """Return the top-k documents matching `query` by cosine similarity."""
     init_db()
 
+    index = get_embedding_index(model_name=model_name, scope=scope)
+    if index is None:
+        logger.warning(
+            "No embeddings stored for model=%s scope=%s. Run `vitiligo embed run` first.",
+            model_name,
+            scope,
+        )
+        return []
+
+    encoder = get_encoder(model_name=model_name)
+    query_vec = encoder.encode([query])[0]
+    scores = index.matrix @ query_vec
+
     with session_scope() as session:
-        rows = session.exec(
-            select(Embedding).where(Embedding.model == model_name, Embedding.scope == scope)
-        ).all()
-
-        if not rows:
-            logger.warning(
-                "No embeddings stored for model=%s scope=%s. Run `vitiligo embed run` first.",
-                model_name,
-                scope,
-            )
-            return []
-
-        dim = rows[0].dim
-        matrix = np.empty((len(rows), dim), dtype=np.float32)
-        doc_ids: list[int] = []
-        for idx, emb in enumerate(rows):
-            matrix[idx] = Encoder.vector_from_bytes(emb.vector, dim)
-            doc_ids.append(emb.document_id)
-
-        encoder = get_encoder(model_name=model_name)
-        query_vec = encoder.encode([query])[0]
-
-        scores = matrix @ query_vec  # all vectors are L2-normalized
-
         documents = {
             d.id: d
             for d in session.exec(
-                select(Document).where(Document.id.in_(doc_ids))  # type: ignore[union-attr]
+                select(Document).where(Document.id.in_(index.doc_ids))  # type: ignore[union-attr]
             ).all()
         }
 
         ranked: list[tuple[float, float, int]] = []
-        for i, doc_id in enumerate(doc_ids):
+        for i, doc_id in enumerate(index.doc_ids):
             doc = documents.get(doc_id)
             if doc is None:
                 continue
@@ -94,7 +84,7 @@ def semantic_search(
 
         hits: list[SearchHit] = []
         for adjusted, _raw, i in top_ranked:
-            doc = documents.get(doc_ids[i])
+            doc = documents.get(index.doc_ids[i])
             if doc is None:
                 continue
             hits.append(SearchHit(document=doc, score=adjusted))
