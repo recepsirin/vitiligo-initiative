@@ -167,8 +167,7 @@ def create_app() -> FastAPI:
             "trials": {
                 "total": trial_summary["total"][0].count if trial_summary["total"] else 0,
                 "by_source": [
-                    {"label": r.label, "count": r.count}
-                    for r in trial_summary.get("by_source", [])
+                    {"label": r.label, "count": r.count} for r in trial_summary.get("by_source", [])
                 ],
             },
         }

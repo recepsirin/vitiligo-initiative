@@ -111,7 +111,7 @@ Not live yet; governance requirements documented early to avoid rework.
 - HTTPS only (host platform enforces TLS — e.g. Render, DigitalOcean, reverse proxy)  
 - Secrets in platform vault (`ANTHROPIC_API_KEY` in host env/secrets, not in repo)  
 - Database on private volume; no public SQLite download endpoint  
-- Dependency scanning via GitHub Actions (CI: pytest + ruff; extend with Dependabot as needed)  
+- Dependency scanning via GitHub Actions (CI: pytest + ruff) and Dependabot (pip + Actions)  
 - Incident response: document owner contact; ability to rotate API keys and take app offline  
 
 ---

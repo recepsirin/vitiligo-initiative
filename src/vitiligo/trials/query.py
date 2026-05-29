@@ -50,9 +50,7 @@ def _apply_filter(stmt: Any, filt: TrialFilter) -> Any:
         # phases / countries / conditions / keywords are JSON lists; in SQLite
         # they're stored as JSON strings, so a case-insensitive LIKE on the
         # serialized form is correct and adequately fast at this scale.
-        stmt = stmt.where(
-            func.lower(cast(Trial.phases, String)).like(f'%"{filt.phase.lower()}"%')
-        )
+        stmt = stmt.where(func.lower(cast(Trial.phases, String)).like(f'%"{filt.phase.lower()}"%'))
     if filt.country:
         stmt = stmt.where(
             func.lower(cast(Trial.countries, String)).like(f'%"{filt.country.lower()}"%')
@@ -132,8 +130,7 @@ def retrieve_relevant_trials(
         filtered = [
             t
             for t in candidates
-            if t.has_results
-            or any(p in _HIGH_SIGNAL_PHASES for p in (t.phases or []))
+            if t.has_results or any(p in _HIGH_SIGNAL_PHASES for p in (t.phases or []))
         ]
         # If the high-signal filter wipes out all candidates, fall back to
         # the unfiltered list so the user always gets *something* back.
@@ -153,16 +150,12 @@ def retrieve_relevant_trials(
                     (trial.summary or ""),
                     " ".join(trial.conditions or []),
                     " ".join(trial.keywords or []),
-                    " ".join(
-                        (iv.get("name") or "") for iv in (trial.interventions or [])
-                    ),
+                    " ".join((iv.get("name") or "") for iv in (trial.interventions or [])),
                 ],
             )
         ).lower()
         token_overlap = sum(1 for tok in intent_tokens if tok in haystack)
-        phase_bonus = sum(
-            1 for p in (trial.phases or []) if p in _HIGH_SIGNAL_PHASES
-        )
+        phase_bonus = sum(1 for p in (trial.phases or []) if p in _HIGH_SIGNAL_PHASES)
         results_bonus = 1 if trial.has_results else 0
         return (token_overlap, phase_bonus + results_bonus, trial.id or 0)
 
@@ -179,9 +172,7 @@ def summarize_trials(
     with Session(get_engine(), expire_on_commit=False) as session:
         total = int(
             session.exec(
-                select(func.count())
-                .select_from(Trial)
-                .where(Trial.source.in_(src_list))  # type: ignore[attr-defined]
+                select(func.count()).select_from(Trial).where(Trial.source.in_(src_list))  # type: ignore[attr-defined]
             ).one()
             or 0
         )

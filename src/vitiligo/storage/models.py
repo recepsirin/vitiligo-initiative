@@ -186,7 +186,9 @@ class Prior(SQLModel, table=True):
 
     source: PriorSourceKind = Field(index=True)
     kind: PriorKind = Field(index=True)
-    source_id: str = Field(index=True, description="Stable ID within source (e.g. CHEMBL id, Ensembl id).")
+    source_id: str = Field(
+        index=True, description="Stable ID within source (e.g. CHEMBL id, Ensembl id)."
+    )
 
     disease_id: str = Field(index=True, description="Disease identifier (e.g. EFO_0004208).")
     disease_name: str | None = Field(default=None)
@@ -194,9 +196,13 @@ class Prior(SQLModel, table=True):
     name: str = Field(index=True)
     description: str | None = Field(default=None)
 
-    score: float | None = Field(default=None, index=True, description="Association score for targets.")
+    score: float | None = Field(
+        default=None, index=True, description="Association score for targets."
+    )
     clinical_stage: str | None = Field(
-        default=None, index=True, description="Max clinical stage for drugs (e.g. PHASE_3, APPROVAL)."
+        default=None,
+        index=True,
+        description="Max clinical stage for drugs (e.g. PHASE_3, APPROVAL).",
     )
 
     synonyms: list[str] = Field(default_factory=list, sa_column=Column(JSON))

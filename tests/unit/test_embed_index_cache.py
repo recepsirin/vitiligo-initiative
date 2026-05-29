@@ -15,7 +15,11 @@ def _seed_two_embedded_papers(test_db_path) -> None:
     init_db()
     texts = [
         ("pmid1", "JAK inhibitors for vitiligo repigmentation", "Clinical trial of tofacitinib."),
-        ("pmid2", "Mouse model of vitiligo depigmentation", "C57BL/6 mice with vitiligo-like lesions."),
+        (
+            "pmid2",
+            "Mouse model of vitiligo depigmentation",
+            "C57BL/6 mice with vitiligo-like lesions.",
+        ),
     ]
     encoder = Encoder()
     vectors = encoder.encode([t[2] for t in texts])

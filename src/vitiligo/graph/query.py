@@ -60,7 +60,9 @@ def summarize_graph() -> dict[str, list[GraphStatsRow]]:
             GraphStatsRow(label="edges", count=edges),
         ],
         "by_kind": [
-            GraphStatsRow(label=str(kind.value if hasattr(kind, "value") else kind), count=int(count))
+            GraphStatsRow(
+                label=str(kind.value if hasattr(kind, "value") else kind), count=int(count)
+            )
             for kind, count in kind_rows
         ],
         "by_predicate": [

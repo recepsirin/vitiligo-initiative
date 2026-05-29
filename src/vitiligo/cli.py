@@ -75,7 +75,9 @@ app = typer.Typer(
     help="Vitiligo Initiative engine — ingestion, search, and reasoning.",
     no_args_is_help=True,
 )
-ingest_app = typer.Typer(help="Ingest documents and trials from external sources.", no_args_is_help=True)
+ingest_app = typer.Typer(
+    help="Ingest documents and trials from external sources.", no_args_is_help=True
+)
 db_app = typer.Typer(help="Inspect the local document store.", no_args_is_help=True)
 embed_app = typer.Typer(help="Generate and inspect embeddings.", no_args_is_help=True)
 trials_app = typer.Typer(help="Browse the local clinical-trials store.", no_args_is_help=True)
@@ -224,9 +226,7 @@ def ingest_ctgov(
         "-q",
         help="ClinicalTrials.gov condition query.",
     ),
-    page_size: int = typer.Option(
-        100, "--page-size", "-p", help="Studies per request (max 1000)."
-    ),
+    page_size: int = typer.Option(100, "--page-size", "-p", help="Studies per request (max 1000)."),
     limit: int | None = typer.Option(
         None, "--limit", "-l", help="Cap total trials (smoke testing)."
     ),
@@ -314,9 +314,7 @@ def ingest_opentargets(
         console.print(f"EFO id:   [magenta]{efo_id}[/magenta]")
     console.print()
 
-    stats = run_opentargets_ingestion(
-        query=query, efo_id=efo_id, target_limit=target_limit
-    )
+    stats = run_opentargets_ingestion(query=query, efo_id=efo_id, target_limit=target_limit)
 
     console.print()
     console.rule("[bold green]Done[/bold green]")
@@ -879,16 +877,16 @@ def priors_sample(
         raise typer.Exit(code=2)
 
     if not rows:
-        console.print("[yellow]No priors found. Run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`.[/yellow]")
+        console.print(
+            "[yellow]No priors found. Run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`.[/yellow]"
+        )
         return
 
     console.rule(f"[bold]Sample {kind} priors[/bold]")
     for p in rows:
         score = f" score={p.score:.3f}" if p.score is not None else ""
         stage = f" stage={p.clinical_stage}" if p.clinical_stage else ""
-        console.print(
-            f"[cyan]{p.source_id}[/cyan] {p.name}{score}{stage}"
-        )
+        console.print(f"[cyan]{p.source_id}[/cyan] {p.name}{score}{stage}")
 
 
 # --------------------------------------------------------------------- trials
@@ -926,9 +924,7 @@ def trials_stats() -> None:
         console.print(status_table)
 
     if summary["by_results"]:
-        results_table = Table(
-            title="Reported results", show_header=True, header_style="bold"
-        )
+        results_table = Table(title="Reported results", show_header=True, header_style="bold")
         results_table.add_column("Has results")
         results_table.add_column("Count", justify="right")
         for row in summary["by_results"]:
@@ -961,7 +957,7 @@ def trials_sample(
             console.print(f"[bold]Conditions:[/bold] {', '.join(trial.conditions[:6])}")
         if trial.interventions:
             ivs = [
-                f"{iv.get('type','?')}: {iv.get('name','?')}" for iv in trial.interventions[:5]
+                f"{iv.get('type', '?')}: {iv.get('name', '?')}" for iv in trial.interventions[:5]
             ]
             console.print(f"[bold]Interventions:[/bold] {' | '.join(ivs)}")
         if trial.countries:
@@ -1027,7 +1023,7 @@ def trials_search(
             console.print(f"Conditions: {', '.join(trial.conditions[:6])}")
         if trial.interventions:
             ivs = [
-                f"{iv.get('type','?')}: {iv.get('name','?')}" for iv in trial.interventions[:4]
+                f"{iv.get('type', '?')}: {iv.get('name', '?')}" for iv in trial.interventions[:4]
             ]
             console.print(f"Interventions: {' | '.join(ivs)}")
         if trial.countries:

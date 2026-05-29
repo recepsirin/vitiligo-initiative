@@ -192,7 +192,7 @@ def parse_ctgov_study(study: dict[str, Any]) -> Trial | None:
     contacts_mod = protocol.get("contactsLocationsModule") or {}
     sponsor_mod = protocol.get("sponsorCollaboratorsModule") or {}
 
-    enrollment = (design_mod.get("enrollmentInfo") or {})
+    enrollment = design_mod.get("enrollmentInfo") or {}
     locations = contacts_mod.get("locations") or []
     countries = sorted(
         {(loc.get("country") or "").strip() for loc in locations if loc.get("country")}

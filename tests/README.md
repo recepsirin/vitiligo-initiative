@@ -51,8 +51,9 @@ pytest -m confidence
 ## Commands
 
 ```bash
-# CI-equivalent (fast)
+# CI-equivalent (fast; matches .github/workflows/ci.yml)
 pytest -m "not corpus and not smoke and not confidence"
+ruff check src tests && ruff format --check src tests
 
 # Confidence regression (builds minimal corpus if needed)
 python scripts/test/build_regression_db.py

@@ -4,10 +4,22 @@ on:
   push:
     branches: [master, main]
   pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    env:
+      FASTEMBED_CACHE_PATH: ${{ github.workspace }}/.cache/fastembed
+      VITILIGO_REGRESSION_DB: /tmp/vitiligo-regression.db
     steps:
       - uses: actions/checkout@v4
 
@@ -16,19 +28,34 @@ jobs:
           python-version: "3.13"
           cache: pip
 
+      - name: Cache fastembed ONNX model
+        uses: actions/cache@v4
+        with:
+          path: .cache/fastembed
+          key: fastembed-${{ runner.os }}-bge-small-en-v1.5
+
+      - name: Cache regression corpus
+        id: regression-db
+        uses: actions/cache@v4
+        with:
+          path: /tmp/vitiligo-regression.db
+          key: regression-${{ hashFiles('tests/fixtures/regression/**', 'scripts/test/build_regression_db.py') }}
+
       - name: Install package and dev tools
         run: pip install -e ".[dev]"
 
-      - name: Ruff
+      - name: Ruff lint
         run: ruff check src tests
+
+      - name: Ruff format
+        run: ruff format --check src tests
 
       - name: Pytest (unit + integration)
         run: pytest tests/ -q -m "not corpus and not smoke and not confidence"
 
       - name: Build regression corpus
-        run: python scripts/test/build_regression_db.py --output /tmp/vitiligo-regression.db
+        if: steps.regression-db.outputs.cache-hit != 'true'
+        run: python scripts/test/build_regression_db.py --output "$VITILIGO_REGRESSION_DB"
 
       - name: Pytest (confidence regression)
-        env:
-          VITILIGO_REGRESSION_DB: /tmp/vitiligo-regression.db
         run: pytest tests/ -q -m confidence

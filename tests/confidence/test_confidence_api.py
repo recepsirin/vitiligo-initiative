@@ -116,7 +116,9 @@ class TestApiAskCitationConfidence:
         assert_answer_cites_only_retrieved(body["answer"], top_k)
 
         citations = body["citations"]
-        assert len(citations) == top_k, f"{case['id']}: expected {top_k} citations, got {len(citations)}"
+        assert len(citations) == top_k, (
+            f"{case['id']}: expected {top_k} citations, got {len(citations)}"
+        )
 
         citation_ids = {c["source_id"] for c in citations}
         missing = set(case["must_include_citation_source_ids"]) - citation_ids

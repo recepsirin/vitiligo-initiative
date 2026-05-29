@@ -200,9 +200,7 @@ def generate_hypotheses(
 
 def _trial_to_citation(idx: int, trial: Trial) -> TrialCitation:
     src_value = trial.source.value if hasattr(trial.source, "value") else str(trial.source)
-    sponsor_names = [
-        s.get("name") or "" for s in (trial.sponsors or [])[:3] if isinstance(s, dict)
-    ]
+    sponsor_names = [s.get("name") or "" for s in (trial.sponsors or [])[:3] if isinstance(s, dict)]
     sponsor_names = [s for s in sponsor_names if s]
     trial_level = classify_trial(trial)
     return TrialCitation(
@@ -223,11 +221,9 @@ def _trial_to_citation(idx: int, trial: Trial) -> TrialCitation:
 def _prior_to_citation(idx: int, prior: Prior) -> PriorCitation:
     src = prior.source.value if hasattr(prior.source, "value") else str(prior.source)
     kind = prior.kind.value if hasattr(prior.kind, "value") else str(prior.kind)
-    mechs = [
-        str(m.get("mechanism") or "")
-        for m in (prior.mechanisms or [])
-        if m.get("mechanism")
-    ][:5]
+    mechs = [str(m.get("mechanism") or "") for m in (prior.mechanisms or []) if m.get("mechanism")][
+        :5
+    ]
     return PriorCitation(
         index=idx,
         kind=kind,
@@ -290,14 +286,10 @@ def _build_user_prompt(
         lines.append("REGISTERED CLINICAL TRIALS:")
         lines.append("")
         for idx, trial in enumerate(trials, start=1):
-            src_value = (
-                trial.source.value if hasattr(trial.source, "value") else str(trial.source)
-            )
+            src_value = trial.source.value if hasattr(trial.source, "value") else str(trial.source)
             phase = ", ".join(trial.phases) if trial.phases else "—"
             sponsors = ", ".join(
-                (s.get("name") or "")
-                for s in (trial.sponsors or [])[:2]
-                if isinstance(s, dict)
+                (s.get("name") or "") for s in (trial.sponsors or [])[:2] if isinstance(s, dict)
             ).strip(", ")
             countries = ", ".join(trial.countries[:6]) if trial.countries else ""
             interventions = ", ".join(
@@ -339,9 +331,7 @@ def _build_user_prompt(
                 stage = prior.clinical_stage or "unknown"
                 lines.append(f"    Clinical stage: {stage}")
                 if prior.mechanisms:
-                    mechs = "; ".join(
-                        str(m.get("mechanism") or "") for m in prior.mechanisms[:3]
-                    )
+                    mechs = "; ".join(str(m.get("mechanism") or "") for m in prior.mechanisms[:3])
                     lines.append(f"    Mechanisms: {mechs}")
                 if prior.linked_trial_ids:
                     lines.append(f"    Linked trials: {', '.join(prior.linked_trial_ids[:6])}")
@@ -353,7 +343,9 @@ def _build_user_prompt(
                     lines.append(f"    Gene: {desc}")
             lines.append("")
     else:
-        lines.append("DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)")
+        lines.append(
+            "DRUG & TARGET PRIORS: (none — run `vitiligo ingest opentargets` or `vitiligo ingest drugbank`)"
+        )
         lines.append("")
 
     if graph_edges:
