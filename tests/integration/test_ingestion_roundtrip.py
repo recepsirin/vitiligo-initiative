@@ -84,7 +84,5 @@ def test_ingested_ctgov_cxcl9_trial_findable(ctgov_trials_db) -> None:
 def test_ingested_ctgov_filter_by_source(ctgov_trials_db) -> None:
     from vitiligo.storage import TrialSourceKind
 
-    hits = list_trials(
-        TrialFilter(query="vitiligo", sources=(TrialSourceKind.CTGOV,), limit=10)
-    )
+    hits = list_trials(TrialFilter(query="vitiligo", sources=(TrialSourceKind.CTGOV,), limit=10))
     assert len(hits) == len(_load_ctgov_studies())
