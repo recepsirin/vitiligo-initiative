@@ -61,14 +61,14 @@ class Settings(BaseSettings):
 
     @property
     def effective_web_host(self) -> str:
-        """Bind host; default to all interfaces when PORT is set (Fly/Render)."""
+        """Bind host; default to all interfaces when PORT is set (container hosts)."""
         if os.environ.get("PORT") and self.web_host == "127.0.0.1":
             return "0.0.0.0"
         return self.web_host
 
     @property
     def effective_web_port(self) -> int:
-        """Listen port; Fly.io and Render inject PORT."""
+        """Listen port; Render and similar hosts inject PORT."""
         if port := os.environ.get("PORT"):
             return int(port)
         return self.web_port

@@ -1,4 +1,4 @@
-# Render.com blueprint — alternative to Fly.io (docs/deploy.md).
+# Render.com blueprint — optional public hosting (docs/deploy.md).
 services:
   - type: web
     name: vitiligo-evidence-engine

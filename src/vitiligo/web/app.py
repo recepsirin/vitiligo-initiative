@@ -3,7 +3,7 @@
 This is intentionally small: JSON endpoints + one static HTML page.
 The HTML page (`static/index.html`) is the Evidence Engine UI.
 
-For public deployment (Fly.io / Render), configure:
+For public deployment (Docker / Render / VPS), configure:
 - ``VITILIGO_DB_PATH`` pointing at a persistent volume with the corpus DB
 - ``ANTHROPIC_API_KEY`` for Ask / Hypothesize
 - ``VITILIGO_RATE_LIMIT_POST_PER_MINUTE`` (default 30) for basic abuse protection
