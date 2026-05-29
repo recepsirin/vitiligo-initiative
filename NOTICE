@@ -1,0 +1,55 @@
+Vitiligo Initiative — Evidence Engine
+Copyright 2026 Vitiligo Initiative
+
+This product is licensed under the Apache License, Version 2.0. See the
+LICENSE file in the repository root for the full license text.
+
+================================================================================
+Third-party software and models
+================================================================================
+
+The components below are used by this project. Items marked "runtime" are not
+vendored in this repository; they are downloaded when you run embedding features
+(for example `vitiligo embed run` or `vitiligo serve` with embedding prewarm).
+
+--------------------------------------------------------------------------------
+1. fastembed (Python dependency)
+--------------------------------------------------------------------------------
+   Project:   https://github.com/qdrant/fastembed
+   License:   Apache License 2.0
+   Copyright: Qdrant (see upstream LICENSE)
+   Role:      ONNX-based text embedding inference library
+
+--------------------------------------------------------------------------------
+2. BAAI/bge-small-en-v1.5 (default embedding model, runtime)
+--------------------------------------------------------------------------------
+   Project:   https://huggingface.co/BAAI/bge-small-en-v1.5
+   License:   MIT License (BAAI / FlagEmbedding model terms)
+   Role:      Default model for semantic search (`BAAI/bge-small-en-v1.5`, 384-dim)
+   Note:      Weights are fetched into the local fastembed cache on first use.
+              They are not committed to this repository.
+
+--------------------------------------------------------------------------------
+3. ONNX Runtime (transitive dependency via fastembed)
+--------------------------------------------------------------------------------
+   Project:   https://github.com/microsoft/onnxruntime
+   License:   MIT License
+   Role:      ONNX model inference runtime
+
+================================================================================
+Upstream public data
+================================================================================
+
+Ingested corpus records (literature, trial registries, priors, and similar) are
+sourced from third-party public databases. Each source remains subject to its
+provider's terms of use. This repository does not ship the full built corpus in
+git; see `docs/engine.md` for how to build or obtain `vitiligo.db`.
+
+================================================================================
+Optional cloud API (not bundled)
+================================================================================
+
+The Ask and Hypothesize features may call the Anthropic Messages API when
+`ANTHROPIC_API_KEY` is configured on the server. That service is not part of
+this distribution; use is governed by Anthropic's terms at
+https://www.anthropic.com/legal.

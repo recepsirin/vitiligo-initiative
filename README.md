@@ -202,7 +202,7 @@ Every artifact in the table above, plus methods, code, and findings.
 
 | Asset type | License |
 |---|---|
-| Source code | Apache 2.0 |
+| Source code | [Apache 2.0](LICENSE) — see also [NOTICE](NOTICE) for embedding stack |
 | Datasets (non-patient) | CC-BY 4.0 |
 | Models | Open weights, permissive license |
 | Patient-derived datasets | Controlled access via Data Use Agreement (UK Biobank-style) |
