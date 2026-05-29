@@ -32,7 +32,8 @@ Semantic search applies a small evidence-level penalty (mouse/in-vitro) after co
 ./scripts/review/run-eval-retrieval.sh -o exports/retrieval-eval.json
 # Label advisor_relevance (1-5) on each promoted hit in the export JSON.
 python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json        # dry-run
-python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --apply
+python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --apply          # add new
+python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --update --apply # refresh existing
 python scripts/test/build_regression_db.py
 pytest -m confidence
 ```
@@ -44,7 +45,7 @@ pytest -m confidence
 | *(none)* | Pure logic, parsers, API validation | CI |
 | `integration` | Real SQLite on seeded temp data | CI |
 | `confidence` | **Right papers and trials** for curated queries | CI + local |
-| `corpus` | Full `data/vitiligo.db` (candidate rankings, ICTRP) | Local only |
+| `corpus` | Full `data/vitiligo.db` (candidate rankings, ICTRP, retrieval guards) | Local only |
 | `smoke` | Thin end-to-end over full corpus | Local release audit |
 
 ## Commands

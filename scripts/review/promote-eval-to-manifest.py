@@ -8,6 +8,7 @@ advisors.
 Usage:
     python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json
     python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --apply
+    python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --update --apply
 """
 
 from __future__ import annotations
@@ -65,18 +66,36 @@ def _propose_case(run: dict[str, Any], hits: list[dict[str, Any]]) -> dict[str, 
     return case
 
 
-def _merge_cases(manifest: dict[str, Any], proposals: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[str]]:
+def _apply_case_update(existing: dict[str, Any], proposal: dict[str, Any]) -> dict[str, Any]:
+    """Merge a proposal into an existing manifest row, preserving extra fields."""
+    merged = dict(existing)
+    merged.update(proposal)
+    return merged
+
+
+def _merge_cases(
+    manifest: dict[str, Any],
+    proposals: list[dict[str, Any]],
+    *,
+    update: bool = False,
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
     retrieval = list(manifest.get("retrieval", []))
-    existing_ids = {case["id"] for case in retrieval}
+    index_by_id = {case["id"]: idx for idx, case in enumerate(retrieval)}
     added: list[str] = []
+    updated: list[str] = []
     for case in proposals:
-        if case["id"] in existing_ids:
+        case_id = case["id"]
+        if case_id in index_by_id:
+            if update:
+                idx = index_by_id[case_id]
+                retrieval[idx] = _apply_case_update(retrieval[idx], case)
+                updated.append(case_id)
             continue
         retrieval.append(case)
-        existing_ids.add(case["id"])
-        added.append(case["id"])
+        index_by_id[case_id] = len(retrieval) - 1
+        added.append(case_id)
     manifest["retrieval"] = retrieval
-    return proposals, added
+    return proposals, added, updated
 
 
 def main() -> int:
@@ -92,6 +111,11 @@ def main() -> int:
         "--apply",
         action="store_true",
         help="Write merged cases to the manifest (default: dry-run only)",
+    )
+    parser.add_argument(
+        "--update",
+        action="store_true",
+        help="Refresh existing manifest rows with the same id (default: skip existing)",
     )
     parser.add_argument(
         "--min-relevance",
@@ -117,15 +141,30 @@ def main() -> int:
         print("No promotable runs found (label advisor_relevance >= threshold on results or runs).")
         return 0
 
-    _, added = _merge_cases(manifest, proposals)
-    print(json.dumps({"proposed": proposals, "would_add_ids": added, "skipped_unlabeled": skipped}, indent=2))
+    _, added, updated = _merge_cases(manifest, proposals, update=args.update)
+    print(
+        json.dumps(
+            {
+                "proposed": proposals,
+                "would_add_ids": added,
+                "would_update_ids": updated,
+                "skipped_unlabeled": skipped,
+            },
+            indent=2,
+        )
+    )
 
     if args.apply:
-        if not added:
-            print("Nothing new to add; manifest already contains these ids.", file=sys.stderr)
+        if not added and not updated:
+            print("Nothing new to add or update.", file=sys.stderr)
             return 0
         args.manifest.write_text(json.dumps(manifest, indent=2) + "\n")
-        print(f"Updated {args.manifest} (+{len(added)} retrieval cases).", file=sys.stderr)
+        parts: list[str] = []
+        if added:
+            parts.append(f"+{len(added)} added")
+        if updated:
+            parts.append(f"{len(updated)} updated")
+        print(f"Updated {args.manifest} ({', '.join(parts)}).", file=sys.stderr)
         print("Rebuild: python scripts/test/build_regression_db.py", file=sys.stderr)
         print("Verify:  pytest -m confidence", file=sys.stderr)
     else:

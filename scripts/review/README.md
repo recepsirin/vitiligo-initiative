@@ -17,7 +17,8 @@ vitiligo graph export -o exports/graph-review.json
 ./scripts/review/run-eval-retrieval.sh -o exports/retrieval-eval.json
 # Advisors set advisor_relevance (1-5) on each top hit (or on the run).
 python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json
-python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --apply
+python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --apply          # add new cases
+python scripts/review/promote-eval-to-manifest.py exports/retrieval-eval.json --update --apply # refresh existing
 python scripts/test/build_regression_db.py
 pytest -m confidence
 

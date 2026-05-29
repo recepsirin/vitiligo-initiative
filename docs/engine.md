@@ -53,9 +53,17 @@ vitiligo trials stats
 vitiligo trials search --status RECRUITING --phase PHASE2
 vitiligo priors stats
 vitiligo priors sample --kind drug -l 5
+
+# 10. Release gate + advisor pack (local-first v1.0.0)
+./scripts/audit/smoke-all.sh
+./scripts/review/kol-share-pack.sh          # exports/kol-share-YYYYMMDD.tar.gz
+vitiligo serve &
+./scripts/deploy/verify-local.sh
 ```
 
 For smoke testing, every ingest command supports `--limit N`.
+
+**GitHub releases:** push an annotated `v*` tag (see [`.github/workflows/release.yml`](../.github/workflows/release.yml)) or `./scripts/release/create-github-release.sh vX.Y.Z`.
 
 ---
 
