@@ -54,6 +54,23 @@ def test_regression_manifest_structure() -> None:
         assert case["must_include_candidate_names"]
         assert int(case["top_k"]) >= 1
 
+    graph_cases = spec.get("graph", [])
+    assert len(graph_cases) >= 3, "graph confidence section must not be empty"
+
+    for case in graph_cases:
+        assert case["id"]
+        assert case["scenario"]
+        if "search_q" in case:
+            assert case["search_q"].strip()
+            assert case["must_include_keys"]
+        if "neighbors_name" in case:
+            assert case["neighbors_name"].strip()
+            assert case["must_include_neighbor_keys"]
+        if "min_entities" in case:
+            assert int(case["min_entities"]) >= 1
+            assert int(case["min_edges"]) >= 1
+            assert case["must_include_entity_keys"]
+
 
 def test_eval_queries_file_is_valid() -> None:
     spec = json.loads(EVAL_QUERIES.read_text())

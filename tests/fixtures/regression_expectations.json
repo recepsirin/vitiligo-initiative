@@ -535,6 +535,91 @@
       "must_include_citation_source_ids": [
         "20199553"
       ]
+    },
+    {
+      "id": "ask_treat_segmental",
+      "eval_query_id": "treat_segmental",
+      "scenario": "Ask must cite segmental vitiligo treatment evidence",
+      "question": "segmental vitiligo treatment repigmentation evidence",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "22233150"
+      ]
+    },
+    {
+      "id": "ask_safety_jak_systemic",
+      "eval_query_id": "safety_jak_systemic",
+      "scenario": "Ask must cite JAK inhibitor safety literature",
+      "question": "JAK inhibitor safety vitiligo systemic adverse events",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "39713946"
+      ]
+    },
+    {
+      "id": "ask_treat_acral",
+      "eval_query_id": "treat_acral",
+      "scenario": "Ask must cite acral vitiligo repigmentation papers",
+      "question": "acral vitiligo hands feet repigmentation poor response",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "18559781",
+        "37467136"
+      ]
+    },
+    {
+      "id": "ask_treat_spread_arrest",
+      "eval_query_id": "treat_spread_arrest",
+      "scenario": "Ask must cite spread arrest / stabilization literature",
+      "question": "stop progression active vitiligo spread arrest",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "35230707"
+      ]
+    },
+    {
+      "id": "ask_trial_phase3_jak",
+      "eval_query_id": "trial_phase3_jak",
+      "scenario": "Ask must cite Phase 3 JAK vitiligo trial publications",
+      "question": "phase 3 vitiligo JAK inhibitor randomized",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "36652364",
+        "37027285"
+      ]
+    }
+  ],
+  "graph": [
+    {
+      "id": "graph_search_ruxolitinib",
+      "scenario": "Entity search returns ruxolitinib drug node",
+      "search_q": "ruxolitinib",
+      "limit": 10,
+      "must_include_keys": [
+        "ruxolitinib"
+      ]
+    },
+    {
+      "id": "graph_neighbors_vitiligo",
+      "scenario": "Vitiligo disease anchor has seeded drug neighbors",
+      "neighbors_name": "vitiligo",
+      "hops": 1,
+      "limit": 50,
+      "min_neighbor_count": 5,
+      "must_include_neighbor_keys": [
+        "ruxolitinib",
+        "tacrolimus"
+      ]
+    },
+    {
+      "id": "graph_export_seeded",
+      "scenario": "Graph JSON export includes regression seed entities",
+      "min_entities": 8,
+      "min_edges": 6,
+      "must_include_entity_keys": [
+        "vitiligo",
+        "ruxolitinib"
+      ]
     }
   ],
   "hypothesize": [

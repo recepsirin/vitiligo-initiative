@@ -17,7 +17,9 @@
 Property-based checks live in `unit/test_properties_normalize.py` and
 `integration/test_properties_trials.py` (Hypothesis).
 
-HTTP + Ask confidence: `confidence/test_confidence_api.py` (`POST /api/search`, `POST /api/ask`).
+HTTP + Ask confidence: `confidence/test_confidence_api.py` (`POST /api/search`, `POST /api/ask`, `POST /api/trials/search`).
+
+Graph API confidence: `confidence/test_confidence_graph_api.py` (`GET /api/graph/*` on regression corpus).
 
 Hypothesize confidence: `confidence/test_confidence_hypothesize.py` (`POST /api/hypothesize`, fake LLM JSON).
 
@@ -42,9 +44,9 @@ pytest -m confidence
 
 | Marker | What it proves | Where it runs |
 |--------|----------------|---------------|
-| *(none)* | Pure logic, parsers, API validation | CI |
+| *(none)* | Pure logic, parsers, API validation | CI (~164 fast tests) |
 | `integration` | Real SQLite on seeded temp data | CI |
-| `confidence` | **Right papers and trials** for curated queries | CI + local |
+| `confidence` | **Right papers, trials, graph API, Ask citations** for curated queries | CI + local (~91 tests) |
 | `corpus` | Full `data/vitiligo.db` (candidate rankings, ICTRP, retrieval guards) | Local only |
 | `smoke` | Thin end-to-end over full corpus | Local release audit |
 
@@ -89,12 +91,12 @@ Graph density checks still require the full local corpus (`test_confidence_corpu
 ## Adding a regression case
 
 1. Fix a bug or get advisor validation on a query
-2. Add the case to `regression_expectations.json` with `must_include_source_ids` and optional `eval_query_id`
+2. Add the case to `regression_expectations.json` (`retrieval`, `trials`, `ask`, `graph`, …) with `eval_query_id` when tied to `docs/eval-queries.json`
 3. If new papers/trials are needed, add rows to `tests/fixtures/regression/*.json`
 4. Rebuild: `python scripts/test/build_regression_db.py`
 5. Run: `pytest -m confidence`
 
-Every production bug in search/trials should add a confidence case.
+Every production bug in search/trials/graph API should add a confidence case. Ask cases should reuse PMIDs already proven in matching `retrieval` rows.
 
 ## Trimmed / consolidated (intentionally)
 

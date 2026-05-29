@@ -137,3 +137,31 @@ class TestApiAskCitationConfidence:
         assert "RETRIEVED PAPERS" in llm.captured_user
         assert f"QUESTION: {case['question']}" in llm.captured_user
         assert "Cite with bracketed numbers like [1]" in llm.captured_user
+
+
+class TestApiTrialsConfidence:
+    """POST /api/trials/search must return the same registry IDs as direct trial search."""
+
+    @pytest.mark.parametrize("case", _EXPECTATIONS["trials"], ids=lambda c: c["id"])
+    def test_trials_api_finds_expected_ids(
+        self,
+        case: dict,
+        regression_api_client: TestClient,
+    ) -> None:
+        resp = regression_api_client.post(
+            "/api/trials/search",
+            json={"query": case["query"], "limit": int(case["limit"])},
+        )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["limit"] == int(case["limit"])
+        returned_ids = {row["source_id"] for row in body["results"]}
+        missing = set(case["must_include_source_ids"]) - returned_ids
+        assert not missing, (
+            f"{case['id']} ({case['scenario']}): API missing trials {sorted(missing)}. "
+            f"Returned {len(body['results'])} ids (first 10): {sorted(returned_ids)[:10]}"
+        )
+        for row in body["results"]:
+            assert row["source"]
+            assert row["source_id"]
+            assert row["brief_title"]
