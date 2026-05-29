@@ -163,7 +163,7 @@ Until a formal board exists:
 - [ ] `ANTHROPIC_API_KEY` set only on server, not client  
 - [ ] Rate limits verified  
 - [x] KOL skim of graph export OR documented decision to launch with “beta” label (see [`open-questions-resolutions.md`](open-questions-resolutions.md))
-- [ ] Contact email for corrections / takedown requests  
+- [ ] Contact email for corrections / takedown requests — **parked:** domain not purchased; use GitHub per [SECURITY.md](../SECURITY.md) until `contact@` / `privacy@` are live  
 
 ---
 
