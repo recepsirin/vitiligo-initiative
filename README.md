@@ -1,8 +1,10 @@
 # Vitiligo Initiative
 
-[CI](https://github.com/recepsirin/vitiligo-initiative/actions/workflows/ci.yml)
-[License: Apache 2.0](LICENSE)
-[Python 3.11+](https://www.python.org/downloads/)
+<p>
+  <a href="https://github.com/recepsirin/vitiligo-initiative/actions/workflows/ci.yml"><img src="https://github.com/recepsirin/vitiligo-initiative/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+"></a>
+</p>
 
 > **Open, AI-native vitiligo research.** Unify public literature and trial registries into one corpus, search it by meaning with citations, and run citation-grounded Q&A and ranked therapeutic-hypothesis generation.
 
@@ -10,25 +12,30 @@ Vitiligo evidence is scattered across PubMed, PMC, several trial registries, and
 
 **At a glance** *(representative local build)* — ~14k indexed documents · 344 registered trials · ~1,000-node knowledge graph · 250 tests · Apache-2.0.
 
-Non-profit initiative context (mission, phases, roadmap): `**[docs/strategic-plan.md](docs/strategic-plan.md)`**.
+Non-profit initiative context (mission, phases, roadmap): **[docs/strategic-plan.md](docs/strategic-plan.md)**.
 
 ## Screenshots
 
-The Evidence Engine ships a FastAPI web UI (`vitiligo serve`) with Search, Ask, Hypothesize, Candidates, Graph, and Trials tabs. Run it locally at [http://127.0.0.1:8765](http://127.0.0.1:8765) (see [Quick start](#quick-start)).
+The Evidence Engine ships a FastAPI web UI (`vitiligo serve`) with Search, Ask, Hypothesize, Candidates, Graph, and Trials tabs. Run it locally at <http://127.0.0.1:8765> (see [Quick start](#quick-start)).
 
-Semantic search over the vitiligo corpus, ranked by meaning with evidence-level tags and citations
+<p align="center">
+  <img src="docs/images/search.png" alt="Semantic search over the vitiligo corpus, ranked by meaning with evidence-level tags and citations" width="820">
+</p>
 
-
-|                                                                      |                                                                     |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| **Candidates** — deterministic, evidence-scored therapeutic rankings | **Candidates** — per-candidate trials, graph edges, and literature  |
-| Evidence-scored candidate rankings                                   | Candidate detail with trials, graph, and literature evidence        |
-| **Trials** — cross-registry search with status/phase/country filters | **Trials** — registered vitiligo trials with structured metadata    |
-| Clinical trials search with filters                                  | Clinical trial result details                                       |
-| **Graph** — knowledge graph browser seeded from priors and trials    | **Hypothesize** — LLM-ranked candidates with multi-stream citations |
-| Knowledge graph entity browser                                       | Hypothesis generation form                                          |
-| **Ask** — citation-grounded Q&A over the corpus                      |                                                                     |
-| Cited Q&A over the corpus                                            |                                                                     |
+<table>
+  <tr>
+    <td width="50%"><b>Candidates</b> — deterministic, evidence-scored rankings<br><img src="docs/images/candidates.png" alt="Evidence-scored candidate rankings"></td>
+    <td width="50%"><b>Graph</b> — knowledge-graph browser seeded from priors and trials<br><img src="docs/images/graph.png" alt="Knowledge graph entity browser"></td>
+  </tr>
+  <tr>
+    <td><b>Trials</b> — cross-registry search with status/phase/country filters<br><img src="docs/images/trials.png" alt="Clinical trials search with filters"></td>
+    <td><b>Hypothesize</b> — LLM-ranked candidates with multi-stream citations<br><img src="docs/images/hypothesize.png" alt="Hypothesis generation form"></td>
+  </tr>
+  <tr>
+    <td><b>Ask</b> — citation-grounded Q&amp;A over the corpus<br><img src="docs/images/ask.png" alt="Cited Q&A over the corpus"></td>
+    <td></td>
+  </tr>
+</table>
 
 
 ## About this repository
@@ -75,34 +82,40 @@ vitiligo report candidates -n 10
 
 Every web UI tab has a CLI equivalent — full command reference in [`docs/engine.md`](docs/engine.md).
 
-## How it works
+## Architecture
 
 ```mermaid
-flowchart LR
-  subgraph sources [Public sources]
-    S["PubMed · PMC · GEO<br/>CT.gov · EU CTR · ICTRP<br/>Open Targets · DrugBank"]
+flowchart TB
+  subgraph sources["Public sources"]
+    direction LR
+    S1["PubMed · PMC · GEO"]
+    S2["ClinicalTrials.gov · EU CTR · WHO ICTRP"]
+    S3["Open Targets · DrugBank"]
   end
-  subgraph engine [Evidence Engine]
-    DB[("SQLite corpus")]
-    EMB["Semantic search<br/>fastembed ONNX"]
+
+  ING["Ingestion<br/>vitiligo ingest · embed run · graph seed<br/>(CLI / CI batch jobs)"]
+  DB[("SQLite corpus<br/>documents · trials · priors · graph")]
+
+  subgraph retrieval["Retrieval & reasoning"]
+    SEARCH["Semantic search<br/>fastembed ONNX + evidence tiers"]
     GRAPH["Knowledge graph"]
-    REASON["Ask · Hypothesize · Candidates"]
+    REASON["Ask (RAG) · Hypothesize · Candidates"]
+    LLM["Anthropic API<br/>Ask / Hypothesize only"]
   end
-  subgraph faces [Interfaces]
-    UI["Web UI"]
-    CLI["CLI"]
+
+  subgraph serve["Interfaces"]
+    UI["FastAPI Web UI"]
+    CLI["vitiligo CLI"]
   end
-  S --> DB
-  DB --> EMB
-  DB --> GRAPH
-  EMB --> REASON
-  GRAPH --> REASON
-  EMB --> UI & CLI
-  GRAPH --> UI & CLI
-  REASON --> UI & CLI
+
+  sources --> ING --> DB
+  DB --> SEARCH & GRAPH
+  SEARCH & GRAPH --> REASON
+  REASON -.-> LLM
+  SEARCH & GRAPH & REASON --> UI & CLI
 ```
 
-Five swappable layers — ingestion → SQLite store → embeddings + graph → reasoning → serving (CLI + FastAPI). Full diagrams and module map: [`docs/architecture.md`](docs/architecture.md).
+Five swappable layers — **ingestion → SQLite store → embeddings + graph → reasoning → serving** (CLI + FastAPI). The LLM is optional: it powers only Ask and Hypothesize, while search, graph, and candidate ranking stay fully deterministic. Full diagrams and module map: [`docs/architecture.md`](docs/architecture.md).
 
 ## Features
 
