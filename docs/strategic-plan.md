@@ -426,7 +426,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
   - **Candidate report v1** — evidence-scored rankings: [`candidate-report-v1.md`](candidate-report-v1.md) (`vitiligo report candidates`); **Candidates** tab in web UI.
   - **Validation proposals** — lab outreach one-pagers: [`validation-proposals/`](validation-proposals/).
 - **Engineering docs** — [`engine.md`](engine.md) (quickstart); [`architecture.md`](architecture.md) (system diagrams).
-- **Planning briefs** — [`scientific-brief.md`](scientific-brief.md), [`governance-ethics-brief.md`](governance-ethics-brief.md), [`kol-meeting-prep.md`](kol-meeting-prep.md), [`methods-preprint-outline.md`](methods-preprint-outline.md), [`methods-preprint-draft.md`](methods-preprint-draft.md), [`advisor-outreach.md`](advisor-outreach.md), [`release-checklist-v1.0.0.md`](release-checklist-v1.0.0.md) (drafts for advisor review).
+- **Planning briefs** — [`scientific-brief.md`](scientific-brief.md), [`governance-ethics-brief.md`](governance-ethics-brief.md), [`methods-preprint-outline.md`](methods-preprint-outline.md), [`methods-preprint-draft.md`](methods-preprint-draft.md) (drafts for advisor review). Outreach, meeting-prep, and release-checklist templates are maintained in a private internal repo.
 
 ### Release & advisor demo (v1.0.0 local-first)
 
@@ -450,7 +450,7 @@ vitiligo serve &
 
 ### Immediate next moves
 
-1. **KOL meeting** — attach `exports/kol-share-*.tar.gz` from `./scripts/review/kol-share-pack.sh`; [`advisor-outreach.md`](advisor-outreach.md)
+1. **KOL meeting** — attach `exports/kol-share-*.tar.gz` from `./scripts/review/kol-share-pack.sh` (outreach + meeting-prep templates in private internal repo)
 2. **Advisor review** — label `retrieval-eval.json`; promote with `--update --apply` when expectations change
 3. **Local demo** — `vitiligo serve` + `./scripts/deploy/verify-local.sh` for screen-share sessions
 4. **Methods preprint** — complete Methods section after advisor feedback

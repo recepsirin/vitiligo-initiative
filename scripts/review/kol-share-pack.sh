@@ -37,7 +37,7 @@ vitiligo_run report candidates \
 cp docs/candidate-intents.json "$OUT/"
 
 vitiligo_info "Copy briefs"
-cp docs/scientific-brief.md docs/kol-meeting-prep.md docs/eval-queries.json "$OUT/"
+cp docs/scientific-brief.md docs/eval-queries.json "$OUT/"
 if [[ -d docs/validation-proposals ]]; then
   mkdir -p "$OUT/validation-proposals"
   cp docs/validation-proposals/*.md "$OUT/validation-proposals/"
@@ -48,7 +48,6 @@ Vitiligo Initiative — KOL review pack (${STAMP})
 
 Contents:
   scientific-brief.md       — disease + engine context
-  kol-meeting-prep.md       — meeting agenda and demo script
   graph-review.json         — full knowledge graph export for edge review
   spotcheck.log             — automated graph invariant checks (should pass)
   retrieval-eval.json       — 20 semantic search queries + top-5 hits each
@@ -75,4 +74,4 @@ vitiligo_info "Pack ready"
 echo "  Directory: $OUT"
 echo "  Archive:   $ARCHIVE ($(du -h "$ARCHIVE" | awk '{print $1}'))"
 echo ""
-echo "Attach $ARCHIVE to advisor email (see docs/advisor-outreach.md)."
+echo "Attach $ARCHIVE to advisor email (outreach + meeting-prep templates are kept in the private internal repo)."
