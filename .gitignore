@@ -47,20 +47,27 @@ htmlcov/
 
 # Environment & secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.key
 *.pem
+*.p8
+*.p12
+*.pfx
+*.jks
 
 # Project data (large, regenerable)
 data/
 exports/
 !data/.gitkeep
 logs/
+*.log
 *.db
 *.sqlite
 *.sqlite3
 *.duckdb
+*.tar.gz
+*.zip
 
 # Notebooks
 .ipynb_checkpoints/

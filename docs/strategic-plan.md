@@ -194,12 +194,14 @@ Every artifact in the table above, plus methods, code, and findings.
 - SID — Society for Investigative Dermatology (May)
 - IPCC — International Pigment Cell Conference (biennial)
 
-**Targeted private channels:**
+**Partnership channels:**
 
-- Direct outreach to specific translational labs (Harris, Le Poole, Picardo, van Geel, Taïeb, etc.) with candidate hypothesis reports
-- Pharma BD conversations (Incyte, Pfizer, AbbVie, smaller vitiligo programs) for RWE / trial matching partnerships
-- Funder briefings (VR Foundation, NIH NIAMS, CZI, Wellcome, Open Philanthropy)
+- Direct outreach to translational labs with candidate hypothesis reports
+- Industry partnership conversations for RWE / trial matching collaborations
+- Funder briefings with aligned research and open-science grantmakers
 - Regulatory pre-submission meetings (FDA / EMA) — when/if we approach a SaMD line
+
+Named outreach targets, relationship status, and contact details stay outside the public repository until disclosure is appropriate and consented.
 
 ### How
 
@@ -379,7 +381,7 @@ These shape execution and must be resolved before some downstream decisions. Tra
 - [ ] Time commitment (full-time vs. part-time vs. evenings)
 - [ ] Co-founders / team members
 - [ ] Geography / base of operations
-- [ ] Personal connection to vitiligo (informs authenticity and patient engagement)
+- [ ] Founder narrative and patient-engagement boundaries (document privately if personal)
 - [ ] Financial runway for first months
 
 ### Strategic
