@@ -17,7 +17,7 @@ Report privately via **GitHub** (domain and project mailboxes are not set up yet
 - **[GitHub Security Advisories](https://github.com/recepsirin/vitiligo-initiative/security/advisories/new)** (preferred for vulnerabilities), or  
 - Email the maintainers listed on the repository if you already have a private channel.
 
-When `vitiligo-initiative.org` is live, we plan to use **contact@vitiligo-initiative.org** for security and corrections. Until then, please do not rely on `@vitiligo-initiative.org` addresses in older drafts of the web UI.
+When `vitiligo-initiative.org` is live, we plan to use **contact@vitiligo-initiative.org** for security and corrections. Until then, use GitHub (see below and the Privacy/Terms pages).
 
 Include:
 
@@ -61,7 +61,7 @@ Examples we care about:
 | Privacy / data requests | Planned: `privacy@vitiligo-initiative.org` — not active yet |
 | Corrections to indexed public records | Planned: `contact@vitiligo-initiative.org` — not active yet |
 
-The web UI footer may still show `@vitiligo-initiative.org` links from draft legal pages; treat those as **placeholders** until the domain is registered and inboxes exist.
+Privacy and Terms pages link to GitHub Discussions and Issues until project mailboxes exist.
 
 ## Legal entity
 

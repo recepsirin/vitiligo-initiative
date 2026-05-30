@@ -1,6 +1,6 @@
 # Evidence Engine — Architecture
 
-Canonical diagrams for the **software** stack (ingestion → storage → search → reasoning → web). For mission-level strategy loops and artifact maps, see the Mermaid diagrams in the [README](../README.md). For commands and module detail, see [`engine.md`](engine.md).
+Canonical diagrams for the **software** stack (ingestion → storage → search → reasoning → web). For mission-level strategy loops and artifact maps, see [`strategic-plan.md`](strategic-plan.md). For commands and module detail, see [`engine.md`](engine.md).
 
 ---
 
@@ -267,4 +267,4 @@ POST routes under `/api/*` are rate-limited per IP in production (`VITILIGO_RATE
 
 - [`engine.md`](engine.md) — quickstart, source modules, CLI reference
 - [`deploy.md`](deploy.md) — hosting posture and env vars
-- [README](../README.md) — mission, strategic logic, artifact map (non-software diagrams)
+- [`strategic-plan.md`](strategic-plan.md) — mission, strategic logic, artifact map (non-software diagrams)

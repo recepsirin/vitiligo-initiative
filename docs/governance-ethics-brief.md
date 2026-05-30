@@ -23,7 +23,7 @@ This brief covers **Phase 0–1** (planning + public Evidence Engine) and outlin
 
 ---
 
-## Ethical principles (aligned with README operating principles)
+## Ethical principles (aligned with [strategic plan](strategic-plan.md) operating principles)
 
 1. **Patient safety first** — no tool presents itself as diagnosis or individualized treatment without appropriate regulatory path.  
 2. **Scientific integrity** — AI generates hypotheses; biology and peer review validate.  
@@ -76,7 +76,7 @@ Before treating Hypothesize outputs as “initiative endorsements”:
 
 1. KOL review of **knowledge graph export** (`exports/graph-review.json`)  
 2. Spot-check of **10 Hypothesize runs** on canonical questions (JAK+UVB, SV vs NSV, acral disease)  
-3. Sign-off on **public launch vs closed beta** (see open question in README)  
+3. Sign-off on **public launch vs closed beta** (see open question in [strategic plan](strategic-plan.md))  
 
 ---
 
@@ -89,7 +89,7 @@ Not live yet; governance requirements documented early to avoid rework.
 - **IRB / ethics committee approval** before enrollment (US IRB or EU REC + GDPR lawful basis)  
 - **Informed consent** — purpose (care + research), risks, data sharing, withdrawal  
 - **HIPAA** (US) / **GDPR** (EU) — DPIA before launch; data minimization; encryption at rest and in transit  
-- **De-identification pipeline** for any shared datasets; controlled access via Data Use Agreement (see README licensing table)  
+- **De-identification pipeline** for any shared datasets; controlled access via Data Use Agreement (see [strategic plan](strategic-plan.md) licensing table)  
 - **Minor patients** — parental consent; stricter retention rules  
 
 ### Clinical Decision Support (CDS)

@@ -2,7 +2,7 @@
 
 This document covers the engineering side of the initiative: how the
 ingestion pipeline is built, how to run it locally, and how to add new
-data sources. For mission and strategy, see the [README](../README.md).
+data sources. For mission and strategy, see [`strategic-plan.md`](strategic-plan.md).
 
 ---
 

@@ -95,7 +95,3 @@ The remainder of this manuscript details system architecture and ingestion metho
 - [ ] Complete Results after advisor labels `retrieval-eval.json`  
 - [ ] Add 30 Ask faithfulness pairs post-KOL meeting  
 - [ ] Legal review before submitting URL in Abstract  
-
----
-
-*Internal draft — not for external distribution until co-authors and advisors review.*
