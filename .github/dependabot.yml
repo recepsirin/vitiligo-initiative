@@ -1,0 +1,22 @@
+# Dependabot — safe for public repo; opens PRs only (no auto-merge).
+# https://docs.github.com/en/code-security/dependabot
+
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-dependencies:
+        patterns:
+          - pytest*
+          - ruff
+          - mypy*
+          - hypothesis*
+          - types-*
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

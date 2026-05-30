@@ -1,0 +1,27 @@
+# Render.com blueprint — optional public hosting (docs/deploy.md).
+services:
+  - type: web
+    name: vitiligo-evidence-engine
+    runtime: docker
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /api/health
+    envVars:
+      - key: VITILIGO_WEB_HOST
+        value: 0.0.0.0
+      - key: VITILIGO_DB_PATH
+        value: /var/data/vitiligo.db
+      - key: FASTEMBED_CACHE_PATH
+        value: /var/data/cache
+      - key: VITILIGO_PREWARM_EMBEDDINGS
+        value: "true"
+      - key: VITILIGO_RATE_LIMIT_POST_PER_MINUTE
+        value: "30"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: ANTHROPIC_API_KEY
+        sync: false
+    disk:
+      name: vitiligo-data
+      mountPath: /var/data
+      sizeGB: 1

@@ -1,0 +1,34 @@
+title: Ideas
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose a feature, data source, or workflow improvement. Explain the problem and who it helps.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or gap
+      description: What is missing today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed direction
+      description: What would a good solution look like? Links to papers or trials welcome.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Rough scope
+      options:
+        - label: Documentation only
+        - label: CLI / ingestion
+        - label: Web UI / API
+        - label: Knowledge graph / hypothesize
+        - label: Needs full local corpus to validate

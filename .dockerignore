@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python
+.venv
+__pycache__
+*.py[cod]
+.mypy_cache
+.ruff_cache
+.pytest_cache
+htmlcov
+.coverage
+
+# Local data (mount a volume in production)
+data/
+*.db
+
+# Dev / IDE
+.env
+.cursor
+*.md
+!README.md
+docs/
+tests/
+
+# OS
+.DS_Store

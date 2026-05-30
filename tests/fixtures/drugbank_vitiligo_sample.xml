@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic DrugBank-shaped parser fixture. No DrugBank database content. -->
+<drugbank xmlns="http://www.drugbank.ca" version="5.1">
+  <drug type="small molecule" created="2026-01-01" updated="2026-01-01">
+    <drugbank-id primary="true">SYN-DRUG-001</drugbank-id>
+    <name>Fixture Depigmentin</name>
+    <description>A synthetic parser fixture compound for vitiligo text matching.</description>
+    <groups>
+      <group>approved</group>
+    </groups>
+    <indication>Fixture indication mentioning vitiligo for parser coverage.</indication>
+    <mechanism-of-action>Fixture mechanism acting on synthetic melanocyte signaling.</mechanism-of-action>
+    <synonyms>
+      <synonym>Fixture depigmenting agent</synonym>
+    </synonyms>
+    <categories>
+      <category>Fixture Agents</category>
+    </categories>
+    <targets>
+      <target>
+        <id>SYN-TARGET-001</id>
+        <name>Fixture melanocyte enzyme</name>
+        <organism>Humans</organism>
+        <actions>
+          <action>inhibitor</action>
+        </actions>
+        <known-action>yes</known-action>
+        <polypeptide id="SYN-POLY-001" source="Fixture">
+          <name>Fixture melanocyte enzyme</name>
+          <gene-name>SYNMEL</gene-name>
+        </polypeptide>
+      </target>
+    </targets>
+  </drug>
+  <drug type="small molecule" created="2026-01-01" updated="2026-01-01">
+    <drugbank-id primary="true">SYN-DRUG-002</drugbank-id>
+    <name>Fixture Comparator</name>
+    <description>A synthetic non-matching parser fixture compound.</description>
+    <groups>
+      <group>approved</group>
+    </groups>
+    <indication>Fixture indication without the query term.</indication>
+    <mechanism-of-action>Fixture comparator mechanism.</mechanism-of-action>
+  </drug>
+  <drug type="small molecule" created="2026-01-01" updated="2026-01-01">
+    <drugbank-id primary="true">SYN-DRUG-003</drugbank-id>
+    <name>Fixture Jakstatinib</name>
+    <description>A synthetic kinase inhibitor parser fixture.</description>
+    <groups>
+      <group>approved</group>
+      <group>investigational</group>
+    </groups>
+    <indication>Investigated in a synthetic non-segmental vitiligo fixture scenario.</indication>
+    <mechanism-of-action>Fixture inhibition of synthetic JAK-like signaling.</mechanism-of-action>
+    <targets>
+      <target>
+        <id>SYN-TARGET-002</id>
+        <name>Fixture JAK-like kinase 1</name>
+        <organism>Humans</organism>
+        <actions>
+          <action>inhibitor</action>
+        </actions>
+        <known-action>yes</known-action>
+        <polypeptide id="SYN-POLY-002" source="Fixture">
+          <name>Fixture JAK-like kinase 1</name>
+          <gene-name>SYNJAK1</gene-name>
+        </polypeptide>
+      </target>
+    </targets>
+  </drug>
+</drugbank>

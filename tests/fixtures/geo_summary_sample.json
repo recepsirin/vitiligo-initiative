@@ -1,0 +1,15 @@
+{
+  "uid": "200326094",
+  "accession": "GSE326094",
+  "title": "Aberrant laminin signaling drives melanocyte dedifferentiation and unveils a tractable therapeutic target in vitiligo",
+  "summary": "Vitiligo is characterized by progressive loss of melanocytes. Spatial transcriptomics on human vitiligo skin samples.",
+  "gpl": "24676",
+  "gse": "326094",
+  "taxon": "Homo sapiens",
+  "entrytype": "GSE",
+  "gdstype": "Other",
+  "pdat": "2026/04/16",
+  "n_samples": 1,
+  "bioproject": "PRJNA1443326",
+  "ftplink": "ftp://ftp.ncbi.nlm.nih.gov/geo/series/GSE326nnn/GSE326094/"
+}

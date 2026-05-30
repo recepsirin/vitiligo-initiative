@@ -1,0 +1,197 @@
+{
+  "entities": [
+    {
+      "kind": "disease",
+      "key": "vitiligo",
+      "name": "Vitiligo",
+      "aliases": [
+        "Vitiligo"
+      ],
+      "external_ids": {
+        "efo": "EFO_0004208",
+        "key": "vitiligo"
+      }
+    },
+    {
+      "kind": "drug",
+      "key": "ruxolitinib",
+      "name": "ruxolitinib",
+      "aliases": [
+        "RUXOLITINIB",
+        "INC-424",
+        "INC424",
+        "INCB-018424",
+        "INCB-18424",
+        "INCB018424",
+        "Ruxolitinib",
+        "Ruxolitinib, s-",
+        "S-ruxolitinib",
+        "ruxolitinib",
+        "INCB018424 Cream"
+      ],
+      "external_ids": {
+        "opentargets": "CHEMBL1789941",
+        "disease_id": "EFO_0004208",
+        "drugbank": "DB08877"
+      }
+    },
+    {
+      "kind": "drug",
+      "key": "tacrolimus",
+      "name": "Tacrolimus",
+      "aliases": [
+        "Tacrolimus",
+        "tacrolimus",
+        "Protopic"
+      ],
+      "external_ids": {}
+    },
+    {
+      "kind": "drug",
+      "key": "baricitinib",
+      "name": "Baricitinib",
+      "aliases": [
+        "BARICITINIB",
+        "Baricitinib",
+        "Baricitinib phosphate",
+        "Baricitinib phosphate salt",
+        "INCB-028050",
+        "INCB028050",
+        "Incb-28050",
+        "LY-3009104",
+        "LY3009104",
+        "Excimer light308nm"
+      ],
+      "external_ids": {
+        "opentargets": "CHEMBL2105759",
+        "disease_id": "EFO_0004208"
+      }
+    },
+    {
+      "kind": "drug",
+      "key": "upadacitinib",
+      "name": "Upadacitinib",
+      "aliases": [
+        "UPADACITINIB",
+        "ABT-494",
+        "Upadacitinib",
+        "Upadacitinib anhydrous",
+        "Rinvoq",
+        "RINVOQ",
+        "upadacitinib"
+      ],
+      "external_ids": {
+        "opentargets": "CHEMBL3622821",
+        "disease_id": "EFO_0004208"
+      }
+    },
+    {
+      "kind": "drug",
+      "key": "povorcitinib",
+      "name": "Povorcitinib",
+      "aliases": [
+        "POVORCITINIB",
+        "INCB-054707",
+        "INCB054707",
+        "Incb054707",
+        "Povorcitinib",
+        "4-[3-(cyanomethyl)-3-(3',5'-dimethyl-1h,1'h-[4,4'-bipyrazol]-1-yl)azetidin-1-yl]-2,5-difluoro-n-[(2s)-1,1,1-trifluoropropan-2-yl]benzamide",
+        "povorcitinib"
+      ],
+      "external_ids": {
+        "opentargets": "CHEMBL5095079",
+        "disease_id": "EFO_0004208"
+      }
+    },
+    {
+      "kind": "drug",
+      "key": "pimecrolimus",
+      "name": "PIMECROLIMUS",
+      "aliases": [
+        "PIMECROLIMUS",
+        "(-)-pimecrolimus",
+        "Pimecrolimus",
+        "SDZ ASM 981",
+        "SDZ ASM-981",
+        "SDZ-ASM 981",
+        "SDZ-ASM-981"
+      ],
+      "external_ids": {
+        "opentargets": "CHEMBL1200686",
+        "disease_id": "EFO_0004208"
+      }
+    },
+    {
+      "kind": "target",
+      "key": "jak1",
+      "name": "JAK1",
+      "aliases": [
+        "JAK1",
+        "Janus kinase 1",
+        "Tyrosine-protein kinase JAK1"
+      ],
+      "external_ids": {
+        "ensembl": "P23458",
+        "opentargets": "ENSG00000162434",
+        "disease_id": "EFO_0004208",
+        "drugbank": "P23458"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "subject_key": "ruxolitinib",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.88,
+      "extraction_method": "structured"
+    },
+    {
+      "subject_key": "tacrolimus",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.68,
+      "extraction_method": "structured"
+    },
+    {
+      "subject_key": "baricitinib",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.82,
+      "extraction_method": "structured"
+    },
+    {
+      "subject_key": "upadacitinib",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.88,
+      "extraction_method": "structured"
+    },
+    {
+      "subject_key": "povorcitinib",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.88,
+      "extraction_method": "structured"
+    },
+    {
+      "subject_key": "pimecrolimus",
+      "subject_kind": "drug",
+      "predicate": "treats",
+      "object_key": "vitiligo",
+      "object_kind": "disease",
+      "confidence": 0.82,
+      "extraction_method": "structured"
+    }
+  ]
+}

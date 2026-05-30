@@ -1,0 +1,32 @@
+title: General
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this category for open questions, feedback on the Evidence Engine, or collaboration ideas.
+        **Not for medical advice** — outputs are for research and education only.
+
+        For bugs with steps to reproduce, prefer [opening an issue](https://github.com/recepsirin/vitiligo-initiative/issues/new).
+
+  - type: textarea
+    id: body
+    attributes:
+      label: Your question or topic
+      description: What are you trying to do or understand?
+      placeholder: e.g. "I'm a dermatology resident trying to run semantic search locally…"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: audience
+    attributes:
+      label: I am a…
+      options:
+        - Researcher / scientist
+        - Clinician
+        - Developer
+        - Patient / advocate
+        - Other
+    validations:
+      required: false

@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "description": "Expert retrieval evaluation set for the Vitiligo Initiative Evidence Engine. Advisors label top-5 relevance per query (1=irrelevant, 3=partial, 5=highly relevant).",
+  "top_k": 5,
+  "queries": [
+    {
+      "id": "mech_jak_ifn",
+      "category": "mechanism",
+      "query": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
+      "review_notes": "Expect CXCL10 / JAK-STAT / autoreactive CD8 papers"
+    },
+    {
+      "id": "treat_rux_uvb",
+      "category": "treatment",
+      "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "review_notes": "Combination or sequencing studies; Phase 2/3 if present"
+    },
+    {
+      "id": "treat_jak_oral",
+      "category": "treatment",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "review_notes": "Povorcitinib, upadacitinib, ritlecitinib trial or review papers"
+    },
+    {
+      "id": "treat_segmental",
+      "category": "subtype",
+      "query": "segmental vitiligo treatment repigmentation evidence",
+      "review_notes": "SV-specific; avoid only NSV generalizations"
+    },
+    {
+      "id": "treat_acral",
+      "category": "unmet_need",
+      "query": "acral vitiligo hands feet repigmentation poor response",
+      "review_notes": "Acral / recalcitrant site literature"
+    },
+    {
+      "id": "treat_spread_arrest",
+      "category": "outcome",
+      "query": "stop progression active vitiligo spread arrest",
+      "review_notes": "Activity / stabilization endpoints, not only repigmentation"
+    },
+    {
+      "id": "treat_cs_first_line",
+      "category": "treatment",
+      "query": "topical corticosteroid calcineurin inhibitor vitiligo first line",
+      "review_notes": "Guideline-level topical therapy evidence"
+    },
+    {
+      "id": "trial_phase3_jak",
+      "category": "trials",
+      "query": "phase 3 vitiligo JAK inhibitor randomized",
+      "review_notes": "Pivotal trial reports or registry-linked publications"
+    },
+    {
+      "id": "trial_nb_uvb",
+      "category": "trials",
+      "query": "narrowband ultraviolet B vitiligo randomized controlled trial",
+      "review_notes": "NB-UVB RCTs with repigmentation outcomes"
+    },
+    {
+      "id": "omics_ifn_signature",
+      "category": "omics",
+      "query": "vitiligo transcriptome interferon gene signature skin",
+      "review_notes": "GEO-linked or microarray/RNA-seq vitiligo lesional skin"
+    },
+    {
+      "id": "omics_melanocyte",
+      "category": "omics",
+      "query": "melanocyte stress oxidative vitiligo biomarker",
+      "review_notes": "Melanocyte-centric mechanistic omics or biomarker work"
+    },
+    {
+      "id": "combo_microneedling",
+      "category": "treatment",
+      "query": "microneedling topical tacrolimus vitiligo repigmentation",
+      "review_notes": "Procedural combination studies"
+    },
+    {
+      "id": "safety_jak_systemic",
+      "category": "safety",
+      "query": "JAK inhibitor safety vitiligo systemic adverse events",
+      "review_notes": "Safety / class-effect papers relevant to vitiligo use"
+    },
+    {
+      "id": "pediatric",
+      "category": "population",
+      "query": "pediatric vitiligo treatment evidence children",
+      "review_notes": "Pediatric-specific evidence if sparse, note in review"
+    },
+    {
+      "id": "vitiligo_univitiligo",
+      "category": "subtype",
+      "query": "universal vitiligo depigmentation treatment",
+      "review_notes": "Universal / extensive vitiligo management"
+    },
+    {
+      "id": "mech_memory_tcells",
+      "category": "mechanism",
+      "query": "resident memory T cells vitiligo skin",
+      "review_notes": "Trm / immunology mechanistic papers"
+    },
+    {
+      "id": "repigmentation_koebner",
+      "category": "clinical",
+      "query": "Koebner phenomenon vitiligo isomorphic response",
+      "review_notes": "Clinical phenomenology linked to activity"
+    },
+    {
+      "id": "treat_afamelanotide",
+      "category": "treatment",
+      "query": "afamelanotide vitiligo repigmentation trial",
+      "review_notes": "Afamelanotide Phase 3 priors in graph"
+    },
+    {
+      "id": "guideline_review",
+      "category": "review",
+      "query": "vitiligo treatment guideline systematic review 2020 2024",
+      "review_notes": "Recent reviews or meta-analyses"
+    },
+    {
+      "id": "face_facial",
+      "category": "unmet_need",
+      "query": "facial vitiligo repigmentation treatment face",
+      "review_notes": "Facial-specific outcomes (F-VASI context)"
+    }
+  ]
+}

@@ -1,0 +1,729 @@
+{
+  "version": 1,
+  "description": "Curated regression expectations for the Vitiligo Evidence Engine. Each case encodes a research scenario we must not break. Update only after verifying against data/vitiligo.db and documenting why.",
+  "retrieval": [
+    {
+      "id": "mech_jak_ifn",
+      "eval_query_id": "mech_jak_ifn",
+      "scenario": "Mechanism query for IFN-gamma / CXCL10 / JAK-STAT axis",
+      "query": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "26734651",
+        "26046061"
+      ],
+      "top_hit_title_must_contain_any": [
+        "CXCL10",
+        "IFN",
+        "interferon"
+      ],
+      "min_top_score": 0.82
+    },
+    {
+      "id": "treat_rux_uvb",
+      "eval_query_id": "treat_rux_uvb",
+      "scenario": "Clinician asks about ruxolitinib + NB-UVB combination for NSV",
+      "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "35787401",
+        "33248492"
+      ],
+      "expected_top_source_id": "35787401",
+      "top_hit_title_must_contain_any": [
+        "ruxolitinib",
+        "Ruxolitinib"
+      ],
+      "min_top_score": 0.85
+    },
+    {
+      "id": "treat_jak_oral",
+      "eval_query_id": "treat_jak_oral",
+      "scenario": "Researcher searches for oral JAK inhibitor trial evidence",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "37027285"
+      ],
+      "top_hit_title_must_contain_any": [
+        "JAK",
+        "jak"
+      ],
+      "min_top_score": 0.85
+    },
+    {
+      "id": "treat_segmental",
+      "eval_query_id": "treat_segmental",
+      "scenario": "SV-specific; avoid only NSV generalizations",
+      "query": "segmental vitiligo treatment repigmentation evidence",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "22233150"
+      ],
+      "top_hit_title_must_contain_any": [
+        "segmental"
+      ],
+      "min_top_score": 0.86,
+      "expected_top_source_id": "22233150"
+    },
+    {
+      "id": "treat_acral",
+      "eval_query_id": "treat_acral",
+      "scenario": "Acral / recalcitrant site literature",
+      "query": "acral vitiligo hands feet repigmentation poor response",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "18559781",
+        "37467136"
+      ],
+      "top_hit_title_must_contain_any": [
+        "finger",
+        "acral",
+        "camouflag"
+      ],
+      "min_top_score": 0.81,
+      "expected_top_source_id": "18559781"
+    },
+    {
+      "id": "treat_spread_arrest",
+      "eval_query_id": "treat_spread_arrest",
+      "scenario": "Activity / stabilization endpoints, not only repigmentation",
+      "query": "stop progression active vitiligo spread arrest",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "35230707"
+      ],
+      "top_hit_title_must_contain_any": [
+        "spread",
+        "arrest",
+        "progression"
+      ],
+      "min_top_score": 0.83,
+      "expected_top_source_id": "35230707"
+    },
+    {
+      "id": "treat_cs_first_line",
+      "eval_query_id": "treat_cs_first_line",
+      "scenario": "Guideline-level topical therapy evidence",
+      "query": "topical corticosteroid calcineurin inhibitor vitiligo first line",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "31408687"
+      ],
+      "top_hit_title_must_contain_any": [
+        "calcineurin",
+        "corticosteroid"
+      ],
+      "min_top_score": 0.88,
+      "expected_top_source_id": "31408687"
+    },
+    {
+      "id": "trial_phase3_jak",
+      "eval_query_id": "trial_phase3_jak",
+      "scenario": "Pivotal trial reports or registry-linked publications",
+      "query": "phase 3 vitiligo JAK inhibitor randomized",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "36652364",
+        "37027285"
+      ],
+      "top_hit_title_must_contain_any": [
+        "JAK",
+        "jak",
+        "Phase 3",
+        "phase 3",
+        "Ruxolitinib"
+      ],
+      "min_top_score": 0.83
+    },
+    {
+      "id": "trial_nb_uvb",
+      "eval_query_id": "trial_nb_uvb",
+      "scenario": "NB-UVB randomized trial literature",
+      "query": "narrowband ultraviolet B vitiligo randomized controlled trial",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "20199553"
+      ],
+      "top_hit_title_must_contain_any": [
+        "narrow",
+        "NB-UVB",
+        "ultraviolet"
+      ],
+      "min_top_score": 0.88
+    },
+    {
+      "id": "omics_ifn_signature",
+      "eval_query_id": "omics_ifn_signature",
+      "scenario": "GEO-linked or microarray/RNA-seq vitiligo lesional skin",
+      "query": "vitiligo transcriptome interferon gene signature skin",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "40513622"
+      ],
+      "top_hit_title_must_contain_any": [
+        "transcriptom",
+        "interferon",
+        "immune"
+      ],
+      "min_top_score": 0.84,
+      "expected_top_source_id": "40513622"
+    },
+    {
+      "id": "omics_melanocyte",
+      "eval_query_id": "omics_melanocyte",
+      "scenario": "Melanocyte-centric mechanistic omics or biomarker work",
+      "query": "melanocyte stress oxidative vitiligo biomarker",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "42072733"
+      ],
+      "top_hit_title_must_contain_any": [
+        "oxidative",
+        "melanocyte"
+      ],
+      "min_top_score": 0.85,
+      "expected_top_source_id": "42072733"
+    },
+    {
+      "id": "combo_microneedling",
+      "eval_query_id": "combo_microneedling",
+      "scenario": "Procedural combo: microneedling + tacrolimus",
+      "query": "microneedling topical tacrolimus vitiligo repigmentation",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "32030880",
+        "32041441"
+      ],
+      "top_hit_title_must_contain_any": [
+        "tacrolimus",
+        "microneedling"
+      ],
+      "min_top_score": 0.85
+    },
+    {
+      "id": "safety_jak_systemic",
+      "eval_query_id": "safety_jak_systemic",
+      "scenario": "Safety / class-effect papers relevant to vitiligo use",
+      "query": "JAK inhibitor safety vitiligo systemic adverse events",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "39713946"
+      ],
+      "top_hit_title_must_contain_any": [
+        "JAK",
+        "jak",
+        "safety"
+      ],
+      "min_top_score": 0.85,
+      "expected_top_source_id": "39713946"
+    },
+    {
+      "id": "pediatric",
+      "eval_query_id": "pediatric",
+      "scenario": "Pediatric-specific evidence if sparse, note in review",
+      "query": "pediatric vitiligo treatment evidence children",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "19588678"
+      ],
+      "top_hit_title_must_contain_any": [
+        "children",
+        "pediatric",
+        "child"
+      ],
+      "min_top_score": 0.88,
+      "expected_top_source_id": "19588678"
+    },
+    {
+      "id": "vitiligo_univitiligo",
+      "eval_query_id": "vitiligo_univitiligo",
+      "scenario": "Universal / extensive vitiligo management",
+      "query": "universal vitiligo depigmentation treatment",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "37746876",
+        "37877761"
+      ],
+      "top_hit_title_must_contain_any": [
+        "vitiligo",
+        "Vitiligo",
+        "management",
+        "recommendations"
+      ],
+      "min_top_score": 0.8
+    },
+    {
+      "id": "mech_memory_tcells",
+      "eval_query_id": "mech_memory_tcells",
+      "scenario": "Trm / immunology mechanistic papers",
+      "query": "resident memory T cells vitiligo skin",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "38336493"
+      ],
+      "top_hit_title_must_contain_any": [
+        "memory",
+        "Memory",
+        "resident"
+      ],
+      "min_top_score": 0.9,
+      "expected_top_source_id": "38336493"
+    },
+    {
+      "id": "repigmentation_koebner",
+      "eval_query_id": "repigmentation_koebner",
+      "scenario": "Clinical phenomenology linked to activity",
+      "query": "Koebner phenomenon vitiligo isomorphic response",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "23738602"
+      ],
+      "top_hit_title_must_contain_any": [
+        "Koebner",
+        "K\u00f6bner",
+        "koebner"
+      ],
+      "min_top_score": 0.86,
+      "expected_top_source_id": "23738602"
+    },
+    {
+      "id": "treat_afamelanotide",
+      "eval_query_id": "treat_afamelanotide",
+      "scenario": "Afamelanotide Phase 3 priors in graph",
+      "query": "afamelanotide vitiligo repigmentation trial",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "25607828"
+      ],
+      "top_hit_title_must_contain_any": [
+        "afamelanotide",
+        "Afamelanotide"
+      ],
+      "min_top_score": 0.86,
+      "expected_top_source_id": "25607828"
+    },
+    {
+      "id": "guideline_review",
+      "eval_query_id": "guideline_review",
+      "scenario": "Recent reviews or meta-analyses",
+      "query": "vitiligo treatment guideline systematic review 2020 2024",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "37877761"
+      ],
+      "top_hit_title_must_contain_any": [
+        "guideline",
+        "recommendations",
+        "management"
+      ],
+      "min_top_score": 0.84,
+      "expected_top_source_id": "37877761"
+    },
+    {
+      "id": "face_facial",
+      "eval_query_id": "face_facial",
+      "scenario": "Facial-specific outcomes (F-VASI context)",
+      "query": "facial vitiligo repigmentation treatment face",
+      "top_k": 10,
+      "must_include_source_ids": [
+        "39172556"
+      ],
+      "top_hit_title_must_contain_any": [
+        "facial",
+        "Facial",
+        "face"
+      ],
+      "min_top_score": 0.86,
+      "expected_top_source_id": "39172556"
+    }
+  ],
+  "retrieval_negative": [
+    {
+      "id": "treat_jak_oral_not_mouse_top",
+      "scenario": "Oral JAK query should not rank animal models first",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 5,
+      "top_n": 3,
+      "max_mouse_in_top": 0,
+      "top_hit_must_not_be_mouse": true
+    },
+    {
+      "id": "treat_rux_uvb_not_mouse_top",
+      "scenario": "Ruxolitinib clinical query should not rank animal models first",
+      "query": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "top_k": 5,
+      "top_n": 3,
+      "max_mouse_in_top": 0,
+      "top_hit_must_not_be_mouse": true
+    },
+    {
+      "id": "treat_jak_oral_not_mouse_pmid",
+      "eval_query_id": "treat_jak_oral",
+      "scenario": "Oral JAK clinical query must not surface the mouse oxidative-stress decoy",
+      "query": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 5,
+      "top_n": 5,
+      "must_not_include_source_ids": [
+        "42100987"
+      ]
+    },
+    {
+      "id": "treat_cs_first_line_not_mouse_pmid",
+      "eval_query_id": "treat_cs_first_line",
+      "scenario": "Topical first-line query must not surface the mouse oxidative-stress decoy",
+      "query": "topical corticosteroid calcineurin inhibitor vitiligo first line",
+      "top_k": 5,
+      "top_n": 5,
+      "must_not_include_source_ids": [
+        "42100987"
+      ]
+    },
+    {
+      "id": "pediatric_not_mouse_pmid",
+      "eval_query_id": "pediatric",
+      "scenario": "Pediatric treatment query must not surface the mouse oxidative-stress decoy",
+      "query": "pediatric vitiligo treatment evidence children",
+      "top_k": 5,
+      "top_n": 5,
+      "must_not_include_source_ids": [
+        "42100987"
+      ]
+    },
+    {
+      "id": "mech_jak_ifn_not_mouse_pmid",
+      "eval_query_id": "mech_jak_ifn",
+      "scenario": "IFN/CXCL10 mechanism query must not surface the mouse oxidative-stress decoy",
+      "query": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
+      "top_k": 5,
+      "top_n": 5,
+      "must_not_include_source_ids": [
+        "42100987"
+      ]
+    },
+    {
+      "id": "omics_melanocyte_mouse_not_top",
+      "eval_query_id": "omics_melanocyte",
+      "scenario": "Melanocyte omics query must not rank the mouse decoy in top 3",
+      "query": "melanocyte stress oxidative vitiligo biomarker",
+      "top_k": 5,
+      "top_n": 3,
+      "must_not_include_source_ids": [
+        "42100987"
+      ]
+    }
+  ],
+  "trials": [
+    {
+      "id": "tacrolimus_intervention_only",
+      "scenario": "Drug appears only under interventions JSON, not title (audit regression)",
+      "query": "tacrolimus",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT03365141"
+      ]
+    },
+    {
+      "id": "baricitinib_vitiligo",
+      "scenario": "Baricitinib vitiligo trial findable",
+      "query": "baricitinib",
+      "limit": 20,
+      "must_include_source_ids": [
+        "NCT07554222"
+      ]
+    },
+    {
+      "id": "pimecrolimus_intervention",
+      "scenario": "Pimecrolimus intervention-only match",
+      "query": "pimecrolimus",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT01082393"
+      ]
+    },
+    {
+      "id": "trial_afamelanotide_phase3",
+      "eval_query_id": "treat_afamelanotide",
+      "scenario": "Afamelanotide Phase 3 vitiligo trial findable in registry",
+      "query": "afamelanotide",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT06109649"
+      ]
+    },
+    {
+      "id": "trial_koebner_phenomenon",
+      "eval_query_id": "repigmentation_koebner",
+      "scenario": "Koebner phenomenon vitiligo trial findable",
+      "query": "koebner",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT01082393"
+      ]
+    },
+    {
+      "id": "trial_ruxolitinib_phase3",
+      "eval_query_id": "trial_phase3_jak",
+      "scenario": "Phase 3 ruxolitinib cream trial findable",
+      "query": "ruxolitinib",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT06548360"
+      ]
+    },
+    {
+      "id": "trial_acral_nb_uvb",
+      "eval_query_id": "treat_acral",
+      "scenario": "Acral vitiligo NB-UVB trial findable in registry",
+      "query": "acral vitiligo",
+      "limit": 50,
+      "must_include_source_ids": [
+        "NCT03155698"
+      ]
+    }
+  ],
+  "ask": [
+    {
+      "id": "ask_rux_uvb",
+      "eval_query_id": "treat_rux_uvb",
+      "scenario": "Ask must retrieve and cite ruxolitinib + NB-UVB combination papers",
+      "question": "topical ruxolitinib narrowband UVB combination non-segmental vitiligo",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "35787401",
+        "33248492"
+      ]
+    },
+    {
+      "id": "ask_jak_oral",
+      "eval_query_id": "treat_jak_oral",
+      "scenario": "Ask must cite oral JAK inhibitor evidence",
+      "question": "oral JAK inhibitor repigmentation vitiligo clinical trial",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "37027285"
+      ]
+    },
+    {
+      "id": "ask_mech_jak_ifn",
+      "eval_query_id": "mech_jak_ifn",
+      "scenario": "Ask must cite IFN-gamma / CXCL10 mechanism papers",
+      "question": "IFN-gamma CXCL10 JAK STAT vitiligo melanocyte",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "26734651",
+        "26046061"
+      ]
+    },
+    {
+      "id": "ask_microneedling_tacrolimus",
+      "eval_query_id": "combo_microneedling",
+      "scenario": "Ask must cite microneedling + tacrolimus combination trials",
+      "question": "microneedling topical tacrolimus vitiligo repigmentation",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "32030880",
+        "32041441"
+      ]
+    },
+    {
+      "id": "ask_nb_uvb_rct",
+      "eval_query_id": "trial_nb_uvb",
+      "scenario": "Ask must cite NB-UVB randomized trial literature",
+      "question": "narrowband ultraviolet B vitiligo randomized controlled trial",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "20199553"
+      ]
+    },
+    {
+      "id": "ask_treat_segmental",
+      "eval_query_id": "treat_segmental",
+      "scenario": "Ask must cite segmental vitiligo treatment evidence",
+      "question": "segmental vitiligo treatment repigmentation evidence",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "22233150"
+      ]
+    },
+    {
+      "id": "ask_safety_jak_systemic",
+      "eval_query_id": "safety_jak_systemic",
+      "scenario": "Ask must cite JAK inhibitor safety literature",
+      "question": "JAK inhibitor safety vitiligo systemic adverse events",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "39713946"
+      ]
+    },
+    {
+      "id": "ask_treat_acral",
+      "eval_query_id": "treat_acral",
+      "scenario": "Ask must cite acral vitiligo repigmentation papers",
+      "question": "acral vitiligo hands feet repigmentation poor response",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "18559781",
+        "37467136"
+      ]
+    },
+    {
+      "id": "ask_treat_spread_arrest",
+      "eval_query_id": "treat_spread_arrest",
+      "scenario": "Ask must cite spread arrest / stabilization literature",
+      "question": "stop progression active vitiligo spread arrest",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "35230707"
+      ]
+    },
+    {
+      "id": "ask_trial_phase3_jak",
+      "eval_query_id": "trial_phase3_jak",
+      "scenario": "Ask must cite Phase 3 JAK vitiligo trial publications",
+      "question": "phase 3 vitiligo JAK inhibitor randomized",
+      "top_k": 8,
+      "must_include_citation_source_ids": [
+        "36652364",
+        "37027285"
+      ]
+    }
+  ],
+  "graph": [
+    {
+      "id": "graph_search_ruxolitinib",
+      "scenario": "Entity search returns ruxolitinib drug node",
+      "search_q": "ruxolitinib",
+      "limit": 10,
+      "must_include_keys": [
+        "ruxolitinib"
+      ]
+    },
+    {
+      "id": "graph_neighbors_vitiligo",
+      "scenario": "Vitiligo disease anchor has seeded drug neighbors",
+      "neighbors_name": "vitiligo",
+      "hops": 1,
+      "limit": 50,
+      "min_neighbor_count": 5,
+      "must_include_neighbor_keys": [
+        "ruxolitinib",
+        "tacrolimus"
+      ]
+    },
+    {
+      "id": "graph_export_seeded",
+      "scenario": "Graph JSON export includes regression seed entities",
+      "min_entities": 8,
+      "min_edges": 6,
+      "must_include_entity_keys": [
+        "vitiligo",
+        "ruxolitinib"
+      ]
+    }
+  ],
+  "hypothesize": [
+    {
+      "id": "hyp_spread_arrest_jak",
+      "scenario": "Stop-spread intent retrieves JAK literature and proposes ruxolitinib",
+      "intent": "stop spread active non-segmental vitiligo JAK inhibitor",
+      "top_k": 12,
+      "top_trials": 8,
+      "must_include_citation_source_ids": [
+        "37027285"
+      ],
+      "must_include_candidate_names": [
+        "Ruxolitinib"
+      ]
+    },
+    {
+      "id": "hyp_acral_tacrolimus",
+      "scenario": "Acral intent surfaces acral tacrolimus paper and proposes tacrolimus",
+      "intent": "acral vitiligo hands feet repigmentation treatment",
+      "top_k": 12,
+      "top_trials": 8,
+      "must_include_citation_source_ids": [
+        "37467136"
+      ],
+      "must_include_candidate_names": [
+        "Tacrolimus"
+      ]
+    },
+    {
+      "id": "hyp_jak_combination",
+      "scenario": "Combination intent cites ruxolitinib + UVB papers",
+      "intent": "topical ruxolitinib narrowband UVB combination vitiligo",
+      "top_k": 12,
+      "top_trials": 8,
+      "must_include_citation_source_ids": [
+        "35787401",
+        "33248492"
+      ],
+      "must_include_candidate_names": [
+        "Ruxolitinib"
+      ]
+    }
+  ],
+  "candidate_intents": {
+    "top_n": 6,
+    "intents": [
+      {
+        "id": "spread_arrest_nsv",
+        "scenario": "Stop-spread intent surfaces JAK pipeline candidates",
+        "must_include_tokens": [
+          "ruxolitinib",
+          "baricitinib"
+        ],
+        "rank1_token": "ruxolitinib"
+      },
+      {
+        "id": "repigmentation_nsv",
+        "scenario": "NSV repigmentation intent surfaces ruxolitinib and upadacitinib",
+        "must_include_tokens": [
+          "ruxolitinib",
+          "upadacitinib"
+        ],
+        "rank1_token": "ruxolitinib"
+      },
+      {
+        "id": "jak_combination",
+        "scenario": "JAK + phototherapy combination intent ranks ruxolitinib first",
+        "must_include_tokens": [
+          "ruxolitinib"
+        ],
+        "rank1_token": "ruxolitinib"
+      },
+      {
+        "id": "acral_recalcitrant",
+        "scenario": "Acral intent surfaces acral tacrolimus evidence ahead of generic JAK combo literature",
+        "must_include_tokens": [
+          "tacrolimus",
+          "ruxolitinib"
+        ],
+        "rank1_token": "ruxolitinib",
+        "tacrolimus_primary_literature_source_id": "37467136"
+      },
+      {
+        "id": "facial_vitiligo",
+        "scenario": "Facial repigmentation intent surfaces ruxolitinib",
+        "must_include_tokens": [
+          "ruxolitinib"
+        ],
+        "rank1_token": "ruxolitinib"
+      }
+    ]
+  },
+  "candidates": {
+    "scenario": "Deterministic candidate report ranks approved JAKs and tacrolimus",
+    "top_n": 10,
+    "must_include_tokens": [
+      "ruxolitinib",
+      "upadacitinib",
+      "povorcitinib",
+      "tacrolimus",
+      "baricitinib"
+    ],
+    "rank1_token": "ruxolitinib",
+    "min_rank1_score": 70
+  }
+}
