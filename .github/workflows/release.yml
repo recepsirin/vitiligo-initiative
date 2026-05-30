@@ -5,9 +5,6 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write
-
 jobs:
   ci:
     uses: ./.github/workflows/ci.yml
@@ -15,6 +12,9 @@ jobs:
   github-release:
     needs: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -22,5 +22,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}

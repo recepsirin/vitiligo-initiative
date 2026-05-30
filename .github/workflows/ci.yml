@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [master]
   pull_request:
   workflow_dispatch:
   workflow_call:
@@ -17,6 +17,7 @@ permissions:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       FASTEMBED_CACHE_PATH: ${{ github.workspace }}/.cache/fastembed
       VITILIGO_REGRESSION_DB: /tmp/vitiligo-regression.db
