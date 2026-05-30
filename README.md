@@ -14,30 +14,6 @@ Vitiligo evidence is scattered across PubMed, PMC, several trial registries, and
 
 Non-profit initiative context (mission, phases, roadmap): **[docs/strategic-plan.md](docs/strategic-plan.md)**.
 
-## Screenshots
-
-The Evidence Engine ships a FastAPI web UI (`vitiligo serve`) with Search, Ask, Hypothesize, Candidates, Graph, and Trials tabs. Run it locally at <http://127.0.0.1:8765> (see [Quick start](#quick-start)).
-
-<p align="center">
-  <img src="docs/images/search.png" alt="Semantic search over the vitiligo corpus, ranked by meaning with evidence-level tags and citations" width="820">
-</p>
-
-<table>
-  <tr>
-    <td width="50%"><b>Candidates</b> — deterministic, evidence-scored rankings<br><img src="docs/images/candidates.png" alt="Evidence-scored candidate rankings"></td>
-    <td width="50%"><b>Graph</b> — knowledge-graph browser seeded from priors and trials<br><img src="docs/images/graph.png" alt="Knowledge graph entity browser"></td>
-  </tr>
-  <tr>
-    <td><b>Trials</b> — cross-registry search with status/phase/country filters<br><img src="docs/images/trials.png" alt="Clinical trials search with filters"></td>
-    <td><b>Hypothesize</b> — LLM-ranked candidates with multi-stream citations<br><img src="docs/images/hypothesize.png" alt="Hypothesis generation form"></td>
-  </tr>
-  <tr>
-    <td><b>Ask</b> — citation-grounded Q&amp;A over the corpus<br><img src="docs/images/ask.png" alt="Cited Q&A over the corpus"></td>
-    <td></td>
-  </tr>
-</table>
-
-
 ## About this repository
 
 **What it is:** The **Vitiligo Initiative Evidence Engine** — open-source Python software (CLI + FastAPI UI) to ingest public vitiligo literature and trial registries, index them for semantic search, and optionally run citation-grounded Q&A and hypothesis ranking when an Anthropic API key is configured on the server.
@@ -182,6 +158,29 @@ WHO ICTRP and DrugBank are optional XML imports on top. Rebuild anytime with `./
 ## Citation
 
 If you use this software in research, cite the repository and (when available) the methods preprint linked from [`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md).
+
+## Screenshots
+
+The Evidence Engine ships a FastAPI web UI (`vitiligo serve`) with Search, Ask, Hypothesize, Candidates, Graph, and Trials tabs. Run it locally at <http://127.0.0.1:8765> (see [Quick start](#quick-start)).
+
+<p align="center">
+  <img src="docs/images/search.png" alt="Semantic search over the vitiligo corpus, ranked by meaning with evidence-level tags and citations" width="820">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><b>Candidates</b> — deterministic, evidence-scored rankings<br><img src="docs/images/candidates.png" alt="Evidence-scored candidate rankings"></td>
+    <td width="50%"><b>Graph</b> — knowledge-graph browser seeded from priors and trials<br><img src="docs/images/graph.png" alt="Knowledge graph entity browser"></td>
+  </tr>
+  <tr>
+    <td><b>Trials</b> — cross-registry search with status/phase/country filters<br><img src="docs/images/trials.png" alt="Clinical trials search with filters"></td>
+    <td><b>Hypothesize</b> — LLM-ranked candidates with multi-stream citations<br><img src="docs/images/hypothesize.png" alt="Hypothesis generation form"></td>
+  </tr>
+  <tr>
+    <td><b>Ask</b> — citation-grounded Q&amp;A over the corpus<br><img src="docs/images/ask.png" alt="Cited Q&A over the corpus"></td>
+    <td></td>
+  </tr>
+</table>
 
 ---
 
