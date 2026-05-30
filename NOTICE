@@ -45,6 +45,12 @@ sourced from third-party public databases. Each source remains subject to its
 provider's terms of use. This repository does not ship the full built corpus in
 git; see `docs/engine.md` for how to build or obtain `vitiligo.db`.
 
+DrugBank support is import-only. This repository does not bundle DrugBank
+database content, API results, or derived DrugBank datasets. Parser tests use a
+synthetic DrugBank-shaped XML fixture. Users who enable DrugBank ingestion must
+bring their own appropriately licensed export and comply with DrugBank's
+redistribution and citation terms.
+
 ================================================================================
 Optional cloud API (not bundled)
 ================================================================================

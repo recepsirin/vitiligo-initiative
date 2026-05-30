@@ -31,7 +31,7 @@ vitiligo ingest euctr              # ~22 EU vitiligo trials from EU CTR (CTIS)
 vitiligo ingest opentargets        # ~37 drugs + 200 targets for vitiligo (EFO_0004208)
 vitiligo ingest geo                # ~311 vitiligo-linked GEO series (GSE metadata)
 vitiligo ingest ictrp --file export.xml   # WHO ICTRP XML export (see trialsearch.who.int)
-vitiligo ingest drugbank --file full_database.xml   # DrugBank academic XML export
+vitiligo ingest drugbank --file full_database.xml   # bring your own licensed DrugBank XML export
 
 # 6. Embed the corpus and run semantic search
 vitiligo embed run                 # ~10-20 min on CPU; fastembed downloads model on first run
@@ -91,7 +91,7 @@ Currently shipped:
 | `vitiligo.sources.euctr` | EU CTR (CTIS) public JSON API (EMA) | EU CT number | Search + retrieve; phases normalized into the canonical PHASE1..PHASE4 set; eligibility + objective parsed from nested protocol structure |
 | `vitiligo.sources.opentargets` | Open Targets Platform GraphQL v4 | ChEMBL id (drugs) / Ensembl id (targets) | Disease resolution + drug candidates + associated targets; mechanism-of-action enrichment per drug |
 | `vitiligo.sources.ictrp` | WHO ICTRP search portal (XML export) | ICTRP TrialID | File import from https://trialsearch.who.int/; skips ctgov/euctr duplicates |
-| `vitiligo.sources.drugbank` | DrugBank full database (XML export) | DB id | File import from academic download; vitiligo text filter + Open Targets name seeding |
+| `vitiligo.sources.drugbank` | DrugBank full database (XML export) | DrugBank id | Optional file import from a user-provided licensed export; vitiligo text filter + Open Targets name seeding |
 
 Planned (in priority order):
 
@@ -203,7 +203,7 @@ vitiligo ingest pmc                                 # PMC Open Access full text
 vitiligo ingest geo                                 # NCBI GEO series metadata (GSE)
 vitiligo ingest opentargets                         # Open Targets drug + target priors
 vitiligo ingest ictrp --file export.xml              # WHO ICTRP XML export
-vitiligo ingest drugbank --file full_database.xml    # DrugBank academic XML (.zip ok)
+vitiligo ingest drugbank --file full_database.xml    # user-provided licensed DrugBank XML (.zip ok)
 vitiligo ingest opentargets --target-limit 50       # smoke test (fewer targets)
 
 # Embeddings
@@ -251,6 +251,20 @@ vitiligo serve --host 0.0.0.0 --port 8080           # bind to all interfaces
 
 Keep new source clients **independent**: they should not import each
 other or share state beyond `storage` and `config`.
+
+---
+
+## Source data licensing
+
+- The repository does not include the built `vitiligo.db` corpus, DrugBank
+  database exports, or DrugBank-derived datasets.
+- DrugBank ingestion is an optional local import. Use it only with a DrugBank
+  export you are licensed to access, and do not publish generated DrugBank
+  records or derived datasets unless your license permits redistribution.
+- Parser tests use a synthetic DrugBank-shaped XML fixture so the open
+  repository can test XML handling without bundling DrugBank content.
+- Public releases should ship code, docs, synthetic fixtures, and non-restricted
+  regression fixtures only; large/generated corpus artifacts stay outside Git.
 
 ---
 

@@ -1,8 +1,8 @@
 """DrugBank source — local XML file import.
 
 DrugBank full-database XML requires an academic or commercial license and
-is not freely downloadable without credentials (official open CC0 packages
-are vocabulary/structures only). The supported workflow is:
+is not freely downloadable without credentials, fetched automatically, or
+bundled with this repository. The supported workflow is:
 
 1. Create a free academic account at https://go.drugbank.com/
 2. Download ``all-full-database`` XML (or place an older export on disk)
@@ -13,6 +13,9 @@ are vocabulary/structures only). The supported workflow is:
 We parse the standard DrugBank 5.x XML namespace, filter to vitiligo-relevant
 drugs (text match + optional Open Targets name seeding), and persist drug and
 target priors under ``source=drugbank``.
+
+Do not redistribute imported DrugBank records or derived DrugBank datasets
+unless your license explicitly permits it.
 """
 
 from __future__ import annotations

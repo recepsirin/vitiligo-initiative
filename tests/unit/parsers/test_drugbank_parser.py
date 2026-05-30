@@ -24,14 +24,14 @@ def test_filters_to_vitiligo_drugs_and_targets() -> None:
     targets = [p for p in priors if p.kind == PriorKind.TARGET]
 
     assert len(drugs) == 2
-    assert {d.source_id for d in drugs} == {"DB00600", "DB08877"}
+    assert {d.source_id for d in drugs} == {"SYN-DRUG-001", "SYN-DRUG-003"}
     assert all(d.source == PriorSourceKind.DRUGBANK for d in drugs)
     assert drugs[0].clinical_stage == "APPROVAL"
     assert "vitiligo" in (drugs[0].raw_metadata.get("indication") or "").lower()
 
     assert len(targets) == 2
-    assert {t.source_id for t in targets} == {"P14679", "P23458"}
-    assert any(t.name == "JAK1" for t in targets)
+    assert {t.source_id for t in targets} == {"SYN-POLY-001", "SYN-POLY-002"}
+    assert any(t.name == "SYNJAK1" for t in targets)
 
 
 def test_seed_name_matching_without_query_hit() -> None:
@@ -39,8 +39,8 @@ def test_seed_name_matching_without_query_hit() -> None:
         iter_drugbank_priors(
             FIXTURE,
             query="unlikely-term-xyz",
-            seed_names={normalize_drug_name("Ruxolitinib")},
+            seed_names={normalize_drug_name("Fixture Jakstatinib")},
         )
     )
     drug_ids = {p.source_id for p in priors if p.kind == PriorKind.DRUG}
-    assert drug_ids == {"DB08877"}
+    assert drug_ids == {"SYN-DRUG-003"}
