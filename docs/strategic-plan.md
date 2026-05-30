@@ -5,8 +5,6 @@
 
 **Software:** [README](../README.md) (repo landing page) · [`engine.md`](engine.md) (setup & CLI) · [`architecture.md`](architecture.md) (system design).
 
-Provisional decisions on open questions: [`open-questions-resolutions.md`](open-questions-resolutions.md).
-
 ---
 
 ## Table of Contents
@@ -20,7 +18,6 @@ Provisional decisions on open questions: [`open-questions-resolutions.md`](open-
 - [Outcomes](#outcomes)
 - [Operating Principles](#operating-principles)
 - [Phases of Work](#phases-of-work)
-- [Open Questions](#open-questions)
 - [Status](#status)
 
 ---
@@ -255,7 +252,6 @@ Laddered honestly from immediate to ultimate, with realistic probability.
 - First investigator-initiated clinical trial designed and funded based on our candidate identification work.
 - Real-world evidence dataset of thousands of patients influencing clinical practice and trial design.
 - Recognized as a serious vitiligo research entity, invited to consortia, cited in guidelines.
-- Pharma paying for real-world data and trial-matching services — sustainable revenue.
 
 ### Long-term outcomes — lower probability, higher impact
 
@@ -312,7 +308,6 @@ Gate conditions:
 - [x] Scientific brief on vitiligo state-of-the-art completed ([`scientific-brief.md`](scientific-brief.md) — draft v0.1)
 - [x] Governance and ethics brief drafted ([`governance-ethics-brief.md`](governance-ethics-brief.md) — draft v0.1)
 - [ ] Strategic plan finalized
-- [ ] Open questions resolved (see [Open Questions](#open-questions))
 
 ### Phase 1 — Engine + First Public Artifact
 
@@ -370,30 +365,6 @@ Gate conditions:
 - [ ] First investigator-initiated trial designed
 - [ ] Trial funding secured (grants + venture philanthropy)
 - [ ] Trial enrolling
-
----
-
-## Open Questions
-
-These shape execution and must be resolved before some downstream decisions. Tracked here so we don't forget them.
-
-### Personal / team
-- [ ] Time commitment (full-time vs. part-time vs. evenings)
-- [ ] Co-founders / team members
-- [ ] Geography / base of operations
-- [ ] Founder narrative and patient-engagement boundaries (document privately if personal)
-- [ ] Financial runway for first months
-
-### Strategic
-- [ ] Risk tolerance: hybrid model (AI + biology partnerships) accepted? (working assumption: yes)
-- [ ] Geographic scope: global from day one or start regional
-- [ ] Openness stance: fully open vs. open core
-- [ ] Speed vs. credibility tradeoff for Evidence Engine launch (public early vs. private with advisors first)
-
-### Operational
-- [ ] Legal structure: US 501(c)(3), EU foundation, fiscal sponsorship, or undecided
-- [ ] Working organization name (current placeholder: "Vitiligo Initiative")
-- [ ] Initial advisors and how to approach them
 
 ---
 
@@ -457,7 +428,7 @@ vitiligo serve &
 
 ## How to Read This Document
 
-This is a **living planning artifact**, not a public mission statement (yet). It is intentionally:
+This is a **living planning document**. It is intentionally:
 
 - **Honest about probabilities** — we ladder claims realistically.
 - **Honest about limits** — we name what AI does and does not compress.
