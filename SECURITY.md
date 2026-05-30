@@ -14,8 +14,7 @@ Pre-release and local-only experiments are out of scope unless they affect users
 
 Report privately via **GitHub** (domain and project mailboxes are not set up yet):
 
-- **[GitHub Security Advisories](https://github.com/recepsirin/vitiligo-initiative/security/advisories/new)** (preferred for vulnerabilities), or  
-- Email the maintainers listed on the repository if you already have a private channel.
+- **[GitHub Security Advisories](https://github.com/recepsirin/vitiligo-initiative/security/advisories/new)** (preferred for vulnerabilities) — requires Private Vulnerability Reporting to be enabled on the repository.
 
 When `vitiligo-initiative.org` is live, we plan to use **contact@vitiligo-initiative.org** for security and corrections. Until then, use GitHub (see below and the Privacy/Terms pages).
 
