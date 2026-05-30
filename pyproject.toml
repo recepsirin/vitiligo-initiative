@@ -57,6 +57,8 @@ vitiligo = "vitiligo.cli:app"
 
 [project.urls]
 Repository = "https://github.com/recepsirin/vitiligo-initiative"
+Contributing = "https://github.com/recepsirin/vitiligo-initiative/blob/master/CONTRIBUTING.md"
+Funding = "https://github.com/sponsors/recepsirin"
 
 [tool.setuptools.packages.find]
 where = ["src"]

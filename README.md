@@ -16,6 +16,8 @@
 | **Architecture** | [`docs/architecture.md`](docs/architecture.md) |
 | **Deploy** | [`docs/deploy.md`](docs/deploy.md) (Render / Docker; static corpus on disk) |
 | **License** | [Apache 2.0](LICENSE) · third-party [NOTICE](NOTICE) |
+| **Contributing** | [CONTRIBUTING.md](CONTRIBUTING.md) · [Discussions](https://github.com/recepsirin/vitiligo-initiative/discussions) |
+| **Sponsor** | [GitHub Sponsors](https://github.com/sponsors/recepsirin) (supports open vitiligo research tooling) |
 | **Security** | [SECURITY.md](SECURITY.md) |
 | **Contact** | **Parked** — domain not purchased yet. Security: [SECURITY.md](SECURITY.md) (GitHub for now). Planned: `contact@` / `privacy@` on `vitiligo-initiative.org` |
 

@@ -1,0 +1,27 @@
+title: Q&A
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ask how to install, ingest, deploy, or interpret Evidence Engine outputs.
+
+        **Setup docs:** [`docs/engine.md`](https://github.com/recepsirin/vitiligo-initiative/blob/master/docs/engine.md) · **Deploy:** [`docs/deploy.md`](https://github.com/recepsirin/vitiligo-initiative/blob/master/docs/deploy.md)
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: What you've tried
+      description: OS, Python version, commands run, error messages (redact API keys).
+      placeholder: |
+        Python 3.13, macOS, pip install -e ".[dev]"
+        vitiligo ingest pubmed --limit 10 → …
+    validations:
+      required: false
