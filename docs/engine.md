@@ -230,6 +230,10 @@ vitiligo graph export -o exports/graph-review.json    # JSON for expert spot-che
 vitiligo graph search ruxolitinib
 vitiligo graph neighbors vitiligo
 
+# Reports (deterministic, no LLM)
+vitiligo report candidates --json exports/candidate-report.json --markdown exports/candidate-report.md
+vitiligo report jak --json exports/jak-atlas.json --markdown exports/jak-atlas.md --csv-dir exports/jak-atlas
+
 # Web UI (Evidence Engine)
 vitiligo serve                                      # http://127.0.0.1:8765
 vitiligo serve --host 0.0.0.0 --port 8080           # bind to all interfaces

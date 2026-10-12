@@ -46,9 +46,13 @@ from vitiligo.reasoning import (
     generate_hypotheses,
 )
 from vitiligo.reports import (
+    atlas_to_dict,
     build_candidate_report,
+    build_jak_atlas,
     render_candidate_report_markdown,
+    render_jak_atlas_markdown,
     report_to_dict,
+    write_jak_atlas_csv,
 )
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.drugbank import DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY
@@ -1106,6 +1110,77 @@ def report_candidates_cmd(
         console.print(
             "\n[dim]Tip: pass --json exports/candidate-report.json "
             "--markdown docs/candidate-report-v1.md[/dim]"
+        )
+
+
+@report_app.command("jak")
+def report_jak_cmd(
+    json_out: str | None = typer.Option(
+        None,
+        "--json",
+        help="Write the full atlas as JSON (e.g. exports/jak-atlas.json).",
+    ),
+    markdown_out: str | None = typer.Option(
+        None,
+        "--markdown",
+        help="Write a human-readable Markdown atlas (e.g. exports/jak-atlas.md).",
+    ),
+    csv_dir: str | None = typer.Option(
+        None,
+        "--csv-dir",
+        help="Write trials.csv, outcomes.csv, adverse_events.csv into this directory.",
+    ),
+) -> None:
+    """Build the open JAK-inhibitor evidence atlas (registry data, no LLM)."""
+    init_db()
+    console.rule("[bold]JAK inhibitor atlas[/bold] — registry evidence for vitiligo")
+    atlas = build_jak_atlas()
+
+    studies = len({t.study_id for t in atlas.trials})
+    console.print(
+        f"[dim]{studies} studies ({len(atlas.trials)} registry records) across "
+        f"{sum(1 for a in atlas.agents if a.studies)} agents[/dim]"
+    )
+    console.print()
+
+    table = Table(title="JAK-family agents in vitiligo")
+    table.add_column("Agent")
+    table.add_column("OT stage")
+    table.add_column("Top trial phase")
+    table.add_column("Studies", justify="right")
+    table.add_column("Posted results", justify="right")
+    table.add_column("Routes")
+    for summary in atlas.agents:
+        table.add_row(
+            summary.name,
+            summary.prior_stage or "—",
+            summary.max_trial_stage or "—",
+            str(summary.studies),
+            str(summary.studies_with_posted_results),
+            ", ".join(summary.routes) or "—",
+        )
+    console.print(table)
+
+    if json_out:
+        json_path = Path(json_out)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(atlas_to_dict(atlas), indent=2) + "\n")
+        console.print(f"\n[green]Wrote[/green] {json_path}")
+
+    if markdown_out:
+        md_path = Path(markdown_out)
+        md_path.parent.mkdir(parents=True, exist_ok=True)
+        md_path.write_text(render_jak_atlas_markdown(atlas))
+        console.print(f"[green]Wrote[/green] {md_path}")
+
+    if csv_dir:
+        for path in write_jak_atlas_csv(atlas, Path(csv_dir)):
+            console.print(f"[green]Wrote[/green] {path}")
+
+    if not (json_out or markdown_out or csv_dir):
+        console.print(
+            "\n[dim]Tip: pass --json exports/jak-atlas.json --markdown exports/jak-atlas.md "
+            "--csv-dir exports/jak-atlas[/dim]"
         )
 
 
