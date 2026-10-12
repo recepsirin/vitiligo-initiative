@@ -2,6 +2,7 @@
 
 from vitiligo.priors.query import (
     PriorStatsRow,
+    clinical_stage_rank,
     list_drug_priors,
     list_target_priors,
     retrieve_priors_for_hypothesize,
@@ -10,6 +11,7 @@ from vitiligo.priors.query import (
 
 __all__ = [
     "PriorStatsRow",
+    "clinical_stage_rank",
     "list_drug_priors",
     "list_target_priors",
     "retrieve_priors_for_hypothesize",

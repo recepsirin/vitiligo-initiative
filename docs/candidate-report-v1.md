@@ -1,6 +1,6 @@
 # Therapeutic Candidate Report v1
 
-**Generated:** 2026-05-26T17:55:15.545987+00:00  
+**Generated:** 2026-10-12T20:31:39.129567+00:00  
 **Engine:** v1.0.0  
 **Status:** Research hypothesis ranking — not medical advice, not an endorsement.
 
@@ -30,11 +30,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
@@ -49,7 +49,7 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 ### #2 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 91 (prior 30 + graph 22 + trials 23 + literature 16)  
+**Score:** 101 (prior 30 + graph 22 + trials 33 + literature 16)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -69,39 +69,17 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:39704810] Repigmentation in non-segmental vitiligo using the Janus kinase inhibitor upadacitinib, a retrospective case series. (2024) — Case series, score=0.8502
 - [pubmed:38873632] Once-daily upadacitinib versus placebo in adults with extensive non-segmental vitiligo: a phase 2, multicentre, randomised, double-blind, placebo-controlled, dose-ranging study. (2024) — Other, score=0.8489
 
-### #3 RITLECITINIB
+### #3 POVORCITINIB
 
 **Evidence strength:** strong  
-**Score:** 85 (prior 20 + graph 22 + trials 35 + literature 8)  
-**Clinical stage (prior):** PHASE_2  
-**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
-
-**Trials:**
-- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
-- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
-- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
-
-**Graph:**
-- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Literature (intent retrieval):**
-- [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
-- [pubmed:39508655] Ritlecitinib rescues exacerbated vitiligo during the JAK1 inhibitor therapy: More than a coincidence? (2024) — Other, score=0.8403
-
-### #4 POVORCITINIB
-
-**Evidence strength:** strong  
-**Score:** 81 (prior 30 + graph 22 + trials 25 + literature 4)  
+**Score:** 91 (prior 30 + graph 22 + trials 35 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -111,20 +89,62 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Literature (intent retrieval):**
 - [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
 
-### #5 TACROLIMUS ANHYDROUS
+### #4 RITLECITINIB
 
 **Evidence strength:** strong  
-**Score:** 71 (prior 30 + graph 22 + trials 15 + literature 4)  
+**Score:** 90 (prior 30 + graph 22 + trials 30 + literature 8)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
+**Open Targets ID:** `CHEMBL4085457`  
+
+**Trials:**
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
+- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
+- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
+
+**Graph:**
+- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Literature (intent retrieval):**
+- [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
+- [pubmed:39508655] Ritlecitinib rescues exacerbated vitiligo during the JAK1 inhibitor therapy: More than a coincidence? (2024) — Other, score=0.8403
+
+### #5 AFAMELANOTIDE
+
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Melanocortin receptor 1 agonist  
+**Open Targets ID:** `CHEMBL441738`  
+
+**Trials:**
+- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
+- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
+
+**Graph:**
+- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #6 TACROLIMUS ANHYDROUS
+
+**Evidence strength:** strong  
+**Score:** 81 (prior 30 + graph 22 + trials 25 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** FK506-binding protein 1A inhibitor  
 **Open Targets ID:** `CHEMBL269732`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
 - [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
 
 **Graph:**
 - TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
@@ -132,30 +152,30 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Literature (intent retrieval):**
 - [pubmed:12399684] Repigmentation of vitiligo with topical tacrolimus. (2002) — Case report, score=0.8248
 
-### #6 AFAMELANOTIDE
+### #7 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Melanocortin receptor 1 agonist  
-**Open Targets ID:** `CHEMBL441738`  
+**Mechanisms:** Dihydrofolate reductase inhibitor  
+**Open Targets ID:** `CHEMBL34259`  
 
 **Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
-- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
-- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
+- [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
+- [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
 
 **Graph:**
-- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+- METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #7 FLUOROURACIL
+### #8 FLUOROURACIL
 
-**Evidence strength:** moderate  
-**Score:** 63 (prior 25 + graph 20 + trials 10 + literature 8)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 25 + graph 20 + trials 24 + literature 8)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -174,42 +194,18 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pmc:PMC11928802] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report (2025) — Other, score=0.8785
 - [pubmed:40123791] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report. (2025) — Case report, score=0.8767
 
-### #8 MONOBENZONE
+### #9 BARICITINIB
 
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Mechanisms:** Tyrosinase inhibitor  
-**Open Targets ID:** `CHEMBL1388`  
-
-**Graph:**
-- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #9 TRIOXSALEN
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
-
-**Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #10 BARICITINIB
-
-**Evidence strength:** moderate  
-**Score:** 61 (prior 20 + graph 20 + trials 5 + literature 16)  
+**Evidence strength:** strong  
+**Score:** 74 (prior 20 + graph 20 + trials 18 + literature 16)  
 **Clinical stage (prior):** PHASE_2  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor  
 **Open Targets ID:** `CHEMBL2105759`  
 
 **Trials:**
-- [ctgov:NCT04822584] Evaluation of Effect and Tolerance of the Association of Baricitinib and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
 - [ctgov:NCT06768840] Vitiligo, New Treatment and Serum s100B — RECRUITING, PHASE2, PHASE3, no results yet
+- [ctgov:NCT04822584] Evaluation of Effect and Tolerance of the Association of Baricitinib and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07554222] Study to Evaluate the Safety, Tolerability and How IBI3013 is Taken up and Processed by the Body in Healthy Volunteers After Single-dose Administration, and in Non-segmental Vitiligo Patients and Alopecia Areata Patients After Multiple-dose Administration — RECRUITING, PHASE1, no results yet
 - [ctgov:NCT05950542] Evaluation Safety ,Efficacy Baricitinib Plus Excimer Light Versus Excimer Light Alone in Non Segmental Vitiligo — UNKNOWN, —, no results yet
 
 **Graph:**
@@ -220,6 +216,25 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:40682379] 308 nm Excimer Laser Combined With JAK Inhibitors for Adult Localized Non-Segmental Vitiligo: A Multicenter Randomized Controlled Trial. (2025) — RCT, score=0.8513
 - [pubmed:39723343] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study. (2024) — Other, score=0.8453
 - [pmc:PMC11668684] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study (2024) — Other, score=0.8398
+
+### #10 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
 
 ## Intent: Stop spread — active non-segmental vitiligo
 
@@ -235,11 +250,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
@@ -253,7 +268,7 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 ### #2 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 91 (prior 30 + graph 22 + trials 23 + literature 16)  
+**Score:** 101 (prior 30 + graph 22 + trials 33 + literature 16)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -273,39 +288,17 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:39704810] Repigmentation in non-segmental vitiligo using the Janus kinase inhibitor upadacitinib, a retrospective case series. (2024) — Case series, score=0.8502
 - [pubmed:38873632] Once-daily upadacitinib versus placebo in adults with extensive non-segmental vitiligo: a phase 2, multicentre, randomised, double-blind, placebo-controlled, dose-ranging study. (2024) — Other, score=0.8489
 
-### #3 RITLECITINIB
+### #3 POVORCITINIB
 
 **Evidence strength:** strong  
-**Score:** 85 (prior 20 + graph 22 + trials 35 + literature 8)  
-**Clinical stage (prior):** PHASE_2  
-**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
-
-**Trials:**
-- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
-- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
-- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
-
-**Graph:**
-- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Literature (intent retrieval):**
-- [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
-- [pubmed:39508655] Ritlecitinib rescues exacerbated vitiligo during the JAK1 inhibitor therapy: More than a coincidence? (2024) — Other, score=0.8403
-
-### #4 POVORCITINIB
-
-**Evidence strength:** strong  
-**Score:** 81 (prior 30 + graph 22 + trials 25 + literature 4)  
+**Score:** 91 (prior 30 + graph 22 + trials 35 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -315,82 +308,100 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Literature (intent retrieval):**
 - [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
 
-### #5 TACROLIMUS ANHYDROUS
+### #4 RITLECITINIB
 
-**Evidence strength:** moderate  
-**Score:** 67 (prior 30 + graph 22 + trials 15 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 90 (prior 30 + graph 22 + trials 30 + literature 8)  
 **Clinical stage (prior):** PHASE_3  
-**Mechanisms:** FK506-binding protein 1A inhibitor  
-**Open Targets ID:** `CHEMBL269732`  
+**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
+**Open Targets ID:** `CHEMBL4085457`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
+- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
+- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
 
 **Graph:**
-- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
+- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
 
-**Caveats:** No intent-matched papers in top semantic retrieval.
+**Literature (intent retrieval):**
+- [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
+- [pubmed:39508655] Ritlecitinib rescues exacerbated vitiligo during the JAK1 inhibitor therapy: More than a coincidence? (2024) — Other, score=0.8403
 
-### #6 AFAMELANOTIDE
+### #5 AFAMELANOTIDE
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Melanocortin receptor 1 agonist  
 **Open Targets ID:** `CHEMBL441738`  
 
 **Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
 - [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
 - [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
 
 **Graph:**
 - Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #7 MONOBENZONE
+### #6 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Mechanisms:** Tyrosinase inhibitor  
-**Open Targets ID:** `CHEMBL1388`  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Dihydrofolate reductase inhibitor  
+**Open Targets ID:** `CHEMBL34259`  
+
+**Trials:**
+- [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
+- [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
+- [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
 
 **Graph:**
-- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
+- METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #8 TRIOXSALEN
+### #7 TACROLIMUS ANHYDROUS
 
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** FK506-binding protein 1A inhibitor  
+**Open Targets ID:** `CHEMBL269732`  
+
+**Trials:**
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
 
 **Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
+- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #9 BARICITINIB
+### #8 BARICITINIB
 
-**Evidence strength:** moderate  
-**Score:** 61 (prior 20 + graph 20 + trials 5 + literature 16)  
+**Evidence strength:** strong  
+**Score:** 74 (prior 20 + graph 20 + trials 18 + literature 16)  
 **Clinical stage (prior):** PHASE_2  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor  
 **Open Targets ID:** `CHEMBL2105759`  
 
 **Trials:**
-- [ctgov:NCT04822584] Evaluation of Effect and Tolerance of the Association of Baricitinib and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
 - [ctgov:NCT06768840] Vitiligo, New Treatment and Serum s100B — RECRUITING, PHASE2, PHASE3, no results yet
+- [ctgov:NCT04822584] Evaluation of Effect and Tolerance of the Association of Baricitinib and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07554222] Study to Evaluate the Safety, Tolerability and How IBI3013 is Taken up and Processed by the Body in Healthy Volunteers After Single-dose Administration, and in Non-segmental Vitiligo Patients and Alopecia Areata Patients After Multiple-dose Administration — RECRUITING, PHASE1, no results yet
 - [ctgov:NCT05950542] Evaluation Safety ,Efficacy Baricitinib Plus Excimer Light Versus Excimer Light Alone in Non Segmental Vitiligo — UNKNOWN, —, no results yet
 
 **Graph:**
@@ -402,23 +413,42 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:39723343] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study. (2024) — Other, score=0.8453
 - [pmc:PMC11668684] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study (2024) — Other, score=0.8398
 
-### #10 METHOTREXATE
+### #9 FLUOROURACIL
 
 **Evidence strength:** moderate  
-**Score:** 57 (prior 30 + graph 22 + trials 5 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Dihydrofolate reductase inhibitor  
-**Open Targets ID:** `CHEMBL34259`  
+**Score:** 69 (prior 25 + graph 20 + trials 24 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Thymidylate synthase inhibitor  
+**Open Targets ID:** `CHEMBL185`  
 
 **Trials:**
-- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
-- [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
-- [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
-- [euctr:2024-512766-34-00] CHUBX 2017/44 — ENDED, PHASE2, no results yet
+- [ctgov:NCT07398807] Effectiveness of Micro-needling With 5 Fluorouracil Versus Potent Topical Steroids in the Treatment of Limited Vitiligo — RECRUITING, EARLY_PHASE1, no results yet
+- [ctgov:NCT05536856] Topical 5-Fluorouracil Effervescent Powder in the Treatment of Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT06209138] 5-fluorouracil for Treatment of Stable Vitiligo — COMPLETED, NA, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT05008887] Fractional CO2 Laser-assisted Cutaneous Delivery of Methotrexate Versus 5-fluorouracil in Stable Non-segmental Vitiligo — UNKNOWN, PHASE4, no results yet
 
 **Graph:**
-- METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
+- FLUOROURACIL —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #10 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
@@ -436,11 +466,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
@@ -455,16 +485,16 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 ### #2 RITLECITINIB
 
 **Evidence strength:** strong  
-**Score:** 85 (prior 20 + graph 22 + trials 35 + literature 8)  
-**Clinical stage (prior):** PHASE_2  
+**Score:** 90 (prior 30 + graph 22 + trials 30 + literature 8)  
+**Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
+**Open Targets ID:** `CHEMBL4085457`  
 
 **Trials:**
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
 - [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
 - [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
 
 **Graph:**
@@ -474,17 +504,37 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pmc:PMC12281511] Successful repigmentation with ritlecitinib and combined home-based phototherapy in an intractable case of generalized vitiligo☆ (2025) — Other, score=0.8845
 - [pubmed:40664119] Successful repigmentation with ritlecitinib and combined home-based phototherapy in an intractable case of generalized vitiligo. (2025) — Other, score=0.8821
 
-### #3 POVORCITINIB
+### #3 AFAMELANOTIDE
 
 **Evidence strength:** strong  
-**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Melanocortin receptor 1 agonist  
+**Open Targets ID:** `CHEMBL441738`  
+
+**Trials:**
+- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
+- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
+
+**Graph:**
+- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #4 POVORCITINIB
+
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -493,10 +543,10 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #4 UPADACITINIB
+### #5 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 75 (prior 30 + graph 22 + trials 23 + literature 0)  
+**Score:** 85 (prior 30 + graph 22 + trials 33 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -512,50 +562,50 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #5 TACROLIMUS ANHYDROUS
+### #6 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 67 (prior 30 + graph 22 + trials 15 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Dihydrofolate reductase inhibitor  
+**Open Targets ID:** `CHEMBL34259`  
+
+**Trials:**
+- [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
+- [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
+- [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
+
+**Graph:**
+- METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #7 TACROLIMUS ANHYDROUS
+
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** FK506-binding protein 1A inhibitor  
 **Open Targets ID:** `CHEMBL269732`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
 - [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
 
 **Graph:**
 - TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #6 AFAMELANOTIDE
+### #8 FLUOROURACIL
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Melanocortin receptor 1 agonist  
-**Open Targets ID:** `CHEMBL441738`  
-
-**Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
-- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
-- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
-
-**Graph:**
-- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #7 FLUOROURACIL
-
-**Evidence strength:** moderate  
-**Score:** 63 (prior 25 + graph 20 + trials 10 + literature 8)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 25 + graph 20 + trials 24 + literature 8)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -574,7 +624,26 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pmc:PMC11928802] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report (2025) — Other, score=0.8785
 - [pubmed:40123791] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report. (2025) — Case report, score=0.8767
 
-### #8 MONOBENZONE
+### #9 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #10 MONOBENZONE
 
 **Evidence strength:** moderate  
 **Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
@@ -584,38 +653,6 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Graph:**
 - Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #9 TRIOXSALEN
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
-
-**Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #10 METHOTREXATE
-
-**Evidence strength:** moderate  
-**Score:** 57 (prior 30 + graph 22 + trials 5 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Dihydrofolate reductase inhibitor  
-**Open Targets ID:** `CHEMBL34259`  
-
-**Trials:**
-- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
-- [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
-- [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
-- [euctr:2024-512766-34-00] CHUBX 2017/44 — ENDED, PHASE2, no results yet
-
-**Graph:**
-- METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
@@ -633,11 +670,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
@@ -649,17 +686,37 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:37450618] Eyelid Vitiligo Treatment with Topical Ruxolitinib. (2024) — Other, score=0.8854
 - [pubmed:41386328] Efficacy and safety of ruxolitinib cream combined with narrow-band UVB phototherapy for treatment of vitiligo. (2025) — Other, score=0.8827
 
-### #2 POVORCITINIB
+### #2 AFAMELANOTIDE
 
 **Evidence strength:** strong  
-**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Melanocortin receptor 1 agonist  
+**Open Targets ID:** `CHEMBL441738`  
+
+**Trials:**
+- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
+- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
+
+**Graph:**
+- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #3 POVORCITINIB
+
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -668,30 +725,10 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #3 RITLECITINIB
-
-**Evidence strength:** strong  
-**Score:** 77 (prior 20 + graph 22 + trials 35 + literature 0)  
-**Clinical stage (prior):** PHASE_2  
-**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
-
-**Trials:**
-- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
-- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
-- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
-
-**Graph:**
-- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
 ### #4 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 75 (prior 30 + graph 22 + trials 23 + literature 0)  
+**Score:** 85 (prior 30 + graph 22 + trials 33 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -707,95 +744,70 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #5 TACROLIMUS ANHYDROUS
+### #5 RITLECITINIB
 
-**Evidence strength:** moderate  
-**Score:** 67 (prior 30 + graph 22 + trials 15 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 82 (prior 30 + graph 22 + trials 30 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
-**Mechanisms:** FK506-binding protein 1A inhibitor  
-**Open Targets ID:** `CHEMBL269732`  
+**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
+**Open Targets ID:** `CHEMBL4085457`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
+- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
+- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
 
 **Graph:**
-- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
+- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #6 AFAMELANOTIDE
+### #6 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Melanocortin receptor 1 agonist  
-**Open Targets ID:** `CHEMBL441738`  
-
-**Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
-- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
-- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
-
-**Graph:**
-- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #7 MONOBENZONE
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Mechanisms:** Tyrosinase inhibitor  
-**Open Targets ID:** `CHEMBL1388`  
-
-**Graph:**
-- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #8 TRIOXSALEN
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
-
-**Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #9 METHOTREXATE
-
-**Evidence strength:** moderate  
-**Score:** 57 (prior 30 + graph 22 + trials 5 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Dihydrofolate reductase inhibitor  
 **Open Targets ID:** `CHEMBL34259`  
 
 **Trials:**
-- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
 - [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
 - [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
 - [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
-- [euctr:2024-512766-34-00] CHUBX 2017/44 — ENDED, PHASE2, no results yet
 
 **Graph:**
 - METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #10 FLUOROURACIL
+### #7 TACROLIMUS ANHYDROUS
+
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** FK506-binding protein 1A inhibitor  
+**Open Targets ID:** `CHEMBL269732`  
+
+**Trials:**
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
+
+**Graph:**
+- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #8 FLUOROURACIL
 
 **Evidence strength:** moderate  
-**Score:** 55 (prior 25 + graph 20 + trials 10 + literature 0)  
+**Score:** 69 (prior 25 + graph 20 + trials 24 + literature 0)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -809,6 +821,46 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Graph:**
 - FLUOROURACIL —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #9 BARICITINIB
+
+**Evidence strength:** moderate  
+**Score:** 66 (prior 20 + graph 20 + trials 18 + literature 8)  
+**Clinical stage (prior):** PHASE_2  
+**Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor  
+**Open Targets ID:** `CHEMBL2105759`  
+
+**Trials:**
+- [ctgov:NCT06768840] Vitiligo, New Treatment and Serum s100B — RECRUITING, PHASE2, PHASE3, no results yet
+- [ctgov:NCT04822584] Evaluation of Effect and Tolerance of the Association of Baricitinib and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07554222] Study to Evaluate the Safety, Tolerability and How IBI3013 is Taken up and Processed by the Body in Healthy Volunteers After Single-dose Administration, and in Non-segmental Vitiligo Patients and Alopecia Areata Patients After Multiple-dose Administration — RECRUITING, PHASE1, no results yet
+- [ctgov:NCT05950542] Evaluation Safety ,Efficacy Baricitinib Plus Excimer Light Versus Excimer Light Alone in Non Segmental Vitiligo — UNKNOWN, —, no results yet
+
+**Graph:**
+- Baricitinib —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Literature (intent retrieval):**
+- [pubmed:41211759] Topical ruxolitinib ± oral baricitinib in the treatment of active non-segmental vitiligo: A retrospective analysis. (2025) — Other, score=0.8631
+- [pmc:PMC11668684] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study (2024) — Other, score=0.8615
+
+### #10 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
@@ -826,28 +878,48 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #2 POVORCITINIB
+### #2 AFAMELANOTIDE
 
 **Evidence strength:** strong  
-**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Melanocortin receptor 1 agonist  
+**Open Targets ID:** `CHEMBL441738`  
+
+**Trials:**
+- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
+- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
+
+**Graph:**
+- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #3 POVORCITINIB
+
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -856,30 +928,10 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #3 RITLECITINIB
-
-**Evidence strength:** strong  
-**Score:** 77 (prior 20 + graph 22 + trials 35 + literature 0)  
-**Clinical stage (prior):** PHASE_2  
-**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
-
-**Trials:**
-- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
-- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
-- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
-
-**Graph:**
-- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
 ### #4 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 75 (prior 30 + graph 22 + trials 23 + literature 0)  
+**Score:** 85 (prior 30 + graph 22 + trials 33 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -895,20 +947,40 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #5 TACROLIMUS ANHYDROUS
+### #5 RITLECITINIB
 
 **Evidence strength:** strong  
-**Score:** 71 (prior 30 + graph 22 + trials 15 + literature 4)  
+**Score:** 82 (prior 30 + graph 22 + trials 30 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
+**Open Targets ID:** `CHEMBL4085457`  
+
+**Trials:**
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
+- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
+- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
+
+**Graph:**
+- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #6 TACROLIMUS ANHYDROUS
+
+**Evidence strength:** strong  
+**Score:** 81 (prior 30 + graph 22 + trials 25 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** FK506-binding protein 1A inhibitor  
 **Open Targets ID:** `CHEMBL269732`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
 - [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
 
 **Graph:**
 - TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
@@ -916,75 +988,30 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Literature (intent retrieval):**
 - [pubmed:12399684] Repigmentation of vitiligo with topical tacrolimus. (2002) — Case report, score=0.8248
 
-### #6 AFAMELANOTIDE
+### #7 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Melanocortin receptor 1 agonist  
-**Open Targets ID:** `CHEMBL441738`  
-
-**Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
-- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
-- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
-
-**Graph:**
-- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #7 MONOBENZONE
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Mechanisms:** Tyrosinase inhibitor  
-**Open Targets ID:** `CHEMBL1388`  
-
-**Graph:**
-- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #8 TRIOXSALEN
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
-
-**Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #9 METHOTREXATE
-
-**Evidence strength:** moderate  
-**Score:** 57 (prior 30 + graph 22 + trials 5 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Dihydrofolate reductase inhibitor  
 **Open Targets ID:** `CHEMBL34259`  
 
 **Trials:**
-- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
 - [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
 - [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
 - [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
-- [euctr:2024-512766-34-00] CHUBX 2017/44 — ENDED, PHASE2, no results yet
 
 **Graph:**
 - METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #10 FLUOROURACIL
+### #8 FLUOROURACIL
 
 **Evidence strength:** moderate  
-**Score:** 55 (prior 25 + graph 20 + trials 10 + literature 0)  
+**Score:** 69 (prior 25 + graph 20 + trials 24 + literature 0)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -998,6 +1025,38 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Graph:**
 - FLUOROURACIL —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #9 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #10 MONOBENZONE
+
+**Evidence strength:** moderate  
+**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
+**Clinical stage (prior):** APPROVAL  
+**Mechanisms:** Tyrosinase inhibitor  
+**Open Targets ID:** `CHEMBL1388`  
+
+**Graph:**
+- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
@@ -1015,11 +1074,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 **Open Targets ID:** `CHEMBL1789941`  
 
 **Trials:**
-- [euctr:2024-513171-41-00] INCB 18424-309 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT07595939] Efficacy and Safety of Ruxolitinib Cream in Chinese Children Aged 2-11 Years With Non-segmental Vitiligo — NOT_YET_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT05750823] A Study to Assess the Safety and Efficacy of Ruxolitinib Cream in Participants With Genital Vitiligo — COMPLETED, PHASE2, results
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07153666] A Real-world Study on the Influencing Factors of Efficacy of Ruxolitinib Cream in Vitiligo — RECRUITING, —, no results yet
+- [ctgov:NCT04052425] Topical Ruxolitinib Evaluation in Vitiligo Study 1 (TRuE-V1) — COMPLETED, PHASE3, results
+- [ctgov:NCT05247489] A Study to Evaluate the Safety and Efficacy of Ruxolitinib Cream With Phototherapy in Participants With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04057573] Topical Ruxolitinib Evaluation in Vitiligo Study 2 (TRuE-V2) — COMPLETED, PHASE3, results
+- [ctgov:NCT03099304] A Study of INCB018424 Phosphate Cream in Subjects With Vitiligo — COMPLETED, PHASE2, results
+- [ctgov:NCT04896385] A Study to Evaluate the Mechanism of Action of Ruxolitinib Cream in Subjects With Vitiligo (TRuE-V MOA) — COMPLETED, PHASE2, results
 
 **Graph:**
 - ruxolitinib —[treats]→ Vitiligo (conf=0.88, structured)
@@ -1028,17 +1087,37 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pmc:PMC11851260] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream over 52 weeks (2024) — Other, score=0.8608
 - [pubmed:39011655] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream over 52 weeks. (2025) — Other, score=0.8581
 
-### #2 POVORCITINIB
+### #2 AFAMELANOTIDE
 
 **Evidence strength:** strong  
-**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** Melanocortin receptor 1 agonist  
+**Open Targets ID:** `CHEMBL441738`  
+
+**Trials:**
+- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
+- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
+- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2023-507470-40-00] CUV105 — AUTHORISED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
+
+**Graph:**
+- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #3 POVORCITINIB
+
+**Evidence strength:** strong  
+**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
 **Trials:**
-- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
-- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
 - [ctgov:NCT06113445] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V1) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT06113471] A Study to Evaluate Efficacy and Safety of Povorcitinib in Participants With Nonsegmental Vitiligo (STOP-V2) — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2024-520107-12-00] INCB054707-801 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-505782-86-00] INCB 54707-303 — AUTHORISED, PHASE3, no results yet
 - [euctr:2023-506011-18-00] INCB 54707-304 — AUTHORISED, PHASE3, no results yet
 
@@ -1047,30 +1126,10 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #3 RITLECITINIB
-
-**Evidence strength:** strong  
-**Score:** 77 (prior 20 + graph 22 + trials 35 + literature 0)  
-**Clinical stage (prior):** PHASE_2  
-**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
-**Open Targets ID:** `CHEMBL5314649`  
-
-**Trials:**
-- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
-- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
-- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
-
-**Graph:**
-- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
 ### #4 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 75 (prior 30 + graph 22 + trials 23 + literature 0)  
+**Score:** 85 (prior 30 + graph 22 + trials 33 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -1086,95 +1145,70 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #5 TACROLIMUS ANHYDROUS
+### #5 RITLECITINIB
 
-**Evidence strength:** moderate  
-**Score:** 67 (prior 30 + graph 22 + trials 15 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 82 (prior 30 + graph 22 + trials 30 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
-**Mechanisms:** FK506-binding protein 1A inhibitor  
-**Open Targets ID:** `CHEMBL269732`  
+**Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
+**Open Targets ID:** `CHEMBL4085457`  
 
 **Trials:**
-- [ctgov:NCT07532330] Tyrosine Vs Tacrolimus With NB-UVB in Vitiligo — ACTIVE_NOT_RECRUITING, NA, no results yet
-- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
-- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
-- [ctgov:NCT07307534] Nevus Removal vs. Conservative Treatment in Halo Nevus With Vitiligo: A Randomized Study — NOT_YET_RECRUITING, NA, no results yet
-- [ctgov:NCT06880042] COMPARISON OF EFFICACY AND SAFETY OF NARROWBAND UVB WITH 0.1% TACROLIMUS VS NARROWBAND UVB WITH 0.005% CALCIPOTRIOL IN TREATMENT OF VITILIGO — ENROLLING_BY_INVITATION, EARLY_PHASE1, no results yet
+- [ctgov:NCT06072183] A 104-Week Study of Ritlecitinib Oral Capsules in Adults With Nonsegmental Vitiligo (Active and Stable) Tranquillo 2 — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [ctgov:NCT07152626] Combination Approach With Ritlecitinib and nbUVB Compared to Ritlecitinib Alone for Treating Vitiligo — RECRUITING, PHASE2, no results yet
+- [euctr:2025-521504-22-00] 25-PP-03 — AUTHORISED, PHASE2, no results yet
+- [ctgov:NCT06163326] A 52-Week Study to Learn About the Safety and Effects of Ritlecitinib in Participants With Nonsegmental Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
+- [euctr:2022-502518-98-00] B7981080 — AUTHORISED, PHASE3, no results yet
 
 **Graph:**
-- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
+- Ritlecitinib —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #6 AFAMELANOTIDE
+### #6 METHOTREXATE
 
-**Evidence strength:** moderate  
-**Score:** 65 (prior 30 + graph 22 + trials 13 + literature 0)  
-**Clinical stage (prior):** PHASE_3  
-**Mechanisms:** Melanocortin receptor 1 agonist  
-**Open Targets ID:** `CHEMBL441738`  
-
-**Trials:**
-- [ctgov:NCT06109649] A Study to Compare the Efficacy and Safety of SCENESSE and Narrow-Band Ultraviolet (NB-UVB) Light Versus NB-UVB Light Alone in Patients With Vitiligo — ACTIVE_NOT_RECRUITING, PHASE3, no results yet
-- [ctgov:NCT04525157] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Phototherapy in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE2, results
-- [ctgov:NCT05210582] A Study to Assess the Changes in Pigmentation and Safety of Afamelanotide in Patients With Vitiligo on the Face — UNKNOWN, PHASE2, no results yet
-- [ctgov:NCT01430195] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo (NSV) — COMPLETED, PHASE1, no results yet
-- [ctgov:NCT01382589] Afamelanotide and Narrow-Band Ultraviolet B (NB-UVB) Light in the Treatment of Nonsegmental Vitiligo — COMPLETED, PHASE2, no results yet
-
-**Graph:**
-- Afamelanotide —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #7 MONOBENZONE
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Mechanisms:** Tyrosinase inhibitor  
-**Open Targets ID:** `CHEMBL1388`  
-
-**Graph:**
-- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #8 TRIOXSALEN
-
-**Evidence strength:** moderate  
-**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
-**Clinical stage (prior):** APPROVAL  
-**Open Targets ID:** `CHEMBL1475`  
-
-**Graph:**
-- TRIOXSALEN —[treats]→ Vitiligo (conf=0.88, structured)
-
-**Caveats:** No intent-matched papers in top semantic retrieval.
-
-### #9 METHOTREXATE
-
-**Evidence strength:** moderate  
-**Score:** 57 (prior 30 + graph 22 + trials 5 + literature 0)  
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Dihydrofolate reductase inhibitor  
 **Open Targets ID:** `CHEMBL34259`  
 
 **Trials:**
-- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
 - [ctgov:NCT07352293] The Value of Methotrexate in NCES for Stable Vitiligo — RECRUITING, PHASE4, no results yet
+- [ctgov:NCT04237103] Combination of Methotrexate and Phototherapy Versus Phototherapy in Adults With Progressive Vitiligo — COMPLETED, PHASE2, no results yet
+- [ctgov:NCT07336641] LANDSCAPE: Demographics and Treatment Patterns of Patients With Immune-Mediated Inflammatory Skin Diseases in Italian Clinical Practice — NOT_YET_RECRUITING, —, no results yet
 - [ctgov:NCT07208890] Methotrexate Iontophoresis Versus Methotrexate 1% Gel on Depigmentation in Vitiligo Patients — NOT_YET_RECRUITING, NA, no results yet
 - [ctgov:NCT06877455] Topical Methotrexate with Fractional CO2 Laser in Treatment of Non Segmental Vitiligo — NOT_YET_RECRUITING, NA, no results yet
-- [euctr:2024-512766-34-00] CHUBX 2017/44 — ENDED, PHASE2, no results yet
 
 **Graph:**
 - METHOTREXATE —[treats]→ Vitiligo (conf=0.88, structured)
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
-### #10 FLUOROURACIL
+### #7 TACROLIMUS ANHYDROUS
+
+**Evidence strength:** strong  
+**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Clinical stage (prior):** PHASE_3  
+**Mechanisms:** FK506-binding protein 1A inhibitor  
+**Open Targets ID:** `CHEMBL269732`  
+
+**Trials:**
+- [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
+- [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
+- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
+
+**Graph:**
+- TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #8 FLUOROURACIL
 
 **Evidence strength:** moderate  
-**Score:** 55 (prior 25 + graph 20 + trials 10 + literature 0)  
+**Score:** 69 (prior 25 + graph 20 + trials 24 + literature 0)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -1191,10 +1225,43 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Caveats:** No intent-matched papers in top semantic retrieval.
 
+### #9 LATANOPROST
+
+**Evidence strength:** moderate  
+**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Clinical stage (prior):** PHASE_2_3  
+**Mechanisms:** Prostanoid FP receptor agonist  
+**Open Targets ID:** `CHEMBL1051`  
+
+**Trials:**
+- [ctgov:NCT07016113] 0.005% Latanoprost Gel for Nonsegmental Vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
+- [ctgov:NCT04811326] Latanoprost Plus NB-UVB Versus Each Alone in Non-segmental Vitiligo: Clinical and Laboratory Evaluation — UNKNOWN, PHASE4, no results yet
+- [ctgov:NCT05513924] Comparative Study Between Topical 5-fluorouracil and Latanoprost in Vitiligo. — COMPLETED, PHASE2, PHASE3, no results yet
+- [ctgov:NCT03611348] Microneedling and Latanoprost in Acrofacial Vitiligo — UNKNOWN, PHASE2, PHASE3, no results yet
+
+**Graph:**
+- Latanoprost —[treats]→ Vitiligo (conf=0.82, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
+### #10 MONOBENZONE
+
+**Evidence strength:** moderate  
+**Score:** 62 (prior 40 + graph 22 + trials 0 + literature 0)  
+**Clinical stage (prior):** APPROVAL  
+**Mechanisms:** Tyrosinase inhibitor  
+**Open Targets ID:** `CHEMBL1388`  
+
+**Graph:**
+- Monobenzone —[treats]→ Vitiligo (conf=0.88, structured)
+
+**Caveats:** No intent-matched papers in top semantic retrieval.
+
 ## Accountability notes
 
 - Deterministic ranking — not a clinical recommendation.
 - Score rubric: prior clinical stage (0-40) + graph edges (0-40) + trials (0-35) + literature (0-20).
+- Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.
 - Re-run after corpus updates: vitiligo report candidates
 
 Reproduce: `vitiligo report candidates --json exports/candidate-report.json --markdown docs/candidate-report-v1.md`

@@ -10,11 +10,14 @@ from vitiligo.reports.candidates import (
     _best_stage,
     _evidence_strength,
     _stage_points,
+    _trial_points,
     build_candidate_report,
     load_intents,
     normalize_drug_token,
+    normalize_stage,
+    trial_stage,
 )
-from vitiligo.storage import init_db
+from vitiligo.storage import Trial, TrialSourceKind, init_db
 
 
 def test_normalize_drug_token_stems_formulations() -> None:
@@ -97,3 +100,64 @@ def test_report_to_dict_includes_score_total() -> None:
         caveats=[],
     )
     assert _candidate_dict(cand)["score"]["total"] == 39
+
+
+def test_normalize_stage_maps_registry_phases_to_prior_format() -> None:
+    assert normalize_stage("PHASE3") == "PHASE_3"
+    assert normalize_stage("phase2") == "PHASE_2"
+    assert normalize_stage("EARLY_PHASE1") == "EARLY_PHASE_1"
+    assert normalize_stage("PHASE_2_3") == "PHASE_2_3"
+    assert normalize_stage("NA") == "NA"
+
+
+def test_trial_stage_collapses_combined_phases() -> None:
+    assert trial_stage(["PHASE3"]) == "PHASE_3"
+    assert trial_stage(["PHASE2", "PHASE3"]) == "PHASE_2_3"
+    assert trial_stage(["PHASE1", "PHASE2"]) == "PHASE_1_2"
+    assert trial_stage(["NA"]) is None
+    assert trial_stage([]) is None
+
+
+def test_stage_points_accept_registry_labels() -> None:
+    assert _stage_points("PHASE3") == _stage_points("PHASE_3") == 30
+    assert _stage_points("EARLY_PHASE1") == _stage_points("EARLY_PHASE_1") == 5
+
+
+def test_trial_points_credit_registry_phase_format() -> None:
+    """CT.gov stores PHASE3 (no underscore); the high-signal bonus must still apply."""
+    trial = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000003",
+        phases=["PHASE3"],
+        status="COMPLETED",
+        has_results=False,
+    )
+    assert _trial_points([trial]) == 15
+
+
+def _scored_trial(source_id: str, phases: list[str], **kwargs: object) -> Trial:
+    return Trial(source=TrialSourceKind.CTGOV, source_id=source_id, phases=phases, **kwargs)
+
+
+def test_trial_points_reward_best_evidence_not_count() -> None:
+    """Ten small Phase 1 trials with results must not reach the 35-point cap."""
+    many_small = [
+        _scored_trial(f"NCT5{i:07d}", ["PHASE1"], has_results=True, status="RECRUITING")
+        for i in range(10)
+    ]
+    # phase 3 + results (not Phase 2+) 5 + active 5 + breadth 5
+    assert _trial_points(many_small) == 18
+
+
+def test_trial_points_full_portfolio() -> None:
+    trials = [
+        _scored_trial("NCT60000001", ["PHASE3"], status="RECRUITING"),
+        _scored_trial("NCT60000002", ["PHASE2"], has_results=True, status="COMPLETED"),
+    ]
+    # phase 15 + Phase 2+ results 10 + active 5 + breadth 1
+    assert _trial_points(trials) == 31
+
+
+def test_trial_points_phase_2_3_is_not_full_phase_3() -> None:
+    assert _trial_points([_scored_trial("NCT70000001", ["PHASE2", "PHASE3"])]) == 10
+    assert _trial_points([]) == 0
