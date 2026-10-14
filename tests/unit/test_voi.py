@@ -79,10 +79,13 @@ def test_surprise_flags_outcomes_the_model_did_not_expect() -> None:
 def test_arms_of_one_trial_share_its_random_effects() -> None:
     """Two arms sharing a random baseline u: the item likelihood must integrate u jointly.
 
-    p_active = Phi(theta + u + 1), p_control = Phi(theta + u), u ~ N(0, 1) per trial.
-    A low placebo with a moderate active arm is only likely if u is low for *both*.
+    p_active = L(theta + u + 1), p_control = L(theta + u), u ~ N(0, 1) per trial (L logistic;
+    the link is irrelevant here). A low placebo with a moderate active arm is only likely if
+    u is low for *both*.
     """
-    from scipy.special import ndtr
+
+    def ndtr(x: np.ndarray) -> np.ndarray:  # logistic link: NumPy only, so the test runs in CI
+        return np.asarray(1.0 / (1.0 + np.exp(-x)))
 
     rng = np.random.default_rng(8)
     theta = rng.normal(-1.0, 0.3, 4000)
@@ -90,7 +93,7 @@ def test_arms_of_one_trial_share_its_random_effects() -> None:
     u = rng.normal(0.0, 1.0, (k, 1))
     active = voi.ArmWeek(cumulative=ndtr(theta[None, :] + u + 1.0)[..., None], n=200)
     control = voi.ArmWeek(cumulative=ndtr(theta[None, :] + u)[..., None], n=200)
-    counts = [voi.counts_from_cumulative(200, [30]), voi.counts_from_cumulative(200, [2])]
+    counts = [voi.counts_from_cumulative(200, [60]), voi.counts_from_cumulative(200, [20])]
     got = voi.item_loglik([active, control], counts)
     # Exact: integrate u on a fine grid, jointly for both arms.
     grid = np.linspace(-6, 6, 2001)
@@ -98,7 +101,7 @@ def test_arms_of_one_trial_share_its_random_effects() -> None:
     w /= w.sum()
     pa = ndtr(theta[:, None] + grid[None, :] + 1.0)
     pc = ndtr(theta[:, None] + grid[None, :])
-    joint = 30 * np.log(pa) + 170 * np.log1p(-pa) + 2 * np.log(pc) + 198 * np.log1p(-pc)
+    joint = 60 * np.log(pa) + 140 * np.log1p(-pa) + 20 * np.log(pc) + 180 * np.log1p(-pc)
     exact = np.log((np.exp(joint - joint.max(axis=1, keepdims=True)) * w).sum(axis=1)) + joint.max(
         axis=1
     )
