@@ -90,3 +90,29 @@ def test_parses_minimal_pmc_article() -> None:
 def test_handles_empty_pmc_payload() -> None:
     empty = b"<?xml version='1.0'?><pmc-articleset></pmc-articleset>"
     assert list(parse_pmc_xml(empty)) == []
+
+
+def _abstract_of(abstract_xml: str) -> str | None:
+    from lxml import etree
+
+    from vitiligo.sources.pmc import _collect_abstract
+
+    return _collect_abstract(etree.fromstring(f"<article><front>{abstract_xml}</front></article>"))
+
+
+def test_abstract_inline_markup_is_not_repeated() -> None:
+    """Italic/sup text used to be appended again (e.g. 'P' in '<italic>P</italic> < 0.05')."""
+    text = _abstract_of(
+        "<abstract><p>Repigmentation improved (<italic>P</italic> &lt; 0.05) with "
+        "<italic>Vernonia anthelmintica</italic> extract.</p></abstract>"
+    )
+    assert text == "Repigmentation improved (P < 0.05) with Vernonia anthelmintica extract."
+
+
+def test_structured_abstract_keeps_section_labels_once() -> None:
+    text = _abstract_of(
+        "<abstract><title>Abstract</title>"
+        "<sec><title>Background</title><p>Alpha <sup>2</sup> beta.</p></sec>"
+        "<sec><title>Results</title><p>Gamma.</p></sec></abstract>"
+    )
+    assert text == "Background: Alpha 2 beta.\n\nResults: Gamma."

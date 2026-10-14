@@ -37,6 +37,10 @@ def _reset_engine() -> None:
     from vitiligo.embed.cache import clear_embedding_index_cache
 
     cfg._settings = None
+    if dbmod._engine is not None:
+        # Close pooled SQLite connections now; otherwise GC closes them later
+        # and pytest reports an unraisable ResourceWarning on an unrelated test.
+        dbmod._engine.dispose()
     dbmod._engine = None
     clear_embedding_index_cache()
 

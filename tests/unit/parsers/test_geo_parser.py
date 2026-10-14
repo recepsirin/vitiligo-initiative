@@ -32,3 +32,10 @@ def test_parse_geo_summary_maps_fields() -> None:
 
 def test_parse_geo_summary_rejects_empty_record() -> None:
     assert parse_geo_summary({}) is None
+
+
+def test_parse_geo_summary_skips_non_series_records() -> None:
+    """Samples (GSM) and platforms (GPL) are not dataset-level documents."""
+    record = json.loads(FIXTURE.read_text())
+    for entrytype, accession in (("GSM", "GSM9000001"), ("GPL", "GPL570"), ("GDS", "GDS1234")):
+        assert parse_geo_summary({**record, "entrytype": entrytype, "accession": accession}) is None

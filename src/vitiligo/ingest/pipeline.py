@@ -47,6 +47,7 @@ from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUE
 from vitiligo.sources.pubmed import PubMedClient
 from vitiligo.storage import (
     Document,
+    Embedding,
     IngestionRun,
     Prior,
     PriorKind,
@@ -687,6 +688,14 @@ def _upsert_document(session, doc: Document) -> tuple[int, int]:  # type: ignore
     if existing is None:
         session.add(doc)
         return 1, 0
+
+    if (existing.title, existing.abstract) != (doc.title, doc.abstract):
+        # Embeddings encode title + abstract; drop them so `embed run`
+        # re-embeds this document instead of serving a stale vector.
+        for embedding in session.exec(
+            select(Embedding).where(Embedding.document_id == existing.id)
+        ).all():
+            session.delete(embedding)
 
     for field in (
         "title",

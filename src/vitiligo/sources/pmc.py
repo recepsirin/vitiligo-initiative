@@ -17,6 +17,7 @@ API docs:
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -165,6 +166,12 @@ class PMCClient:
         response = self._get(EFETCH_URL, params)
         return list(parse_pmc_xml(response.content))
 
+    def fetch_article_xml(self, pmcid: str) -> bytes:
+        """One article's full JATS XML (tables included), by PMCID."""
+        params = {"db": "pmc", "id": pmcid.removeprefix("PMC"), "retmode": "xml"}
+        response = self._get(EFETCH_URL, {**params, **self._identity_params()})
+        return response.content
+
     def iter_documents(
         self,
         query: str = DEFAULT_VITILIGO_QUERY,
@@ -298,13 +305,40 @@ def _parse_year(article: etree._Element) -> int | None:
     return None
 
 
+_ASCII_WHITESPACE_RE = re.compile(r"[ \t\r\n]+")
+
+
+def _clean_text(el: etree._Element) -> str:
+    """All text under ``el`` (inline markup included once), ASCII whitespace collapsed."""
+    return _ASCII_WHITESPACE_RE.sub(" ", "".join(el.itertext())).strip()
+
+
+def _abstract_text(ab: etree._Element) -> str:
+    """Render one JATS ``<abstract>``.
+
+    Structured abstracts become ``"Title: text"`` blocks (the same shape as
+    PubMed's labelled abstracts); otherwise paragraphs are joined. Each
+    element's text is taken exactly once, so inline markup such as
+    ``<italic>`` is not repeated.
+    """
+    sections = ab.findall("./sec")
+    if sections:
+        blocks: list[str] = []
+        for sec in sections:
+            title_el = sec.find("./title")
+            title = _clean_text(title_el) if title_el is not None else ""
+            body = " ".join(t for t in (_clean_text(p) for p in sec.iter("p")) if t)
+            if body:
+                blocks.append(f"{title}: {body}" if title else body)
+        return "\n\n".join(blocks)
+    paragraphs = [t for t in (_clean_text(p) for p in ab.iter("p")) if t]
+    if paragraphs:
+        return "\n\n".join(paragraphs)
+    return _clean_text(ab)
+
+
 def _collect_abstract(article: etree._Element) -> str | None:
-    parts: list[str] = []
-    for ab in article.iterfind(".//front//abstract"):
-        text = " ".join("".join(p.itertext()).strip() for p in ab.iter() if p.text)
-        text = text.strip()
-        if text:
-            parts.append(text)
+    parts = [t for t in (_abstract_text(ab) for ab in article.iterfind(".//front//abstract")) if t]
     return "\n\n".join(parts) if parts else None
 
 

@@ -92,3 +92,28 @@ def test_parses_minimal_article() -> None:
 def test_handles_empty_article_list() -> None:
     empty = b"<?xml version='1.0'?><PubmedArticleSet></PubmedArticleSet>"
     assert list(parse_pubmed_xml(empty)) == []
+
+
+def test_parse_title_keeps_inline_markup_text() -> None:
+    """Titles with <sup>/<i> must not be truncated at the first child element."""
+    xml = b"""<?xml version="1.0"?>
+<PubmedArticleSet><PubmedArticle><MedlineCitation>
+  <PMID Version="1">87654321</PMID>
+  <Article>
+    <ArticleTitle>Lactate Enhances CD8<sup>+</sup> T Cell Cytotoxicity in <i>vivo</i>.</ArticleTitle>
+  </Article>
+</MedlineCitation></PubmedArticle></PubmedArticleSet>"""
+    [doc] = list(parse_pubmed_xml(xml))
+    assert doc.title == "Lactate Enhances CD8+ T Cell Cytotoxicity in vivo."
+
+
+def test_parse_title_preserves_typographic_spaces() -> None:
+    """Only ASCII whitespace is collapsed; a thin space (U+2009) is kept."""
+    xml = """<?xml version="1.0"?>
+<PubmedArticleSet><PubmedArticle><MedlineCitation>
+  <PMID Version="1">41978525</PMID>
+  <Article><ArticleTitle>Efficacy of 308\u2009nm excimer light in
+    <i>progressive</i> vitiligo.</ArticleTitle></Article>
+</MedlineCitation></PubmedArticle></PubmedArticleSet>""".encode()
+    [doc] = list(parse_pubmed_xml(xml))
+    assert doc.title == "Efficacy of 308\u2009nm excimer light in progressive vitiligo."

@@ -191,8 +191,16 @@ class GEOClient:
             yield from self.fetch_summaries(chunk)
 
 
+# The gds index also returns samples (GSM), platforms (GPL) and curated
+# DataSets (GDS); only series-level records are kept as documents.
+_KEPT_ENTRY_TYPES = frozenset({"GSE"})
+
+
 def parse_geo_summary(record: dict[str, Any]) -> Document | None:
-    """Map a GEO DataSets esummary record to a Document."""
+    """Map a GEO DataSets esummary record to a Document (series only; else None)."""
+    entrytype = str(record.get("entrytype") or "GSE").strip()
+    if entrytype.upper() not in _KEPT_ENTRY_TYPES:
+        return None
     accession = str(record.get("accession") or "").strip()
     uid = str(record.get("uid") or "").strip()
     source_id = accession or (f"GDS{uid}" if uid else "")
@@ -202,7 +210,6 @@ def parse_geo_summary(record: dict[str, Any]) -> Document | None:
     title = str(record.get("title") or "").strip() or None
     summary = str(record.get("summary") or "").strip() or None
     taxon = str(record.get("taxon") or "").strip()
-    entrytype = str(record.get("entrytype") or "GSE").strip()
     gdstype = str(record.get("gdstype") or "").strip()
     pdat = str(record.get("pdat") or "").strip()
     year = _parse_year(pdat)
