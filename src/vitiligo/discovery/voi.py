@@ -48,9 +48,21 @@ def _bins(cumulative: np.ndarray) -> np.ndarray:
     )
 
 
-def simulate_counts(arm: ArmWeek, draw: int, rng: np.random.Generator) -> np.ndarray:
+def simulate_counts(
+    arm: ArmWeek, draw: int, rng: np.random.Generator, replicate: int = 0
+) -> np.ndarray:
     """Bin counts for one simulated outcome of ``arm`` under posterior draw ``draw``."""
-    return np.asarray(rng.multinomial(arm.n, _bins(arm.cumulative[0, draw])))
+    k = min(replicate, arm.cumulative.shape[0] - 1)
+    return np.asarray(rng.multinomial(arm.n, _bins(arm.cumulative[k, draw])))
+
+
+def _simulate_item(
+    item: Sequence[ArmWeek], draw: int, rng: np.random.Generator
+) -> list[np.ndarray]:
+    """One simulated outcome of every arm, sharing one replicate of the trial effects."""
+    replicates = max(arm.cumulative.shape[0] for arm in item)
+    k = int(rng.integers(replicates))
+    return [simulate_counts(arm, draw, rng, k) for arm in item]
 
 
 def counts_from_cumulative(n: int, responders: Sequence[int]) -> np.ndarray:
@@ -59,11 +71,27 @@ def counts_from_cumulative(n: int, responders: Sequence[int]) -> np.ndarray:
     return np.asarray(np.concatenate([[n], r]) - np.concatenate([r, [0.0]]))
 
 
+def item_loglik(item: Sequence[ArmWeek], counts: Sequence[np.ndarray]) -> np.ndarray:
+    """(D,) log-likelihood of an item's bin counts per draw.
+
+    Replicate k is one draw of the new trial's random effects, shared by every
+    arm of the item (the arms of one trial share its baseline and treatment
+    effect). So arm log-likelihoods are summed within a replicate *before*
+    averaging over replicates. Averaging each arm separately would treat the
+    arms as coming from different trials.
+    """
+    total: np.ndarray | None = None
+    for arm, c in zip(item, counts, strict=True):
+        ll = (c * np.log(_bins(arm.cumulative))).sum(axis=-1)  # (K, D); K = 1 broadcasts
+        total = ll if total is None else total + ll
+    assert total is not None
+    peak = total.max(axis=0)
+    return np.asarray(peak + np.log(np.mean(np.exp(total - peak), axis=0)))
+
+
 def loglik(arm: ArmWeek, counts: np.ndarray) -> np.ndarray:
-    """(D,) log-likelihood of bin ``counts`` per draw, averaging over K replicates."""
-    ll = (counts * np.log(_bins(arm.cumulative))).sum(axis=-1)  # (K, D)
-    peak = ll.max(axis=0)
-    return np.asarray(peak + np.log(np.mean(np.exp(ll - peak), axis=0)))
+    """(D,) log-likelihood of one arm's bin ``counts`` per draw."""
+    return item_loglik([arm], [counts])
 
 
 def _weights(log_w: np.ndarray) -> tuple[np.ndarray, float]:
@@ -88,9 +116,7 @@ def expected_variance_reduction(
     means, ess = [], []
     for _ in range(sims):
         j = int(rng.integers(draws))
-        log_w = np.zeros(draws)
-        for arm in item:
-            log_w += loglik(arm, simulate_counts(arm, j, rng))
+        log_w = item_loglik(item, _simulate_item(item, j, rng))
         w, e = _weights(log_w)
         means.append(float(w @ q))
         ess.append(e)
@@ -104,13 +130,14 @@ def expected_variance_reduction(
 
 def realized_shift(
     q: np.ndarray, item: Sequence[ArmWeek], observed: Sequence[np.ndarray]
-) -> tuple[float, float]:
-    """(shift of q's mean, ESS) after reweighting by the observed bin counts."""
-    log_w = np.zeros(q.shape[0])
-    for arm, counts in zip(item, observed, strict=True):
-        log_w += loglik(arm, counts)
+) -> tuple[float, float, float]:
+    """(shift of q's mean, ESS, Pareto k) after reweighting by the observed bin counts.
+
+    Trust the shift only when Pareto k < 0.7; otherwise refit.
+    """
+    log_w = item_loglik(item, observed)
     w, e = _weights(log_w)
-    return float(w @ q - q.mean()), e
+    return float(w @ q - q.mean()), e, pareto_khat(log_w)
 
 
 def model_discrimination(
@@ -154,3 +181,63 @@ def model_discrimination(
         "max_nats": math.log(len(names)),
         "p_true_model_gets_75pct": decisive / sims,
     }
+
+
+def pareto_khat(log_weights: np.ndarray) -> float:
+    """Pareto-k diagnostic of importance weights (PSIS; Vehtari et al. 2024).
+
+    Fits a generalized Pareto distribution to the largest weights (Zhang &
+    Stephens estimator with PSIS's weak prior toward 0.5), as in arviz. Above
+    0.7 the reweighted estimates are unreliable even when the effective sample
+    size looks adequate: the target lies where the draws are too sparse.
+    """
+    lw = np.asarray(log_weights, dtype=float)
+    n = lw.size
+    tail_size = math.floor(3 * math.sqrt(n)) if n > 225 else n // 5
+    if tail_size < 5:
+        return float("nan")
+    ordered = np.sort(lw - lw.max())
+    cutoff = math.exp(ordered[n - tail_size - 1])
+    x = np.exp(ordered[n - tail_size :]) - cutoff  # sorted ascending
+    m = x.size
+    quartile = x[int(m / 4 + 0.5) - 1]
+    if quartile <= x[0]:
+        return float("nan")
+    grid = 30 + int(math.sqrt(m))
+    b = 1.0 / x[-1] + (1.0 - np.sqrt(grid / (np.arange(1, grid + 1) - 0.5))) / (3.0 * quartile)
+    k_grid = np.log1p(-b[:, None] * x[None, :]).mean(axis=1)
+    log_lik = m * (np.log(-b / k_grid) - k_grid - 1.0)
+    w = np.exp(log_lik - log_lik.max())
+    w /= w.sum()
+    b_post = float((b * w).sum())
+    k = float(np.log1p(-b_post * x).mean())
+    return float((m * k + 10 * 0.5) / (m + 10))
+
+
+def surprise(
+    item: Sequence[ArmWeek], observed: Sequence[np.ndarray], *, sims: int = 400, seed: int = 0
+) -> float:
+    """Share of the model's own simulated outcomes that are less likely than the observed one.
+
+    Near 0 means the observed outcome lies far outside what the model expected:
+    value-of-information estimates made with that model did not anticipate it.
+    """
+    rng = np.random.default_rng(seed)
+
+    def log_marginal(counts: Sequence[np.ndarray]) -> float:
+        # Unlike reweighting, comparing different outcomes needs the
+        # multinomial coefficients, which depend on the counts.
+        ll = item_loglik(item, counts)
+        const = sum(
+            math.lgamma(float(c.sum()) + 1) - sum(math.lgamma(float(x) + 1) for x in c)
+            for c in counts
+        )
+        return float(const + ll.max() + np.log(np.mean(np.exp(ll - ll.max()))))
+
+    observed_lp = log_marginal(observed)
+    draws = item[0].cumulative.shape[1]
+    simulated = []
+    for _ in range(sims):
+        j = int(rng.integers(draws))
+        simulated.append(log_marginal(_simulate_item(item, j, rng)))
+    return float(np.mean(np.asarray(simulated) <= observed_lp))

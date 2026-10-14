@@ -5,6 +5,7 @@ Pre-registered in docs/voi-preregistration.md.
     python scripts/model/voi_core.py retro F-VASI    # one instrument: M0, predicted value, refits
     python scripts/model/voi_core.py retro T-VASI
     python scripts/model/voi_core.py gate            # G1 and G2 over the 11 items
+    python scripts/model/voi_core.py diagnose T-VASI # surprise and Pareto-k per item
     python scripts/model/voi_core.py discriminate    # sealed targets: which would separate models
 
 Results go to forecasts/voi/.
@@ -36,7 +37,7 @@ from vitiligo.reports.paper_results import load_curation, load_toplines, new_row
 OUT = Path("forecasts/voi")
 SETTINGS = FitSettings(version="v0.3", target_accept=0.995)
 K_Q = 32  # new-trial replicates averaged into q
-K_ITEM = 8  # new-trial replicates in an item's likelihood
+K_ITEM = 64  # new-trial replicates in an item's likelihood (shared by its arms)
 TOPLINE_TRIALS = ("NCT05583526", "NCT06072183", "NCT06118411-S1", "NCT06118411-S2")
 PAPER_ITEMS = {
     "F-VASI": [("NCT03099304", "ruxolitinib phase 2 1.5% BID, F-VASI rows")],
@@ -166,7 +167,8 @@ def retro(instrument: str) -> None:
         arms, observed = item_armweeks(m0, item["rows"], routes, phase3)
         predicted_sum = voi.expected_variance_reduction(q0_sum, arms, sims=400, seed=1)
         predicted_oral = voi.expected_variance_reduction(q0["oral"], arms, sims=400, seed=1)
-        reweighted_shift, reweighted_ess = voi.realized_shift(q0_sum, arms, observed)
+        reweighted_shift, reweighted_ess, reweighted_k = voi.realized_shift(q0_sum, arms, observed)
+        item_surprise = voi.surprise(arms, observed, sims=400, seed=2)
         refit = _fit(registry + item["rows"], instrument, routes, phase3)
         q1 = {name: q_draws(refit, sc) for name, sc in questions.items()}
         realized_shift = float((q1["oral"] + q1["topical"]).mean() - q0_sum.mean())
@@ -177,6 +179,7 @@ def retro(instrument: str) -> None:
             "realized_shift_sum": realized_shift, "realized_shift_oral": float(q1["oral"].mean() - q0["oral"].mean()),
             "surprise_ratio": realized_shift**2 / predicted_sum.evr if predicted_sum.evr > 0 else None,
             "reweighted_shift_sum": reweighted_shift, "reweighted_ess": reweighted_ess,
+            "reweighted_pareto_k": reweighted_k, "surprise": item_surprise,
             "refit_diagnostics": refit.diagnostics,
         })  # fmt: skip
         print(
@@ -195,17 +198,83 @@ def retro(instrument: str) -> None:
     (OUT / f"retro-{instrument}.json").write_text(json.dumps(payload, indent=1, default=str) + "\n")
 
 
+def diagnose(instrument: str) -> None:
+    """Surprise and Pareto-k for each retrospective item, from M0 (cached in exports/)."""
+    import pickle
+
+    registry, routes, phase3 = model_inputs_v03(with_toplines=False, with_papers=False)
+    phase3 |= dict.fromkeys(TOPLINE_TRIALS, True)
+    cache = Path("exports/voi") / f"m0-{instrument}.pkl"
+    if cache.exists():
+        m0 = pickle.loads(cache.read_bytes())
+    else:
+        m0 = _fit(registry, instrument, routes, phase3)
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_bytes(pickle.dumps(m0))
+    questions = _questions(instrument)
+    q_sum = sum(q_draws(m0, sc) for sc in questions.values())
+    retro_items = {
+        i["item"]: i for i in json.loads((OUT / f"retro-{instrument}.json").read_text())["items"]
+    }
+    out = []
+    for item in _items(registry, instrument):
+        arms, observed = item_armweeks(m0, item["rows"], routes, phase3)
+        shift, ess, k = voi.realized_shift(q_sum, arms, observed)
+        out.append({
+            "item": item["name"],
+            "surprise": voi.surprise(arms, observed, sims=400, seed=2),
+            "reweighted_shift_sum": shift, "reweighted_pareto_k": k, "reweighted_ess": ess,
+            "refit_shift_sum": retro_items[item["name"]]["realized_shift_sum"],
+        })  # fmt: skip
+        print(json.dumps(out[-1]), flush=True)
+    (OUT / f"diagnostics-{instrument}.json").write_text(json.dumps(out, indent=1) + "\n")
+
+
+def rescore(instrument: str) -> None:
+    """Predicted values with the current engine, from cached M0, against the stored refits."""
+    import pickle
+
+    registry, routes, phase3 = model_inputs_v03(with_toplines=False, with_papers=False)
+    phase3 |= dict.fromkeys(TOPLINE_TRIALS, True)
+    m0 = pickle.loads((Path("exports/voi") / f"m0-{instrument}.pkl").read_bytes())
+    questions = _questions(instrument)
+    q0 = {name: q_draws(m0, sc) for name, sc in questions.items()}
+    q0_sum = q0["oral"] + q0["topical"]
+    stored = json.loads((OUT / f"retro-{instrument}.json").read_text())
+    by_name = {i["item"]: i for i in stored["items"]}
+    items = []
+    for item in _items(registry, instrument):
+        arms, _observed = item_armweeks(m0, item["rows"], routes, phase3)
+        total = voi.expected_variance_reduction(q0_sum, arms, sims=400, seed=1)
+        oral = voi.expected_variance_reduction(q0["oral"], arms, sims=400, seed=1)
+        old = by_name[item["name"]]
+        items.append({**old, "predicted_evr_sum": total.evr, "predicted_evr_oral": oral.evr,
+                      "mean_ess": total.mean_ess,
+                      "surprise_ratio": old["realized_shift_sum"] ** 2 / total.evr})  # fmt: skip
+        print(
+            json.dumps(
+                {"item": item["name"], "evr": total.evr, "shift": old["realized_shift_sum"]}
+            ),
+            flush=True,
+        )
+    stored["items"] = items
+    stored["engine"] = "v1.1 (arms of a trial share replicates; K_ITEM=64); post-hoc re-score"
+    (OUT / f"retro-v1.1-{instrument}.json").write_text(
+        json.dumps(stored, indent=1, default=str) + "\n"
+    )
+
+
 def _spearman(x: list[float], y: list[float]) -> float:
     rx = np.argsort(np.argsort(x))
     ry = np.argsort(np.argsort(y))
     return float(np.corrcoef(rx, ry)[0, 1])
 
 
-def gate() -> None:
+def gate(version: str = "") -> None:
     items = []
     converged = True
     for instrument in ("F-VASI", "T-VASI"):
-        payload = json.loads((OUT / f"retro-{instrument}.json").read_text())
+        payload = json.loads((OUT / f"retro{version}-{instrument}.json").read_text())
         items += payload["items"]
         diagnostics = [payload["m0_diagnostics"]] + [
             i["refit_diagnostics"] for i in payload["items"]
@@ -250,7 +319,7 @@ def gate() -> None:
             for i in items
         ],
     }
-    (OUT / "gate.json").write_text(json.dumps(result, indent=1) + "\n")
+    (OUT / f"gate{version}.json").write_text(json.dumps(result, indent=1) + "\n")
     print(json.dumps(result, indent=1))
 
 
@@ -306,7 +375,11 @@ if __name__ == "__main__":
     if command == "retro":
         retro(sys.argv[2])
     elif command == "gate":
-        gate()
+        gate(sys.argv[2] if len(sys.argv) > 2 else "")
+    elif command == "rescore":
+        rescore(sys.argv[2])
+    elif command == "diagnose":
+        diagnose(sys.argv[2])
     elif command == "discriminate":
         discriminate()
     else:

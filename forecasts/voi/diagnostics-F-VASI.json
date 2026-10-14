@@ -1,0 +1,42 @@
+[
+ {
+  "item": "topline NCT05583526 F-VASI",
+  "surprise": 0.8425,
+  "reweighted_shift_sum": -0.19099339541512317,
+  "reweighted_pareto_k": 0.1698797232653663,
+  "reweighted_ess": 1829.060876459622,
+  "refit_shift_sum": -0.19357564785131298
+ },
+ {
+  "item": "topline NCT06072183 F-VASI",
+  "surprise": 0.8225,
+  "reweighted_shift_sum": -0.17093282810978405,
+  "reweighted_pareto_k": 0.09112698505858559,
+  "reweighted_ess": 1718.7378959068785,
+  "refit_shift_sum": -0.17565279470092499
+ },
+ {
+  "item": "topline NCT06118411-S1 F-VASI",
+  "surprise": 0.66,
+  "reweighted_shift_sum": -0.08364458598968216,
+  "reweighted_pareto_k": -0.043243622475045505,
+  "reweighted_ess": 2618.2762082422587,
+  "refit_shift_sum": -0.08287511920728474
+ },
+ {
+  "item": "topline NCT06118411-S2 F-VASI",
+  "surprise": 0.63,
+  "reweighted_shift_sum": -0.10060723706828534,
+  "reweighted_pareto_k": 0.060229388592373895,
+  "reweighted_ess": 2453.7078615575956,
+  "refit_shift_sum": -0.09983900850242178
+ },
+ {
+  "item": "paper: ruxolitinib phase 2 1.5% BID, F-VASI rows",
+  "surprise": 0.8825,
+  "reweighted_shift_sum": 0.004268753794643643,
+  "reweighted_pareto_k": -0.4110524768988808,
+  "reweighted_ess": 4252.583293040114,
+  "refit_shift_sum": 0.006619694277954391
+ }
+]

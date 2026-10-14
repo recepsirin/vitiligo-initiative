@@ -1,0 +1,122 @@
+{
+ "instrument": "F-VASI",
+ "m0_diagnostics": {
+  "max_rhat": 1.0039741297953906,
+  "min_ess_bulk": 2153.7699805419848,
+  "divergences": 0.0,
+  "draws": 6000.0
+ },
+ "q0": {
+  "oral": {
+   "mean": 0.49315481555102036,
+   "sd": 0.22467113217696702
+  },
+  "topical": {
+   "mean": 0.25709029504984127,
+   "sd": 0.11001086923466294
+  }
+ },
+ "items": [
+  {
+   "item": "topline NCT05583526 F-VASI",
+   "kind": "topline",
+   "instrument": "F-VASI",
+   "predicted_evr_sum": 0.029203581459342154,
+   "predicted_evr_oral": 0.026076031299889387,
+   "prior_var_sum": 0.07485577716402354,
+   "mean_ess": 1327.1309091087041,
+   "realized_shift_sum": -0.19357564785131298,
+   "realized_shift_oral": -0.16630245504901264,
+   "surprise_ratio": 1.2831142472447838,
+   "reweighted_shift_sum": -0.19700889079268435,
+   "reweighted_ess": 1032.2908436252605,
+   "refit_diagnostics": {
+    "max_rhat": 1.0021777361533137,
+    "min_ess_bulk": 2007.6143024739963,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06072183 F-VASI",
+   "kind": "topline",
+   "instrument": "F-VASI",
+   "predicted_evr_sum": 0.03163396845812479,
+   "predicted_evr_oral": 0.028755997893307524,
+   "prior_var_sum": 0.07485577716402354,
+   "mean_ess": 1199.2205657858808,
+   "realized_shift_sum": -0.17565279470092499,
+   "realized_shift_oral": -0.14942632153556257,
+   "surprise_ratio": 0.9753409322351668,
+   "reweighted_shift_sum": -0.19517022560133968,
+   "reweighted_ess": 860.939086222901,
+   "refit_diagnostics": {
+    "max_rhat": 1.0029237298073284,
+    "min_ess_bulk": 2190.8974117348257,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06118411-S1 F-VASI",
+   "kind": "topline",
+   "instrument": "F-VASI",
+   "predicted_evr_sum": 0.020403655325660495,
+   "predicted_evr_oral": 0.01805694322828177,
+   "prior_var_sum": 0.07485577716402354,
+   "mean_ess": 1760.2565541633965,
+   "realized_shift_sum": -0.08287511920728474,
+   "realized_shift_oral": -0.06508839527522675,
+   "surprise_ratio": 0.33662033954199433,
+   "reweighted_shift_sum": -0.08450683121069891,
+   "reweighted_ess": 1871.8222157015755,
+   "refit_diagnostics": {
+    "max_rhat": 1.0032626445901984,
+    "min_ess_bulk": 2286.0248190248985,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06118411-S2 F-VASI",
+   "kind": "topline",
+   "instrument": "F-VASI",
+   "predicted_evr_sum": 0.020139177930489346,
+   "predicted_evr_oral": 0.018310540173592318,
+   "prior_var_sum": 0.07485577716402354,
+   "mean_ess": 1733.9822499875568,
+   "realized_shift_sum": -0.09983900850242178,
+   "realized_shift_oral": -0.08688428589355568,
+   "surprise_ratio": 0.4949470953159431,
+   "reweighted_shift_sum": -0.08994044462457251,
+   "reweighted_ess": 1848.5670951424063,
+   "refit_diagnostics": {
+    "max_rhat": 1.002330877058986,
+    "min_ess_bulk": 2302.423162633182,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "paper: ruxolitinib phase 2 1.5% BID, F-VASI rows",
+   "kind": "paper",
+   "instrument": "F-VASI",
+   "predicted_evr_sum": 8.686689870559037e-05,
+   "predicted_evr_oral": 3.4639226174606724e-05,
+   "prior_var_sum": 0.07485577716402354,
+   "mean_ess": 3030.799871894592,
+   "realized_shift_sum": 0.006619694277954391,
+   "realized_shift_oral": -0.0003938313475448929,
+   "surprise_ratio": 0.5044539748345134,
+   "reweighted_shift_sum": 0.004268753794643643,
+   "reweighted_ess": 4252.583293040114,
+   "refit_diagnostics": {
+    "max_rhat": 1.0038337142457638,
+    "min_ess_bulk": 2095.9336290209026,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  }
+ ],
+ "engine": "v1.1 (arms of a trial share replicates; K_ITEM=64); post-hoc re-score"
+}

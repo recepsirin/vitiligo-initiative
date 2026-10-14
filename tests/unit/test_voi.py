@@ -37,9 +37,10 @@ def test_evr_grows_with_size_and_vanishes_for_unrelated_evidence() -> None:
 def test_realized_shift_and_counts() -> None:
     p = np.random.default_rng(4).beta(2, 2, 20000)
     counts = voi.counts_from_cumulative(100, [80])  # 80 of 100 responded
-    shift, ess = voi.realized_shift(p, [_beta_arm(p, 100)], [counts])
+    shift, ess, khat = voi.realized_shift(p, [_beta_arm(p, 100)], [counts])
     exact = (2 + 80) / (4 + 100) - 0.5
     assert shift == pytest.approx(exact, abs=0.01) and 1 < ess < 20000
+    assert khat < 0.7  # bounded likelihood: the reweighting is reliable, and exact here
     assert voi.counts_from_cumulative(50, [30, 20, 5]).tolist() == [20, 10, 15, 5]
 
 
@@ -52,3 +53,62 @@ def test_model_discrimination_limits() -> None:
     assert tie["mutual_information_nats"] < 0.02
     assert clear["mutual_information_nats"] == pytest.approx(math.log(2), abs=0.02)
     assert clear["p_true_model_gets_75pct"] > 0.98
+
+
+def test_pareto_khat_separates_good_and_bad_importance_weights() -> None:
+    rng = np.random.default_rng(6)
+    x = rng.normal(0.0, 1.0, 8000)
+    matched = -0.5 * (x / 1.1) ** 2 + 0.5 * x**2  # proposal N(0,1), target N(0,1.1^2)
+    shifted = -0.5 * (x - 3.0) ** 2 + 0.5 * x**2  # target N(3,1): far into the proposal's tail
+    assert voi.pareto_khat(matched) < 0.5
+    assert voi.pareto_khat(shifted) > 0.7
+    stats = pytest.importorskip("arviz_stats.base.array")
+    for lw in (matched, shifted):
+        _, k_ref = stats.array_stats.psislw(-lw)  # arviz takes negated log weights
+        assert voi.pareto_khat(lw) == pytest.approx(float(k_ref), abs=1e-6)
+
+
+def test_surprise_flags_outcomes_the_model_did_not_expect() -> None:
+    p = np.random.default_rng(7).beta(2, 8, 6000)  # expects about 20% responders
+    arm = _beta_arm(p, 100)
+    typical = voi.surprise([arm], [voi.counts_from_cumulative(100, [20])], sims=400)
+    extreme = voi.surprise([arm], [voi.counts_from_cumulative(100, [95])], sims=400)
+    assert typical > 0.3 and extreme < 0.01
+
+
+def test_arms_of_one_trial_share_its_random_effects() -> None:
+    """Two arms sharing a random baseline u: the item likelihood must integrate u jointly.
+
+    p_active = Phi(theta + u + 1), p_control = Phi(theta + u), u ~ N(0, 1) per trial.
+    A low placebo with a moderate active arm is only likely if u is low for *both*.
+    """
+    from scipy.special import ndtr
+
+    rng = np.random.default_rng(8)
+    theta = rng.normal(-1.0, 0.3, 4000)
+    k = 400
+    u = rng.normal(0.0, 1.0, (k, 1))
+    active = voi.ArmWeek(cumulative=ndtr(theta[None, :] + u + 1.0)[..., None], n=200)
+    control = voi.ArmWeek(cumulative=ndtr(theta[None, :] + u)[..., None], n=200)
+    counts = [voi.counts_from_cumulative(200, [30]), voi.counts_from_cumulative(200, [2])]
+    got = voi.item_loglik([active, control], counts)
+    # Exact: integrate u on a fine grid, jointly for both arms.
+    grid = np.linspace(-6, 6, 2001)
+    w = np.exp(-0.5 * grid**2)
+    w /= w.sum()
+    pa = ndtr(theta[:, None] + grid[None, :] + 1.0)
+    pc = ndtr(theta[:, None] + grid[None, :])
+    joint = 30 * np.log(pa) + 170 * np.log1p(-pa) + 2 * np.log(pc) + 198 * np.log1p(-pc)
+    exact = np.log((np.exp(joint - joint.max(axis=1, keepdims=True)) * w).sum(axis=1)) + joint.max(
+        axis=1
+    )
+
+    def posterior_mean(log_w: np.ndarray) -> float:
+        w_ = np.exp(log_w - log_w.max())
+        return float(w_ @ theta / w_.sum())
+
+    truth = posterior_mean(exact)
+    assert abs(posterior_mean(got) - truth) < 0.03
+    # Integrating each arm separately (the old behaviour) overshoots the update.
+    separate = voi.loglik(active, counts[0]) + voi.loglik(control, counts[1])
+    assert abs(posterior_mean(separate) - truth) > 0.05

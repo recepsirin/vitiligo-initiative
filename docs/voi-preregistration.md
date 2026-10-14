@@ -43,4 +43,4 @@ The author knows the toplines changed v0.2's forecasts far more than the paper r
 
 ## Amendments
 
-None yet.
+1. **2026-10-14, after the gate ran (post-hoc).** The engine integrated each arm's new-trial random effects separately, although the arms of one trial share them. Diagnosis: the reweighted shifts disagreed with refits on the T-VASI toplines (Tranquillo −0.12 vs −0.02). Refits were stable across seeds, and the reweighting was otherwise reliable (Pareto k < 0.25). The fix sums the arms' log-likelihoods within each shared replicate before averaging. It is tested against exact integration, and it raises the replicates from 8 to 64. Afterwards, reweighted and refit shifts agree within about 0.01 on all 11 items. The gate is re-scored with the fixed engine as **v1.1**, using the same items and the same refits. The re-score is post-hoc, so it is reported as such and does not replace the original result.

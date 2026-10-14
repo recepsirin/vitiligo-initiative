@@ -1,0 +1,86 @@
+{
+ "G1_toplines_above_paper_rows_for_q_oral": true,
+ "G2_spearman_predicted_vs_realized": 0.6818181818181819,
+ "G2_passed": true,
+ "all_fits_converged": true,
+ "passed": true,
+ "items": [
+  {
+   "item": "topline NCT05583526 F-VASI",
+   "predicted_evr_sum": 0.029203581459342154,
+   "realized_shift_sum": -0.19357564785131298,
+   "surprise_ratio": 1.2831142472447838,
+   "mean_ess": 1327.1309091087041
+  },
+  {
+   "item": "topline NCT06072183 F-VASI",
+   "predicted_evr_sum": 0.03163396845812479,
+   "realized_shift_sum": -0.17565279470092499,
+   "surprise_ratio": 0.9753409322351668,
+   "mean_ess": 1199.2205657858808
+  },
+  {
+   "item": "topline NCT06118411-S1 F-VASI",
+   "predicted_evr_sum": 0.020403655325660495,
+   "realized_shift_sum": -0.08287511920728474,
+   "surprise_ratio": 0.33662033954199433,
+   "mean_ess": 1760.2565541633965
+  },
+  {
+   "item": "topline NCT06118411-S2 F-VASI",
+   "predicted_evr_sum": 0.020139177930489346,
+   "realized_shift_sum": -0.09983900850242178,
+   "surprise_ratio": 0.4949470953159431,
+   "mean_ess": 1733.9822499875568
+  },
+  {
+   "item": "paper: ruxolitinib phase 2 1.5% BID, F-VASI rows",
+   "predicted_evr_sum": 8.686689870559037e-05,
+   "realized_shift_sum": 0.006619694277954391,
+   "surprise_ratio": 0.5044539748345134,
+   "mean_ess": 3030.799871894592
+  },
+  {
+   "item": "topline NCT05583526 T-VASI",
+   "predicted_evr_sum": 0.02604395914251462,
+   "realized_shift_sum": -0.022086895037923715,
+   "surprise_ratio": 0.018731058889580095,
+   "mean_ess": 1216.3305722989892
+  },
+  {
+   "item": "topline NCT06072183 T-VASI",
+   "predicted_evr_sum": 0.02598030179348786,
+   "realized_shift_sum": -0.040773034670657404,
+   "surprise_ratio": 0.06398849287698932,
+   "mean_ess": 1159.9840854600393
+  },
+  {
+   "item": "topline NCT06118411-S1 T-VASI",
+   "predicted_evr_sum": 0.018688616491196193,
+   "realized_shift_sum": -0.0522513219404499,
+   "surprise_ratio": 0.14608896521637546,
+   "mean_ess": 1797.0857204691729
+  },
+  {
+   "item": "topline NCT06118411-S2 T-VASI",
+   "predicted_evr_sum": 0.020209675252817767,
+   "realized_shift_sum": -0.04014002672779027,
+   "surprise_ratio": 0.07972526651476351,
+   "mean_ess": 1802.6878311254738
+  },
+  {
+   "item": "paper: ruxolitinib phase 2 1.5% BID, T-VASI rows",
+   "predicted_evr_sum": 0.0016602240576686436,
+   "realized_shift_sum": -0.00850637238784202,
+   "surprise_ratio": 0.04358349758059152,
+   "mean_ess": 3407.7547411377354
+  },
+  {
+   "item": "paper: upadacitinib phase 2, T-VASI50 week 24",
+   "predicted_evr_sum": 0.0038280051510931664,
+   "realized_shift_sum": -0.02549987242923568,
+   "surprise_ratio": 0.16986484297744572,
+   "mean_ess": 3565.419030712192
+  }
+ ]
+}

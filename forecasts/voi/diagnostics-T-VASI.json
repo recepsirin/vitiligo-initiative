@@ -1,0 +1,50 @@
+[
+ {
+  "item": "topline NCT05583526 T-VASI",
+  "surprise": 0.1375,
+  "reweighted_shift_sum": -0.031006356256921164,
+  "reweighted_pareto_k": 0.13740257784802573,
+  "reweighted_ess": 278.5741522890858,
+  "refit_shift_sum": -0.022086895037923715
+ },
+ {
+  "item": "topline NCT06072183 T-VASI",
+  "surprise": 0.1075,
+  "reweighted_shift_sum": -0.033730994113421287,
+  "reweighted_pareto_k": 0.0828490639899791,
+  "reweighted_ess": 286.17161929465124,
+  "refit_shift_sum": -0.040773034670657404
+ },
+ {
+  "item": "topline NCT06118411-S1 T-VASI",
+  "surprise": 0.41,
+  "reweighted_shift_sum": -0.050627531637145284,
+  "reweighted_pareto_k": 0.0627646369608733,
+  "reweighted_ess": 1713.9964246013633,
+  "refit_shift_sum": -0.0522513219404499
+ },
+ {
+  "item": "topline NCT06118411-S2 T-VASI",
+  "surprise": 0.395,
+  "reweighted_shift_sum": -0.04101920632680689,
+  "reweighted_pareto_k": 0.08858390276586223,
+  "reweighted_ess": 1699.3419851940876,
+  "refit_shift_sum": -0.04014002672779027
+ },
+ {
+  "item": "paper: ruxolitinib phase 2 1.5% BID, T-VASI rows",
+  "surprise": 0.9025,
+  "reweighted_shift_sum": -0.010605964844060733,
+  "reweighted_pareto_k": 0.03933343943144834,
+  "reweighted_ess": 3315.85129336317,
+  "refit_shift_sum": -0.00850637238784202
+ },
+ {
+  "item": "paper: upadacitinib phase 2, T-VASI50 week 24",
+  "surprise": 0.5625,
+  "reweighted_shift_sum": -0.03160746940142056,
+  "reweighted_pareto_k": 0.03288996918202467,
+  "reweighted_ess": 4415.402552063085,
+  "refit_shift_sum": -0.02549987242923568
+ }
+]
