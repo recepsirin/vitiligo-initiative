@@ -731,6 +731,28 @@ def _build_record(
     )
 
 
+def jak_record_from_ctgov(study: dict[str, Any]) -> JakTrial | None:
+    """An atlas record for one raw ClinicalTrials.gov study, without the corpus.
+
+    Registry linking and corpus publications are left empty; outcomes and
+    adverse events are parsed exactly as in the atlas.
+    """
+    from vitiligo.sources.ctgov import parse_ctgov_study
+
+    trial = parse_ctgov_study(study)
+    if trial is None:
+        return None
+    return _build_record(
+        trial,
+        agents=match_agents(_trial_match_text(trial)),
+        match_basis="registry_text",
+        study_id=trial.source_id,
+        linked=[],
+        cites={},
+        pmid_titles={},
+    )
+
+
 def build_jak_atlas() -> JakAtlas:
     """Build the JAK-inhibitor atlas from the configured local corpus."""
     with Session(get_engine(), expire_on_commit=False) as session:
