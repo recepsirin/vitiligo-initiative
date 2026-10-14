@@ -12,43 +12,76 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
 from vitiligo import __version__
 from vitiligo.corpus_stats import get_corpus_stats
 from vitiligo.embed import semantic_search
+from vitiligo.embed.search import SearchHit
 from vitiligo.graph.query import GraphEdgeView, get_neighbors, search_entities
-from vitiligo.priors import list_drug_priors
+from vitiligo.priors import clinical_stage_rank, list_drug_priors
 from vitiligo.storage import Prior, Trial
 from vitiligo.trials import TrialFilter, list_trials, retrieve_relevant_trials
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_INTENTS_PATH = _PROJECT_ROOT / "docs" / "candidate-intents.json"
+# Shipped as package data so non-editable installs (Docker, wheels) find it.
+DEFAULT_INTENTS_RESOURCE = "candidate-intents.json"
 
+# Stage labels use the Open Targets prior format (PHASE_3, EARLY_PHASE_1).
+# Registry phases (CT.gov "PHASE3", "EARLY_PHASE1") go through
+# ``normalize_stage`` before any lookup here.
 _STAGE_ORDER = (
     "APPROVAL",
     "PHASE_4",
     "PHASE_3",
     "PHASE_2_3",
     "PHASE_2",
+    "PHASE_1_2",
     "PHASE_1",
-    "EARLY_PHASE1",
+    "EARLY_PHASE_1",
     "UNKNOWN",
 )
 _STAGE_POINTS: dict[str, int] = {
     "APPROVAL": 40,
     "PHASE_4": 35,
     "PHASE_3": 30,
-    "PHASE_2_3": 25,
+    "PHASE_2_3": 25,  # midpoint of PHASE_2 and PHASE_3
     "PHASE_2": 20,
+    "PHASE_1_2": 8,  # credited as PHASE_1 (conservative)
     "PHASE_1": 8,
-    "EARLY_PHASE1": 5,
+    "EARLY_PHASE_1": 5,
     "UNKNOWN": 0,
 }
-_HIGH_SIGNAL_PHASES = frozenset({"PHASE_2", "PHASE_2_3", "PHASE_3", "PHASE_4"})
+_LITERATURE_TOP_K = 25
+
+_REGISTRY_PHASE_RE = re.compile(r"^PHASE(\d)$")
+
+
+def normalize_stage(label: str) -> str:
+    """Map registry phase labels (``PHASE3``, ``EARLY_PHASE1``) to prior format."""
+    upper = label.strip().upper()
+    if upper == "EARLY_PHASE1":
+        return "EARLY_PHASE_1"
+    match = _REGISTRY_PHASE_RE.match(upper)
+    return f"PHASE_{match.group(1)}" if match else upper
+
+
+def trial_stage(phases: list[str]) -> str | None:
+    """Collapse one trial's registry phase list into a single stage label.
+
+    CT.gov encodes a Phase 2/3 trial as ``["PHASE2", "PHASE3"]``; that maps
+    to ``PHASE_2_3`` rather than being credited as a full Phase 3.
+    """
+    stages = {normalize_stage(p) for p in phases if p}
+    if stages == {"PHASE_2", "PHASE_3"}:
+        return "PHASE_2_3"
+    if stages == {"PHASE_1", "PHASE_2"}:
+        return "PHASE_1_2"
+    return _best_stage(list(stages))
 
 
 @dataclass(frozen=True)
@@ -136,8 +169,16 @@ class CandidateReport:
 
 
 def load_intents(path: Path | None = None) -> list[IntentSpec]:
-    spec_path = path or DEFAULT_INTENTS_PATH
-    raw = json.loads(spec_path.read_text())
+    """Load research intents from ``path``, or the packaged defaults."""
+    if path is not None:
+        text = path.read_text(encoding="utf-8")
+    else:
+        text = (
+            resources.files("vitiligo.reports")
+            .joinpath(DEFAULT_INTENTS_RESOURCE)
+            .read_text(encoding="utf-8")
+        )
+    raw = json.loads(text)
     return [
         IntentSpec(
             id=item["id"],
@@ -178,18 +219,15 @@ _STOPWORDS = frozenset(
 def _stage_points(stage: str | None) -> int:
     if not stage:
         return 0
-    return _STAGE_POINTS.get(stage.upper(), 0)
+    return _STAGE_POINTS.get(normalize_stage(stage), 0)
 
 
 def _best_stage_from_trials(trials: list[Trial]) -> str | None:
-    phases: list[str] = []
-    for trial in trials:
-        phases.extend(trial.phases or [])
-    return _best_stage(phases) if phases else None
+    return _best_stage([trial_stage(trial.phases or []) for trial in trials])
 
 
-def _best_stage(stages: list[str | None]) -> str | None:
-    present = {s.upper() for s in stages if s}
+def _best_stage(stages: Sequence[str | None]) -> str | None:
+    present = {normalize_stage(s) for s in stages if s}
     for stage in _STAGE_ORDER:
         if stage in present:
             return stage
@@ -238,16 +276,43 @@ def _graph_points(edges: list[GraphEdgeView]) -> int:
     return min(points, 40)
 
 
+_ACTIVE_TRIAL_STATUSES = frozenset({"RECRUITING", "ACTIVE_NOT_RECRUITING", "AUTHORISED"})
+
+
 def _trial_points(trials: list[Trial]) -> int:
-    points = 0
-    for trial in trials:
-        if any(p in _HIGH_SIGNAL_PHASES for p in (trial.phases or [])):
-            points += 15
-        if trial.has_results:
-            points += 8
-        if (trial.status or "").upper() in {"RECRUITING", "ACTIVE_NOT_RECRUITING", "AUTHORISED"}:
-            points += 5
-    return min(points, 35)
+    """Score the strength of a drug's registered-trial portfolio (0-35).
+
+    Rewards the best evidence rather than the number of trials, so a long
+    tail of small studies cannot max out the component:
+    - most advanced trial phase: Phase 3/4 -> 15, Phase 2 or 2/3 -> 10, earlier -> 3
+    - posted results: on a Phase 2+ trial -> 10, otherwise on any trial -> 5
+    - at least one recruiting / active / authorised trial -> 5
+    - breadth: +1 per additional trial, up to +5
+    """
+    if not trials:
+        return 0
+    ranks = [clinical_stage_rank(trial_stage(t.phases or [])) for t in trials]
+    best = max(ranks)
+    if best >= clinical_stage_rank("PHASE_3"):
+        phase_pts = 15
+    elif best >= clinical_stage_rank("PHASE_2"):
+        phase_pts = 10
+    elif best > 0:
+        phase_pts = 3
+    else:
+        phase_pts = 0
+
+    with_results = [rank for t, rank in zip(trials, ranks, strict=True) if t.has_results]
+    if any(rank >= clinical_stage_rank("PHASE_2") for rank in with_results):
+        results_pts = 10
+    elif with_results:
+        results_pts = 5
+    else:
+        results_pts = 0
+
+    active_pts = 5 if any((t.status or "").upper() in _ACTIVE_TRIAL_STATUSES for t in trials) else 0
+    breadth_pts = min(len(trials) - 1, 5)
+    return phase_pts + results_pts + active_pts + breadth_pts
 
 
 def _literature_points(refs: list[LiteratureRef]) -> int:
@@ -284,8 +349,14 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
             bundles[token] = _DrugBundle(display_name=name.strip(), token=token)
         bundle = bundles[token]
         if "prior" in kwargs and kwargs["prior"] is not None:
-            bundle.prior = kwargs["prior"]
-            for mech in bundle.prior.mechanisms or []:
+            prior = kwargs["prior"]
+            # Salt forms share a stem (RITLECITINIB / RITLECITINIB TOSYLATE);
+            # keep whichever record reports the most advanced clinical stage.
+            if bundle.prior is None or clinical_stage_rank(
+                prior.clinical_stage
+            ) > clinical_stage_rank(bundle.prior.clinical_stage):
+                bundle.prior = prior
+            for mech in prior.mechanisms or []:
                 label = mech.get("mechanism") if isinstance(mech, dict) else str(mech)
                 if label and label not in bundle.mechanisms:
                     bundle.mechanisms.append(label)
@@ -353,8 +424,8 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
     return bundles
 
 
-def _literature_for_drug(token: str, intent_query: str, top_k: int = 25) -> list[LiteratureRef]:
-    hits = semantic_search(query=intent_query, top_k=top_k)
+def _literature_for_drug(token: str, hits: list[SearchHit]) -> list[LiteratureRef]:
+    """Intent-retrieved papers (``hits``, in rank order) that mention ``token``."""
     refs: list[LiteratureRef] = []
     for rank, hit in enumerate(hits, start=1):
         text = f"{hit.document.title or ''} {hit.document.abstract or ''}".lower()
@@ -384,6 +455,8 @@ def _rank_candidates_for_intent(
     top_n: int = 10,
 ) -> list[RankedCandidate]:
     ranked: list[RankedCandidate] = []
+    # One retrieval per intent; each drug filters the same ranked hits.
+    intent_hits = semantic_search(query=intent.query, top_k=_LITERATURE_TOP_K)
 
     for token, bundle in bundles.items():
         stage = (
@@ -392,7 +465,7 @@ def _rank_candidates_for_intent(
 
         graph_pts = _graph_points(bundle.graph_edges)
         trial_pts = _trial_points(bundle.trials)
-        lit_refs = _literature_for_drug(token, intent.query)
+        lit_refs = _literature_for_drug(token, intent_hits)
         lit_pts = _literature_points(lit_refs)
         prior_pts = _stage_points(stage)
 
@@ -488,6 +561,7 @@ def build_candidate_report(
     notes = [
         "Deterministic ranking — not a clinical recommendation.",
         "Score rubric: prior clinical stage (0-40) + graph edges (0-40) + trials (0-35) + literature (0-20).",
+        "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.",
         "Re-run after corpus updates: vitiligo report candidates",
     ]
     if include_llm:
@@ -597,8 +671,7 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
             lines.append("*No candidates met minimum evidence threshold for this intent.*")
             lines.append("")
             continue
-        for cand in ir.candidates:
-            lines.extend(_render_candidate_block(cand))
+        lines.extend(_render_intent_table(ir.candidates))
 
     lines.extend(
         [
@@ -612,6 +685,34 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _render_intent_table(candidates: list[RankedCandidate]) -> list[str]:
+    """One row per candidate; full evidence cards appear once, under the global top."""
+    lines = [
+        "| # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |",
+        "|---:|---|---:|---:|---:|---:|---:|---|",
+    ]
+    for cand in candidates:
+        s = cand.score
+        top = "—"
+        if cand.literature_refs:
+            ref = cand.literature_refs[0]
+            title = (ref.title or "(untitled)").replace("|", "/")
+            if len(title) > 90:
+                title = title[:87].rstrip() + "..."
+            top = f"[{ref.source}:{ref.source_id}] {title} ({ref.year or '?'})"
+        lines.append(
+            f"| {cand.rank} | {cand.name} | {s.total} | {s.prior_stage} | {s.graph} "
+            f"| {s.trials} | {s.literature} | {top} |"
+        )
+    lines.append("")
+    rationales = [c for c in candidates if c.llm_rationale]
+    if rationales:
+        lines.append("**LLM rationale (advisory):**")
+        lines.extend(f"- **#{c.rank} {c.name}:** {c.llm_rationale}" for c in rationales)
+        lines.append("")
+    return lines
 
 
 def _render_candidate_block(cand: RankedCandidate) -> list[str]:

@@ -1,0 +1,165 @@
+{
+  "frozen_at": "2026-10-14T17:16:46.061293+00:00",
+  "label": "NCT06072183: Arm 2- Ritlecitinib 50mg vs Arm 3- Placebo, F-VASI75 at week 52",
+  "target": {
+    "trial": "NCT06072183",
+    "group": null,
+    "arm_label": "Arm 2- Ritlecitinib 50mg",
+    "control_label": "Arm 3- Placebo",
+    "agent": "ritlecitinib",
+    "dose_value": 50.0,
+    "dose_unit": "mg",
+    "frequency": "QD",
+    "phototherapy": false,
+    "instrument": "F-VASI",
+    "threshold": 75,
+    "week": 52,
+    "registry_measure": "Tranquillo 2 co-primary endpoint at week 52 (50 mg arm, exploratory)",
+    "assumptions": [],
+    "phase3": true,
+    "key": "NCT06072183|Arm 2- Ritlecitinib 50mg|50mg|F-VASI75|wk52"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.215115147404846,
+      "median": 0.18079787774277745,
+      "lo80": 0.06101462017549534,
+      "hi80": 0.41779467036584594,
+      "lo95": 0.02359697485239129,
+      "hi95": 0.6067977929689915
+    },
+    "p_control": {
+      "mean": 0.054295562890837264,
+      "median": 0.040180603009354485,
+      "lo80": 0.012195339765082427,
+      "hi80": 0.10937835344704305,
+      "lo95": 0.004287281927795737,
+      "hi95": 0.1986683769357467
+    },
+    "difference": {
+      "mean": 0.1608195845140087,
+      "median": 0.1351758550083233,
+      "lo80": 0.03816499713413367,
+      "hi80": 0.31794317548244233,
+      "lo95": 0.004983567250980269,
+      "hi95": 0.4639097970026809
+    },
+    "p_active_beats_control": 0.9816666666666667,
+    "extrapolation": []
+  },
+  "draws_file": "nct06072183-arm-2-ritlecitinib-50mg-50mg-f-vasi75-wk52.npz",
+  "draws_sha256": "b940c95a287b5e470a2fd848518580976159f19315700c60daa07d3a201315e8",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.5 (challenger)",
+  "priors": {
+    "mu0 (mean trial baseline)": "Normal(-1.5, 1.0)",
+    "sigma_mu (between-trial baseline SD)": "HalfNormal(1.0)",
+    "pi (placebo drift along h(w), zero at week 24)": "Normal(0, 1.0)",
+    "baseline of uncontrolled trials (unpooled)": "Normal(-1.5, 2.5)",
+    "cut-point gaps": "HalfNormal(1.5)",
+    "alpha_route (class effect at reference dose, per route)": "Normal(1.0, 1.0)",
+    "omega_alpha (between-agent SD)": "HalfNormal(0.5)",
+    "beta_class (log-dose slope)": "Normal(0.3, 0.3)",
+    "omega_beta (between-agent slope SD)": "HalfNormal(0.3)",
+    "lambda (loading dose)": "Normal(0, 0.5)",
+    "phi (phototherapy)": "Normal(0, 0.5)",
+    "tau (between-arm SD)": "HalfNormal(0.3)",
+    "T50 per route (weeks to half of week-infinity effect)": "LogNormal(log 20, 0.7)",
+    "sigma_gamma (trial-by-treatment SD)": "HalfNormal(0.5)",
+    "kappa_route (phase 3 shift of the drug effect)": "Normal(0, 0.5)",
+    "mu0_route (mean baseline per route, replaces mu0)": "Normal(-1.5, 1.0)"
+  },
+  "fit_settings": {
+    "draws": 1500,
+    "tune": 2000,
+    "chains": 4,
+    "target_accept": 0.995,
+    "random_seed": 20261014,
+    "version": "v0.5"
+  },
+  "dataset": {
+    "instrument": "F-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975",
+      "NCT05247489",
+      "NCT05583526",
+      "NCT06072183",
+      "NCT06118411-S1",
+      "NCT06118411-S2"
+    ],
+    "agents": [
+      "ritlecitinib",
+      "ruxolitinib",
+      "upadacitinib"
+    ],
+    "reference_dose": {
+      "ritlecitinib": 100.0,
+      "ruxolitinib": 3.0,
+      "upadacitinib": 22.0
+    },
+    "agent_route": {
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical",
+      "upadacitinib": "oral"
+    },
+    "controlled_trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975",
+      "NCT05583526",
+      "NCT06072183",
+      "NCT06118411-S1",
+      "NCT06118411-S2"
+    ],
+    "arms": 29,
+    "active_arms": 20,
+    "observations": 64,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 119,
+      "design annotation: post-randomization selection": 6,
+      "local read where central exists": 144,
+      "as-observed population (not comparable with non-responder imputation)": 10
+    },
+    "design_annotations": {
+      "NCT03099304": {
+        "max_week": 24,
+        "reason": "After week 24 arms were re-assigned (registry arm labels such as 'Vehicle/Ruxolitinib Cream 0.15% QD to 0.5% QD: 1.5% BID'), so arms observed later are selected subsets, not the randomized population."
+      }
+    }
+  },
+  "data_sha256": "48a62f5f4f621bd9d98cae6aaa2584bd00dd148fc1678c4d7a98d37ce1888589",
+  "diagnostics": {
+    "max_rhat": 1.002727611319377,
+    "min_ess_bulk": 1815.200657179799,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "preregistration": "docs/model-v0.5-preregistration.md",
+  "public_results_check": "2026-10-14: searched Pfizer and Incyte press releases, EADV 2026 reports (HCPLive, Dermatology Times) and PMC. Tranquillo week-24 numbers and Tranquillo 2 50 mg numbers are not public; Pfizer stated only that both doses improved over placebo at week 52 and that disease stabilization appeared from week 24. Nothing found for NCT06548360 or NCT06804811.",
+  "disclaimer": "Research forecast; not medical advice. No results for this target were consulted.",
+  "sha256": "a4682da8bb6027b7a377516a29554de48a0552c0706151981ca1bdc050f15305"
+}

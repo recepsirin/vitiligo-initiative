@@ -1,0 +1,31 @@
+{
+ "selected_at": "2026-10-14T14:16:12.091981+00:00",
+ "programs_evaluated": 79,
+ "best_score": -3.531585924179545,
+ "tied_within": 0.01,
+ "tied": [
+  {
+   "id": 68,
+   "score": -3.531585924179545,
+   "params": 21
+  }
+ ],
+ "program": {
+  "id": 68,
+  "name": "gamma=fixed,lag=free,cuts=free,sigma=region,nonresp=region,dose=loglinear,trial=shared,placebo=single",
+  "spec": {
+   "cuts": "free",
+   "dose": "loglinear",
+   "gamma": "fixed",
+   "kinetics": "shared",
+   "lag": "free",
+   "nonresp": "region",
+   "placebo": "single",
+   "sigma": "region",
+   "trial": "shared"
+  },
+  "score": -3.531585924179545,
+  "params": 21
+ },
+ "sha256": "d6835b88fd86403068d3d7eab98a2b78f9c038b72575a214f2f4247a3b690887"
+}

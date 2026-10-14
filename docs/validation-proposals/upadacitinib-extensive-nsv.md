@@ -1,7 +1,7 @@
 # Validation Proposal — Oral Upadacitinib in Extensive Non-Segmental Vitiligo
 
 **Status:** Draft for lab / clinical research partner outreach (May 2026)  
-**Evidence basis:** [`candidate-report-v1.md`](candidate-report-v1.md) (#2 global candidate, score 91, PHASE_3)  
+**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#2 global candidate, score 101, PHASE_3)  
 **Disclaimer:** Research hypothesis only — not a treatment recommendation.
 
 ---

@@ -1,0 +1,42 @@
+{
+ "decided_at": "2026-10-14T17:03:36.406758+00:00",
+ "criteria": {
+  "a_e1_log_score_beats_v02": false,
+  "b_loto_coverage80_at_least_0.75": true,
+  "c_all_fits_converged": true
+ },
+ "adopt_v03": false,
+ "e1": {
+  "pairs_with_both": 6,
+  "v03_log_score_sum": -54.29191495639556,
+  "v02_log_score_sum": -54.130249293264676
+ },
+ "loto_overall": {
+  "F-VASI": {
+   "points": 111,
+   "coverage80": 0.982,
+   "coverage95": 1.0,
+   "mean_abs_error_pp": 6.69
+  },
+  "T-VASI": {
+   "points": 142,
+   "coverage80": 0.951,
+   "coverage95": 1.0,
+   "mean_abs_error_pp": 5.4
+  }
+ },
+ "time_overall": {
+  "F-VASI": {
+   "points": 28,
+   "coverage80": 0.714,
+   "coverage95": 0.964,
+   "mean_abs_error_pp": 9.92
+  },
+  "T-VASI": {
+   "points": 31,
+   "coverage80": 0.935,
+   "coverage95": 0.968,
+   "mean_abs_error_pp": 10.82
+  }
+ }
+}

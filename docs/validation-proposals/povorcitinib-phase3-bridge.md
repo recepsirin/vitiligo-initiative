@@ -1,7 +1,7 @@
 # Validation Proposal — Povorcitinib Phase 3 Bridge Studies
 
 **Status:** Draft for lab / clinical research partner outreach (May 2026)  
-**Evidence basis:** [`candidate-report-v1.md`](candidate-report-v1.md) (#4 global candidate, score 81, PHASE_3)  
+**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#3 global candidate, score 91, PHASE_3)  
 **Disclaimer:** Research hypothesis only — not a treatment recommendation.
 
 ---

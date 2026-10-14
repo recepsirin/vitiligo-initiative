@@ -5,17 +5,34 @@ from __future__ import annotations
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from sqlalchemy import desc, func
+from sqlalchemy import case, desc, func
 from sqlmodel import Session, select
 
 from vitiligo.storage import Prior, PriorKind, PriorSourceKind, get_engine
 
 DEFAULT_VITILIGO_EFO_ID = "EFO_0004208"
 
-# Clinical stages that indicate meaningful drug development activity.
-_HIGH_SIGNAL_STAGES: frozenset[str] = frozenset(
-    {"PHASE_2", "PHASE_2_3", "PHASE_3", "PHASE_4", "APPROVAL"}
-)
+# Ordinal rank of clinical-stage labels (higher = further along). Stage strings
+# must never be sorted lexically: "APPROVAL" < "PHASE_1" < "UNKNOWN" as text.
+# Unlisted labels (UNKNOWN, WITHDRAWN, None) rank 0.
+_STAGE_RANK: dict[str, int] = {
+    "APPROVAL": 8,
+    "PHASE_4": 7,
+    "PHASE_3": 6,
+    "PHASE_2_3": 5,
+    "PHASE_2": 4,
+    "PHASE_1_2": 3,
+    "PHASE_1": 2,
+    "EARLY_PHASE_1": 1,
+}
+
+# Drugs at or beyond this stage count as meaningful development activity.
+_HIGH_SIGNAL_MIN_RANK = _STAGE_RANK["PHASE_2"]
+
+
+def clinical_stage_rank(stage: str | None) -> int:
+    """Return the ordinal rank of a clinical-stage label (0 when unknown)."""
+    return _STAGE_RANK.get((stage or "").upper(), 0)
 
 
 @dataclass(frozen=True)
@@ -36,7 +53,10 @@ def list_drug_priors(
             .where(Prior.kind == PriorKind.DRUG)
             .where(Prior.disease_id == disease_id)
             .where(Prior.source.in_(src_list))  # type: ignore[attr-defined]
-            .order_by(desc(Prior.clinical_stage), Prior.name)
+            .order_by(
+                desc(case(_STAGE_RANK, value=Prior.clinical_stage, else_=0)),
+                Prior.name,
+            )
             .limit(limit)
         )
         return list(session.exec(stmt))
@@ -111,14 +131,9 @@ def _merge_drug_priors(
     *,
     limit: int,
 ) -> list[Prior]:
-    high_signal_stages = _HIGH_SIGNAL_STAGES
-
-    def _is_high_signal(d: Prior) -> bool:
-        return (d.clinical_stage or "") in high_signal_stages or (
-            d.clinical_stage or ""
-        ).startswith("PHASE")
-
-    filtered_primary = [d for d in primary if _is_high_signal(d)] or primary
+    filtered_primary = [
+        d for d in primary if clinical_stage_rank(d.clinical_stage) >= _HIGH_SIGNAL_MIN_RANK
+    ] or primary
     seen = {_normalize_prior_name(d.name) for d in filtered_primary}
     merged = list(filtered_primary[:limit])
     for drug in secondary:

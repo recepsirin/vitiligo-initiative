@@ -14,6 +14,7 @@ requires for programmatic access.
 
 from __future__ import annotations
 
+import re
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -348,7 +349,7 @@ def _parse_article(article: etree._Element) -> Document:
     if not pmid:
         raise ValueError("Article missing PMID")
 
-    title = _findtext(article, ".//ArticleTitle")
+    title = full_text(article, ".//ArticleTitle")
     abstract = _collect_abstract(article)
     journal = _findtext(article, ".//Journal/Title")
     year = _parse_year(article)
@@ -386,6 +387,24 @@ def _parse_article(article: etree._Element) -> Document:
 def _findtext(el: etree._Element, xpath: str) -> str | None:
     found = el.findtext(xpath)
     return found.strip() if found else None
+
+
+_ASCII_WHITESPACE_RE = re.compile(r"[ \t\r\n]+")
+
+
+def full_text(el: etree._Element, xpath: str) -> str | None:
+    """Text of the first match including inline markup (``CD8<sup>+</sup>`` -> ``CD8+``).
+
+    ``findtext`` stops at the first child element, which truncates titles
+    containing ``<i>``, ``<sup>`` or ``<sub>``.
+    """
+    found = el.find(xpath)
+    if found is None:
+        return None
+    # Collapse only ASCII whitespace (line breaks around inline tags); keep
+    # typographic spaces such as U+2009 in "308\u2009nm" as published.
+    text = _ASCII_WHITESPACE_RE.sub(" ", "".join(found.itertext())).strip()
+    return text or None
 
 
 def _collect_abstract(article: etree._Element) -> str | None:

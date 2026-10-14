@@ -1,0 +1,2511 @@
+{
+  "leave_one_trial_out": {
+    "design": "leave-one-trial-out, control arm kept",
+    "overall": {
+      "points": 107,
+      "coverage80": 0.925,
+      "coverage95": 0.991,
+      "mean_abs_error_pp": 5.08
+    },
+    "all_folds_converged": true,
+    "folds": {
+      "NCT03099304": {
+        "metrics": {
+          "points": 4,
+          "coverage80": 1.0,
+          "coverage95": 1.0,
+          "mean_abs_error_pp": 20.15
+        },
+        "converged": true,
+        "diagnostics": {
+          "max_rhat": 1.0097257902040804,
+          "min_ess_bulk": 1217.7104796286303,
+          "divergences": 0.0,
+          "draws": 6000.0
+        },
+        "points": [
+          {
+            "source_id": "NCT03099304",
+            "arm_label": "Ruxolitinib Cream 0.15% QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 31,
+            "observed": 0.32299999999999995,
+            "predicted": {
+              "mean": 0.13498387096774192,
+              "median": 0.06451612903225806,
+              "lo80": 0.0,
+              "hi80": 0.41935483870967744,
+              "lo95": 0.0,
+              "hi95": 0.7427419354838593
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03099304",
+            "arm_label": "Ruxolitinib Cream 0.5% QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 31,
+            "observed": 0.258,
+            "predicted": {
+              "mean": 0.18086559139784947,
+              "median": 0.12903225806451613,
+              "lo80": 0.0,
+              "hi80": 0.45161290322580644,
+              "lo95": 0.0,
+              "hi95": 0.6774193548387096
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03099304",
+            "arm_label": "Ruxolitinib Cream 1.5% QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 30,
+            "observed": 0.5,
+            "predicted": {
+              "mean": 0.2604777777777778,
+              "median": 0.23333333333333334,
+              "lo80": 0.03333333333333333,
+              "hi80": 0.5333333333333333,
+              "lo95": 0.0,
+              "hi95": 0.7
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03099304",
+            "arm_label": "Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 50,
+            "n": 33,
+            "observed": 0.455,
+            "predicted": {
+              "mean": 0.33166161616161616,
+              "median": 0.30303030303030304,
+              "lo80": 0.09090909090909091,
+              "hi80": 0.6060606060606061,
+              "lo95": 0.030303030303030304,
+              "hi95": 0.7575757575757576
+            },
+            "in80": true,
+            "in95": true
+          }
+        ]
+      },
+      "NCT03715829": {
+        "metrics": {
+          "points": 81,
+          "coverage80": 1.0,
+          "coverage95": 1.0,
+          "mean_abs_error_pp": 1.21
+        },
+        "converged": true,
+        "diagnostics": {
+          "max_rhat": 1.002556322552386,
+          "min_ess_bulk": 1529.8999684075934,
+          "divergences": 0.0,
+          "draws": 6000.0
+        },
+        "points": [
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200 mg - 50 mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 58,
+            "observed": 0.121,
+            "predicted": {
+              "mean": 0.16073563218390807,
+              "median": 0.08620689655172414,
+              "lo80": 0.0,
+              "hi80": 0.4482758620689655,
+              "lo95": 0.0,
+              "hi95": 0.7241379310344828
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 59,
+            "observed": 0.085,
+            "predicted": {
+              "mean": 0.1607683615819209,
+              "median": 0.0847457627118644,
+              "lo80": 0.0,
+              "hi80": 0.4406779661016949,
+              "lo95": 0.0,
+              "hi95": 0.711864406779661
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 52,
+            "observed": 0.077,
+            "predicted": {
+              "mean": 0.14292307692307693,
+              "median": 0.09615384615384616,
+              "lo80": 0.0,
+              "hi80": 0.34615384615384615,
+              "lo95": 0.0,
+              "hi95": 0.6153846153846154
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 37,
+            "observed": 0.027000000000000003,
+            "predicted": {
+              "mean": 0.14284684684684687,
+              "median": 0.08108108108108109,
+              "lo80": 0.0,
+              "hi80": 0.35135135135135137,
+              "lo95": 0.0,
+              "hi95": 0.6216216216216216
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 43,
+            "observed": 0.023,
+            "predicted": {
+              "mean": 0.14299612403100775,
+              "median": 0.09302325581395349,
+              "lo80": 0.0,
+              "hi80": 0.3488372093023256,
+              "lo95": 0.0,
+              "hi95": 0.6052325581395264
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 4,
+            "threshold": 50,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00900268817204301,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.03225806451612903,
+              "lo95": 0.0,
+              "hi95": 0.06451612903225806
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 4,
+            "threshold": 50,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.008984126984126983,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.031746031746031744,
+              "lo95": 0.0,
+              "hi95": 0.06349206349206349
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 4,
+            "threshold": 50,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00853954802259887,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.03389830508474576,
+              "lo95": 0.0,
+              "hi95": 0.05084745762711865
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 4,
+            "threshold": 50,
+            "n": 45,
+            "observed": 0.022000000000000002,
+            "predicted": {
+              "mean": 0.00854074074074074,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.022222222222222223,
+              "lo95": 0.0,
+              "hi95": 0.06666666666666667
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 4,
+            "threshold": 50,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.008548611111111113,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.020833333333333332,
+              "lo95": 0.0,
+              "hi95": 0.0625
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 8,
+            "threshold": 50,
+            "n": 62,
+            "observed": 0.032,
+            "predicted": {
+              "mean": 0.038279569892473116,
+              "median": 0.016129032258064516,
+              "lo80": 0.0,
+              "hi80": 0.0967741935483871,
+              "lo95": 0.0,
+              "hi95": 0.21008064516128447
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 8,
+            "threshold": 50,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.038402116402116396,
+              "median": 0.015873015873015872,
+              "lo80": 0.0,
+              "hi80": 0.1111111111111111,
+              "lo95": 0.0,
+              "hi95": 0.2222222222222222
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 8,
+            "threshold": 50,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.03486158192090395,
+              "median": 0.01694915254237288,
+              "lo80": 0.0,
+              "hi80": 0.0847457627118644,
+              "lo95": 0.0,
+              "hi95": 0.1864406779661017
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 8,
+            "threshold": 50,
+            "n": 45,
+            "observed": 0.022000000000000002,
+            "predicted": {
+              "mean": 0.03493703703703704,
+              "median": 0.022222222222222223,
+              "lo80": 0.0,
+              "hi80": 0.08888888888888889,
+              "lo95": 0.0,
+              "hi95": 0.2
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 8,
+            "threshold": 50,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.03494097222222222,
+              "median": 0.020833333333333332,
+              "lo80": 0.0,
+              "hi80": 0.08333333333333333,
+              "lo95": 0.0,
+              "hi95": 0.1875
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 16,
+            "threshold": 50,
+            "n": 61,
+            "observed": 0.14800000000000002,
+            "predicted": {
+              "mean": 0.15539344262295082,
+              "median": 0.09836065573770492,
+              "lo80": 0.0,
+              "hi80": 0.39344262295081966,
+              "lo95": 0.0,
+              "hi95": 0.6229508196721312
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 16,
+            "threshold": 50,
+            "n": 58,
+            "observed": 0.138,
+            "predicted": {
+              "mean": 0.1554683908045977,
+              "median": 0.10344827586206896,
+              "lo80": 0.0,
+              "hi80": 0.39655172413793105,
+              "lo95": 0.0,
+              "hi95": 0.6379310344827587
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 16,
+            "threshold": 50,
+            "n": 58,
+            "observed": 0.069,
+            "predicted": {
+              "mean": 0.14258620689655171,
+              "median": 0.10344827586206896,
+              "lo80": 0.0,
+              "hi80": 0.3275862068965517,
+              "lo95": 0.0,
+              "hi95": 0.5517241379310345
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 16,
+            "threshold": 50,
+            "n": 39,
+            "observed": 0.10300000000000001,
+            "predicted": {
+              "mean": 0.142517094017094,
+              "median": 0.10256410256410256,
+              "lo80": 0.0,
+              "hi80": 0.3333333333333333,
+              "lo95": 0.0,
+              "hi95": 0.5641025641025641
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 16,
+            "threshold": 50,
+            "n": 42,
+            "observed": 0.024,
+            "predicted": {
+              "mean": 0.14247619047619045,
+              "median": 0.09523809523809523,
+              "lo80": 0.0,
+              "hi80": 0.3333333333333333,
+              "lo95": 0.0,
+              "hi95": 0.5476190476190477
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 58,
+            "observed": 0.22399999999999998,
+            "predicted": {
+              "mean": 0.28949425287356323,
+              "median": 0.22413793103448276,
+              "lo80": 0.017241379310344827,
+              "hi80": 0.6724137931034483,
+              "lo95": 0.0,
+              "hi95": 0.8793103448275862
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 59,
+            "observed": 0.254,
+            "predicted": {
+              "mean": 0.2894887005649718,
+              "median": 0.22033898305084745,
+              "lo80": 0.01694915254237288,
+              "hi80": 0.6610169491525424,
+              "lo95": 0.0,
+              "hi95": 0.8813559322033898
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 52,
+            "observed": 0.154,
+            "predicted": {
+              "mean": 0.27625320512820517,
+              "median": 0.23076923076923078,
+              "lo80": 0.038461538461538464,
+              "hi80": 0.5961538461538461,
+              "lo95": 0.0,
+              "hi95": 0.8269230769230769
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 37,
+            "observed": 0.18899999999999997,
+            "predicted": {
+              "mean": 0.2762207207207208,
+              "median": 0.24324324324324326,
+              "lo80": 0.02702702702702703,
+              "hi80": 0.5945945945945946,
+              "lo95": 0.0,
+              "hi95": 0.8378378378378378
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 24,
+            "threshold": 50,
+            "n": 43,
+            "observed": 0.07,
+            "predicted": {
+              "mean": 0.2763643410852713,
+              "median": 0.23255813953488372,
+              "lo80": 0.023255813953488372,
+              "hi80": 0.5813953488372093,
+              "lo95": 0.0,
+              "hi95": 0.813953488372093
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 4,
+            "threshold": 75,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.001983870967741935,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.016129032258064516
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 4,
+            "threshold": 75,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.001984126984126984,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.015873015873015872
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 4,
+            "threshold": 75,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0017259887005649718,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.01694915254237288
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 4,
+            "threshold": 75,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0017296296296296294,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.022222222222222223
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 4,
+            "threshold": 75,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00175,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.020833333333333332
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 8,
+            "threshold": 75,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.011618279569892474,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.03225806451612903,
+              "lo95": 0.0,
+              "hi95": 0.08064516129032258
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 8,
+            "threshold": 75,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.011613756613756614,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.031746031746031744,
+              "lo95": 0.0,
+              "hi95": 0.07936507936507936
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 8,
+            "threshold": 75,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.010124293785310734,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.03389830508474576,
+              "lo95": 0.0,
+              "hi95": 0.06779661016949153
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 8,
+            "threshold": 75,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.010048148148148148,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.022222222222222223,
+              "lo95": 0.0,
+              "hi95": 0.06666666666666667
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 8,
+            "threshold": 75,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.010038194444444443,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.020833333333333332,
+              "lo95": 0.0,
+              "hi95": 0.08333333333333333
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 16,
+            "threshold": 75,
+            "n": 61,
+            "observed": 0.016,
+            "predicted": {
+              "mean": 0.06885519125683061,
+              "median": 0.03278688524590164,
+              "lo80": 0.0,
+              "hi80": 0.19672131147540983,
+              "lo95": 0.0,
+              "hi95": 0.3770491803278688
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 16,
+            "threshold": 75,
+            "n": 58,
+            "observed": 0.017,
+            "predicted": {
+              "mean": 0.06891954022988506,
+              "median": 0.034482758620689655,
+              "lo80": 0.0,
+              "hi80": 0.1896551724137931,
+              "lo95": 0.0,
+              "hi95": 0.3793103448275862
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 16,
+            "threshold": 75,
+            "n": 58,
+            "observed": 0.052000000000000005,
+            "predicted": {
+              "mean": 0.05919827586206897,
+              "median": 0.034482758620689655,
+              "lo80": 0.0,
+              "hi80": 0.15517241379310345,
+              "lo95": 0.0,
+              "hi95": 0.3275862068965517
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 16,
+            "threshold": 75,
+            "n": 39,
+            "observed": 0.026000000000000002,
+            "predicted": {
+              "mean": 0.05931196581196581,
+              "median": 0.02564102564102564,
+              "lo80": 0.0,
+              "hi80": 0.15384615384615385,
+              "lo95": 0.0,
+              "hi95": 0.3333333333333333
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 16,
+            "threshold": 75,
+            "n": 42,
+            "observed": 0.024,
+            "predicted": {
+              "mean": 0.05941269841269842,
+              "median": 0.023809523809523808,
+              "lo80": 0.0,
+              "hi80": 0.16666666666666666,
+              "lo95": 0.0,
+              "hi95": 0.3333333333333333
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 24,
+            "threshold": 75,
+            "n": 58,
+            "observed": 0.121,
+            "predicted": {
+              "mean": 0.16073563218390807,
+              "median": 0.08620689655172414,
+              "lo80": 0.0,
+              "hi80": 0.4482758620689655,
+              "lo95": 0.0,
+              "hi95": 0.7241379310344828
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 4,
+            "threshold": 90,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00029032258064516127,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 4,
+            "threshold": 90,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0002857142857142857,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 4,
+            "threshold": 90,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00027683615819209037,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 4,
+            "threshold": 90,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0002777777777777778,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 4,
+            "threshold": 90,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0002743055555555555,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 8,
+            "threshold": 90,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.002991935483870968,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.016129032258064516,
+              "lo95": 0.0,
+              "hi95": 0.03225806451612903
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 8,
+            "threshold": 90,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0029920634920634916,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.015873015873015872,
+              "lo95": 0.0,
+              "hi95": 0.031746031746031744
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 8,
+            "threshold": 90,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.002361581920903955,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.01694915254237288
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 8,
+            "threshold": 90,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.002425925925925926,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.022222222222222223
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 8,
+            "threshold": 90,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.002451388888888889,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.020833333333333332
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 16,
+            "threshold": 90,
+            "n": 61,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.026437158469945356,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.06557377049180328,
+              "lo95": 0.0,
+              "hi95": 0.19672131147540983
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 16,
+            "threshold": 90,
+            "n": 58,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.026531609195402296,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.06896551724137931,
+              "lo95": 0.0,
+              "hi95": 0.1896551724137931
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 16,
+            "threshold": 90,
+            "n": 58,
+            "observed": 0.017,
+            "predicted": {
+              "mean": 0.02102873563218391,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.05172413793103448,
+              "lo95": 0.0,
+              "hi95": 0.15517241379310345
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 16,
+            "threshold": 90,
+            "n": 39,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.020982905982905982,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.05128205128205128,
+              "lo95": 0.0,
+              "hi95": 0.15384615384615385
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 16,
+            "threshold": 90,
+            "n": 42,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.021067460317460315,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.047619047619047616,
+              "lo95": 0.0,
+              "hi95": 0.14285714285714285
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 24,
+            "threshold": 90,
+            "n": 58,
+            "observed": 0.017,
+            "predicted": {
+              "mean": 0.07820114942528736,
+              "median": 0.017241379310344827,
+              "lo80": 0.0,
+              "hi80": 0.2413793103448276,
+              "lo95": 0.0,
+              "hi95": 0.4827586206896552
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 24,
+            "threshold": 90,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.07823163841807909,
+              "median": 0.01694915254237288,
+              "lo80": 0.0,
+              "hi80": 0.23728813559322035,
+              "lo95": 0.0,
+              "hi95": 0.4915254237288136
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 24,
+            "threshold": 90,
+            "n": 52,
+            "observed": 0.038,
+            "predicted": {
+              "mean": 0.06421794871794873,
+              "median": 0.019230769230769232,
+              "lo80": 0.0,
+              "hi80": 0.17307692307692307,
+              "lo95": 0.0,
+              "hi95": 0.38461538461538464
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 24,
+            "threshold": 90,
+            "n": 37,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.06432432432432432,
+              "median": 0.02702702702702703,
+              "lo80": 0.0,
+              "hi80": 0.16216216216216217,
+              "lo95": 0.0,
+              "hi95": 0.40540540540540543
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 24,
+            "threshold": 90,
+            "n": 43,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.06443410852713177,
+              "median": 0.023255813953488372,
+              "lo80": 0.0,
+              "hi80": 0.16279069767441862,
+              "lo95": 0.0,
+              "hi95": 0.3953488372093023
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 4,
+            "threshold": 100,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 3.2258064516129034e-05,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 4,
+            "threshold": 100,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 3.1746031746031745e-05,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 4,
+            "threshold": 100,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 3.6723163841807906e-05,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 4,
+            "threshold": 100,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 3.7037037037037037e-05,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 4,
+            "threshold": 100,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 4.1666666666666665e-05,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 8,
+            "threshold": 100,
+            "n": 62,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0005134408602150537,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 8,
+            "threshold": 100,
+            "n": 63,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0005132275132275132,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 8,
+            "threshold": 100,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0004293785310734463,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 8,
+            "threshold": 100,
+            "n": 45,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00043703703703703705,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 8,
+            "threshold": 100,
+            "n": 48,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.0004236111111111111,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 16,
+            "threshold": 100,
+            "n": 61,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.006639344262295082,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.01639344262295082,
+              "lo95": 0.0,
+              "hi95": 0.06557377049180328
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 16,
+            "threshold": 100,
+            "n": 58,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.006589080459770115,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.017241379310344827,
+              "lo95": 0.0,
+              "hi95": 0.06896551724137931
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 16,
+            "threshold": 100,
+            "n": 58,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.004827586206896552,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.017241379310344827,
+              "lo95": 0.0,
+              "hi95": 0.05172413793103448
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 16,
+            "threshold": 100,
+            "n": 39,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.00485042735042735,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.05128205128205128
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 16,
+            "threshold": 100,
+            "n": 42,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.004845238095238095,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.0,
+              "lo95": 0.0,
+              "hi95": 0.047619047619047616
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 200mg - 50mg QD",
+            "week": 24,
+            "threshold": 100,
+            "n": 58,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.023683908045977014,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.06896551724137931,
+              "lo95": 0.0,
+              "hi95": 0.22413793103448276
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 100 mg - 50 mg QD",
+            "week": 24,
+            "threshold": 100,
+            "n": 59,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.023632768361581923,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.06779661016949153,
+              "lo95": 0.0,
+              "hi95": 0.22033898305084745
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 50 mg QD",
+            "week": 24,
+            "threshold": 100,
+            "n": 52,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.017756410256410258,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.038461538461538464,
+              "lo95": 0.0,
+              "hi95": 0.17307692307692307
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 30 mg QD",
+            "week": 24,
+            "threshold": 100,
+            "n": 37,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.017963963963963964,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.05405405405405406,
+              "lo95": 0.0,
+              "hi95": 0.16216216216216217
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT03715829",
+            "arm_label": "PF-06651600 10 mg QD",
+            "week": 24,
+            "threshold": 100,
+            "n": 43,
+            "observed": 0.0,
+            "predicted": {
+              "mean": 0.017906976744186048,
+              "median": 0.0,
+              "lo80": 0.0,
+              "hi80": 0.046511627906976744,
+              "lo95": 0.0,
+              "hi95": 0.16279069767441862
+            },
+            "in80": true,
+            "in95": true
+          }
+        ]
+      },
+      "NCT04052425": {
+        "metrics": {
+          "points": 8,
+          "coverage80": 0.75,
+          "coverage95": 1.0,
+          "mean_abs_error_pp": 17.9
+        },
+        "converged": true,
+        "diagnostics": {
+          "max_rhat": 1.0022036233127198,
+          "min_ess_bulk": 2250.874915070931,
+          "divergences": 0.0,
+          "draws": 6000.0
+        },
+        "points": [
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 75,
+            "n": 221,
+            "observed": 0.298,
+            "predicted": {
+              "mean": 0.4831975867269985,
+              "median": 0.4751131221719457,
+              "lo80": 0.2669683257918552,
+              "hi80": 0.7149321266968326,
+              "lo95": 0.18099547511312217,
+              "hi95": 0.8371040723981901
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 50,
+            "n": 221,
+            "observed": 0.512,
+            "predicted": {
+              "mean": 0.6974298642533937,
+              "median": 0.7058823529411765,
+              "lo80": 0.497737556561086,
+              "hi80": 0.8868778280542986,
+              "lo95": 0.38009049773755654,
+              "hi95": 0.9457013574660633
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 90,
+            "n": 221,
+            "observed": 0.153,
+            "predicted": {
+              "mean": 0.26402790346907995,
+              "median": 0.23529411764705882,
+              "lo80": 0.09954751131221719,
+              "hi80": 0.4710407239819021,
+              "lo95": 0.05429864253393665,
+              "hi95": 0.6380090497737556
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 25,
+            "n": 221,
+            "observed": 0.698,
+            "predicted": {
+              "mean": 0.7953891402714932,
+              "median": 0.8144796380090498,
+              "lo80": 0.6289592760180995,
+              "hi80": 0.9366515837104072,
+              "lo95": 0.5158371040723982,
+              "hi95": 0.9773755656108597
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 25,
+            "n": 173,
+            "observed": 0.8959999999999999,
+            "predicted": {
+              "mean": 0.9488169556840078,
+              "median": 0.9710982658959537,
+              "lo80": 0.8670520231213873,
+              "hi80": 1.0,
+              "lo95": 0.7687861271676301,
+              "hi95": 1.0
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 50,
+            "n": 173,
+            "observed": 0.7509999999999999,
+            "predicted": {
+              "mean": 0.9114017341040462,
+              "median": 0.9421965317919075,
+              "lo80": 0.7803468208092486,
+              "hi80": 0.9942196531791907,
+              "lo95": 0.653179190751445,
+              "hi95": 1.0
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 75,
+            "n": 173,
+            "observed": 0.526,
+            "predicted": {
+              "mean": 0.7958159922928708,
+              "median": 0.8323699421965318,
+              "lo80": 0.5664739884393064,
+              "hi80": 0.976878612716763,
+              "lo95": 0.41040462427745666,
+              "hi95": 1.0
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04052425",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 90,
+            "n": 173,
+            "observed": 0.32899999999999996,
+            "predicted": {
+              "mean": 0.6116531791907515,
+              "median": 0.6184971098265896,
+              "lo80": 0.31213872832369943,
+              "hi80": 0.9017341040462428,
+              "lo95": 0.1907514450867052,
+              "hi95": 0.9710982658959537
+            },
+            "in80": true,
+            "in95": true
+          }
+        ]
+      },
+      "NCT04057573": {
+        "metrics": {
+          "points": 8,
+          "coverage80": 0.25,
+          "coverage95": 0.875,
+          "mean_abs_error_pp": 19.28
+        },
+        "converged": true,
+        "diagnostics": {
+          "max_rhat": 1.0013037135047647,
+          "min_ess_bulk": 1531.4399430743854,
+          "divergences": 0.0,
+          "draws": 6000.0
+        },
+        "points": [
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 75,
+            "n": 222,
+            "observed": 0.309,
+            "predicted": {
+              "mean": 0.4636936936936937,
+              "median": 0.44594594594594594,
+              "lo80": 0.28378378378378377,
+              "hi80": 0.6711711711711712,
+              "lo95": 0.2072072072072072,
+              "hi95": 0.7972972972972973
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 50,
+            "n": 222,
+            "observed": 0.514,
+            "predicted": {
+              "mean": 0.6836554054054054,
+              "median": 0.6846846846846847,
+              "lo80": 0.5180180180180181,
+              "hi80": 0.8558558558558559,
+              "lo95": 0.42342342342342343,
+              "hi95": 0.9234234234234234
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 90,
+            "n": 222,
+            "observed": 0.163,
+            "predicted": {
+              "mean": 0.24586936936936937,
+              "median": 0.22072072072072071,
+              "lo80": 0.10810810810810811,
+              "hi80": 0.4189189189189189,
+              "lo95": 0.06756756756756757,
+              "hi95": 0.5765765765765766
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            "week": 24,
+            "threshold": 25,
+            "n": 222,
+            "observed": 0.639,
+            "predicted": {
+              "mean": 0.8221516516516516,
+              "median": 0.8333333333333334,
+              "lo80": 0.6981981981981982,
+              "hi80": 0.9369369369369369,
+              "lo95": 0.6126126126126126,
+              "hi95": 0.9774774774774775
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 25,
+            "n": 177,
+            "observed": 0.825,
+            "predicted": {
+              "mean": 0.9603502824858757,
+              "median": 0.9774011299435028,
+              "lo80": 0.903954802259887,
+              "hi80": 1.0,
+              "lo95": 0.8418079096045198,
+              "hi95": 1.0
+            },
+            "in80": false,
+            "in95": false
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 50,
+            "n": 177,
+            "observed": 0.74,
+            "predicted": {
+              "mean": 0.9089839924670433,
+              "median": 0.9322033898305084,
+              "lo80": 0.7966101694915254,
+              "hi80": 0.9943502824858758,
+              "lo95": 0.6949152542372882,
+              "hi95": 1.0
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 75,
+            "n": 177,
+            "observed": 0.48,
+            "predicted": {
+              "mean": 0.7873258003766478,
+              "median": 0.807909604519774,
+              "lo80": 0.5875706214689266,
+              "hi80": 0.96045197740113,
+              "lo95": 0.4632768361581921,
+              "hi95": 0.9943502824858758
+            },
+            "in80": false,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04057573",
+            "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            "week": 52,
+            "threshold": 90,
+            "n": 177,
+            "observed": 0.27699999999999997,
+            "predicted": {
+              "mean": 0.5932749529190208,
+              "median": 0.5875706214689266,
+              "lo80": 0.3333333333333333,
+              "hi80": 0.864406779661017,
+              "lo95": 0.23163841807909605,
+              "hi95": 0.96045197740113
+            },
+            "in80": false,
+            "in95": true
+          }
+        ]
+      },
+      "NCT04927975": {
+        "metrics": {
+          "points": 6,
+          "coverage80": 1.0,
+          "coverage95": 1.0,
+          "mean_abs_error_pp": 11.25
+        },
+        "converged": true,
+        "diagnostics": {
+          "max_rhat": 1.0034420850576768,
+          "min_ess_bulk": 1524.6294327291464,
+          "divergences": 0.0,
+          "draws": 6000.0
+        },
+        "points": [
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 6 mg Period 1, Then Upa 6 mg Period 2",
+            "week": 24,
+            "threshold": 75,
+            "n": 49,
+            "observed": 0.08199999999999999,
+            "predicted": {
+              "mean": 0.27235374149659863,
+              "median": 0.22448979591836735,
+              "lo80": 0.04081632653061224,
+              "hi80": 0.5714285714285714,
+              "lo95": 0.0,
+              "hi95": 0.7755102040816326
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 11 mg Period 1, Then Upa 11 mg Period 2",
+            "week": 24,
+            "threshold": 75,
+            "n": 47,
+            "observed": 0.191,
+            "predicted": {
+              "mean": 0.27251063829787237,
+              "median": 0.23404255319148937,
+              "lo80": 0.0425531914893617,
+              "hi80": 0.574468085106383,
+              "lo95": 0.0,
+              "hi95": 0.7872340425531915
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 22 mg Period 1, Then Upa 22 mg Period 2",
+            "week": 24,
+            "threshold": 75,
+            "n": 43,
+            "observed": 0.14,
+            "predicted": {
+              "mean": 0.2727751937984496,
+              "median": 0.23255813953488372,
+              "lo80": 0.046511627906976744,
+              "hi80": 0.5813953488372093,
+              "lo95": 0.0,
+              "hi95": 0.7906976744186046
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 6 mg Period 1, Then Upa 6 mg Period 2",
+            "week": 24,
+            "threshold": 50,
+            "n": 49,
+            "observed": 0.163,
+            "predicted": {
+              "mean": 0.4522482993197279,
+              "median": 0.4489795918367347,
+              "lo80": 0.14285714285714285,
+              "hi80": 0.7959183673469388,
+              "lo95": 0.04081632653061224,
+              "hi95": 0.9183673469387755
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 11 mg Period 1, Then Upa 11 mg Period 2",
+            "week": 24,
+            "threshold": 50,
+            "n": 47,
+            "observed": 0.38299999999999995,
+            "predicted": {
+              "mean": 0.4520886524822695,
+              "median": 0.44680851063829785,
+              "lo80": 0.1276595744680851,
+              "hi80": 0.7872340425531915,
+              "lo95": 0.0425531914893617,
+              "hi95": 0.9148936170212766
+            },
+            "in80": true,
+            "in95": true
+          },
+          {
+            "source_id": "NCT04927975",
+            "arm_label": "Upa 22 mg Period 1, Then Upa 22 mg Period 2",
+            "week": 24,
+            "threshold": 50,
+            "n": 43,
+            "observed": 0.395,
+            "predicted": {
+              "mean": 0.4523178294573643,
+              "median": 0.4418604651162791,
+              "lo80": 0.13953488372093023,
+              "hi80": 0.7906976744186046,
+              "lo95": 0.023255813953488372,
+              "hi95": 0.9302325581395349
+            },
+            "in80": true,
+            "in95": true
+          }
+        ]
+      }
+    }
+  },
+  "time_extrapolation": {
+    "design": "fit weeks <= 24, predict later weeks",
+    "overall": {
+      "points": 26,
+      "coverage80": 0.692,
+      "coverage95": 0.731,
+      "mean_abs_error_pp": 10.62
+    },
+    "converged": false,
+    "diagnostics": {
+      "max_rhat": 1.002187032314609,
+      "min_ess_bulk": 1629.5123316730696,
+      "divergences": 1.0,
+      "draws": 6000.0
+    },
+    "points": [
+      {
+        "source_id": "NCT04052425",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 25,
+        "n": 173,
+        "observed": 0.8959999999999999,
+        "predicted": {
+          "mean": 0.9590134874759153,
+          "median": 0.9653179190751445,
+          "lo80": 0.9075144508670521,
+          "hi80": 0.9942196531791907,
+          "lo95": 0.8728323699421965,
+          "hi95": 1.0
+        },
+        "in80": false,
+        "in95": true
+      },
+      {
+        "source_id": "NCT04052425",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 50,
+        "n": 173,
+        "observed": 0.7509999999999999,
+        "predicted": {
+          "mean": 0.9137398843930635,
+          "median": 0.9248554913294798,
+          "lo80": 0.8265895953757225,
+          "hi80": 0.9826589595375722,
+          "lo95": 0.7745664739884393,
+          "hi95": 0.9942196531791907
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04052425",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 75,
+        "n": 173,
+        "observed": 0.526,
+        "predicted": {
+          "mean": 0.794188824662813,
+          "median": 0.8034682080924855,
+          "lo80": 0.6416184971098265,
+          "hi80": 0.9364161849710982,
+          "lo95": 0.5722543352601156,
+          "hi95": 0.9710982658959537
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04052425",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 90,
+        "n": 173,
+        "observed": 0.32899999999999996,
+        "predicted": {
+          "mean": 0.5969788053949904,
+          "median": 0.5895953757225434,
+          "lo80": 0.4046242774566474,
+          "hi80": 0.8034682080924855,
+          "lo95": 0.32947976878612717,
+          "hi95": 0.8959537572254336
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04057573",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 25,
+        "n": 177,
+        "observed": 0.825,
+        "predicted": {
+          "mean": 0.9558549905838042,
+          "median": 0.9661016949152542,
+          "lo80": 0.903954802259887,
+          "hi80": 0.9943502824858758,
+          "lo95": 0.864406779661017,
+          "hi95": 1.0
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04057573",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 50,
+        "n": 177,
+        "observed": 0.74,
+        "predicted": {
+          "mean": 0.9076186440677966,
+          "median": 0.9209039548022598,
+          "lo80": 0.8192090395480226,
+          "hi80": 0.9830508474576272,
+          "lo95": 0.7570621468926554,
+          "hi95": 0.9943502824858758
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04057573",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 75,
+        "n": 177,
+        "observed": 0.48,
+        "predicted": {
+          "mean": 0.7834519774011299,
+          "median": 0.7909604519774012,
+          "lo80": 0.632768361581921,
+          "hi80": 0.9265536723163842,
+          "lo95": 0.5536723163841808,
+          "hi95": 0.9661016949152542
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT04057573",
+        "arm_label": "Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        "week": 52,
+        "threshold": 90,
+        "n": 177,
+        "observed": 0.27699999999999997,
+        "predicted": {
+          "mean": 0.5812457627118643,
+          "median": 0.5706214689265536,
+          "lo80": 0.3898305084745763,
+          "hi80": 0.7909604519774012,
+          "lo95": 0.3107344632768362,
+          "hi95": 0.8813559322033898
+        },
+        "in80": false,
+        "in95": false
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 32,
+        "threshold": 50,
+        "n": 6,
+        "observed": 1.0,
+        "predicted": {
+          "mean": 0.9405277777777779,
+          "median": 1.0,
+          "lo80": 0.8333333333333334,
+          "hi80": 1.0,
+          "lo95": 0.6666666666666666,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 32,
+        "threshold": 50,
+        "n": 32,
+        "observed": 0.875,
+        "predicted": {
+          "mean": 0.8030677083333333,
+          "median": 0.8125,
+          "lo80": 0.6875,
+          "hi80": 0.90625,
+          "lo95": 0.59375,
+          "hi95": 0.96875
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 40,
+        "threshold": 50,
+        "n": 6,
+        "observed": 1.0,
+        "predicted": {
+          "mean": 0.9705,
+          "median": 1.0,
+          "lo80": 0.8333333333333334,
+          "hi80": 1.0,
+          "lo95": 0.8333333333333334,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 40,
+        "threshold": 50,
+        "n": 28,
+        "observed": 0.929,
+        "predicted": {
+          "mean": 0.8759345238095237,
+          "median": 0.8928571428571429,
+          "lo80": 0.75,
+          "hi80": 0.9642857142857143,
+          "lo95": 0.6785714285714286,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 48,
+        "threshold": 50,
+        "n": 6,
+        "observed": 1.0,
+        "predicted": {
+          "mean": 0.98275,
+          "median": 1.0,
+          "lo80": 1.0,
+          "hi80": 1.0,
+          "lo95": 0.8333333333333334,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 48,
+        "threshold": 50,
+        "n": 26,
+        "observed": 0.9620000000000001,
+        "predicted": {
+          "mean": 0.9161602564102566,
+          "median": 0.9230769230769231,
+          "lo80": 0.8076923076923077,
+          "hi80": 1.0,
+          "lo95": 0.7307692307692307,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 32,
+        "threshold": 75,
+        "n": 6,
+        "observed": 0.833,
+        "predicted": {
+          "mean": 0.8447777777777778,
+          "median": 0.8333333333333334,
+          "lo80": 0.6666666666666666,
+          "hi80": 1.0,
+          "lo95": 0.5,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 32,
+        "threshold": 75,
+        "n": 32,
+        "observed": 0.594,
+        "predicted": {
+          "mean": 0.6120208333333333,
+          "median": 0.625,
+          "lo80": 0.46875,
+          "hi80": 0.78125,
+          "lo95": 0.375,
+          "hi95": 0.84375
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 40,
+        "threshold": 75,
+        "n": 6,
+        "observed": 1.0,
+        "predicted": {
+          "mean": 0.91325,
+          "median": 1.0,
+          "lo80": 0.6666666666666666,
+          "hi80": 1.0,
+          "lo95": 0.6666666666666666,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 40,
+        "threshold": 75,
+        "n": 28,
+        "observed": 0.7140000000000001,
+        "predicted": {
+          "mean": 0.7255119047619049,
+          "median": 0.75,
+          "lo80": 0.5714285714285714,
+          "hi80": 0.8928571428571429,
+          "lo95": 0.4642857142857143,
+          "hi95": 0.9285714285714286
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 48,
+        "threshold": 75,
+        "n": 6,
+        "observed": 1.0,
+        "predicted": {
+          "mean": 0.9468055555555557,
+          "median": 1.0,
+          "lo80": 0.8333333333333334,
+          "hi80": 1.0,
+          "lo95": 0.6666666666666666,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 48,
+        "threshold": 75,
+        "n": 26,
+        "observed": 0.846,
+        "predicted": {
+          "mean": 0.7983397435897435,
+          "median": 0.8076923076923077,
+          "lo80": 0.6153846153846154,
+          "hi80": 0.9615384615384616,
+          "lo95": 0.5384615384615384,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 32,
+        "threshold": 90,
+        "n": 6,
+        "observed": 0.5,
+        "predicted": {
+          "mean": 0.6632222222222222,
+          "median": 0.6666666666666666,
+          "lo80": 0.3333333333333333,
+          "hi80": 1.0,
+          "lo95": 0.16666666666666666,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 32,
+        "threshold": 90,
+        "n": 32,
+        "observed": 0.344,
+        "predicted": {
+          "mean": 0.3727447916666667,
+          "median": 0.375,
+          "lo80": 0.21875,
+          "hi80": 0.53125,
+          "lo95": 0.15625,
+          "hi95": 0.625
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 40,
+        "threshold": 90,
+        "n": 6,
+        "observed": 0.5,
+        "predicted": {
+          "mean": 0.7866388888888889,
+          "median": 0.8333333333333334,
+          "lo80": 0.5,
+          "hi80": 1.0,
+          "lo95": 0.3333333333333333,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 40,
+        "threshold": 90,
+        "n": 28,
+        "observed": 0.536,
+        "predicted": {
+          "mean": 0.5011904761904762,
+          "median": 0.5,
+          "lo80": 0.32142857142857145,
+          "hi80": 0.7142857142857143,
+          "lo95": 0.21428571428571427,
+          "hi95": 0.7857142857142857
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID",
+        "week": 48,
+        "threshold": 90,
+        "n": 6,
+        "observed": 0.667,
+        "predicted": {
+          "mean": 0.855361111111111,
+          "median": 0.8333333333333334,
+          "lo80": 0.6666666666666666,
+          "hi80": 1.0,
+          "lo95": 0.5,
+          "hi95": 1.0
+        },
+        "in80": true,
+        "in95": true
+      },
+      {
+        "source_id": "NCT05247489",
+        "arm_label": "Ruxolitinib 1.5% Cream BID + NB-UVB",
+        "week": 48,
+        "threshold": 90,
+        "n": 26,
+        "observed": 0.5379999999999999,
+        "predicted": {
+          "mean": 0.5998974358974358,
+          "median": 0.6153846153846154,
+          "lo80": 0.38461538461538464,
+          "hi80": 0.8076923076923077,
+          "lo95": 0.2692307692307692,
+          "hi95": 0.8846153846153846
+        },
+        "in80": true,
+        "in95": true
+      }
+    ]
+  }
+}

@@ -57,9 +57,11 @@ htmlcov/
 *.jks
 
 # Project data (large, regenerable)
-data/
+/data/
 exports/
-!data/.gitkeep
+!/data/.gitkeep
+# Simulator benchmark draws and posteriors (regenerate: python -m vsim.benchmark)
+lab/simulator/results/benchmark/
 logs/
 *.log
 *.db

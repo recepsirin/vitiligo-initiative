@@ -5,8 +5,11 @@ Run `vitiligo --help` for available commands.
 
 from __future__ import annotations
 
+import hashlib
 import json
+from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -37,6 +40,7 @@ from vitiligo.ingest import (
     run_pmc_ingestion,
     run_pubmed_ingestion,
 )
+from vitiligo.ingest.repair import repair_corpus
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
 from vitiligo.reasoning import (
@@ -46,9 +50,19 @@ from vitiligo.reasoning import (
     generate_hypotheses,
 )
 from vitiligo.reports import (
+    atlas_to_dict,
     build_candidate_report,
+    build_jak_atlas,
     render_candidate_report_markdown,
+    render_jak_atlas_markdown,
     report_to_dict,
+    write_jak_atlas_csv,
+)
+from vitiligo.reports.jak_arms import (
+    ArmEndpointRow,
+    harmonize_arms,
+    summarize_arms,
+    write_arms_csv,
 )
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
 from vitiligo.sources.drugbank import DEFAULT_VITILIGO_QUERY as DRUGBANK_DEFAULT_QUERY
@@ -84,6 +98,10 @@ trials_app = typer.Typer(help="Browse the local clinical-trials store.", no_args
 priors_app = typer.Typer(help="Browse drug/target priors from Open Targets.", no_args_is_help=True)
 graph_app = typer.Typer(help="Build and query the vitiligo knowledge graph.", no_args_is_help=True)
 report_app = typer.Typer(help="Generate reproducible research reports.", no_args_is_help=True)
+model_app = typer.Typer(
+    help="Scenario models over the JAK arm table (needs: pip install -e '.[model]').",
+    no_args_is_help=True,
+)
 app.add_typer(ingest_app, name="ingest")
 app.add_typer(db_app, name="db")
 app.add_typer(embed_app, name="embed")
@@ -91,6 +109,17 @@ app.add_typer(trials_app, name="trials")
 app.add_typer(priors_app, name="priors")
 app.add_typer(graph_app, name="graph")
 app.add_typer(report_app, name="report")
+app.add_typer(model_app, name="model")
+discover_app = typer.Typer(
+    help="Discovery loop: propose hypotheses, test on held-out evidence, keep a ledger.",
+    no_args_is_help=True,
+)
+app.add_typer(discover_app, name="discover")
+papers_app = typer.Typer(
+    help="Results tables from open-access papers (curated, cell-verified).", no_args_is_help=True
+)
+app.add_typer(papers_app, name="papers")
+PAPER_CURATION = Path("curation/paper-results.json")
 
 console = Console()
 logger = get_logger(__name__)
@@ -491,6 +520,35 @@ def db_sample(
             preview = doc.abstract[:400] + ("..." if len(doc.abstract) > 400 else "")
             console.print(f"[bold]Abstract:[/bold] {preview}")
         console.print()
+
+
+@db_app.command("repair")
+def db_repair(
+    apply: bool = typer.Option(
+        False, "--apply", help="Write the fixes (default: dry run that only reports)."
+    ),
+) -> None:
+    """Fix truncated PubMed titles and drop non-series GEO records in an existing corpus."""
+    init_db()
+    stats = repair_corpus(apply=apply)
+    mode = "[green]applied[/green]" if apply else "[yellow]dry run[/yellow]"
+    console.rule(f"[bold]Corpus repair[/bold] — {mode}")
+    console.print(
+        f"PubMed titles re-derived from stored XML: [cyan]{stats.pubmed_titles_fixed}[/cyan]"
+    )
+    console.print(
+        f"Non-series GEO documents removed:        [cyan]{stats.geo_documents_removed}[/cyan]"
+    )
+    if apply:
+        console.print(
+            f"Embeddings dropped:                      [cyan]{stats.embeddings_dropped}[/cyan]"
+        )
+    for source_id, old, new in stats.title_examples:
+        console.print(f"  [dim]PMID {source_id}:[/dim] {old!r} -> {new!r}")
+    if not apply:
+        console.print("\n[dim]Re-run with --apply to write. Back up the database first.[/dim]")
+    elif stats.embeddings_dropped:
+        console.print("\n[dim]Next: vitiligo embed run  (re-embeds the repaired documents)[/dim]")
 
 
 # --------------------------------------------------------------------- embed
@@ -1049,7 +1107,7 @@ def report_candidates_cmd(
     intents: str | None = typer.Option(
         None,
         "--intents",
-        help="Path to candidate-intents.json (default: docs/candidate-intents.json).",
+        help="Path to an intents JSON file (default: the packaged candidate-intents.json).",
     ),
     top_n: int = typer.Option(10, "--top-n", "-n", help="Candidates per intent / global list."),
     llm: bool = typer.Option(
@@ -1107,6 +1165,642 @@ def report_candidates_cmd(
             "\n[dim]Tip: pass --json exports/candidate-report.json "
             "--markdown docs/candidate-report-v1.md[/dim]"
         )
+
+
+@report_app.command("jak")
+def report_jak_cmd(
+    json_out: str | None = typer.Option(
+        None,
+        "--json",
+        help="Write the full atlas as JSON (e.g. exports/jak-atlas.json).",
+    ),
+    markdown_out: str | None = typer.Option(
+        None,
+        "--markdown",
+        help="Write a human-readable Markdown atlas (e.g. exports/jak-atlas.md).",
+    ),
+    csv_dir: str | None = typer.Option(
+        None,
+        "--csv-dir",
+        help="Write trials.csv, outcomes.csv, adverse_events.csv into this directory.",
+    ),
+) -> None:
+    """Build the open JAK-inhibitor evidence atlas (registry data, no LLM)."""
+    init_db()
+    console.rule("[bold]JAK inhibitor atlas[/bold] — registry evidence for vitiligo")
+    atlas = build_jak_atlas()
+
+    studies = len({t.study_id for t in atlas.trials})
+    console.print(
+        f"[dim]{studies} studies ({len(atlas.trials)} registry records) across "
+        f"{sum(1 for a in atlas.agents if a.studies)} agents[/dim]"
+    )
+    console.print()
+
+    table = Table(title="JAK-family agents in vitiligo")
+    table.add_column("Agent")
+    table.add_column("OT stage")
+    table.add_column("Top trial phase")
+    table.add_column("Studies", justify="right")
+    table.add_column("Posted results", justify="right")
+    table.add_column("Routes")
+    for summary in atlas.agents:
+        table.add_row(
+            summary.name,
+            summary.prior_stage or "—",
+            summary.max_trial_stage or "—",
+            str(summary.studies),
+            str(summary.studies_with_posted_results),
+            ", ".join(summary.routes) or "—",
+        )
+    console.print(table)
+
+    if json_out:
+        json_path = Path(json_out)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(atlas_to_dict(atlas), indent=2) + "\n")
+        console.print(f"\n[green]Wrote[/green] {json_path}")
+
+    if markdown_out:
+        md_path = Path(markdown_out)
+        md_path.parent.mkdir(parents=True, exist_ok=True)
+        md_path.write_text(render_jak_atlas_markdown(atlas))
+        console.print(f"[green]Wrote[/green] {md_path}")
+
+    if csv_dir:
+        for path in write_jak_atlas_csv(atlas, Path(csv_dir)):
+            console.print(f"[green]Wrote[/green] {path}")
+
+    if not (json_out or markdown_out or csv_dir):
+        console.print(
+            "\n[dim]Tip: pass --json exports/jak-atlas.json --markdown exports/jak-atlas.md "
+            "--csv-dir exports/jak-atlas[/dim]"
+        )
+
+
+@report_app.command("jak-arms")
+def report_jak_arms_cmd(
+    csv_out: str = typer.Option(
+        "exports/jak-arms.csv", "--csv", help="Harmonized arm-level table (CSV)."
+    ),
+    json_out: str | None = typer.Option(None, "--json", help="Also write rows + summary as JSON."),
+    with_papers: bool = typer.Option(
+        False,
+        "--with-papers",
+        help=f"Append curated paper rows the registry lacks ({PAPER_CURATION}), flagged by source "
+        "and analysis population.",
+    ),
+) -> None:
+    """Build the harmonized arm x endpoint x week table from posted JAK trial results."""
+    init_db()
+    console.rule("[bold]JAK arm table[/bold] — harmonized responder endpoints")
+    rows = harmonize_arms(build_jak_atlas())
+    if with_papers:
+        from vitiligo.reports.paper_results import (
+            cross_check,
+            load_curation,
+            new_rows,
+            to_arm_rows,
+        )
+
+        paper = to_arm_rows(load_curation(PAPER_CURATION))
+        for check in cross_check(paper, rows):
+            colour = "green" if check["agree"] else "red"
+            console.print(
+                f"[{colour}]paper {check['paper']} vs registry {check['registry']}[/{colour}] "
+                f"{check['row']}"
+            )
+        added = new_rows(paper, rows)
+        rows = rows + added
+        console.print(f"Added {len(added)} paper rows (of {len(paper)} curated).")
+    summary = summarize_arms(rows)
+    console.print(
+        f"{summary['rows']} rows from {summary['trials']} trials / {summary['arms']} arms; "
+        f"[cyan]{summary['model_ready_rows']}[/cyan] model-ready rows "
+        f"from {summary['model_ready_trials']} trials"
+    )
+    for key in ("by_agent", "by_endpoint", "by_week", "flags"):
+        console.print(f"[bold]{key}:[/bold] {summary[key]}")
+
+    write_arms_csv(rows, Path(csv_out))
+    console.print(f"\n[green]Wrote[/green] {csv_out}")
+    if json_out:
+        json_path = Path(json_out)
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"summary": summary, "rows": [asdict(r) for r in rows]}
+        json_path.write_text(json.dumps(payload, indent=2) + "\n")
+        console.print(f"[green]Wrote[/green] {json_path}")
+
+
+def _paper_tables(pmcids: list[str]) -> dict[str, Any]:
+    from vitiligo.reports.paper_results import parse_tables
+    from vitiligo.sources.pmc import PMCClient
+
+    with PMCClient() as client:
+        return {p: parse_tables(client.fetch_article_xml(p)) for p in pmcids}
+
+
+@papers_app.command("tables")
+def papers_tables_cmd(pmcid: str = typer.Argument(..., help="e.g. PMC11169949")) -> None:
+    """Print an open-access article's tables as parsed (for curation)."""
+    for table in _paper_tables([pmcid])[pmcid]:
+        console.rule(f"{table.label}  {table.caption[:100]}")
+        for cells in table.rows:
+            console.print(" | ".join(cells), markup=False, highlight=False)
+        if table.footnote:
+            console.print(f"[dim]{table.footnote}[/dim]")
+
+
+@papers_app.command("verify")
+def papers_verify_cmd(
+    path: str = typer.Option(str(PAPER_CURATION), "--file", help="Curation file."),
+) -> None:
+    """Check every curated number against the printed table cell in the article."""
+    from vitiligo.reports.paper_results import load_curation, verify
+
+    results = load_curation(Path(path))
+    tables = _paper_tables(sorted({r.pmcid for r in results}))
+    problems = verify(results, tables)
+    for problem in problems:
+        console.print(f"[red]{problem}[/red]")
+    console.print(
+        f"{len(results) - len(problems)} of {len(results)} curated numbers match their cells."
+    )
+    if problems:
+        raise typer.Exit(code=1)
+
+
+def _backtest_summary(path: Path) -> dict[str, Any]:
+    """Overall metrics of a back-test file, plus its SHA-256, for sealing into a forecast."""
+    raw = path.read_bytes()
+    data = json.loads(raw)
+    loto = data["leave_one_trial_out"]
+    timing = data["time_extrapolation"]
+    loto_points = [p for fold in loto["folds"].values() for p in fold["points"]]
+
+    def signed_error(points: list[dict[str, Any]]) -> float | None:
+        """Mean of (predicted median - observed), percentage points; > 0 = over-prediction."""
+        if not points:
+            return None
+        diffs = [float(p["predicted"]["median"]) - float(p["observed"]) for p in points]
+        return round(100 * sum(diffs) / len(diffs), 2)
+
+    return {
+        "file": str(path),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "leave_one_trial_out": loto["overall"],
+        "leave_one_trial_out_mean_signed_error_pp": signed_error(loto_points),
+        "leave_one_trial_out_all_converged": loto.get("all_folds_converged"),
+        "time_extrapolation": timing["overall"],
+        "time_extrapolation_mean_signed_error_pp": signed_error(timing["points"]),
+        "time_extrapolation_converged": timing.get("converged"),
+    }
+
+
+def _model_inputs() -> tuple[list[ArmEndpointRow], dict[str, str]]:
+    """Arm table rows plus each agent's route from the atlas (all registries)."""
+    init_db()
+    atlas = build_jak_atlas()
+    routes = {s.name: s.routes[0] for s in atlas.agents if len(s.routes) == 1}
+    return harmonize_arms(atlas), routes
+
+
+TOPLINE_CURATION = Path("curation/topline-results.json")
+
+
+def model_inputs_v03(
+    *, with_toplines: bool
+) -> tuple[list[ArmEndpointRow], dict[str, str], dict[str, bool]]:
+    """v0.3 inputs: registry rows + curated paper rows the registry lacks (+ toplines),
+    agent routes, and which trials are phase 3 (from the registry record)."""
+    from vitiligo.reports.paper_results import load_curation, load_toplines, new_rows, to_arm_rows
+
+    init_db()
+    atlas = build_jak_atlas()
+    routes = {s.name: s.routes[0] for s in atlas.agents if len(s.routes) == 1}
+    rows = harmonize_arms(atlas)
+    rows = rows + new_rows(to_arm_rows(load_curation(PAPER_CURATION)), rows)
+    phase3 = {t.source_id: "PHASE3" in (t.phases or []) for t in atlas.trials}
+    if with_toplines:
+        toplines = load_toplines(TOPLINE_CURATION)
+        rows = rows + toplines
+        phase3 |= {r.source_id: True for r in toplines}  # all toplines are phase 3
+    return rows, routes, phase3
+
+
+@model_app.command("backtest")
+def model_backtest_cmd(
+    instrument: str = typer.Option("F-VASI", "--instrument", help="F-VASI or T-VASI."),
+    out: str | None = typer.Option(None, "--out", help="Write full back-test results as JSON."),
+) -> None:
+    """Leave-one-trial-out and week-24 -> later-weeks back-tests of the scenario model."""
+    from vitiligo.models.jak_mbma import backtest_leave_one_trial_out, backtest_time_extrapolation
+
+    rows, routes = _model_inputs()
+    console.rule(f"[bold]Scenario model back-tests[/bold] — {instrument}")
+    loto = backtest_leave_one_trial_out(rows, instrument, agent_routes=routes)
+    console.print(f"[bold]Leave-one-trial-out[/bold] ({loto['design']}): {loto['overall']}")
+    for trial, fold in loto["folds"].items():
+        status = "converged" if fold["converged"] else "[red]NOT converged[/red]"
+        console.print(f"  {trial}: {fold['metrics']}  {status}")
+    time_bt = backtest_time_extrapolation(rows, instrument, agent_routes=routes)
+    console.print(f"[bold]Time extrapolation[/bold] ({time_bt['design']}): {time_bt['overall']}")
+    if out:
+        path = Path(out)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps({"leave_one_trial_out": loto, "time_extrapolation": time_bt}, indent=2)
+            + "\n"
+        )
+        console.print(f"[green]Wrote[/green] {path}")
+
+
+@model_app.command("predict")
+def model_predict_cmd(
+    agent: str = typer.Option(
+        ..., "--agent", help="e.g. ritlecitinib (unseen agents use the class prior)."
+    ),
+    dose: float = typer.Option(
+        ..., "--dose", help="Dose per administration (mg, or % for creams)."
+    ),
+    unit: str = typer.Option("mg", "--unit", help="mg or %."),
+    frequency: str = typer.Option("QD", "--frequency", help="QD or BID."),
+    week: int = typer.Option(24, "--week"),
+    threshold: int = typer.Option(75, "--threshold", help="VASI improvement threshold (25-100)."),
+    instrument: str = typer.Option("F-VASI", "--instrument", help="F-VASI or T-VASI."),
+    loading_dose: bool = typer.Option(
+        False, "--loading-dose", help="Regimen starts with a loading dose."
+    ),
+    route: str | None = typer.Option(
+        None, "--route", help="oral or topical (only used for agents without data)."
+    ),
+    phototherapy: bool = typer.Option(False, "--phototherapy", help="Combined with phototherapy."),
+    n_active: int | None = typer.Option(None, "--n-active", help="Trial size: active arm."),
+    n_control: int | None = typer.Option(None, "--n-control", help="Trial size: control arm."),
+    label: str | None = typer.Option(None, "--label", help="Name for a frozen forecast."),
+    freeze: str | None = typer.Option(
+        None, "--freeze", help="Write a timestamped, SHA-256-sealed forecast JSON to this path."
+    ),
+    backtest: str | None = typer.Option(
+        None,
+        "--backtest",
+        help="Back-test JSON (from `model backtest`) whose summary is sealed into the forecast.",
+    ),
+    public_check: str | None = typer.Option(
+        None,
+        "--public-results-check",
+        help="Where you searched for already-public results (sponsor press releases, conference abstracts, publications) and what you found; sealed into the record."
+        + " Required with --freeze.",
+    ),
+) -> None:
+    """Predict a scenario's responder rate vs placebo in a new trial, with uncertainty."""
+    if freeze and not (public_check or "").strip():
+        console.print(
+            "[red]--freeze needs --public-results-check: registry status alone misses "
+            "toplines announced in press releases or at conferences.[/red]"
+        )
+        raise typer.Exit(code=2)
+    from vitiligo.models.jak_mbma import (
+        PRIORS,
+        Scenario,
+        build_dataset,
+        converged,
+        fit,
+        predict,
+    )
+    from vitiligo.models.jak_mbma import freeze as freeze_record
+
+    rows, routes = _model_inputs()
+    data = build_dataset(rows, instrument, agent_routes=routes)
+    posterior = fit(data)
+    if not converged(posterior):
+        console.print(
+            f"[red]Model did not converge: {posterior.diagnostics}. No prediction made.[/red]"
+        )
+        raise typer.Exit(code=1)
+    scenario = Scenario(
+        agent=agent,
+        dose=dose,
+        dose_unit=unit,
+        frequency=frequency,
+        week=week,
+        threshold=threshold,
+        loading_dose=loading_dose,
+        phototherapy=phototherapy,
+        route=route,
+    )
+    result = predict(posterior, scenario, n_active=n_active, n_control=n_control)
+
+    def pct(interval: dict[str, float]) -> str:
+        return (
+            f"{100 * interval['median']:.1f}% (80%: {100 * interval['lo80']:.1f}-"
+            f"{100 * interval['hi80']:.1f}; 95%: {100 * interval['lo95']:.1f}-{100 * interval['hi95']:.1f})"
+        )
+
+    endpoint = f"{instrument}{threshold} at week {week}"
+    console.rule(f"[bold]Scenario[/bold] — {agent} {dose:g}{unit} {frequency}, {endpoint}")
+    console.print(f"Active:     {pct(result['p_active'])}")
+    console.print(f"Placebo:    {pct(result['p_control'])}")
+    console.print(f"Difference: {pct(result['difference'])}")
+    console.print(f"P(active > placebo): {result['p_active_beats_control']:.3f}")
+    for note in result["extrapolation"]:
+        console.print(f"[yellow]Extrapolation:[/yellow] {note}")
+    console.print(f"[dim]Model diagnostics: {posterior.diagnostics}[/dim]")
+
+    if freeze:
+        observations = [asdict(o) for o in data.observations]
+        record = freeze_record(
+            {
+                "label": label or f"{agent} {endpoint}",
+                "engine_version": __version__,
+                "model": "jak_mbma ordered-probit v0.2",
+                "priors": PRIORS,
+                "dataset": data.summary(),
+                "data_sha256": hashlib.sha256(
+                    json.dumps(observations, sort_keys=True).encode()
+                ).hexdigest(),
+                "diagnostics": posterior.diagnostics,
+                "backtest_at_freeze": _backtest_summary(Path(backtest)) if backtest else None,
+                "prediction": result,
+                "public_results_check": public_check,
+                "disclaimer": "Research forecast; not medical advice or a treatment recommendation.",
+            }
+        )
+        path = Path(freeze)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(record, indent=2, default=str) + "\n")
+        console.print(f"[green]Frozen[/green] {path}  sha256={record['sha256']}")
+
+
+def _ledger() -> Any:
+    from vitiligo.discovery.ledger import Ledger
+
+    return Ledger(get_settings().resolved_ledger_path)
+
+
+@discover_app.command("run")
+def discover_run_cmd(
+    alpha: float = typer.Option(0.10, "--alpha", help="Target false discovery rate (e-LOND)."),
+    belief: float = typer.Option(
+        0.80, "--belief", help="Only test claims the held-out model believes at least this much."
+    ),
+    max_trials: int | None = typer.Option(
+        None, "--max-trials", help="Rounds (held-out trials) to run."
+    ),
+    seed: int = typer.Option(20261014, "--seed"),
+) -> None:
+    """Run discovery rounds over held-out trials with unspent evidence (needs '[model]')."""
+    from vitiligo.discovery.loop import LoopConfig, run_discovery
+
+    rows, routes = _model_inputs()
+    ledger = _ledger()
+    console.rule(f"[bold]Discovery loop[/bold] — ledger {ledger.path}")
+    logs = run_discovery(
+        rows,
+        ledger,
+        LoopConfig(alpha=alpha, belief_threshold=belief, seed=seed),
+        agent_routes=routes,
+        max_trials=max_trials,
+    )
+    if not logs:
+        console.print("No unspent evidence units left — new data is needed for more tests.")
+    for log in logs:
+        console.print(
+            f"\n[bold]Round {log.trial}[/bold]: {len(log.tests)} tests, {log.abstained} abstained"
+            + (
+                f" ({', '.join(f'{n} {r}' for r, n in sorted(log.abstain_reasons.items()))})"
+                if log.abstain_reasons
+                else ""
+            )
+        )
+        for note in log.notes:
+            console.print(f"  [yellow]{note}[/yellow]")
+        for test in log.tests:
+            colour = {"discovery": "green", "evidence": "cyan"}.get(test["status"], "dim")
+            console.print(
+                f"  t={test['t']:<3} [{colour}]{test['status']:<13}[/{colour}] "
+                f"log10 e={test['log10_e']:>7} (needs {test['threshold_log10_e']}) "
+                f"belief={test['belief']}  {test['statement']}"
+            )
+    console.print(f"\n[bold]Ledger:[/bold] {ledger.summary()}")
+
+
+@discover_app.command("ledger")
+def discover_ledger_cmd() -> None:
+    """Show the ledger: tests, discoveries, policy statistics, pending forecasts."""
+    ledger = _ledger()
+    summary = ledger.summary()
+    console.rule(f"[bold]Discovery ledger[/bold] — {ledger.path}")
+    console.print(summary)
+    table = Table(title="Tests (global order)")
+    for column in ("t", "status", "log10 e", "belief", "statement"):
+        table.add_column(column)
+    for row in ledger.tested():
+        table.add_row(
+            str(row["t"]),
+            row["status"],
+            f"{row['log_e'] / 2.302585092994046:.2f}",
+            f"{row['belief']:.2f}" if row["belief"] is not None else "-",
+            row["statement"],
+        )
+    console.print(table)
+
+
+@discover_app.command("import-forecasts")
+def discover_import_cmd(
+    directory: str = typer.Argument(..., help="Folder with sealed forecast JSON files."),
+) -> None:
+    """Add sealed forecasts to the ledger as pending tier-2 hypotheses (seals verified)."""
+    ledger = _ledger()
+    for path in sorted(Path(directory).glob("*.json")):
+        record = json.loads(path.read_text())
+        if "sha256" not in record or "prediction" not in record:
+            continue  # e.g. back-test files stored alongside the forecasts
+        added = ledger.import_forecast(record, str(path))
+        console.print(f"{'[green]imported[/green]' if added else 'already present'}: {path.name}")
+
+
+@discover_app.command("forecast-pending")
+def discover_forecast_pending_cmd(
+    out: str = typer.Option(
+        ..., "--out", help="Folder for sealed forecasts (commit it to timestamp them)."
+    ),
+    backtest_dir: str | None = typer.Option(
+        None, "--backtest-dir", help="Folder with backtest-*-<INSTRUMENT>.json to seal alongside."
+    ),
+    public_check: str = typer.Option(
+        ...,
+        "--public-results-check",
+        help="Where you searched for already-public results (sponsor press releases, conference abstracts, publications) and what you found; sealed into the record.",
+    ),
+    skip_trials: list[str] | None = typer.Option(  # noqa: B008 (repeatable options are lists)
+        None, "--skip", help="Trial id to leave out, e.g. results already public (repeatable)."
+    ),
+) -> None:
+    """Seal forecasts for every unreported JAK trial the registry describes well enough."""
+    if not public_check.strip():
+        console.print("[red]--public-results-check must say what was searched and found.[/red]")
+        raise typer.Exit(code=2)
+    from vitiligo.discovery.forecasts import forecast_target, registry_targets, write_forecast
+    from vitiligo.models.jak_mbma import PRIORS, build_dataset, converged, fit
+
+    init_db()
+    atlas = build_jak_atlas()
+    routes = {s.name: s.routes[0] for s in atlas.agents if len(s.routes) == 1}
+    rows = harmonize_arms(atlas)
+    ledger = _ledger()
+    already = " ".join(ledger.forecast_labels())
+    protocols = []
+    with session_scope() as session:
+        for jt in atlas.trials:
+            if jt.outcomes or jt.source != "ctgov" or jt.source_id in already:
+                continue
+            if jt.source_id in (skip_trials or []):
+                console.print(f"[dim]skip {jt.source_id}: --skip[/dim]")
+                continue
+            trial = session.exec(select(Trial).where(Trial.source_id == jt.source_id)).first()
+            study = (trial.raw_metadata or {}).get("study") if trial else None
+            if study:
+                protocols.append(
+                    (jt.source_id, jt.status or "", study.get("protocolSection") or {})
+                )
+    targets, skips = registry_targets(protocols)
+    console.rule(f"[bold]Forecasting unreported trials[/bold] — {len(targets)} targets")
+    for skip in skips:
+        console.print(f"[dim]skip {skip.trial}: {skip.reason}[/dim]")
+
+    posteriors: dict[str, Any] = {}
+    for instrument in sorted({t.instrument for t in targets}):
+        data = build_dataset(rows, instrument, agent_routes=routes)
+        posterior = fit(data)
+        if not converged(posterior):
+            console.print(
+                f"[red]{instrument}: fit did not converge {posterior.diagnostics}; skipped[/red]"
+            )
+            continue
+        observations = [asdict(o) for o in data.observations]
+        posteriors[instrument] = (
+            posterior,
+            data,
+            hashlib.sha256(json.dumps(observations, sort_keys=True).encode()).hexdigest(),
+        )
+
+    directory = Path(out)
+    for target in targets:
+        if target.instrument not in posteriors:
+            continue
+        posterior, data, data_sha = posteriors[target.instrument]
+        summary, p_active, p_control = forecast_target(posterior, target, routes=routes)
+        backtest = None
+        if backtest_dir:
+            candidates = sorted(Path(backtest_dir).glob(f"backtest-*-{target.instrument}.json"))
+            backtest = _backtest_summary(candidates[-1]) if candidates else None
+        path, record = write_forecast(
+            target,
+            summary,
+            p_active,
+            p_control,
+            directory,
+            context={
+                "engine_version": __version__,
+                "model": "jak_mbma ordered-probit v0.2",
+                "priors": PRIORS,
+                "dataset": data.summary(),
+                "data_sha256": data_sha,
+                "diagnostics": posterior.diagnostics,
+                "backtest_at_freeze": backtest,
+                "public_results_check": public_check,
+                "disclaimer": "Research forecast; not medical advice. No results for this trial were consulted.",
+            },
+        )
+        ledger.import_forecast(record, str(path))
+        a, c = summary["p_active"], summary["p_control"]
+        console.print(
+            f"[green]sealed[/green] {target.key}: active {100 * a['median']:.1f}% "
+            f"(80%: {100 * a['lo80']:.1f}-{100 * a['hi80']:.1f}) vs control {100 * c['median']:.1f}%; "
+            f"P(beats)={summary['p_active_beats_control']:.2f}"
+        )
+
+
+def _model_name(record: dict[str, Any]) -> str:
+    """Short model name of a sealed forecast. The first manual records (Tranquillo,
+    2026-10-14) carry a stale "v0" label but were made with v0.2."""
+    name = str(record.get("model", "?")).removeprefix("jak_mbma ordered-probit ")
+    return "v0.2" if name == "v0" else name.removesuffix(" (challenger)")
+
+
+@discover_app.command("check-forecasts")
+def discover_check_forecasts_cmd(
+    paths: list[str] | None = typer.Argument(  # noqa: B008 (variadic arguments are lists)
+        None, help="Forecast files or folders (default: forecasts/)."
+    ),
+    json_out: str | None = typer.Option(None, "--json", help="Write all results as JSON."),
+    markdown_out: str | None = typer.Option(
+        None, "--markdown", help="Append a Markdown table (e.g. $GITHUB_STEP_SUMMARY)."
+    ),
+) -> None:
+    """Score sealed forecasts against ClinicalTrials.gov posted results (no corpus needed)."""
+    from vitiligo.discovery.forecasts import check_forecasts
+    from vitiligo.sources.ctgov import CTGovClient
+
+    with CTGovClient() as client:
+        results = check_forecasts([Path(p) for p in (paths or ["forecasts"])], client.fetch_study)
+
+    def cell(detail: dict[str, Any], key: str) -> str:
+        value = detail.get(key)
+        return (
+            "-"
+            if value is None
+            else ("yes" if value is True else "no" if value is False else f"{value:.2f}")
+        )
+
+    lines = [
+        "| Forecast | Model | Status | Observed active / control | In 80% | Direction | Log score |",
+        "|---|---|---|---|---|---|---|",
+    ]
+    for path, r in results:
+        model = _model_name(json.loads(path.read_text()))
+        obs = r.detail.get("observed")
+        observed = f"{obs['rate_active']:.1%} / {obs['rate_control']:.1%}" if obs else "-"
+        status = "scored" if r.resolved else r.detail.get("reason", "pending")
+        lines.append(
+            f"| {r.label} | {model} | {status} | {observed} | {cell(r.detail, 'active_in80')} "
+            f"| {cell(r.detail, 'direction_correct')} | {cell(r.detail, 'log_score')} |"
+        )
+    scored = sum(r.resolved for _p, r in results)
+    lines.append("")
+    lines.append(f"{scored} of {len(results)} sealed forecasts have posted results.")
+    from vitiligo.discovery.forecasts import compare_models
+
+    records = [(p, json.loads(p.read_text())) for p, _r in results]
+    comparison = compare_models(
+        [(_model_name(rec), rec, r) for (_p, rec), (_p2, r) in zip(records, results, strict=True)]
+    )
+    for pair, summary in comparison.items():
+        if summary["targets"]:
+            scores = ", ".join(f"{k} {v:.2f}" for k, v in summary.items() if k != "targets")
+            lines.append(
+                f"{pair}: {summary['targets']} common resolved targets; log score {scores}"
+            )
+    console.print("\n".join(lines))
+    if json_out:
+        payload = [{"file": str(p), **asdict(r)} for p, r in results]
+        Path(json_out).write_text(json.dumps(payload, indent=2, default=str) + "\n")
+    if markdown_out:
+        with open(markdown_out, "a") as fh:
+            fh.write("## Sealed forecasts vs posted results\n\n" + "\n".join(lines) + "\n")
+
+
+@discover_app.command("resolve")
+def discover_resolve_cmd() -> None:
+    """Score pending forecasts whose results are now posted (run after a corpus refresh)."""
+    from vitiligo.discovery.forecasts import resolve
+
+    init_db()
+    rows = harmonize_arms(build_jak_atlas())
+    for result in resolve(_ledger(), rows):
+        status = "[green]resolved[/green]" if result.resolved else "[dim]pending[/dim]"
+        console.print(f"{status} {result.label}: {result.detail}")
 
 
 @app.command("serve")

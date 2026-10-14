@@ -86,3 +86,60 @@ def test_ingested_ctgov_filter_by_source(ctgov_trials_db) -> None:
 
     hits = list_trials(TrialFilter(query="vitiligo", sources=(TrialSourceKind.CTGOV,), limit=10))
     assert len(hits) == len(_load_ctgov_studies())
+
+
+def _store_document_with_embedding(title: str, abstract: str) -> int:
+    from vitiligo.storage import Document, Embedding, SourceKind
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        doc = Document(source=SourceKind.PUBMED, source_id="555", title=title, abstract=abstract)
+        session.add(doc)
+        session.flush()
+        assert doc.id is not None
+        session.add(
+            Embedding(
+                document_id=doc.id, model="m", scope="title_abstract", dim=1, vector=b"\0" * 4
+            )
+        )
+        session.commit()
+        return doc.id
+
+
+def _embedding_count(doc_id: int) -> int:
+    from sqlmodel import select
+
+    from vitiligo.storage import Embedding
+
+    with Session(get_engine()) as session:
+        return len(session.exec(select(Embedding).where(Embedding.document_id == doc_id)).all())
+
+
+def test_reingest_with_changed_text_drops_stale_embedding(test_db_path: Path) -> None:
+    """A corrected title/abstract must be re-embedded, not keep its old vector."""
+    from vitiligo.ingest.pipeline import _upsert_document
+    from vitiligo.storage import Document, SourceKind
+
+    doc_id = _store_document_with_embedding("Lactate Enhances CD8", "Old abstract.")
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        same = Document(
+            source=SourceKind.PUBMED,
+            source_id="555",
+            title="Lactate Enhances CD8",
+            abstract="Old abstract.",
+            journal="J",
+        )
+        assert _upsert_document(session, same) == (0, 1)
+        session.commit()
+    assert _embedding_count(doc_id) == 1  # metadata-only change keeps the vector
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        fixed = Document(
+            source=SourceKind.PUBMED,
+            source_id="555",
+            title="Lactate Enhances CD8+ T Cell Cytotoxicity",
+            abstract="Old abstract.",
+        )
+        assert _upsert_document(session, fixed) == (0, 1)
+        session.commit()
+    assert _embedding_count(doc_id) == 0

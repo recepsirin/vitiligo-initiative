@@ -2,7 +2,7 @@
 
 **Status:** Draft v0.1 (May 2026)  
 **Audience:** Advisors, collaborators, funders  
-**Purpose:** Ground the Vitiligo Initiative in current disease biology, treatment landscape, and evidence gaps — and show how the Evidence Engine maps to them.
+**Purpose:** Current disease biology, treatments and evidence gaps, as the scientific basis for the initiative.
 
 ---
 
@@ -12,7 +12,7 @@ Vitiligo is an autoimmune disease characterized by loss of epidermal melanocytes
 
 The field has moved rapidly since ~2020: the **IFN-γ / CXCL10 / JAK–STAT axis** is now the dominant mechanistic frame for NSV, and **topical ruxolitinib** is approved in the US for NSV. Multiple **oral and topical JAK inhibitors** are in Phase 2–3. NB-UVB and topical corticosteroids remain first-line in many guidelines, but sequencing, combination, durability, and segmental vs non-segmental subtypes remain poorly standardized.
 
-The Vitiligo Initiative Evidence Engine (v1.0) ingests and links this literature and trial landscape: **14,245 documents**, **344 registered trials**, **237 Open Targets priors**, and a **1,044-node knowledge graph** seeded from priors and trials. It is designed to accelerate **evidence synthesis and hypothesis ranking**, not to replace clinical judgment or peer review.
+The initiative's tools (see the [README](../README.md)) are built to speed up evidence synthesis and hypothesis ranking, not to replace clinical judgment or peer review.
 
 ---
 
@@ -83,50 +83,9 @@ The priors and trial registry also surface: **methotrexate**, **afamelanotide**,
 4. **Biomarkers of response** — transcriptomic signatures (IFN response, melanocyte survival) not yet clinical tools.  
 5. **Acral / recalcitrant sites** — high unmet need; few positive Phase 3 readouts.  
 6. **Safety tradeoffs** — systemic JAK class effects vs topical; long-term vitiligo-specific safety databases immature.  
-7. **Omics → target** — hundreds of GEO series now in corpus (311 vitiligo-linked GSE records); systematic re-analysis not yet published by this initiative.  
+7. **Omics → target** — public GEO series exist; no systematic re-analysis yet.  
 
-These gaps directly feed the **Hypothesize** and future **Candidate Hypothesis Reports** artifacts.
-
----
-
-## What the Evidence Engine contains (May 2026)
-
-| Layer | Count | Use |
-|-------|-------|-----|
-| PubMed abstracts | 11,356 | Semantic search, Ask, Hypothesize |
-| PMC full text | 2,578 | Deeper methods/results context |
-| GEO series metadata | 311 | Omics discovery queue |
-| Clinical trials | 344 (CT.gov 320, EU CTR 22, ICTRP 2) | Trial stream in Hypothesize; Trials tab |
-| Open Targets priors | 237 drugs/targets | Prior stream; graph seed |
-| Embeddings | 14,242 | `BAAI/bge-small-en-v1.5` |
-| Knowledge graph | 1,044 entities, 1,643 edges | Graph tab; `[Gn]` citations |
-
-Graph predicates (seed): `treats`, `investigates`, `associated_with`, `tested_in`, `inhibits`, `targets`, etc.
-
----
-
-## How we use this scientifically
-
-### What the engine does
-
-- Retrieves and cites **primary literature and registry records**  
-- Ranks **therapeutic hypotheses** with separate evidence streams (papers, trials, priors, graph)  
-- Surfaces **evidence level** (RCT, meta-analysis, preclinical, trial phase)  
-- Maintains a **reproducible, versioned corpus** (SQLite + exportable graph JSON)  
-
-### What the engine does not do
-
-- Does not diagnose or prescribe  
-- Does not replace systematic review or meta-analysis for regulatory claims  
-- Does not guarantee correctness of LLM synthesis — human expert review required before clinical or publication use  
-- Has not yet run large-scale LLM graph extraction over full corpus (optional `vitiligo graph extract`; structured seed is current production path)  
-
-### Near-term scientific outputs (Phase 1–2)
-
-1. **Advisor-reviewed graph export** (`exports/graph-review.json`)  
-2. **Top 5–10 candidate report** from Hypothesize + manual curation  
-3. **Methods preprint** — corpus construction, graph schema, evaluation approach  
-4. **GEO re-analysis pilot** — IFN/JAK axis vs responder signatures  
+Durability, combination and sequencing (gaps 1 and 3) are what the JAK atlas, scenario model and sealed forecasts address first.
 
 ---
 
