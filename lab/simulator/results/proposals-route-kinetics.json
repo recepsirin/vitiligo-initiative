@@ -1,0 +1,35 @@
+[
+ {
+  "gamma": "free",
+  "lag": "free",
+  "cuts": "mechanistic",
+  "sigma": "shared",
+  "nonresp": "shared",
+  "dose": "loglinear",
+  "trial": "shared",
+  "placebo": "single",
+  "kinetics": "route"
+ },
+ {
+  "gamma": "free",
+  "lag": "free",
+  "cuts": "mechanistic",
+  "sigma": "shared",
+  "nonresp": "shared",
+  "dose": "emax",
+  "trial": "shared",
+  "placebo": "single",
+  "kinetics": "route"
+ },
+ {
+  "gamma": "fixed",
+  "lag": "free",
+  "cuts": "free",
+  "sigma": "shared",
+  "nonresp": "region",
+  "dose": "loglinear",
+  "trial": "shared",
+  "placebo": "single",
+  "kinetics": "route"
+ }
+]
