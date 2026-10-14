@@ -34,7 +34,7 @@ vitiligo_info "Candidate report"
 vitiligo_run report candidates \
   --json "$OUT/candidate-report.json" \
   --markdown "$OUT/candidate-report-v1.md"
-cp docs/candidate-intents.json "$OUT/"
+cp src/vitiligo/reports/candidate-intents.json "$OUT/"
 
 vitiligo_info "Copy briefs"
 cp docs/scientific-brief.md docs/eval-queries.json "$OUT/"
@@ -42,6 +42,16 @@ if [[ -d docs/validation-proposals ]]; then
   mkdir -p "$OUT/validation-proposals"
   cp docs/validation-proposals/*.md "$OUT/validation-proposals/"
 fi
+
+vitiligo_info "JAK evidence: atlas, arm table, model, forecasts, curated results"
+mkdir -p "$OUT/jak"
+vitiligo_run report jak --json "$OUT/jak/jak-atlas.json" --markdown "$OUT/jak/jak-atlas.md" \
+  --csv-dir "$OUT/jak/atlas-csv"
+vitiligo_run report jak-arms --with-papers --csv "$OUT/jak/jak-arms.csv" --json "$OUT/jak/jak-arms.json"
+cp docs/findings.md docs/jak-scenario-model.md docs/model-v0.3-preregistration.md \
+  docs/discovery-loop-plan.md "$OUT/jak/"
+cp -R forecasts "$OUT/jak/forecasts"
+cp -R curation "$OUT/jak/curation"
 
 cat >"$OUT/README.txt" <<EOF
 Vitiligo Initiative — KOL review pack (${STAMP})
@@ -56,12 +66,19 @@ Contents:
   candidate-report.json     — machine-readable candidate report
   candidate-intents.json    — research intents used for per-intent rankings
   validation-proposals/     — lab outreach one-pagers (top 3 candidates)
+  jak/findings.md           — START HERE for the JAK work: what we found, what we need checked
+  jak/jak-atlas.*           — every registered JAK-inhibitor vitiligo trial, with posted results
+  jak/jak-arms.*            — harmonized arm x endpoint x week table (+ curated paper rows)
+  jak/jak-scenario-model.md — the scenario model, back-tests and limitations
+  jak/forecasts/            — sealed forecasts, topline check, model v0.3 evaluation
+  jak/curation/             — results taken from papers and toplines, with sources
 
 Advisor tasks:
   1. Skim graph-review.json for drug→vitiligo and target→vitiligo edges
   2. Label retrieval-eval.json hits (advisor_relevance 1–5, advisor_comments)
   3. Review candidate-report-v1.md — validate top 10 rankings and missing drugs
   4. Note any missing Phase 3 drugs or pivotal trials
+  5. JAK work: answer the questions at the end of jak/findings.md
 
 Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Engine version: $(vitiligo_run version 2>/dev/null | tail -1 || echo unknown)

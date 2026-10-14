@@ -97,6 +97,16 @@ class CTGovClient:
         response.raise_for_status()
         return response
 
+    def fetch_study(self, nct_id: str) -> dict[str, Any] | None:
+        """One study's full record (with posted results, if any); None if not found."""
+        self._throttle()
+        response = self._client.get(f"{STUDIES_URL}/{nct_id}")
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        study: dict[str, Any] = response.json()
+        return study
+
     def search_count(self, query: str = DEFAULT_VITILIGO_QUERY) -> int:
         """Return the total number of trials matching `query`."""
         response = self._get(
