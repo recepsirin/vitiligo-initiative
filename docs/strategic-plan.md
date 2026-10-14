@@ -42,7 +42,7 @@ The loop is the point: each cycle makes the next one cheaper. AI shortens the bu
 
 1. **Cure-relevance by design.** Every artifact must serve spread arrest, repigmentation or faster research.
 2. **Open by default.** Code, data, methods and findings are public unless there is a specific reason not to be.
-3. **Integrity over speed.** AI proposes; biology validates; peer review confirms. Predictions are sealed before the results they predict.
+3. **Integrity over speed.** AI proposes; biology validates; peer review confirms. Predictions are sealed before anyone looks at their results, and checked for results that were already public.
 4. **Patients first.** Ethics approval and consent for any patient data; HIPAA and GDPR compliance.
 5. **Earn credibility.** Advisors before clinical claims, peer review before public claims, validation before tool launches.
 6. **Honest about limits.** State what a tool cannot do as clearly as what it can.
@@ -53,8 +53,8 @@ The loop is the point: each cycle makes the next one cheaper. AI shortens the bu
 |---|---|
 | Evidence Engine | v1.0.0: corpus, semantic search, cited Q&A, hypothesis ranking, knowledge graph, web UI ([`engine.md`](engine.md)) |
 | JAK-inhibitor atlas and arm table | Built from registries and posted results; open CSV/JSON exports |
-| Scenario model | v0.2, back-tested on held-out trials ([`jak-scenario-model.md`](jak-scenario-model.md)) |
-| Sealed forecasts | 15 forecasts; 12 turned out to have public toplines before sealing, so 3 remain prospective ([topline check](../forecasts/TOPLINE-CHECK-2026-10-14.md)) |
+| Scenario model | v0.2 default, back-tested on held-out trials; two pre-registered challengers ([`jak-scenario-model.md`](jak-scenario-model.md)) |
+| Sealed forecasts | Scored weekly as results post ([scoreboard](../forecasts/README.md)) |
 | Discovery loop | v1: three claim families, online false-discovery-rate control, ledger ([`discovery-loop-plan.md`](discovery-loop-plan.md)) |
 | Candidate report and lab proposals | [`candidate-report-v1.md`](candidate-report-v1.md), [`validation-proposals/`](validation-proposals/) |
 | Briefs | [`scientific-brief.md`](scientific-brief.md), [`governance-ethics-brief.md`](governance-ethics-brief.md), [`methods-preprint-draft.md`](methods-preprint-draft.md) |

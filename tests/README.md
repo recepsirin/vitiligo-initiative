@@ -44,9 +44,10 @@ pytest -m confidence
 
 | Marker | What it proves | Where it runs |
 |--------|----------------|---------------|
-| *(none)* | Pure logic, parsers, API validation | CI (~164 fast tests) |
+| *(none)* | Pure logic, parsers, API validation | CI |
 | `integration` | Real SQLite on seeded temp data | CI |
-| `confidence` | **Right papers, trials, graph API, Ask citations** for curated queries | CI + local (~91 tests) |
+| `confidence` | **Right papers, trials, graph API, Ask citations** for curated queries | CI + local |
+| `model` | Scenario-model fits (needs the `[model]` extra; skipped without PyMC/SciPy) | Local |
 | `corpus` | Full `data/vitiligo.db` (candidate rankings, ICTRP, retrieval guards) | Local only |
 | `smoke` | Thin end-to-end over full corpus | Local release audit |
 
@@ -97,11 +98,3 @@ Graph density checks still require the full local corpus (`test_confidence_corpu
 5. Run: `pytest -m confidence`
 
 Every production bug in search/trials/graph API should add a confidence case. Ask cases should reuse PMIDs already proven in matching `retrieval` rows.
-
-## Trimmed / consolidated (intentionally)
-
-- Empty graph/trials API checks live in `api/test_web_graph.py` only (not duplicated in validation tests)
-- Smoke no longer repeats tacrolimus trial regression (`confidence` covers it)
-- Internal scoring cap helpers removed from unit tests; ranking quality is covered by `confidence` + `corpus`
-- `test_eval_queries.py` merged into `test_regression_manifest.py`
-- Middleware rate-limit tests kept minimal; app-level limits are in `api/test_web_ratelimit.py`

@@ -6,7 +6,7 @@ Open research by the Vitiligo Initiative, for expert review. Not medical advice.
 
 - **Atlas.** 45 vitiligo studies of 14 JAK-family drugs, linked across registries. 14 have posted results.
 - **Arm table.** Those results turned into 830 comparable rows (arm × endpoint × week), plus results that only papers report, each tied to its printed table cell.
-- **Scenario model.** Predicts responder rates by drug, dose and week. It is judged only on trials it has not seen, and its forecasts are sealed before the results.
+- **Scenario model.** Predicts responder rates by drug, dose and week. It is judged only on trials it has not seen, and its forecasts are sealed before we look at their results.
 - **Discovery loop.** Tests claims on held-out trials with false-discovery-rate control.
 - **Simulator trial run.** A mechanistic, patient-level model of repigmentation, searched under a pre-registered plan.
 
@@ -22,9 +22,9 @@ Every forecast, test and model change is recorded, including the ones that faile
 3. **Placebo response at one year is low,** 2–7% in phase 3, below what models extrapolate from week 24.
 4. **Phase 2 dose comparisons are too small to settle dose questions.** On the current data the discovery loop abstained on all 188 open comparisons (drug vs placebo, dose vs dose, regimen vs regimen), because no test had a reasonable chance of a valid discovery.
 5. **Registry status misses public results.** 12 of our 15 sealed forecasts turned out to have public toplines before sealing. Sealing now requires recording a search of press releases and conference abstracts.
-6. **Model structure alone could not learn the phase 3 gap.** A pre-registered v0.3, fitted without phase 3 oral data, did no better than v0.2 on the held-out toplines, so it was not adopted. Two challengers trained on the toplines, v0.4 and v0.5 (v0.5 with separate baselines for oral placebo and topical vehicle), have sealed 7 forecasts each beside v0.2, to be compared as results post. Their forecasts for ruxolitinib cream in children differ most: v0.2 24%, v0.4 13%, v0.5 20% F-VASI75 at week 24. In a report-only check, the phase 3 shift learned from one oral programme largely carried over to the other: upadacitinib F-VASI75 predicted from ritlecitinib's toplines was 22%, against 23–25% observed.
+6. **Model structure alone could not learn the phase 3 gap.** A pre-registered v0.3, fitted without phase 3 oral data, did no better than v0.2, so it was not adopted. Two challengers trained on the toplines (v0.4, v0.5) now forecast beside v0.2 and are scored as results post. They disagree most on ruxolitinib cream in children: 24%, 13% and 20% F-VASI75 at week 24 ([scoreboard](../forecasts/README.md#scoreboard)).
 
-Details: [topline check](../forecasts/TOPLINE-CHECK-2026-10-14.md) · [curated paper results](../curation/README.md) · [scenario model](jak-scenario-model.md) · [model v0.3 pre-registration](model-v0.3-preregistration.md) · [simulator](../lab/simulator/README.md) · [discovery loop](discovery-loop-plan.md)
+Details: [forecasts and scoreboard](../forecasts/README.md) · [topline check](../forecasts/TOPLINE-CHECK-2026-10-14.md) · [curated paper results](../curation/README.md) · [scenario model](jak-scenario-model.md) · [simulator](../lab/simulator/README.md) · [discovery loop](discovery-loop-plan.md)
 
 ## What we need from experts
 

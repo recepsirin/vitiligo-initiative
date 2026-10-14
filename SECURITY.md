@@ -12,11 +12,7 @@ Pre-release and local-only experiments are out of scope unless they affect users
 
 **Please do not** open a public GitHub issue for security vulnerabilities (issues are public and may alert attackers before a fix is available).
 
-Report privately via **GitHub** (domain and project mailboxes are not set up yet):
-
-- **[GitHub Security Advisories](https://github.com/recepsirin/vitiligo-initiative/security/advisories/new)** (preferred for vulnerabilities) — requires Private Vulnerability Reporting to be enabled on the repository.
-
-When `vitiligo-initiative.org` is live, we plan to use **contact@vitiligo-initiative.org** for security and corrections. Until then, use GitHub (see below and the Privacy/Terms pages).
+Report privately through **[GitHub Security Advisories](https://github.com/recepsirin/vitiligo-initiative/security/advisories/new)** (requires Private Vulnerability Reporting to be enabled on the repository).
 
 Include:
 
@@ -45,22 +41,13 @@ Examples we care about:
 - Prompt injection leading to incorrect **research answers** without a technical flaw in our stack (document as product risk, not always a CVE)
 - Vulnerabilities in dependencies already fixed in a newer release we have not yet adopted (please still tell us)
 
-## Safe deployment reminders
+## Safe deployment
 
-- Keep `ANTHROPIC_API_KEY` and `NCBI_API_KEY` in environment variables or platform secrets — **never** in git
-- Do not expose the SQLite corpus directory as a public download endpoint without access controls
-- Keep `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` enabled on public deployments (default: 30), set `VITILIGO_TRUSTED_PROXY_HOPS` to the real proxy count, and cap Ask/Hypothesize with `VITILIGO_LLM_REQUESTS_PER_MINUTE` and `VITILIGO_LLM_DAILY_TOKEN_BUDGET` ([`docs/deploy.md`](docs/deploy.md))
-- Restart the web service after replacing `vitiligo.db` on disk so caches reload cleanly
+Keep API keys in environment variables or platform secrets, never in git, and never serve the corpus directory publicly. Rate limits, proxy hops and LLM caps are set as described in [`docs/deploy.md`](docs/deploy.md).
 
-## Contact and privacy (planned)
+## Contact and privacy
 
-| Purpose | Status |
-|---------|--------|
-| Security reports | **GitHub Security Advisories** (see above) until domain mail is live |
-| Privacy / data requests | Planned: `privacy@vitiligo-initiative.org` — not active yet |
-| Corrections to indexed public records | Planned: `contact@vitiligo-initiative.org` — not active yet |
-
-Privacy and Terms pages link to GitHub Discussions and Issues until project mailboxes exist.
+Project mailboxes (`privacy@` and `contact@vitiligo-initiative.org`) are planned but not active. Until then, privacy requests and corrections go through GitHub Discussions or Issues; security reports go through Security Advisories.
 
 ## Legal entity
 

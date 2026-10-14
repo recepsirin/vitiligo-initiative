@@ -6,7 +6,7 @@
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+"></a>
 </p>
 
-> **Open, verifiable evidence for vitiligo research.** Every source is public, every answer is cited, and every forecast is sealed before the results it predicts.
+> **Open, verifiable evidence for vitiligo research.** Every source is public, every answer is cited, and every forecast is sealed before we look at its results.
 
 Research and education software, not medical advice.
 
@@ -15,9 +15,9 @@ Research and education software, not medical advice.
 | | What it does | Start with |
 |---|---|---|
 | **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (~14k documents, 344 trials). Semantic search with evidence levels; cited Q&A and hypothesis ranking when an Anthropic key is set. | `vitiligo search` · `vitiligo serve` |
-| **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes and adverse events, plus one harmonized arm × endpoint × week table. Results that only papers report are curated cell by cell ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
-| **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Forecasts of unreported trials are sealed with a SHA-256 before their results are looked up, and checked afterwards for results that were already public ([topline check](forecasts/TOPLINE-CHECK-2026-10-14.md)). | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/) |
-| **Discovery loop** | Proposes claims, tests each on a held-out trial with valid e-values, and controls the false discovery rate at 10% across an open-ended stream. Every test is recorded in a ledger. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
+| **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes, plus one harmonized arm × endpoint × week table and results curated from papers ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
+| **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
+| **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
 
 ## Quick start
 

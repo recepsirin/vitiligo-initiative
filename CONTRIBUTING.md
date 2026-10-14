@@ -12,8 +12,6 @@ Thank you for your interest in the Vitiligo Initiative Evidence Engine. This pro
 | Pull requests | Code, docs, tests, regression fixtures |
 | [Security advisories](SECURITY.md) | Vulnerabilities (do **not** open a public issue) |
 
-**Discussions vs issues:** Use Discussions for “how does this work?”, “did anyone try…?”, or open-ended research questions. Open an issue when you have a reproducible bug or a concrete, actionable change.
-
 ## Before you start
 
 1. Read [`docs/engine.md`](docs/engine.md) for local setup (Python 3.11+, `pip install -e ".[dev]"`, corpus build).
@@ -27,7 +25,8 @@ python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 vitiligo db init   # optional; many tests use temp DBs
 
-# CI-equivalent (what must pass on every PR)
+# CI-equivalent (what must pass on every PR). CI installs the latest ruff:
+# run `pip install -U ruff` first, or new lint rules can fail CI only.
 ruff check src tests && ruff format --check src tests
 pytest -m "not corpus and not smoke and not confidence"
 python scripts/test/build_regression_db.py

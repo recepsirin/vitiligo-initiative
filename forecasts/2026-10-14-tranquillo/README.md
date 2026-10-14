@@ -1,7 +1,7 @@
 # Frozen forecasts — Tranquillo (NCT05583526)
 
 Ritlecitinib 50 mg QD vs placebo; registered ~400 vs ~200 participants. Produced by `vitiligo model predict --freeze` with scenario model v0.2 (`docs/jak-scenario-model.md`).
-**No Tranquillo results were consulted before freezing.** Verify a seal: SHA-256 of the record's canonical JSON (sorted keys, no whitespace) without its `sha256` field. The back-test files referenced by each record are included here and match the hashes sealed inside the records.
+No Tranquillo results were consulted before freezing. The back-test files each record references are included and match the hashes sealed inside it. Verifying seals: see the [index](../README.md).
 
 | File | Endpoint | Frozen at (UTC) | Active — median (80% PI) | Placebo | Difference | P(active > placebo) |
 |---|---|---|---|---|---|---:|
@@ -17,6 +17,6 @@ SHA-256 seals:
 - `tranquillo-tvasi50-w24-secondary.json`: `b643e6fdca778bd286421dd093194d6a32e3d070d1a0e0a6b5d969323664d498`
 - `tranquillo-tvasi50-w52-us-coprimary.json`: `cd33a4ac13010aeff27835dc0f0005444378194c143886eb3c2ac75246070bbc`
 
-## Topline check (added 2026-10-14, after sealing)
+## Not prospective
 
-See [`../TOPLINE-CHECK-2026-10-14.md`](../TOPLINE-CHECK-2026-10-14.md): topline results for some of these trials were public before sealing, so those forecasts are not prospective.
+Pfizer announced the topline on 2026-07-30 and the week-52 numbers at EADV on 2026-10-03, before these were sealed ([topline check](../TOPLINE-CHECK-2026-10-14.md)).

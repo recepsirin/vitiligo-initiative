@@ -78,47 +78,37 @@ Metrics: coverage of the 80% and 95% predictive intervals (well calibrated ≈ 0
 
 ## Forecasting policy
 
-Pre-registrations are hash-sealed before their first fit; `python scripts/model/verify_preregistrations.py` checks that each still matches its seal (amendments are appended afterwards and listed in the document).
+- Forecasts of unreported trials are sealed (timestamp plus SHA-256) before their results are looked up. The record holds the data fingerprint, priors, diagnostics and the search for already-public results (`--public-results-check`; registry status alone missed public toplines).
+- Model changes are pre-registered and hash-sealed before their first fit; `python scripts/model/verify_preregistrations.py` checks the seals.
+- A weekly job (`vitiligo discover check-forecasts`) scores the forecasts as results post. All forecasts and the model scoreboard are in [`forecasts/`](../forecasts/README.md).
 
-Forecasts of unreported trials are **frozen before any results are looked up** (and before sealing, sponsor press releases and conference abstracts must be searched too, because registry status alone missed public toplines): timestamped and sealed with a SHA-256 of their content (`vitiligo model predict … --freeze PATH`). The frozen file records the data fingerprint, priors, diagnostics and the public-results search, so the forecast can be checked against results later and cannot be quietly revised. A weekly job (`vitiligo discover check-forecasts`) scores them as results are posted.
+## Results (v0.2, back-tests run 2026-10-14)
 
-## Results (v0.2, corpus snapshot May 2026, back-tests run 2026-10-14)
+| Back-test | Instrument | Points | In 80% PI | In 95% PI | Mean abs. error | Converged |
+|---|---|---:|---:|---:|---:|---|
+| Leave-one-trial-out | F-VASI | 107 | 0.93 | 0.99 | 5.1 pp | all folds |
+| Leave-one-trial-out | T-VASI | 139 | 0.95 | 1.00 | 4.3 pp | all folds |
+| Weeks ≤ 24 → later | F-VASI | 26 | 0.69 | 0.73 | 10.6 pp | 1 divergence |
+| Weeks ≤ 24 → later | T-VASI | 29 | 0.86 | 0.97 | 9.1 pp | yes |
 
-| Back-test | Instrument | Points | In 80% PI | In 95% PI | Mean abs. error | Mean signed error | Converged |
-|---|---|---:|---:|---:|---:|---:|---|
-| Leave-one-trial-out | F-VASI | 107 | 0.93 | 0.99 | 5.1 pp | see file | all folds |
-| Leave-one-trial-out | T-VASI | 139 | 0.95 | 1.00 | 4.3 pp | see file | all folds |
-| Time extrapolation (≤ wk 24 → later) | F-VASI | 26 | 0.69 | 0.73 | 10.6 pp | over-predicts TRuE-V wk 52 by ~20–23 pp | 1 divergence |
-| Time extrapolation (≤ wk 24 → later) | T-VASI | 29 | 0.86 | 0.97 | 9.1 pp | over-predicts TRuE-V wk 52 by ~10–14 pp | yes |
+Given a trial's control arm, the model predicts its drug arms well within the studied weeks. Beyond week 24 it over-predicts (TRuE-V week 52: by 20–23 pp on F-VASI, 10–14 pp on T-VASI) and is over-confident. Its phase 3 forecasts were also far too high ([findings](findings.md)).
 
-**Reading:**
-- Given a trial's control arm, the model predicts its drug arms well, at least within the studied weeks.
-- Extrapolating beyond week 24 is the weak point. It over-predicts and is over-confident for TRuE-V's week-52 extension, while the uncontrolled ruxolitinib + NB-UVB trial extrapolates almost without bias. That points to a data-semantics question (how the extension results were analysed) as much as to model structure. The large per-trial errors for the small Phase 2 folds reflect wide intervals around few patients.
+## Versions
 
-**Forecasts:** four Tranquillo (NCT05583526) forecasts were frozen on 2026-10-14 without consulting results. They are **not prospective**: Pfizer had announced the topline on 2026-07-30 and the numbers at EADV on 2026-10-03. Scored against those numbers, F-VASI75 at week 52 was over-predicted (45.8% vs 12.5% observed), and T-VASI50 was wrongly forecast not to separate from placebo ([topline check](../forecasts/TOPLINE-CHECK-2026-10-14.md)).
-
-- **Location:** `forecasts/2026-10-14-tranquillo/`, including the sealed records, the back-test files they reference, and a post-freeze assessment of known weaknesses.
-- **In short:** ritlecitinib 50 mg is forecast to beat placebo on F-VASI75 (P ≈ 0.99 at weeks 24 and 52; the magnitude at week 52 is very uncertain and likely biased high). It is forecast **not** to separate on T-VASI50, a low-confidence result driven by Phase 2b's week-24 data and the model's inability to represent late-onset effects.
-
-## Change log
-
-| Version | Change | Why |
+| Version | Change | Status |
 |---|---|---|
-| v0.1 | Uncontrolled trials get unpooled baselines | In v0, a single-arm trial's high response partly counted as drug effect, so held-out TRuE-V2 was over-predicted (44.6% vs 30.9% F-VASI75). |
-| v0.1 | Placebo drift `π·(h(w)−1)` replaces `π·log(w/24)` | The log term, fitted on weeks 4–24, grew without bound; in v0, week-52 predictions overshot by 15–20 points. |
-| v0.1 | Route-specific class means | In v0, held-out oral upadacitinib inherited topical ruxolitinib's larger F-VASI effect. |
-| v0.1 | Back-tests no longer score rows excluded by design annotations; per-fold convergence is reported | Bug fixes. |
-| v0.3 (pre-registered, [`model-v0.3-preregistration.md`](model-v0.3-preregistration.md)) | Trial-by-treatment effect `γ_t`; phase 3 shift `κ_route`; curated paper rows counted the registry's way; public phase 3 toplines in the production fit; `target_accept` 0.995 | v0.2 forecast the oral phase 3 trials 13–34 points too high: it treated phase 2 effects as transferring almost exactly to phase 3. **Not adopted:** fitted without the toplines, it scored −54.29 against v0.2's −54.13 on the held-out phase 3 toplines. With no phase 3 oral data, its phase 3 shift stayed at the prior, so it only widened its intervals. |
-| v0.5 (challenger, [`model-v0.5-preregistration.md`](model-v0.5-preregistration.md)) | v0.4 with a separate baseline mean for oral-placebo and topical-vehicle trials | v0.4's forecasts for topical ruxolitinib in children were pulled down by the low oral phase 3 placebo rates. Same prospective test ([`forecasts/v0.5/`](../forecasts/v0.5/README.md)). |
-| v0.4 (challenger, [`model-v0.4-preregistration.md`](model-v0.4-preregistration.md)) | v0.3 trained on the phase 3 toplines | Can only be tested prospectively. It has sealed forecasts for the same 7 targets as v0.2, and replaces v0.2 only if it scores better once at least 4 have resolved. Report-only check, holding out one oral programme at a time: −49.2 vs v0.2's −54.1 ([`forecasts/v0.4/`](../forecasts/v0.4/README.md)). |
-| v0.2 | T50 per route instead of class-wide; 1,500 draws × 4 chains (was 1,000) | With one shared T50, v0.1 over-predicted topical ruxolitinib from week 24 to week 52 by 15–20 points (the shared half-time was driven by slow-onset oral data). Two v0.1 folds just missed the convergence gate. |
+| v0.1 | Unpooled baselines for uncontrolled trials; bounded placebo drift; route-specific class means; back-test fixes | Superseded. Each change fixed a back-test failure of v0 (e.g. held-out TRuE-V2 over-predicted, 44.6% vs 30.9% F-VASI75). |
+| v0.2 | T50 per route; 1,500 draws × 4 chains | **Default.** A shared T50 had over-predicted topical ruxolitinib at week 52 by 15–20 points. |
+| v0.3 | Trial-by-treatment effect `γ_t`; phase 3 shift `κ_route`; curated paper rows | Not adopted ([pre-registration](model-v0.3-preregistration.md), [result](../forecasts/v0.3/README.md)). |
+| v0.4 | v0.3 fitted with the phase 3 toplines | Challenger, tested prospectively ([pre-registration](model-v0.4-preregistration.md), [forecasts](../forecasts/v0.4/README.md)). |
+| v0.5 | v0.4 with separate baselines for oral placebo and topical vehicle | Challenger, tested prospectively ([pre-registration](model-v0.5-preregistration.md), [forecasts](../forecasts/v0.5/README.md)). |
 
-**Disclosure:** the v0.1 and v0.2 changes were made after seeing back-test results, so their back-tests are not a pure out-of-sample test of the model *choice*. Each change has an independent rationale (above). **Pre-commitment (recorded before the v0.2 back-test ran):** v0.2 is the last model change before the Tranquillo forecast is frozen; whatever the v0.2 back-test shows is reported as-is and sealed into the forecast record.
+The v0.1 and v0.2 changes were made after seeing back-test results, so those back-tests do not test the model *choice* out of sample. v0.3 onwards are pre-registered.
 
 ## Known limitations
 
 - **Small, concentrated data.** Posted results from 9 trials, mostly ruxolitinib cream and ritlecitinib. Results published only in papers are curated separately (`curation/`) and not yet used by the model.
-- **Phase 2 to phase 3 gap.** Phase 3 trials of oral drugs responded far below phase 2 (upadacitinib F-VASI75: at least 51% at week 52 in phase 2, about 25% at week 48 in phase 3). The model treats a new trial as typical of the mostly phase 2 trials it was fitted on ([`curation/README.md`](../curation/README.md)).
+- **Phase 2 to phase 3 gap.** Oral drugs responded far less in phase 3 than in phase 2 ([findings](findings.md)), and v0.2 treats a new trial as typical of the mostly phase 2 trials it was fitted on. v0.4 and v0.5 address this and are being tested.
 - **Time course by route only.** T50 is shared within a route and also drives the placebo drift. **Oral agents have no controlled data beyond week 24**, so oral week-52 predictions (e.g. Tranquillo) extrapolate the oral curve; the time-extrapolation back-test can only check this for topical ruxolitinib.
 - **Placebo beyond week 24.** Placebo/vehicle data end at week 24, so placebo response later is extrapolated through `π` and `h(w)`.
 - **Population differences.** Disease activity, prior therapy, body sites and inclusion criteria are not modelled; they enter only as trial and arm random effects.
