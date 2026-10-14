@@ -413,6 +413,7 @@ def _stub_posterior(tau: float) -> Any:
 
 @pytest.mark.parametrize("agent", ["seen", "unseen"])
 def test_pair_draws_share_trial_and_agent_but_not_arm_deviations(agent: str) -> None:
+    pytest.importorskip("scipy")  # installed with the optional [model] extra
     from vitiligo.models.jak_mbma import Scenario, predict_draws, predict_pair_draws
 
     def sc(dose: float) -> Scenario:
