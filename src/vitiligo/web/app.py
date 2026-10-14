@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from contextlib import asynccontextmanager
 from dataclasses import asdict
 from pathlib import Path
@@ -42,6 +43,8 @@ from vitiligo.reports import report_to_dict as candidate_report_to_dict
 from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
+from vitiligo.web.llm_budget import LLMBudget, LLMBudgetExceeded
+from vitiligo.web.proxy import ForwardedProtoMiddleware
 from vitiligo.web.ratelimit import RateLimitMiddleware
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -100,6 +103,28 @@ def _trial_to_dict(trial: Any) -> dict[str, Any]:
     }
 
 
+# Candidate reports are deterministic for a given corpus, but each build runs
+# several semantic searches. Cache per (top_n, DB file, DB mtime) so repeated
+# GETs are cheap; any DB write invalidates.
+_candidate_report_cache: dict[tuple[int, str, int], dict[str, Any]] = {}
+_candidate_report_lock = threading.Lock()
+
+
+def _cached_candidate_report(top_n: int) -> dict[str, Any]:
+    db_path = get_settings().resolved_db_path
+    mtime = db_path.stat().st_mtime_ns if db_path.is_file() else 0
+    key = (top_n, str(db_path), mtime)
+    with _candidate_report_lock:
+        cached = _candidate_report_cache.get(key)
+        if cached is None:
+            cached = candidate_report_to_dict(build_candidate_report(top_n=top_n))
+            stale = [k for k in _candidate_report_cache if k[1:] != key[1:]]
+            for k in stale:
+                del _candidate_report_cache[k]
+            _candidate_report_cache[key] = cached
+        return cached
+
+
 def _prewarm_embeddings() -> None:
     from vitiligo.embed.cache import warm_embedding_index
     from vitiligo.embed.encoder import get_encoder
@@ -136,6 +161,13 @@ def create_app() -> FastAPI:
         app.add_middleware(
             RateLimitMiddleware,
             post_limit_per_minute=settings.rate_limit_post_per_minute,
+            trusted_proxy_hops=settings.trusted_proxy_hops,
+        )
+
+    if settings.trusted_proxy_hops > 0:
+        app.add_middleware(
+            ForwardedProtoMiddleware,
+            trusted_proxy_hops=settings.trusted_proxy_hops,
         )
 
     app.add_middleware(
@@ -198,12 +230,30 @@ def create_app() -> FastAPI:
             )
         return {"query": req.query, "results": results}
 
+    llm_budget = LLMBudget(
+        settings.resolved_state_db_path,
+        requests_per_minute=settings.llm_requests_per_minute,
+        daily_token_budget=settings.llm_daily_token_budget,
+    )
+
+    def _reserve_llm(endpoint: str) -> int | None:
+        try:
+            return llm_budget.reserve(endpoint)
+        except LLMBudgetExceeded as exc:
+            raise HTTPException(
+                status_code=429,
+                detail=str(exc),
+                headers={"Retry-After": str(exc.retry_after_s)},
+            ) from exc
+
     @app.post("/api/ask")
     def ask(req: AskRequest) -> dict[str, Any]:
+        call_id = _reserve_llm("ask")
         try:
             answer = ask_with_citations(question=req.question, top_k=req.top_k)
         except (LLMUnavailable, CorpusUnavailable) as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
+        llm_budget.record(call_id, answer.input_tokens, answer.output_tokens)
         return {
             "question": answer.question,
             "answer": answer.answer,
@@ -213,10 +263,12 @@ def create_app() -> FastAPI:
 
     @app.post("/api/hypothesize")
     def hypothesize(req: HypothesizeRequest) -> dict[str, Any]:
+        call_id = _reserve_llm("hypothesize")
         try:
             report = generate_hypotheses(intent=req.intent, top_k=req.top_k)
         except (LLMUnavailable, CorpusUnavailable) as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
+        llm_budget.record(call_id, report.input_tokens, report.output_tokens)
         return hypothesize_report_to_dict(report)
 
     @app.get("/api/report/candidates")
@@ -224,8 +276,7 @@ def create_app() -> FastAPI:
         """Deterministic evidence-scored candidate rankings (no LLM)."""
         if top_n < 1 or top_n > 20:
             raise HTTPException(status_code=400, detail="top_n must be between 1 and 20.")
-        report = await asyncio.to_thread(build_candidate_report, top_n=top_n)
-        return candidate_report_to_dict(report)
+        return await asyncio.to_thread(_cached_candidate_report, top_n)
 
     @app.post("/api/trials/search")
     def trials_search(req: TrialsSearchRequest) -> dict[str, Any]:

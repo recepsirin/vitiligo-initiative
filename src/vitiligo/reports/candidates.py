@@ -15,6 +15,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, field, replace
 from datetime import UTC, datetime
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -27,8 +28,8 @@ from vitiligo.priors import clinical_stage_rank, list_drug_priors
 from vitiligo.storage import Prior, Trial
 from vitiligo.trials import TrialFilter, list_trials, retrieve_relevant_trials
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[3]
-DEFAULT_INTENTS_PATH = _PROJECT_ROOT / "docs" / "candidate-intents.json"
+# Shipped as package data so non-editable installs (Docker, wheels) find it.
+DEFAULT_INTENTS_RESOURCE = "candidate-intents.json"
 
 # Stage labels use the Open Targets prior format (PHASE_3, EARLY_PHASE_1).
 # Registry phases (CT.gov "PHASE3", "EARLY_PHASE1") go through
@@ -168,8 +169,16 @@ class CandidateReport:
 
 
 def load_intents(path: Path | None = None) -> list[IntentSpec]:
-    spec_path = path or DEFAULT_INTENTS_PATH
-    raw = json.loads(spec_path.read_text())
+    """Load research intents from ``path``, or the packaged defaults."""
+    if path is not None:
+        text = path.read_text(encoding="utf-8")
+    else:
+        text = (
+            resources.files("vitiligo.reports")
+            .joinpath(DEFAULT_INTENTS_RESOURCE)
+            .read_text(encoding="utf-8")
+        )
+    raw = json.loads(text)
     return [
         IntentSpec(
             id=item["id"],
@@ -662,8 +671,7 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
             lines.append("*No candidates met minimum evidence threshold for this intent.*")
             lines.append("")
             continue
-        for cand in ir.candidates:
-            lines.extend(_render_candidate_block(cand))
+        lines.extend(_render_intent_table(ir.candidates))
 
     lines.extend(
         [
@@ -677,6 +685,34 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _render_intent_table(candidates: list[RankedCandidate]) -> list[str]:
+    """One row per candidate; full evidence cards appear once, under the global top."""
+    lines = [
+        "| # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |",
+        "|---:|---|---:|---:|---:|---:|---:|---|",
+    ]
+    for cand in candidates:
+        s = cand.score
+        top = "—"
+        if cand.literature_refs:
+            ref = cand.literature_refs[0]
+            title = (ref.title or "(untitled)").replace("|", "/")
+            if len(title) > 90:
+                title = title[:87].rstrip() + "..."
+            top = f"[{ref.source}:{ref.source_id}] {title} ({ref.year or '?'})"
+        lines.append(
+            f"| {cand.rank} | {cand.name} | {s.total} | {s.prior_stage} | {s.graph} "
+            f"| {s.trials} | {s.literature} | {top} |"
+        )
+    lines.append("")
+    rationales = [c for c in candidates if c.llm_rationale]
+    if rationales:
+        lines.append("**LLM rationale (advisory):**")
+        lines.extend(f"- **#{c.rank} {c.name}:** {c.llm_rationale}" for c in rationales)
+        lines.append("")
+    return lines
 
 
 def _render_candidate_block(cand: RankedCandidate) -> list[str]:

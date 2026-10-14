@@ -46,14 +46,19 @@ def test_evidence_strength_thresholds(score: int, label: str) -> None:
     assert _evidence_strength(score) == label
 
 
-def test_load_intents_file() -> None:
-    from tests.helpers.paths import PROJECT_ROOT
-
-    path = PROJECT_ROOT / "docs" / "candidate-intents.json"
-    intents = load_intents(path)
+def test_load_intents_packaged_default() -> None:
+    """Defaults load from package data, not a repo-relative docs/ path."""
+    intents = load_intents()
     assert len(intents) >= 5
     assert intents[0].id
     assert intents[0].query
+
+
+def test_load_intents_explicit_path(tmp_path) -> None:
+    path = tmp_path / "intents.json"
+    path.write_text('{"intents": [{"id": "x", "title": "X", "query": "ruxolitinib"}]}')
+    [intent] = load_intents(path)
+    assert (intent.id, intent.query, intent.goal) == ("x", "ruxolitinib", "general")
 
 
 @pytest.mark.corpus
@@ -161,3 +166,34 @@ def test_trial_points_full_portfolio() -> None:
 def test_trial_points_phase_2_3_is_not_full_phase_3() -> None:
     assert _trial_points([_scored_trial("NCT70000001", ["PHASE2", "PHASE3"])]) == 10
     assert _trial_points([]) == 0
+
+
+def test_markdown_shows_full_cards_once_and_intent_tables() -> None:
+    from vitiligo.reports.candidates import (
+        CandidateReport,
+        IntentReport,
+        LiteratureRef,
+        RankedCandidate,
+        render_candidate_report_markdown,
+    )
+
+    def cand(rank: int, name: str, paper: str | None) -> RankedCandidate:
+        refs = [LiteratureRef(1, "pubmed", "1", paper, 2024, "RCT", 0.9)] if paper else []
+        return RankedCandidate(
+            rank=rank, name=name, canonical_token=name.lower(), clinical_stage="PHASE_3",
+            evidence_strength="strong", score=ScoreBreakdown(30, 22, 35, 10), mechanisms=[],
+            prior_source_id=None, graph_refs=[], trial_refs=[], literature_refs=refs,
+            caveats=[], llm_rationale="Plausible." if rank == 1 else None,
+        )  # fmt: skip
+
+    intent = IntentSpec(id="x", title="Spread", query="q", goal="g")
+    report = CandidateReport(
+        generated_at="t", engine_version="1", methodology="m", corpus={},
+        intents=[IntentReport(intent, [cand(1, "ALPHA", "A | B trial"), cand(2, "BETA", None)])],
+        global_top=[cand(1, "ALPHA", "A | B trial"), cand(2, "BETA", None)],
+    )  # fmt: skip
+    md = render_candidate_report_markdown(report)
+    assert md.count("### #1 ALPHA") == 1  # the full card appears once, in the global top
+    assert "| 1 | ALPHA | 97 | 30 | 22 | 35 | 10 | [pubmed:1] A / B trial (2024) |" in md
+    assert "| 2 | BETA | 97 | 30 | 22 | 35 | 10 | — |" in md
+    assert "- **#1 ALPHA:** Plausible." in md

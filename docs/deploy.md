@@ -1,94 +1,54 @@
-# Deploy & hosting
+# Deploy and hosting
 
-## Current posture (May 2026)
+## Local (current)
 
-**Local-first.** Run the Evidence Engine on your machine for development, advisor demos, and KOL review:
-
-```bash
-vitiligo serve                    # http://127.0.0.1:8765
-./scripts/deploy/verify-local.sh  # smoke test
-./scripts/review/kol-share-pack.sh   # advisor materials (no public URL required)
-```
-
-Share with advisors via **screen share** + the KOL pack tarball — not a public URL.
-
----
-
-## Planned public hosting: DigitalOcean
-
-When a public URL is needed, the target platform is **DigitalOcean** (likely a Droplet or App Platform with a persistent volume for `vitiligo.db`). Rationale: predictable pricing, full control over SQLite + FastAPI + fastembed, no vendor lock-in to edge/serverless constraints.
-
-**Not yet implemented** — add DO-specific deploy scripts when you are ready for a public URL.
-
-Rough cost expectation: ~$12–24/mo for a small always-on instance + block storage.
-
-After deploy, verify with:
+The engine runs local-first. Advisors see it by screen share and the review pack, not a public URL.
 
 ```bash
-BASE_URL=https://your-host.example ./scripts/deploy/verify-public.sh
+vitiligo serve                       # http://127.0.0.1:8765
+./scripts/deploy/verify-local.sh     # smoke test
+./scripts/review/kol-share-pack.sh   # advisor pack
 ```
 
-Use `./scripts/deploy/prepare-db.sh` (optionally `--gzip`) to validate the corpus before uploading `vitiligo.db` to the host volume. Seed the graph on the server with `vitiligo graph seed` if `/api/health` shows zero graph entities.
+## Public hosting
 
----
+Any host works if it can run the Docker image with a persistent volume for `vitiligo.db`. `render.yaml` is a ready blueprint. DigitalOcean (about $12–24 a month) is the planned long-term host and has no scripts yet.
 
-## Render (optional alternative)
+**Render:**
+1. New Blueprint → select `render.yaml`.
+2. Set `ANTHROPIC_API_KEY` in the dashboard.
+3. Upload `vitiligo.db` to `/var/data/vitiligo.db` and restart the service.
 
-`render.yaml` remains as an optional blueprint. Same SQLite-on-disk requirement as DigitalOcean. Lower priority than DO path.
+**Before upload:** `./scripts/deploy/prepare-db.sh [--gzip]` validates the corpus. **After deploy:** `BASE_URL=https://… ./scripts/deploy/verify-public.sh`. If `/api/health` shows no graph entities, run `vitiligo graph seed` on the server.
 
-1. Connect the GitHub repo in Render → **New Blueprint** → select `render.yaml`
-2. Set `ANTHROPIC_API_KEY` in the dashboard
-3. Upload `vitiligo.db` to the attached disk at `/var/data/vitiligo.db` (restart the service afterward so the in-process embedding index reloads; mtime changes also trigger reload on the next search)
-
----
-
-## Docker (local smoke test)
+**Docker locally:**
 
 ```bash
 ./scripts/deploy/docker-smoke.sh
-```
-
-Or manually:
-
-```bash
+# or
 docker build -t vitiligo-engine .
-docker run --rm -p 8765:8765 \
-  -e ANTHROPIC_API_KEY \
-  -v "$(pwd)/data:/data" \
-  vitiligo-engine
+docker run --rm -p 8765:8765 -e ANTHROPIC_API_KEY -v "$(pwd)/data:/data" vitiligo-engine
 ```
-
-Open http://127.0.0.1:8765
-
-Helper scripts: [`scripts/deploy/`](../scripts/deploy/) — `docker-smoke.sh`, `verify-local.sh`, `verify-public.sh`, `prepare-db.sh`.
-
----
 
 ## Environment variables
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `VITILIGO_DB_PATH` | `data/vitiligo.db` | SQLite corpus path |
-| `ANTHROPIC_API_KEY` | — | Required for `/api/ask` and `/api/hypothesize` |
-| `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` | `30` | Per-IP POST limit (`0` = off) |
-| `VITILIGO_PREWARM_EMBEDDINGS` | `true` | Load fastembed model at startup |
-| `FASTEMBED_CACHE_PATH` | — | ONNX model cache directory |
-| `PORT` | — | Host platform port override |
+| `VITILIGO_DB_PATH` | `data/vitiligo.db` | Corpus path |
+| `ANTHROPIC_API_KEY` | — | Enables Ask and Hypothesize |
+| `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` | `30` | POST limit per client (`0` = off) |
+| `VITILIGO_TRUSTED_PROXY_HOPS` | `0` | Proxies in front of the app. The client IP and URL scheme are read that many entries from the right of `X-Forwarded-For` / `X-Forwarded-Proto` (Render: `1`). Never set it higher than the real proxy count. |
+| `VITILIGO_LLM_REQUESTS_PER_MINUTE` | `0` | Ask/Hypothesize calls per minute, all clients (`0` = off; Render: `10`) |
+| `VITILIGO_LLM_DAILY_TOKEN_BUDGET` | `0` | Ask/Hypothesize tokens per rolling 24 h, all clients (`0` = off; Render: `2000000`) |
+| `VITILIGO_STATE_DB_PATH` | next to the corpus | Runtime state (LLM budget); keep it on the persistent volume |
+| `VITILIGO_PREWARM_EMBEDDINGS` | `true` | Load the embedding model at startup |
+| `FASTEMBED_CACHE_PATH` | — | Embedding model cache |
+| `PORT` | — | Host port override |
 
----
+## Monitoring and safety
 
-## Monitoring
-
-- **`GET /api/health`** — readiness, version, LLM configured, corpus counts
-- **`GET /api/stats`** — documents, embeddings, trials breakdown
-
-Rate-limited clients receive **HTTP 429** with a `Retry-After` header on excess POST requests to `/api/*`.
-
----
-
-## Security notes
-
-- Search and Trials are public-read; Ask/Hypothesize call Anthropic (cost exposure).
-- Keep rate limits enabled in production.
-- Do not commit `.env`, API keys, or `vitiligo.db`.
-- Add auth (API keys, OAuth) before wide public launch if abuse becomes an issue.
+- `GET /api/health` (readiness, version, corpus counts) and `GET /api/stats`.
+- Over-limit clients get HTTP 429 with `Retry-After`.
+- Per-client limits live in process memory, so run one uvicorn worker (the entrypoint does). The global LLM caps are persisted and shared.
+- Set a monthly spend limit in the Anthropic console as the last line of defence.
+- Never commit `.env`, keys or `vitiligo.db`. Add authentication before a wide public launch if abuse appears.

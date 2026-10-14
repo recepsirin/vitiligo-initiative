@@ -39,7 +39,7 @@ This brief covers **Phase 0–1** (planning + public Evidence Engine) and outlin
 ### What we ship publicly
 
 - Semantic search, Ask, Hypothesize, Graph browse, Trials search over **public literature and trial registries**  
-- Rate-limited HTTP API (`VITILIGO_RATE_LIMIT_POST_PER_MINUTE`, default 30/min)  
+- Rate-limited HTTP API (per-client POST limit plus global Ask/Hypothesize caps; see [`deploy.md`](deploy.md))  
 - Health endpoint without patient data  
 
 ### Required disclaimers (UI + API)
@@ -76,33 +76,17 @@ Before treating Hypothesize outputs as “initiative endorsements”:
 
 1. KOL review of **knowledge graph export** (`exports/graph-review.json`)  
 2. Spot-check of **10 Hypothesize runs** on canonical questions (JAK+UVB, SV vs NSV, acral disease)  
-3. Sign-off on **public launch vs closed beta** (see open question in [strategic plan](strategic-plan.md))  
+3. Sign-off on **public launch vs closed beta** (open question in the [scientific brief](scientific-brief.md#open-scientific-questions-for-advisors))  
 
 ---
 
-## Future patient-facing tools (Phase 2–3) — preview
+## Future patient-facing tools (Phase 2–3)
 
-Not live yet; governance requirements documented early to avoid rework.
+Not live. Requirements recorded now to avoid rework:
 
-### Patient Tracking App & Registry
-
-- **IRB / ethics committee approval** before enrollment (US IRB or EU REC + GDPR lawful basis)  
-- **Informed consent** — purpose (care + research), risks, data sharing, withdrawal  
-- **HIPAA** (US) / **GDPR** (EU) — DPIA before launch; data minimization; encryption at rest and in transit  
-- **De-identification pipeline** for any shared datasets; controlled access via Data Use Agreement (see [strategic plan](strategic-plan.md) licensing table)  
-- **Minor patients** — parental consent; stricter retention rules  
-
-### Clinical Decision Support (CDS)
-
-- Frame as **decision aid**, not autonomous diagnosis  
-- US: monitor **FDA CDS guidance** (non-device CDS criteria vs SaMD)  
-- EU: **MDR** classification assessment with regulatory counsel before clinician-facing recommendations  
-- Validation study plan before marketing to clinicians  
-
-### Automated VASI scoring
-
-- Clinical validation protocol (ICC vs expert graders) before claims of equivalence  
-- Transparent failure modes (lighting, skin tone, lesion borders)  
+- **Patient tracking app and registry:** ethics approval (IRB or REC) before enrolment; informed consent covering care, research, sharing and withdrawal; HIPAA/GDPR with a DPIA, data minimization and encryption; de-identified sharing only under a data use agreement; parental consent and stricter retention for minors.
+- **Clinical decision support:** framed as a decision aid; FDA CDS guidance (US) and MDR classification (EU) reviewed with counsel; a validation study before clinician use.
+- **Automated VASI scoring:** validated against expert graders (ICC) before any equivalence claim; failure modes published (lighting, skin tone, lesion borders).
 
 ---
 
@@ -118,15 +102,7 @@ Not live yet; governance requirements documented early to avoid rework.
 
 ## Intellectual property
 
-| Asset | Policy |
-|-------|--------|
-| Engine source code | Apache 2.0 |
-| Non-patient datasets & graph exports | CC-BY 4.0 |
-| Publications | Open access target |
-| Patient-derived data | Not open; controlled access only |
-| Third-party data | Respect NCBI, CT.gov, Open Targets, DrugBank terms |
-
-No patent-first strategy unless explicitly approved by board/advisors for a narrow defensive purpose.
+Licensing follows the [strategic plan](strategic-plan.md#licensing): Apache 2.0 code, CC-BY 4.0 non-patient data, open-access publications, controlled access for patient data. Third-party terms (NCBI, CT.gov, Open Targets, DrugBank) apply. No patent-first strategy unless the board or advisors approve a narrow defensive use.
 
 ---
 

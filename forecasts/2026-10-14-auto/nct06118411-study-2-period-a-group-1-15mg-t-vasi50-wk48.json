@@ -1,0 +1,158 @@
+{
+  "frozen_at": "2026-10-14T12:24:27.141463+00:00",
+  "label": "NCT06118411: Study 2, Period A: Group 1 vs Study 2, Period A: Group 2, T-VASI50 at week 48",
+  "target": {
+    "trial": "NCT06118411",
+    "group": "Study 2, Period A",
+    "arm_label": "Study 2, Period A: Group 1",
+    "control_label": "Study 2, Period A: Group 2",
+    "agent": "upadacitinib",
+    "dose_value": 15.0,
+    "dose_unit": "mg",
+    "frequency": "QD",
+    "phototherapy": false,
+    "instrument": "T-VASI",
+    "threshold": 50,
+    "week": 48,
+    "registry_measure": "Percentage of Participants Achieving Total Vitiligo Area Scoring Index (T-VASI) 50 (\u2265 50% Improvement in T-VASI From Baseline)",
+    "assumptions": [],
+    "key": "NCT06118411|Study 2, Period A: Group 1|15mg|T-VASI50|wk48"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.23843817310050175,
+      "median": 0.1507632980023483,
+      "lo80": 0.018438967840359605,
+      "hi80": 0.6086652022911911,
+      "lo95": 0.002407711971086145,
+      "hi95": 0.9082163907371761
+    },
+    "p_control": {
+      "mean": 0.1630870610601718,
+      "median": 0.1452403362330587,
+      "lo80": 0.08144608664596299,
+      "hi80": 0.2613147371621087,
+      "lo95": 0.041794626892357384,
+      "hi95": 0.38867068696005425
+    },
+    "difference": {
+      "mean": 0.07535111204032997,
+      "median": 0.005856770951531892,
+      "lo80": -0.13627478700343207,
+      "hi80": 0.40920355904906364,
+      "lo95": -0.21085192164314437,
+      "hi95": 0.6758382036891992
+    },
+    "p_active_beats_control": 0.5166666666666667,
+    "extrapolation": [
+      "agent has no data: prediction is the oral-route class prior, very uncertain",
+      "placebo/vehicle data end at week 24: control response at week 48 is extrapolated"
+    ]
+  },
+  "draws_file": "nct06118411-study-2-period-a-group-1-15mg-t-vasi50-wk48.npz",
+  "draws_sha256": "1d6377a114cccd01dc3cab10a9664d5fedbfbf591187d1a5bda5bde89d1b270b",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.2",
+  "priors": {
+    "mu0 (mean trial baseline)": "Normal(-1.5, 1.0)",
+    "sigma_mu (between-trial baseline SD)": "HalfNormal(1.0)",
+    "pi (placebo drift along h(w), zero at week 24)": "Normal(0, 1.0)",
+    "baseline of uncontrolled trials (unpooled)": "Normal(-1.5, 2.5)",
+    "cut-point gaps": "HalfNormal(1.5)",
+    "alpha_route (class effect at reference dose, per route)": "Normal(1.0, 1.0)",
+    "omega_alpha (between-agent SD)": "HalfNormal(0.5)",
+    "beta_class (log-dose slope)": "Normal(0.3, 0.3)",
+    "omega_beta (between-agent slope SD)": "HalfNormal(0.3)",
+    "lambda (loading dose)": "Normal(0, 0.5)",
+    "phi (phototherapy)": "Normal(0, 0.5)",
+    "tau (between-arm SD)": "HalfNormal(0.3)",
+    "T50 per route (weeks to half of week-infinity effect)": "LogNormal(log 20, 0.7)"
+  },
+  "dataset": {
+    "instrument": "T-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346",
+      "NCT05247489",
+      "NCT05750823"
+    ],
+    "agents": [
+      "povorcitinib",
+      "ritlecitinib",
+      "ruxolitinib"
+    ],
+    "reference_dose": {
+      "povorcitinib": 75.0,
+      "ritlecitinib": 50.0,
+      "ruxolitinib": 3.0
+    },
+    "agent_route": {
+      "povorcitinib": "oral",
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical"
+    },
+    "controlled_trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346"
+    ],
+    "arms": 17,
+    "active_arms": 13,
+    "observations": 64,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 104
+    },
+    "design_annotations": {}
+  },
+  "data_sha256": "6b220531dc91057e2f3cd7e707fea7ad5bd8950dd1928fecf4f322472906ce09",
+  "diagnostics": {
+    "max_rhat": 1.0023266577144239,
+    "min_ess_bulk": 2189.2595125695143,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "backtest_at_freeze": {
+    "file": "exports/model/backtest-v02-T-VASI.json",
+    "sha256": "2062081842171560c40b1ab89aff797ae3806ccf4985d502b18d1259327bca15",
+    "leave_one_trial_out": {
+      "points": 139,
+      "coverage80": 0.95,
+      "coverage95": 1.0,
+      "mean_abs_error_pp": 4.3
+    },
+    "leave_one_trial_out_mean_signed_error_pp": 4.27,
+    "leave_one_trial_out_all_converged": true,
+    "time_extrapolation": {
+      "points": 29,
+      "coverage80": 0.862,
+      "coverage95": 0.966,
+      "mean_abs_error_pp": 9.07
+    },
+    "time_extrapolation_mean_signed_error_pp": 5.32,
+    "time_extrapolation_converged": true
+  },
+  "disclaimer": "Research forecast; not medical advice. No results for this trial were consulted.",
+  "sha256": "d29b45f90f38ea457559897a2236f1ef3d6f55e9cc73ad8fdd46ce8c5d5fa37d"
+}

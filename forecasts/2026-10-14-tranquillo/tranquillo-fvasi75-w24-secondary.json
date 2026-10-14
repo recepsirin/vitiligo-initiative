@@ -1,0 +1,171 @@
+{
+  "frozen_at": "2026-10-14T10:44:02.021953+00:00",
+  "label": "Tranquillo NCT05583526: ritlecitinib 50 mg QD vs placebo, F-VASI75 at week 24",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0",
+  "priors": {
+    "mu0 (mean trial baseline)": "Normal(-1.5, 1.0)",
+    "sigma_mu (between-trial baseline SD)": "HalfNormal(1.0)",
+    "pi (placebo drift along h(w), zero at week 24)": "Normal(0, 1.0)",
+    "baseline of uncontrolled trials (unpooled)": "Normal(-1.5, 2.5)",
+    "cut-point gaps": "HalfNormal(1.5)",
+    "alpha_route (class effect at reference dose, per route)": "Normal(1.0, 1.0)",
+    "omega_alpha (between-agent SD)": "HalfNormal(0.5)",
+    "beta_class (log-dose slope)": "Normal(0.3, 0.3)",
+    "omega_beta (between-agent slope SD)": "HalfNormal(0.3)",
+    "lambda (loading dose)": "Normal(0, 0.5)",
+    "phi (phototherapy)": "Normal(0, 0.5)",
+    "tau (between-arm SD)": "HalfNormal(0.3)",
+    "T50 per route (weeks to half of week-infinity effect)": "LogNormal(log 20, 0.7)"
+  },
+  "dataset": {
+    "instrument": "F-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975",
+      "NCT05247489"
+    ],
+    "agents": [
+      "ritlecitinib",
+      "ruxolitinib",
+      "upadacitinib"
+    ],
+    "reference_dose": {
+      "ritlecitinib": 50.0,
+      "ruxolitinib": 3.0,
+      "upadacitinib": 22.0
+    },
+    "agent_route": {
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical",
+      "upadacitinib": "oral"
+    },
+    "controlled_trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975"
+    ],
+    "arms": 21,
+    "active_arms": 16,
+    "observations": 55,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 119,
+      "design annotation: post-randomization selection": 6,
+      "local read where central exists": 144
+    },
+    "design_annotations": {
+      "NCT03099304": {
+        "max_week": 24,
+        "reason": "After week 24 arms were re-assigned (registry arm labels such as 'Vehicle/Ruxolitinib Cream 0.15% QD to 0.5% QD: 1.5% BID'), so arms observed later are selected subsets, not the randomized population."
+      }
+    }
+  },
+  "data_sha256": "9f48bcbb3f86aac61288de5e82ba7452090a961c4bc7068f7587ae47784a8164",
+  "diagnostics": {
+    "max_rhat": 1.0021331299903518,
+    "min_ess_bulk": 1177.3016053165966,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "backtest_at_freeze": {
+    "file": "exports/model/backtest-v02-F-VASI.json",
+    "sha256": "de7f7a1699acf242e68d3614c636310f5bc6ab60e4a3546978c96069e7e6e857",
+    "leave_one_trial_out": {
+      "points": 107,
+      "coverage80": 0.925,
+      "coverage95": 0.991,
+      "mean_abs_error_pp": 5.08
+    },
+    "leave_one_trial_out_mean_signed_error_pp": 3.05,
+    "leave_one_trial_out_all_converged": true,
+    "time_extrapolation": {
+      "points": 26,
+      "coverage80": 0.692,
+      "coverage95": 0.731,
+      "mean_abs_error_pp": 10.62
+    },
+    "time_extrapolation_mean_signed_error_pp": 8.99,
+    "time_extrapolation_converged": false
+  },
+  "prediction": {
+    "scenario": {
+      "agent": "ritlecitinib",
+      "dose": 50.0,
+      "dose_unit": "mg",
+      "frequency": "QD",
+      "week": 24,
+      "threshold": 75,
+      "loading_dose": false,
+      "phototherapy": false,
+      "route": null
+    },
+    "conditioned_on_trial": null,
+    "p_active": {
+      "mean": 0.2205424612613764,
+      "median": 0.16568243529359006,
+      "lo80": 0.03342824200929591,
+      "hi80": 0.4914232449206906,
+      "lo95": 0.006649833878133188,
+      "hi95": 0.7391301631601112
+    },
+    "p_control": {
+      "mean": 0.05413484216770627,
+      "median": 0.029381942073748495,
+      "lo80": 0.0036953830943270254,
+      "hi80": 0.11927249135871777,
+      "lo95": 0.0004454043472745426,
+      "hi95": 0.26252997921776644
+    },
+    "difference": {
+      "mean": 0.1664076190936701,
+      "median": 0.12840699135154132,
+      "lo80": 0.02095534559534658,
+      "hi80": 0.36481022528888973,
+      "lo95": 0.0018015465693571502,
+      "hi95": 0.5178273383118358
+    },
+    "p_active_beats_control": 0.9863333333333333,
+    "extrapolation": [],
+    "observed_active_rate": {
+      "mean": 0.22079125,
+      "median": 0.165,
+      "lo80": 0.0325,
+      "hi80": 0.495,
+      "lo95": 0.005,
+      "hi95": 0.735
+    },
+    "observed_control_rate": {
+      "mean": 0.054235000000000005,
+      "median": 0.03,
+      "lo80": 0.0,
+      "hi80": 0.125,
+      "lo95": 0.0,
+      "hi95": 0.27
+    }
+  },
+  "disclaimer": "Research forecast; not medical advice or a treatment recommendation.",
+  "sha256": "c5e5aa6c25812ccae236fcb15a4dcd42ea628fc78d4308f2b9e58bc666ff9e27"
+}

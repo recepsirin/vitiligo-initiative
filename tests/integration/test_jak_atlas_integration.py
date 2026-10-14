@@ -53,6 +53,8 @@ def _ctgov_study(
                 {
                     "type": "PRIMARY",
                     "title": "F-VASI75 at Week 24",
+                    "paramType": "NUMBER",
+                    "unitOfMeasure": "percentage of participants",
                     "groups": [{"id": "OG000", "title": "Ruxolitinib"}],
                     "classes": [
                         {"categories": [{"measurements": [{"groupId": "OG000", "value": "30"}]}]}
@@ -277,3 +279,23 @@ def test_report_jak_cli_writes_all_outputs(seeded_jak_db, tmp_path: Path) -> Non
         "outcomes.csv",
         "trials.csv",
     ]
+
+
+def test_report_jak_arms_cli_writes_table(seeded_jak_db, tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from vitiligo.cli import app
+
+    csv_path = tmp_path / "arms.csv"
+    json_path = tmp_path / "arms.json"
+    result = CliRunner().invoke(
+        app, ["report", "jak-arms", "--csv", str(csv_path), "--json", str(json_path)]
+    )
+    assert result.exit_code == 0, result.output
+    with csv_path.open(encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
+    assert [(r["source_id"], r["endpoint"], r["week"], r["value_raw"]) for r in rows] == [
+        ("NCT10000001", "F-VASI75", "24", "30")
+    ]
+    assert "n_missing" in rows[0]["flags"]  # seeded result has no denominator
+    assert json.loads(json_path.read_text())["summary"]["model_ready_rows"] == 0

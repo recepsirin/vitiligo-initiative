@@ -107,6 +107,8 @@ class HypothesisReport:
     graph_citations: list[GraphCitation]
     notes: str
     model: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
 
 _SYSTEM_PROMPT = """You are a careful biomedical research strategist for the Vitiligo Initiative.
@@ -195,6 +197,8 @@ def generate_hypotheses(
         graph_citations=graph_citations,
         notes=notes,
         model=response.model,
+        input_tokens=response.input_tokens,
+        output_tokens=response.output_tokens,
     )
 
 

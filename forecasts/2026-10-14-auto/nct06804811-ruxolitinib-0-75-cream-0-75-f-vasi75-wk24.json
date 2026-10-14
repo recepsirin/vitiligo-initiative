@@ -1,0 +1,164 @@
+{
+  "frozen_at": "2026-10-14T12:24:27.073565+00:00",
+  "label": "NCT06804811: Ruxolitinib 0.75 % Cream vs Vehicle Cream, F-VASI75 at week 24",
+  "target": {
+    "trial": "NCT06804811",
+    "group": null,
+    "arm_label": "Ruxolitinib 0.75 % Cream",
+    "control_label": "Vehicle Cream",
+    "agent": "ruxolitinib",
+    "dose_value": 0.75,
+    "dose_unit": "%",
+    "frequency": null,
+    "phototherapy": false,
+    "instrument": "F-VASI",
+    "threshold": 75,
+    "week": 24,
+    "registry_measure": "Proportion of Participants Achieving a \u2265 75% Improvement From Baseline in the Facial Vitiligo Area Scoring Index (F-VASI75)",
+    "assumptions": [
+      "dosing frequency not stated in the registry: equal QD/BID mixture"
+    ],
+    "key": "NCT06804811|Ruxolitinib 0.75 % Cream|0.75%|F-VASI75|wk24"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.2519879737509751,
+      "median": 0.2032663663301909,
+      "lo80": 0.04582083425064246,
+      "hi80": 0.529101983206048,
+      "lo95": 0.008891904838040978,
+      "hi95": 0.7569789849973286
+    },
+    "p_control": {
+      "mean": 0.05266581738690613,
+      "median": 0.028368814637402914,
+      "lo80": 0.0038901966866503215,
+      "hi80": 0.11424532917054098,
+      "lo95": 0.0005030545707705792,
+      "hi95": 0.25319599937035503
+    },
+    "difference": {
+      "mean": 0.19932215636406903,
+      "median": 0.1682073510156131,
+      "lo80": 0.03528122263724728,
+      "hi80": 0.4082033805248813,
+      "lo95": 0.00612980356258625,
+      "hi95": 0.5597871956415867
+    },
+    "p_active_beats_control": 0.9958333333333333,
+    "extrapolation": []
+  },
+  "draws_file": "nct06804811-ruxolitinib-0-75-cream-0-75-f-vasi75-wk24.npz",
+  "draws_sha256": "553726971c2a2aa5070116859a01a0f593d02bfe888be1c54e29a8dc56f7ac97",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.2",
+  "priors": {
+    "mu0 (mean trial baseline)": "Normal(-1.5, 1.0)",
+    "sigma_mu (between-trial baseline SD)": "HalfNormal(1.0)",
+    "pi (placebo drift along h(w), zero at week 24)": "Normal(0, 1.0)",
+    "baseline of uncontrolled trials (unpooled)": "Normal(-1.5, 2.5)",
+    "cut-point gaps": "HalfNormal(1.5)",
+    "alpha_route (class effect at reference dose, per route)": "Normal(1.0, 1.0)",
+    "omega_alpha (between-agent SD)": "HalfNormal(0.5)",
+    "beta_class (log-dose slope)": "Normal(0.3, 0.3)",
+    "omega_beta (between-agent slope SD)": "HalfNormal(0.3)",
+    "lambda (loading dose)": "Normal(0, 0.5)",
+    "phi (phototherapy)": "Normal(0, 0.5)",
+    "tau (between-arm SD)": "HalfNormal(0.3)",
+    "T50 per route (weeks to half of week-infinity effect)": "LogNormal(log 20, 0.7)"
+  },
+  "dataset": {
+    "instrument": "F-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975",
+      "NCT05247489"
+    ],
+    "agents": [
+      "ritlecitinib",
+      "ruxolitinib",
+      "upadacitinib"
+    ],
+    "reference_dose": {
+      "ritlecitinib": 50.0,
+      "ruxolitinib": 3.0,
+      "upadacitinib": 22.0
+    },
+    "agent_route": {
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical",
+      "upadacitinib": "oral"
+    },
+    "controlled_trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04927975"
+    ],
+    "arms": 21,
+    "active_arms": 16,
+    "observations": 55,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 119,
+      "design annotation: post-randomization selection": 6,
+      "local read where central exists": 144
+    },
+    "design_annotations": {
+      "NCT03099304": {
+        "max_week": 24,
+        "reason": "After week 24 arms were re-assigned (registry arm labels such as 'Vehicle/Ruxolitinib Cream 0.15% QD to 0.5% QD: 1.5% BID'), so arms observed later are selected subsets, not the randomized population."
+      }
+    }
+  },
+  "data_sha256": "9f48bcbb3f86aac61288de5e82ba7452090a961c4bc7068f7587ae47784a8164",
+  "diagnostics": {
+    "max_rhat": 1.0021331299903518,
+    "min_ess_bulk": 1177.3016053165966,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "backtest_at_freeze": {
+    "file": "exports/model/backtest-v02-F-VASI.json",
+    "sha256": "de7f7a1699acf242e68d3614c636310f5bc6ab60e4a3546978c96069e7e6e857",
+    "leave_one_trial_out": {
+      "points": 107,
+      "coverage80": 0.925,
+      "coverage95": 0.991,
+      "mean_abs_error_pp": 5.08
+    },
+    "leave_one_trial_out_mean_signed_error_pp": 3.05,
+    "leave_one_trial_out_all_converged": true,
+    "time_extrapolation": {
+      "points": 26,
+      "coverage80": 0.692,
+      "coverage95": 0.731,
+      "mean_abs_error_pp": 10.62
+    },
+    "time_extrapolation_mean_signed_error_pp": 8.99,
+    "time_extrapolation_converged": false
+  },
+  "disclaimer": "Research forecast; not medical advice. No results for this trial were consulted.",
+  "sha256": "36c55511388234d05476e64e1a15396192ef7eb3653f9bc0512b66ffe063f7f1"
+}

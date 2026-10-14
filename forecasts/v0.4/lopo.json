@@ -1,0 +1,320 @@
+{
+ "summary": {
+  "pairs_with_both": 6,
+  "v04_log_score_sum": -49.228235438022026,
+  "v02_log_score_sum": -54.130249293264676,
+  "note": "Report only (pre-registration L); not first-look."
+ },
+ "pairs": [
+  {
+   "trial": "NCT05583526",
+   "agent": "ritlecitinib",
+   "dose": 50.0,
+   "instrument": "F-VASI",
+   "threshold": 75,
+   "week": 52,
+   "observed": {
+    "responders_active": 50,
+    "n_active": 401,
+    "responders_control": 5,
+    "n_control": 202
+   },
+   "held_out_programme": "ritlecitinib",
+   "v04": {
+    "log_score": -8.365353783154243,
+    "active": {
+     "lo80": 0.0866259141503665,
+     "median": 0.3579633701742005,
+     "hi80": 0.7592439115437859
+    },
+    "control": {
+     "lo80": 0.015945795100136884,
+     "median": 0.07659744346179681,
+     "hi80": 0.22277949491739982
+    }
+   },
+   "converged": true
+  },
+  {
+   "trial": "NCT05583526",
+   "agent": "ritlecitinib",
+   "dose": 50.0,
+   "instrument": "T-VASI",
+   "threshold": 50,
+   "week": 52,
+   "observed": {
+    "responders_active": 36,
+    "n_active": 401,
+    "responders_control": 4,
+    "n_control": 202
+   },
+   "held_out_programme": "ritlecitinib",
+   "v04": {
+    "log_score": -10.01841698426229,
+    "active": {
+     "lo80": 0.027387310506164688,
+     "median": 0.15554082774625252,
+     "hi80": 0.45183149343479
+    },
+    "control": {
+     "lo80": 0.058484606948971805,
+     "median": 0.09097573364170464,
+     "hi80": 0.1448961944018514
+    }
+   },
+   "converged": true
+  },
+  {
+   "trial": "NCT06072183",
+   "agent": "ritlecitinib",
+   "dose": 100.0,
+   "instrument": "F-VASI",
+   "threshold": 75,
+   "week": 52,
+   "observed": {
+    "responders_active": 136,
+    "n_active": 622,
+    "responders_control": 5,
+    "n_control": 208
+   },
+   "held_out_programme": "ritlecitinib",
+   "v04": {
+    "log_score": -9.11800541271773,
+    "active": {
+     "lo80": 0.13189187120797302,
+     "median": 0.4680690764521621,
+     "hi80": 0.8455619778803579
+    },
+    "control": {
+     "lo80": 0.015945795100136884,
+     "median": 0.07659744346179681,
+     "hi80": 0.22277949491739982
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -9.450483630409382,
+    "active": {
+     "lo80": 0.18827404379844664,
+     "median": 0.560065507888794,
+     "hi80": 0.9073864817619324
+    },
+    "control": {
+     "lo80": 0.015724910050630567,
+     "median": 0.09475185349583626,
+     "hi80": 0.28517543375492105
+    }
+   }
+  },
+  {
+   "trial": "NCT06072183",
+   "agent": "ritlecitinib",
+   "dose": 100.0,
+   "instrument": "T-VASI",
+   "threshold": 50,
+   "week": 52,
+   "observed": {
+    "responders_active": 81,
+    "n_active": 622,
+    "responders_control": 5,
+    "n_control": 208
+   },
+   "held_out_programme": "ritlecitinib",
+   "v04": {
+    "log_score": -10.353505747415618,
+    "active": {
+     "lo80": 0.035606380343504246,
+     "median": 0.19492918137097034,
+     "hi80": 0.5255155685827111
+    },
+    "control": {
+     "lo80": 0.058484606948971805,
+     "median": 0.09097573364170464,
+     "hi80": 0.1448961944018514
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -12.090071805700397,
+    "active": {
+     "lo80": 0.022181885130703446,
+     "median": 0.15009475499391556,
+     "hi80": 0.5285894393920898
+    },
+    "control": {
+     "lo80": 0.08603740110993385,
+     "median": 0.15456914901733398,
+     "hi80": 0.287663307785988
+    }
+   }
+  },
+  {
+   "trial": "NCT06118411-S1",
+   "agent": "upadacitinib",
+   "dose": 15.0,
+   "instrument": "F-VASI",
+   "threshold": 75,
+   "week": 48,
+   "observed": {
+    "responders_active": 52,
+    "n_active": 206,
+    "responders_control": 6,
+    "n_control": 102
+   },
+   "held_out_programme": "upadacitinib",
+   "v04": {
+    "log_score": -7.400363608692417,
+    "active": {
+     "lo80": 0.03272701591888191,
+     "median": 0.21961722268941145,
+     "hi80": 0.6274593514085891
+    },
+    "control": {
+     "lo80": 0.006608120630409261,
+     "median": 0.045794294139622896,
+     "hi80": 0.1858588974504776
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -7.506444235366478,
+    "active": {
+     "lo80": 0.09496263116598129,
+     "median": 0.37941519916057587,
+     "hi80": 0.7708004534244538
+    },
+    "control": {
+     "lo80": 0.014047435112297535,
+     "median": 0.0862884446978569,
+     "hi80": 0.2642951875925066
+    }
+   }
+  },
+  {
+   "trial": "NCT06118411-S1",
+   "agent": "upadacitinib",
+   "dose": 15.0,
+   "instrument": "T-VASI",
+   "threshold": 50,
+   "week": 48,
+   "observed": {
+    "responders_active": 40,
+    "n_active": 206,
+    "responders_control": 6,
+    "n_control": 102
+   },
+   "held_out_programme": "upadacitinib",
+   "v04": {
+    "log_score": -7.382545105940238,
+    "active": {
+     "lo80": 0.029329183689184316,
+     "median": 0.23928226277816791,
+     "hi80": 0.6911077035993246
+    },
+    "control": {
+     "lo80": 0.015945762342018256,
+     "median": 0.06327454448611475,
+     "hi80": 0.1944638424941918
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -8.65441850757044,
+    "active": {
+     "lo80": 0.01843896824866533,
+     "median": 0.15076329559087753,
+     "hi80": 0.6086652040481568
+    },
+    "control": {
+     "lo80": 0.0814460851252079,
+     "median": 0.14524033665657043,
+     "hi80": 0.2613147258758545
+    }
+   }
+  },
+  {
+   "trial": "NCT06118411-S2",
+   "agent": "upadacitinib",
+   "dose": 15.0,
+   "instrument": "F-VASI",
+   "threshold": 75,
+   "week": 48,
+   "observed": {
+    "responders_active": 48,
+    "n_active": 205,
+    "responders_control": 7,
+    "n_control": 101
+   },
+   "held_out_programme": "upadacitinib",
+   "v04": {
+    "log_score": -7.533078870409341,
+    "active": {
+     "lo80": 0.03272701591888191,
+     "median": 0.21961722268941145,
+     "hi80": 0.6274593514085891
+    },
+    "control": {
+     "lo80": 0.006608120630409261,
+     "median": 0.045794294139622896,
+     "hi80": 0.1858588974504776
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -7.670112338512995,
+    "active": {
+     "lo80": 0.09496263116598129,
+     "median": 0.37941519916057587,
+     "hi80": 0.7708004534244538
+    },
+    "control": {
+     "lo80": 0.014047435112297535,
+     "median": 0.0862884446978569,
+     "hi80": 0.2642951875925066
+    }
+   }
+  },
+  {
+   "trial": "NCT06118411-S2",
+   "agent": "upadacitinib",
+   "dose": 15.0,
+   "instrument": "T-VASI",
+   "threshold": 50,
+   "week": 48,
+   "observed": {
+    "responders_active": 44,
+    "n_active": 205,
+    "responders_control": 6,
+    "n_control": 101
+   },
+   "held_out_programme": "upadacitinib",
+   "v04": {
+    "log_score": -7.440736692846681,
+    "active": {
+     "lo80": 0.029329183689184316,
+     "median": 0.23928226277816791,
+     "hi80": 0.6911077035993246
+    },
+    "control": {
+     "lo80": 0.015945762342018256,
+     "median": 0.06327454448611475,
+     "hi80": 0.1944638424941918
+    }
+   },
+   "converged": true,
+   "v02": {
+    "log_score": -8.758718775704981,
+    "active": {
+     "lo80": 0.01843896824866533,
+     "median": 0.15076329559087753,
+     "hi80": 0.6086652040481568
+    },
+    "control": {
+     "lo80": 0.0814460851252079,
+     "median": 0.14524033665657043,
+     "hi80": 0.2613147258758545
+    }
+   }
+  }
+ ]
+}

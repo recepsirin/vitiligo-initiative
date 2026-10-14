@@ -51,6 +51,9 @@ dev = [
     "mypy>=1.10",
     "types-lxml>=2024.4",
 ]
+model = [
+    "pymc>=5.16",
+]
 
 [project.scripts]
 vitiligo = "vitiligo.cli:app"
@@ -64,7 +67,7 @@ Funding = "https://github.com/sponsors/recepsirin"
 where = ["src"]
 
 [tool.setuptools.package-data]
-vitiligo = ["py.typed", "web/static/*"]
+vitiligo = ["py.typed", "web/static/*", "reports/*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -100,6 +103,12 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# Optional [model] extra: don't analyse these packages' sources (PyTensor uses
+# Python 3.12-only syntax, which breaks checking at python_version = 3.11).
+module = ["pymc.*", "pytensor.*", "arviz.*", "arviz_stats.*"]
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
@@ -107,6 +116,7 @@ markers = [
     "corpus: requires the full local vitiligo.db corpus",
     "smoke: thin end-to-end checks over the full corpus (run locally)",
     "confidence: curated retrieval/trial scenarios on the minimal regression corpus (runs in CI)",
+    "model: Bayesian scenario-model fits (needs the [model] extra; slower; skipped without PyMC)",
 ]
 pythonpath = ["src", "."]
 addopts = "-ra --strict-markers"
