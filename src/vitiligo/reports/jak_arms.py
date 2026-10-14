@@ -51,7 +51,7 @@ class Endpoint:
         return f"{self.instrument}{self.threshold}"
 
 
-def _vasi_endpoint(text: str) -> Endpoint | None | str:
+def _vasi_endpoint(text: str) -> Endpoint | str | None:
     """Endpoint named in ``text``; "multiple" when several thresholds are listed."""
     match = _VASI_RE.search(text)
     if match:
