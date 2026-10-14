@@ -9,6 +9,7 @@ Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-
 | [`TOPLINE-CHECK-2026-10-14.md`](TOPLINE-CHECK-2026-10-14.md) | Which forecasts were really prospective, and how the others scored against public toplines |
 | [`v0.3/`](v0.3/README.md) | Pre-registered evaluation of model v0.3 (not adopted) |
 | [`v0.4/`](v0.4/README.md), [`v0.5/`](v0.5/README.md) | Challenger models, sealed for the same 7 targets as v0.2 |
+| [`voi/`](voi/README.md) | Value-of-information engine: pre-registered gate (passed narrowly) and how much each pending result can tell |
 
 ## Scoreboard
 
@@ -26,4 +27,6 @@ The 7 targets whose results were not public at sealing. F-VASI75 unless noted; a
 
 \* Sealed without draws, so not scored.
 
-**Rule** (pre-registered): once at least 4 targets that every compared model has scored have resolved, the model with the highest summed log score becomes the default. The pediatric trials separate the models most: near 25–30% favours v0.2, near 15–20% v0.5, near 10% v0.4.
+**Rule** (pre-registered): once at least 4 targets that every compared model has scored have resolved, the model with the highest summed log score becomes the default.
+
+**How much one result can tell us** ([`voi/discrimination.json`](voi/discrimination.json)): little. The models' medians differ, but their intervals overlap, so no single target is decisive. The most informative, Tranquillo 2's T-VASI50, carries 0.30 of a possible 1.10 nats about which model is right; each pediatric trial carries about 0.09. The comparison will take several results.

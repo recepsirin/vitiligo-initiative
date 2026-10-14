@@ -1,0 +1,141 @@
+{
+ "instrument": "T-VASI",
+ "m0_diagnostics": {
+  "max_rhat": 1.001599434046993,
+  "min_ess_bulk": 2120.1940513668196,
+  "divergences": 0.0,
+  "draws": 6000.0
+ },
+ "q0": {
+  "oral": {
+   "mean": 0.2659707923138415,
+   "sd": 0.21085978026068689
+  },
+  "topical": {
+   "mean": 0.32612573468763145,
+   "sd": 0.11727317875446044
+  }
+ },
+ "items": [
+  {
+   "item": "topline NCT05583526 T-VASI",
+   "kind": "topline",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.03136291193563504,
+   "predicted_evr_oral": 0.026209476551155485,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 790.9374427528871,
+   "realized_shift_sum": -0.022086895037923715,
+   "realized_shift_oral": 0.008970781534163086,
+   "surprise_ratio": 0.01555438899989315,
+   "reweighted_shift_sum": -0.12131908713181788,
+   "reweighted_ess": 186.97684639961307,
+   "refit_diagnostics": {
+    "max_rhat": 1.0025534903630795,
+    "min_ess_bulk": 2014.7657895064474,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06072183 T-VASI",
+   "kind": "topline",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.030488362943705362,
+   "predicted_evr_oral": 0.02524769974612707,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 645.7162669704712,
+   "realized_shift_sum": -0.040773034670657404,
+   "realized_shift_oral": -0.0068710064333805665,
+   "surprise_ratio": 0.0545270455919267,
+   "reweighted_shift_sum": -0.10364243842777904,
+   "reweighted_ess": 196.65119239538996,
+   "refit_diagnostics": {
+    "max_rhat": 1.0022869756000596,
+    "min_ess_bulk": 2231.0347545678273,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06118411-S1 T-VASI",
+   "kind": "topline",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.021505583666978124,
+   "predicted_evr_oral": 0.016921866161436455,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 1161.5432273388496,
+   "realized_shift_sum": -0.0522513219404499,
+   "realized_shift_oral": -0.03328689911392088,
+   "surprise_ratio": 0.1269531060771334,
+   "reweighted_shift_sum": -0.07000700119602621,
+   "reweighted_ess": 1120.5527908986735,
+   "refit_diagnostics": {
+    "max_rhat": 1.0031377965822856,
+    "min_ess_bulk": 1939.443057261656,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "topline NCT06118411-S2 T-VASI",
+   "kind": "topline",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.02141289383174385,
+   "predicted_evr_oral": 0.016857065792364307,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 1184.240436936982,
+   "realized_shift_sum": -0.04014002672779027,
+   "realized_shift_oral": -0.023486147864240192,
+   "surprise_ratio": 0.07524539926122169,
+   "reweighted_shift_sum": -0.05742058927429983,
+   "reweighted_ess": 1102.5407314449067,
+   "refit_diagnostics": {
+    "max_rhat": 1.002757829268542,
+    "min_ess_bulk": 1763.9742762238895,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "paper: ruxolitinib phase 2 1.5% BID, T-VASI rows",
+   "kind": "paper",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.003895741097354721,
+   "predicted_evr_oral": 0.00116809457003387,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 1872.472463169659,
+   "realized_shift_sum": -0.00850637238784202,
+   "realized_shift_oral": -0.004571973158455256,
+   "surprise_ratio": 0.018573711494784345,
+   "reweighted_shift_sum": -0.022546875822789247,
+   "reweighted_ess": 1395.734092343423,
+   "refit_diagnostics": {
+    "max_rhat": 1.0028605206218102,
+    "min_ess_bulk": 2037.01732606652,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  },
+  {
+   "item": "paper: upadacitinib phase 2, T-VASI50 week 24",
+   "kind": "paper",
+   "instrument": "T-VASI",
+   "predicted_evr_sum": 0.010510224232473402,
+   "predicted_evr_oral": 0.006309482405372972,
+   "prior_var_sum": 0.06756559487905318,
+   "mean_ess": 1428.6214516983869,
+   "realized_shift_sum": -0.02549987242923568,
+   "realized_shift_oral": -0.008596513145966878,
+   "surprise_ratio": 0.061867708958885874,
+   "reweighted_shift_sum": -0.0616650545485099,
+   "reweighted_ess": 2039.357892378131,
+   "refit_diagnostics": {
+    "max_rhat": 1.002481115447409,
+    "min_ess_bulk": 1817.7423404186632,
+    "divergences": 0.0,
+    "draws": 6000.0
+   }
+  }
+ ]
+}

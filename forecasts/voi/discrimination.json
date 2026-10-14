@@ -1,0 +1,133 @@
+[
+ {
+  "target": [
+   "NCT06072183",
+   "T-VASI",
+   50,
+   52,
+   50.0
+  ],
+  "models": [
+   "v0.2",
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 206,
+  "n_control": 208,
+  "mutual_information_nats": 0.29662650190275774,
+  "max_nats": 1.0986122886681098,
+  "p_true_model_gets_75pct": 0.1715
+ },
+ {
+  "target": [
+   "NCT06072183",
+   "F-VASI",
+   75,
+   52,
+   50.0
+  ],
+  "models": [
+   "v0.2",
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 206,
+  "n_control": 208,
+  "mutual_information_nats": 0.15750828516619092,
+  "max_nats": 1.0986122886681098,
+  "p_true_model_gets_75pct": 0.084
+ },
+ {
+  "target": [
+   "NCT06804811",
+   "F-VASI",
+   75,
+   24,
+   0.75
+  ],
+  "models": [
+   "v0.2",
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 83,
+  "n_control": 83,
+  "mutual_information_nats": 0.09975001146234631,
+  "max_nats": 1.0986122886681098,
+  "p_true_model_gets_75pct": 0.0145
+ },
+ {
+  "target": [
+   "NCT06804811",
+   "F-VASI",
+   75,
+   24,
+   1.5
+  ],
+  "models": [
+   "v0.2",
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 83,
+  "n_control": 83,
+  "mutual_information_nats": 0.08850544097484267,
+  "max_nats": 1.0986122886681098,
+  "p_true_model_gets_75pct": 0.0105
+ },
+ {
+  "target": [
+   "NCT06548360",
+   "F-VASI",
+   75,
+   24,
+   1.5
+  ],
+  "models": [
+   "v0.2",
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 90,
+  "n_control": 90,
+  "mutual_information_nats": 0.08598246556845786,
+  "max_nats": 1.0986122886681098,
+  "p_true_model_gets_75pct": 0.011
+ },
+ {
+  "target": [
+   "NCT05583526",
+   "F-VASI",
+   75,
+   24,
+   50.0
+  ],
+  "models": [
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 401,
+  "n_control": 202,
+  "mutual_information_nats": 0.02501330975862021,
+  "max_nats": 0.6931471805599453,
+  "p_true_model_gets_75pct": 0.024
+ },
+ {
+  "target": [
+   "NCT05583526",
+   "T-VASI",
+   50,
+   24,
+   50.0
+  ],
+  "models": [
+   "v0.4",
+   "v0.5"
+  ],
+  "n_active": 401,
+  "n_control": 202,
+  "mutual_information_nats": 0.006673394709412116,
+  "max_nats": 0.6931471805599453,
+  "p_true_model_gets_75pct": 0.009
+ }
+]

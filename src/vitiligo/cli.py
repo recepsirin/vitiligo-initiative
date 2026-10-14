@@ -1369,7 +1369,7 @@ TOPLINE_CURATION = Path("curation/topline-results.json")
 
 
 def model_inputs_v03(
-    *, with_toplines: bool
+    *, with_toplines: bool, with_papers: bool = True
 ) -> tuple[list[ArmEndpointRow], dict[str, str], dict[str, bool]]:
     """v0.3 inputs: registry rows + curated paper rows the registry lacks (+ toplines),
     agent routes, and which trials are phase 3 (from the registry record)."""
@@ -1379,7 +1379,8 @@ def model_inputs_v03(
     atlas = build_jak_atlas()
     routes = {s.name: s.routes[0] for s in atlas.agents if len(s.routes) == 1}
     rows = harmonize_arms(atlas)
-    rows = rows + new_rows(to_arm_rows(load_curation(PAPER_CURATION)), rows)
+    if with_papers:
+        rows = rows + new_rows(to_arm_rows(load_curation(PAPER_CURATION)), rows)
     phase3 = {t.source_id: "PHASE3" in (t.phases or []) for t in atlas.trials}
     if with_toplines:
         toplines = load_toplines(TOPLINE_CURATION)
