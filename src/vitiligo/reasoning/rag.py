@@ -40,6 +40,8 @@ class RagAnswer:
     answer: str
     citations: list[Citation]
     model: str
+    input_tokens: int | None = None
+    output_tokens: int | None = None
 
 
 _SYSTEM_PROMPT = """You are a careful biomedical research assistant for the Vitiligo Initiative.
@@ -78,6 +80,8 @@ def ask_with_citations(
         answer=response.text,
         citations=citations,
         model=response.model,
+        input_tokens=response.input_tokens,
+        output_tokens=response.output_tokens,
     )
 
 

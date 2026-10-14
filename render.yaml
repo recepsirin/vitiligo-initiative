@@ -17,6 +17,18 @@ services:
         value: "true"
       - key: VITILIGO_RATE_LIMIT_POST_PER_MINUTE
         value: "30"
+      # Render terminates traffic at its proxy; key rate limits on the address that
+      # proxy appends (right-most X-Forwarded-For entry). Raise only if more
+      # proxies sit in front; too high a value lets clients spoof their IP.
+      - key: VITILIGO_TRUSTED_PROXY_HOPS
+        value: "1"
+      # Global caps on the paid Ask/Hypothesize endpoints, across ALL clients.
+      # Starting points: tune to your Anthropic budget (Hypothesize is roughly
+      # 10-20k tokens per call). Also set a spend limit in the Anthropic console.
+      - key: VITILIGO_LLM_REQUESTS_PER_MINUTE
+        value: "10"
+      - key: VITILIGO_LLM_DAILY_TOKEN_BUDGET
+        value: "2000000"
       - key: LOG_LEVEL
         value: INFO
       - key: ANTHROPIC_API_KEY

@@ -49,7 +49,7 @@ Examples we care about:
 
 - Keep `ANTHROPIC_API_KEY` and `NCBI_API_KEY` in environment variables or platform secrets — **never** in git
 - Do not expose the SQLite corpus directory as a public download endpoint without access controls
-- Keep `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` enabled on public deployments (default: 30)
+- Keep `VITILIGO_RATE_LIMIT_POST_PER_MINUTE` enabled on public deployments (default: 30), set `VITILIGO_TRUSTED_PROXY_HOPS` to the real proxy count, and cap Ask/Hypothesize with `VITILIGO_LLM_REQUESTS_PER_MINUTE` and `VITILIGO_LLM_DAILY_TOKEN_BUDGET` ([`docs/deploy.md`](docs/deploy.md))
 - Restart the web service after replacing `vitiligo.db` on disk so caches reload cleanly
 
 ## Contact and privacy (planned)
