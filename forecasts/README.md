@@ -1,6 +1,6 @@
 # Forecasts
 
-Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-256 of its content; predictive draws (`.npz`) are hash-sealed inside it. `vitiligo discover check-forecasts forecasts` re-verifies every seal and scores the forecasts against ClinicalTrials.gov results; a weekly workflow runs it.
+Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-256 of its content; predictive draws (`.npz`) are hash-sealed inside it. `vitiligo discover check-forecasts forecasts` re-verifies every seal and scores the forecasts against ClinicalTrials.gov results. A weekly workflow runs it, together with `vitiligo discover watch`, which ranks pending results by how much they would tell us and lists new papers, trials and SEC filings.
 
 | Folder | Contents |
 |---|---|

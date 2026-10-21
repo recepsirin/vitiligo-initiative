@@ -304,17 +304,19 @@ def committed_code(root: Path | None = None) -> dict[str, str]:
 
     A seal can be reproduced only if its code can be checked out again. The
     forecasts sealed on 2026-10-14 ran on code first committed hours later,
-    and refitting them now gives slightly different posteriors.
+    and refitting them now gives slightly different posteriors. ``root`` is
+    any path inside the checkout; by default, the one this code runs from.
     """
 
-    def git(*args: str) -> str:
+    def git(cwd: Path | str, *args: str) -> str:
         return subprocess.run(
-            ["git", *args], cwd=root, capture_output=True, text=True, check=True
+            ["git", *args], cwd=cwd, capture_output=True, text=True, check=True
         ).stdout.strip()
 
     try:
-        commit = git("rev-parse", "HEAD")
-        dirty = git("status", "--porcelain", "--", *SEALED_CODE)
+        top = git(root or Path(__file__).resolve().parent, "rev-parse", "--show-toplevel")
+        commit = git(top, "rev-parse", "HEAD")
+        dirty = git(top, "status", "--porcelain", "--", *SEALED_CODE)
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RuntimeError("sealing needs a git checkout to record the code") from exc
     if dirty:
@@ -515,16 +517,37 @@ def comparison_key(record: dict[str, Any]) -> tuple[Any, ...] | None:
     )
 
 
-def compare_models(scored: Sequence[tuple[str, dict[str, Any], Resolution]]) -> dict[str, Any]:
+# The targets of the pre-registered default-model comparison (P in
+# docs/model-v0.4-preregistration.md and docs/model-v0.5-preregistration.md).
+# Targets sealed later are scored too, but cannot decide the default.
+PREREGISTERED_COMPARISON = frozenset(
+    {
+        ("NCT05583526", "F-VASI", 75, 24, 50.0),
+        ("NCT05583526", "T-VASI", 50, 24, 50.0),
+        ("NCT06072183", "F-VASI", 75, 52, 50.0),
+        ("NCT06072183", "T-VASI", 50, 52, 50.0),
+        ("NCT06548360", "F-VASI", 75, 24, 1.5),
+        ("NCT06804811", "F-VASI", 75, 24, 0.75),
+        ("NCT06804811", "F-VASI", 75, 24, 1.5),
+    }
+)
+
+
+def compare_models(
+    scored: Sequence[tuple[str, dict[str, Any], Resolution]],
+    *,
+    keys: Callable[[tuple[Any, ...]], bool] = lambda _key: True,
+) -> dict[str, Any]:
     """Summed log scores per model on the targets resolved, with a log score, for every model.
 
-    ``scored`` holds (model, record, resolution) for each sealed forecast.
+    ``scored`` holds (model, record, resolution) for each sealed forecast;
+    ``keys`` selects which targets (by ``comparison_key``) count.
     """
     by_key: dict[tuple[Any, ...], dict[str, float]] = {}
     models: set[str] = set()
     for model, record, result in scored:
         key = comparison_key(record)
-        if key is None:
+        if key is None or not keys(key):
             continue
         models.add(model)
         if result.resolved and "log_score" in result.detail:

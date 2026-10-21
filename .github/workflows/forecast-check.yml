@@ -1,8 +1,10 @@
 name: Forecast check
 
 # Weekly: score the sealed forecasts in forecasts/ against results posted on
-# ClinicalTrials.gov. Read-only: writes a table to the run summary, never
-# commits or opens issues. No corpus or secrets needed.
+# ClinicalTrials.gov, rank pending results by what they would tell us, and list
+# what is new (Europe PMC, ClinicalTrials.gov; SEC filings if the optional
+# SEC_USER_AGENT secret names a contact). Read-only: writes to the run summary,
+# never commits or opens issues. No corpus needed.
 
 on:
   schedule:
@@ -29,3 +31,8 @@ jobs:
 
       - name: Score sealed forecasts
         run: vitiligo discover check-forecasts forecasts --markdown "$GITHUB_STEP_SUMMARY"
+
+      - name: Watch for new evidence
+        env:
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+        run: vitiligo discover watch forecasts --days 8 --markdown "$GITHUB_STEP_SUMMARY"

@@ -1786,18 +1786,23 @@ def discover_check_forecasts_cmd(
     scored = sum(r.resolved for _p, r in results)
     lines.append("")
     lines.append(f"{scored} of {len(results)} sealed forecasts have posted results.")
-    from vitiligo.discovery.forecasts import compare_models
+    from vitiligo.discovery.forecasts import PREREGISTERED_COMPARISON, compare_models
 
     records = [(p, json.loads(p.read_text())) for p, _r in results]
-    comparison = compare_models(
-        [(_model_name(rec), rec, r) for (_p, rec), (_p2, r) in zip(records, results, strict=True)]
-    )
-    for pair, summary in comparison.items():
-        if summary["targets"]:
-            scores = ", ".join(f"{k} {v:.2f}" for k, v in summary.items() if k != "targets")
-            lines.append(
-                f"{pair}: {summary['targets']} common resolved targets; log score {scores}"
-            )
+    scored_by_model = [
+        (_model_name(rec), rec, r) for (_p, rec), (_p2, r) in zip(records, results, strict=True)
+    ]
+    for title, keep in (
+        ("Pre-registered comparison (decides the default)", PREREGISTERED_COMPARISON.__contains__),
+        ("Other targets (reported, not decisive)", lambda k: k not in PREREGISTERED_COMPARISON),
+    ):
+        for pair, summary in compare_models(scored_by_model, keys=keep).items():
+            if summary["targets"]:
+                scores = ", ".join(f"{k} {v:.2f}" for k, v in summary.items() if k != "targets")
+                lines.append(
+                    f"{title}, {pair}: {summary['targets']} common resolved targets; "
+                    f"log score {scores}"
+                )
     console.print("\n".join(lines))
     if json_out:
         payload = [{"file": str(p), **asdict(r)} for p, r in results]
@@ -1805,6 +1810,114 @@ def discover_check_forecasts_cmd(
     if markdown_out:
         with open(markdown_out, "a") as fh:
             fh.write("## Sealed forecasts vs posted results\n\n" + "\n".join(lines) + "\n")
+
+
+@discover_app.command("watch")
+def discover_watch_cmd(
+    paths: list[str] | None = typer.Argument(  # noqa: B008 (variadic arguments are lists)
+        None, help="Sealed forecast files or folders (default: forecasts/)."
+    ),
+    days: int = typer.Option(8, "--days", help="Look back this many days."),
+    since: str | None = typer.Option(
+        None, "--since", help="Look back to this date (YYYY-MM-DD); overrides --days."
+    ),
+    json_out: str | None = typer.Option(None, "--json", help="Write the report as JSON."),
+    markdown_out: str | None = typer.Option(
+        None, "--markdown", help="Append the report as Markdown (e.g. $GITHUB_STEP_SUMMARY)."
+    ),
+) -> None:
+    """Rank pending results by what they would tell us, and list what is new.
+
+    New: Europe PMC papers and preprints, JAK vitiligo trials registered or updated
+    on ClinicalTrials.gov, and SEC filings mentioning vitiligo (needs SEC_USER_AGENT).
+    """
+    from datetime import date, timedelta
+
+    import httpx
+
+    from vitiligo.discovery import watch
+    from vitiligo.discovery.forecasts import check_forecasts
+    from vitiligo.sources.ctgov import CTGovClient
+
+    start = date.fromisoformat(since) if since else date.today() - timedelta(days=days)
+    studies: dict[str, Any] = {}
+    with CTGovClient() as client:
+
+        def fetch(nct_id: str) -> dict[str, Any] | None:
+            studies[nct_id] = client.fetch_study(nct_id)
+            return studies[nct_id]
+
+        results = check_forecasts([Path(p) for p in (paths or ["forecasts"])], fetch)
+    sealed = []
+    for path, result in results:
+        record = json.loads(path.read_text())
+        sealed.append((_model_name(record), path, record, result))
+    ranked = watch.rank_pending(sealed, studies)
+
+    lines = [
+        "## What pending results would tell us",
+        "",
+        "Mutual information between each result and which sealed model is right "
+        "(maximum: log of the number of models).",
+        "",
+        "| Target | Models | Arm sizes | Information (nats) | P(true model gets 75%) |",
+        "|---|---|---|---|---|",
+    ]
+    for t in ranked:
+        trial, instrument, threshold, week, dose = t.key
+        lines.append(
+            f"| {trial} {instrument}{threshold} wk {week}, dose {dose:g} | {', '.join(t.models)} "
+            f"| {t.n_active} / {t.n_control} ({t.sizes_from}) "
+            f"| {t.mutual_information_nats:.2f} of {t.max_nats:.2f} | {t.p_true_model_gets_75pct:.2f} |"
+        )
+    if not ranked:
+        lines.append("| none pending | | | | |")
+
+    pending_trials = {t.key[0] for t in ranked}
+    sources: list[tuple[str, Any]] = [
+        ("Europe PMC", lambda: watch.europe_pmc(start)),
+        ("ClinicalTrials.gov", lambda: watch.ctgov(start)),
+        ("SEC filings", lambda: watch.sec_filings(start, get_settings().sec_user_agent)),
+    ]
+    report: dict[str, Any] = {"since": start.isoformat(), "ranked": [asdict(t) for t in ranked]}
+    lines += ["", f"## New since {start.isoformat()}", ""]
+    for name, run in sources:
+        try:
+            hits = run()
+        except (httpx.HTTPError, ValueError) as exc:
+            lines += [f"**{name}:** unavailable ({type(exc).__name__}).", ""]
+            report[name] = {"error": str(exc)}
+            continue
+        if hits is None:
+            lines += [f"**{name}:** skipped; set SEC_USER_AGENT to a contact name and email.", ""]
+            report[name] = {"skipped": "SEC_USER_AGENT not set"}
+            continue
+        report[name] = [asdict(h) for h in hits]
+        if not hits:
+            lines += [f"**{name}:** nothing new.", ""]
+            continue
+        lines += [
+            f"**{name}** ({len(hits)})",
+            "",
+            "| Date | Item | Agents | Note |",
+            "|---|---|---|---|",
+        ]
+        for h in sorted(hits, key=lambda h: h.date, reverse=True):
+            note = h.note
+            if any(trial in h.title for trial in pending_trials):
+                note = f"{note}; **sealed forecast pending**".lstrip("; ")
+            title = h.title.replace("|", "/")
+            lines.append(
+                f"| {h.date} | [{title}]({h.url}) | {', '.join(h.agents) or '-'} | {note} |"
+            )
+        lines.append("")
+    lines.append("Every item is a lead to read, not a curated result.")
+    console.print("\n".join(lines))
+    if json_out:
+        Path(json_out).write_text(json.dumps(report, indent=2, default=str) + "\n")
+    if markdown_out:
+        with open(markdown_out, "a") as fh:
+            fh.write("\n".join(lines) + "\n")
 
 
 @discover_app.command("resolve")

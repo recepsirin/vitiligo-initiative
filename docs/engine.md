@@ -63,6 +63,7 @@ vitiligo papers verify                       # check every curated number agains
 vitiligo model backtest --instrument F-VASI --out exports/model/backtest-F-VASI.json
 vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --threshold 75
 #   sealing also needs: --freeze PATH --public-results-check "press releases, EADV/AAD abstracts, PubMed: none"
+#   and committed model code (the commit is sealed into the record)
 
 # Discovery loop ([model] extra; docs/discovery-loop-plan.md)
 vitiligo discover run                         # held-out tests under e-LOND FDR control
@@ -72,6 +73,7 @@ vitiligo discover forecast-pending --out forecasts/<date>-auto --backtest-dir ex
   --public-results-check "..." [--skip NCT...]   # seal forecasts for unreported trials
 vitiligo discover resolve                     # score ledger forecasts after a corpus refresh
 vitiligo discover check-forecasts forecasts   # score sealed files straight from ClinicalTrials.gov (no corpus)
+vitiligo discover watch forecasts --days 8    # rank pending results by what they would tell us; list new papers, trials, SEC filings
 
 # Web UI
 vitiligo serve [--host 0.0.0.0 --port 8080]   # http://127.0.0.1:8765

@@ -38,6 +38,6 @@ Re-scored with the fixed engine (`gate-v1.1.json`). This is post-hoc and recorde
 - **Pediatric trials:** about 0.09 each.
 - **No single result is decisive;** the comparison will take several.
 
-## Next
+## Weekly watch
 
-Automatic weekly discovery of candidate evidence (new trials, new open-access papers) and a ranked report. Each new result also tests calibration prospectively, which is what can settle the T-VASI question.
+`vitiligo discover watch` (run weekly by the forecast-check workflow) recomputes this ranking for every pending target that two or more models have sealed, at the trials' arm sizes, and lists what is new: Europe PMC papers and preprints, JAK vitiligo trials registered or updated on ClinicalTrials.gov, and SEC filings mentioning vitiligo (when `SEC_USER_AGENT` names a contact). It does not rank evidence the models have no forecast for; that needs the expected-variance-reduction core and a fitted model, which the workflow does not run.

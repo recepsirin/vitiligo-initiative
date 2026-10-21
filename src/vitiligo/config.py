@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     ncbi_tool: str = Field(default="vitiligo-initiative", alias="NCBI_TOOL")
     ncbi_email: str | None = Field(default=None, alias="NCBI_EMAIL")
 
+    # SEC EDGAR full-text search (`vitiligo discover watch`). SEC requires a
+    # declared contact, e.g. "Jane Doe jane@example.org"; unset skips SEC.
+    sec_user_agent: str | None = Field(default=None, alias="SEC_USER_AGENT")
+
     # Storage
     db_path: Path = Field(default=Path("data/vitiligo.db"), alias="VITILIGO_DB_PATH")
 

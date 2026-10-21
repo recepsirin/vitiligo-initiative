@@ -14,6 +14,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning foll
 - **Sealed forecasts and scoring** (`vitiligo discover forecast-pending --public-results-check`, `discover resolve`, `discover check-forecasts`, weekly workflow): 15 v0.2 forecasts (3 prospective) and challengers v0.4 and v0.5 for 7 targets. Scoreboard: `forecasts/README.md`.
 - **Value-of-information core** (`discovery/voi.py`, `scripts/model/voi_core.py`): scores how much evidence would move an answer or separate models before it is seen. It passed its pre-registered retrospective gate (narrowly). A bug found afterwards (arms of one trial were integrated separately) is fixed; post-hoc, the gate's correlation rises from 0.53 to 0.68. T-VASI values remain upper bounds (`forecasts/voi/`).
 - **Povorcitinib phase 3 check** (`forecasts/povorcitinib-phase3/`): v0.2, v0.4 and v0.5 against STOP-V1/V2 F-VASI75 at week 52, post hoc; v0.4 and v0.5 beat v0.2 by about 1.5 nats. T-VASI50, whose numbers are not yet public, is sealed under all three models.
+- **Weekly watch** (`vitiligo discover watch`, in the forecast-check workflow): ranks pending results by how much they would tell us about which model is right, and lists new Europe PMC papers and preprints, JAK vitiligo trials registered or updated on ClinicalTrials.gov, and SEC 8-K/6-K filings mentioning vitiligo (optional `SEC_USER_AGENT`).
 - **Sealing records the code**: forecasts now carry the git commit, and sealing refuses uncommitted model code. The 2026-10-14 forecasts, sealed before their code was committed, reproduce within 1.4 points (`scripts/model/reproduce_sealed.py`).
 - **Discovery loop** (`vitiligo discover run|ledger|import-forecasts`): claims tested on held-out trials under online false-discovery-rate control, recorded in a ledger.
 - **Simulator trial run** (`lab/simulator/`): pre-registered; stopped after failing its locked exam.
@@ -22,6 +23,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning foll
 
 ### Fixed
 
+- **Model comparison counted targets sealed after the pre-registration.** Only the 7 pre-registered targets can now decide the default model; later targets are reported separately.
 - **Security: rate-limit bypass.** The POST limiter trusted the client-controlled `X-Forwarded-For`. Clients are now keyed by the TCP peer; behind proxies set `VITILIGO_TRUSTED_PROXY_HOPS` (Render: `1`). New global Ask/Hypothesize caps: `VITILIGO_LLM_REQUESTS_PER_MINUTE`, `VITILIGO_LLM_DAILY_TOKEN_BUDGET`.
 - **Hypothesize returned no trials** for natural-language intents (matched as one literal phrase). Intents are now tokenized and weighted by rarity and field.
 - **Approved drugs dropped from Hypothesize priors** (stages sorted as text). Stages now sort by rank.

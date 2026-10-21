@@ -357,6 +357,9 @@ def test_compare_models_uses_targets_scored_by_every_model() -> None:
     ]  # fmt: skip
     out = fc.compare_models(scored)
     assert out == {"v0.2 vs v0.4": {"targets": 1, "v0.2": -5.0, "v0.4": -4.0}}
+    # Only the selected targets count (the pre-registered set decides the default).
+    out = fc.compare_models(scored, keys=lambda key: key[0] != "A")
+    assert out == {"v0.2 vs v0.4": {"targets": 0, "v0.2": 0, "v0.4": 0}}
     # Manual records are matched by their reconstructed target.
     manual = {"label": "Tranquillo NCT05583526: x", "dataset": {"instrument": "F-VASI"},
               "prediction": {"scenario": {"agent": "r", "dose": 50.0, "threshold": 75, "week": 24}}}  # fmt: skip
@@ -395,3 +398,12 @@ def test_sealing_records_the_commit_and_refuses_uncommitted_model_code(tmp_path:
     model.write_text("x = 2\n")
     with pytest.raises(RuntimeError, match="commit the model code"):
         fc.committed_code(tmp_path)
+    with pytest.raises(RuntimeError, match="commit the model code"):
+        fc.committed_code(model.parent)  # from a subdirectory too
+
+
+def test_preregistered_comparison_matches_the_sealed_challengers() -> None:
+    root = Path(__file__).resolve().parents[2] / "forecasts"
+    for model in ("v0.4", "v0.5"):
+        records = fc.sealed_records([root / model / "forecasts"])
+        assert {fc.comparison_key(r) for _p, r in records} == fc.PREREGISTERED_COMPARISON
