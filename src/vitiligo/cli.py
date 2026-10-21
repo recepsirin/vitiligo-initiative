@@ -1365,6 +1365,17 @@ def _model_inputs() -> tuple[list[ArmEndpointRow], dict[str, str]]:
     return harmonize_arms(atlas), routes
 
 
+def _committed_code_or_exit() -> dict[str, str]:
+    """The commit to seal into a forecast; exits if the model code is uncommitted."""
+    from vitiligo.discovery.forecasts import committed_code
+
+    try:
+        return committed_code()
+    except RuntimeError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
+
+
 TOPLINE_CURATION = Path("curation/topline-results.json")
 
 
@@ -1461,6 +1472,7 @@ def model_predict_cmd(
             "toplines announced in press releases or at conferences.[/red]"
         )
         raise typer.Exit(code=2)
+    code = _committed_code_or_exit() if freeze else None
     from vitiligo.models.jak_mbma import (
         PRIORS,
         Scenario,
@@ -1524,6 +1536,7 @@ def model_predict_cmd(
                 "backtest_at_freeze": _backtest_summary(Path(backtest)) if backtest else None,
                 "prediction": result,
                 "public_results_check": public_check,
+                "code": code,
                 "disclaimer": "Research forecast; not medical advice or a treatment recommendation.",
             }
         )
@@ -1642,6 +1655,7 @@ def discover_forecast_pending_cmd(
     if not public_check.strip():
         console.print("[red]--public-results-check must say what was searched and found.[/red]")
         raise typer.Exit(code=2)
+    code = _committed_code_or_exit()
     from vitiligo.discovery.forecasts import forecast_target, registry_targets, write_forecast
     from vitiligo.models.jak_mbma import PRIORS, build_dataset, converged, fit
 
@@ -1711,6 +1725,7 @@ def discover_forecast_pending_cmd(
                 "diagnostics": posterior.diagnostics,
                 "backtest_at_freeze": backtest,
                 "public_results_check": public_check,
+                "code": code,
                 "disclaimer": "Research forecast; not medical advice. No results for this trial were consulted.",
             },
         )

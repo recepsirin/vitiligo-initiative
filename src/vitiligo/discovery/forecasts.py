@@ -19,6 +19,7 @@ import hashlib
 import json
 import math
 import re
+import subprocess
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -293,6 +294,32 @@ def forecast_target(
         "extrapolation": _extrapolation_notes(posterior, scenario),
     }
     return summary, p_active, p_control
+
+
+SEALED_CODE = ("src/vitiligo", "scripts/model")
+
+
+def committed_code(root: Path | None = None) -> dict[str, str]:
+    """The commit that sealing code runs at; refuses uncommitted model code.
+
+    A seal can be reproduced only if its code can be checked out again. The
+    forecasts sealed on 2026-10-14 ran on code first committed hours later,
+    and refitting them now gives slightly different posteriors.
+    """
+
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", *args], cwd=root, capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    try:
+        commit = git("rev-parse", "HEAD")
+        dirty = git("status", "--porcelain", "--", *SEALED_CODE)
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("sealing needs a git checkout to record the code") from exc
+    if dirty:
+        raise RuntimeError(f"commit the model code before sealing:\n{dirty}")
+    return {"commit": commit}
 
 
 def write_forecast(

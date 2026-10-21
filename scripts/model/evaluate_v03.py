@@ -28,7 +28,13 @@ import numpy as np
 
 from vitiligo import __version__
 from vitiligo.cli import model_inputs_v03
-from vitiligo.discovery.forecasts import ForecastTarget, _log_score, forecast_target, write_forecast
+from vitiligo.discovery.forecasts import (
+    ForecastTarget,
+    _log_score,
+    committed_code,
+    forecast_target,
+    write_forecast,
+)
 from vitiligo.discovery.ledger import verify_seal
 from vitiligo.models.jak_mbma import (
     PRIORS,
@@ -324,6 +330,7 @@ def v04_lopo(settings: FitSettings = V03, out: Path = OUT_V04, label: str = "v04
 def _seal_targets(
     directory: Path, model_label: str, prereg: str, settings: FitSettings = V03
 ) -> None:
+    code = committed_code()
     rows, routes, phase3 = model_inputs_v03(with_toplines=True)
     posteriors = {}
     for instrument in ("F-VASI", "T-VASI"):
@@ -356,6 +363,7 @@ def _seal_targets(
                 "diagnostics": posterior.diagnostics,
                 "preregistration": prereg,
                 "public_results_check": E3_PUBLIC_CHECK,
+                "code": code,
                 "disclaimer": "Research forecast; not medical advice. No results for this target were consulted.",
             },
         )  # fmt: skip

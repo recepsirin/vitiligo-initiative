@@ -361,3 +361,37 @@ def test_compare_models_uses_targets_scored_by_every_model() -> None:
     manual = {"label": "Tranquillo NCT05583526: x", "dataset": {"instrument": "F-VASI"},
               "prediction": {"scenario": {"agent": "r", "dose": 50.0, "threshold": 75, "week": 24}}}  # fmt: skip
     assert fc.comparison_key(manual) == ("NCT05583526", "F-VASI", 75, 24, 50.0)
+
+
+def test_sealing_records_the_commit_and_refuses_uncommitted_model_code(tmp_path: Path) -> None:
+    import subprocess
+
+    def git(*args: str) -> None:
+        subprocess.run(["git", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    git("init", "-q")
+    git(
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@example.org",
+        "commit",
+        "-q",
+        "--allow-empty",
+        "-m",
+        "x",
+    )
+    model = tmp_path / "src" / "vitiligo" / "model.py"
+    model.parent.mkdir(parents=True)
+    model.write_text("x = 1\n")
+    with pytest.raises(RuntimeError, match="commit the model code"):
+        fc.committed_code(tmp_path)  # untracked model code
+    git("add", ".")
+    git("-c", "user.name=t", "-c", "user.email=t@example.org", "commit", "-q", "-m", "model")
+    code = fc.committed_code(tmp_path)
+    assert len(code["commit"]) == 40
+    (tmp_path / "notes.md").write_text("outside the model code\n")
+    assert fc.committed_code(tmp_path) == code
+    model.write_text("x = 2\n")
+    with pytest.raises(RuntimeError, match="commit the model code"):
+        fc.committed_code(tmp_path)
