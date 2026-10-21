@@ -1,0 +1,463 @@
+{
+ "computed": "2026-10-21",
+ "status": "post-hoc check, not a sealed forecast; results were public before it ran",
+ "source": "Incyte Q1 2026 results, 2026-04-28, SEC Form 8-K Exhibit 99.1: https://www.sec.gov/Archives/edgar/data/0000879169/000087916926000023/incy-q12026xexx991.htm",
+ "scenario": "povorcitinib 30 mg QD, new phase 3 trial, week 52",
+ "observed_f_vasi75": {
+  "NCT06113445 (STOP-V1)": {
+   "active": 0.189,
+   "control": 0.068,
+   "enrolled": 467
+  },
+  "NCT06113471 (STOP-V2)": {
+   "active": 0.189,
+   "control": 0.031,
+   "enrolled": 450
+  }
+ },
+ "t_vasi50": "reported only as statistically significant; no numbers to score",
+ "models": {
+  "v0.2": {
+   "F-VASI": {
+    "data_sha256": "9f48bcbb3f86aac61288de5e82ba7452090a961c4bc7068f7587ae47784a8164",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": false,
+    "diagnostics": {
+     "max_rhat": 1.0036111547798547,
+     "min_ess_bulk": 1183.9622236601097,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": {
+     "max_rhat": 1.0032718558924465,
+     "min_ess_bulk": 1028.4676242748678,
+     "divergences": 1.0,
+     "draws": 6000.0
+    },
+    "converged": true,
+    "active": {
+     "lo90": 0.04046754358262154,
+     "lo80": 0.09348838377247078,
+     "median": 0.46600016930476135,
+     "hi80": 0.8775932592137468,
+     "hi90": 0.948274506194792
+    },
+    "control": {
+     "lo90": 0.005937975376788976,
+     "lo80": 0.0139292230995168,
+     "median": 0.09431357973005142,
+     "hi80": 0.28774532008732234,
+     "hi90": 0.38403906870199594
+    },
+    "difference": {
+     "lo90": 0.0014339866847417196,
+     "lo80": 0.03997088611603775,
+     "median": 0.33483484255982354,
+     "hi80": 0.6631431215009118,
+     "hi90": 0.7433660889147586
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.199,
+       "control": 0.38283333333333336,
+       "difference": 0.19683333333333333
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 44,
+         "n_active": 234,
+         "responders_control": 16,
+         "n_control": 233
+        },
+        "log_score": -9.031883013335344
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 59,
+         "n_active": 311,
+         "responders_control": 11,
+         "n_control": 156
+        },
+        "log_score": -8.952620870919194
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 66,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -8.76878162600859
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.199,
+       "control": 0.19383333333333333,
+       "difference": 0.249
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 225,
+         "responders_control": 7,
+         "n_control": 225
+        },
+        "log_score": -8.476935765630628
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 300,
+         "responders_control": 5,
+         "n_control": 150
+        },
+        "log_score": -8.390039063691388
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 338,
+         "responders_control": 3,
+         "n_control": 112
+        },
+        "log_score": -8.174905961135531
+       }
+      }
+     }
+    }
+   },
+   "T-VASI": {
+    "data_sha256": "6b220531dc91057e2f3cd7e707fea7ad5bd8950dd1928fecf4f322472906ce09",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": true,
+    "diagnostics": {
+     "max_rhat": 1.005867461364275,
+     "min_ess_bulk": 1974.043561694984,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": {
+     "max_rhat": 1.0015034494615438,
+     "min_ess_bulk": 2126.677950582545,
+     "divergences": 1.0,
+     "draws": 6000.0
+    },
+    "converged": true,
+    "active": {
+     "lo90": 0.015285660222748186,
+     "lo80": 0.031446229022977515,
+     "median": 0.16731568254630222,
+     "hi80": 0.5171698656398214,
+     "hi90": 0.6474186189010092
+    },
+    "control": {
+     "lo90": 0.06768697767923391,
+     "lo80": 0.0868217176645146,
+     "median": 0.15717019797393833,
+     "hi80": 0.2832947171993123,
+     "hi90": 0.35073316775030144
+    },
+    "difference": {
+     "lo90": -0.1691968402975121,
+     "lo80": -0.12972716975796553,
+     "median": 0.01140095121033309,
+     "hi80": 0.29774706120818717,
+     "hi90": 0.405822912886392
+    }
+   }
+  },
+  "v0.4": {
+   "F-VASI": {
+    "data_sha256": "48a62f5f4f621bd9d98cae6aaa2584bd00dd148fc1678c4d7a98d37ce1888589",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": false,
+    "diagnostics": {
+     "max_rhat": 1.0031697960952677,
+     "min_ess_bulk": 2263.3506820912658,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": null,
+    "converged": true,
+    "active": {
+     "lo90": 0.038337094501869104,
+     "lo80": 0.07420447059459416,
+     "median": 0.2961077145360221,
+     "hi80": 0.6583510237327924,
+     "hi90": 0.7790538205560761
+    },
+    "control": {
+     "lo90": 0.0066501555255829795,
+     "lo80": 0.012589376655745322,
+     "median": 0.05530936447976925,
+     "hi80": 0.16759415615022968,
+     "hi90": 0.2305319829740789
+    },
+    "difference": {
+     "lo90": 0.008714266049815353,
+     "lo80": 0.0440359561658617,
+     "median": 0.22976020742014236,
+     "hi80": 0.5056478153437777,
+     "hi90": 0.600599185806311
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.30183333333333334,
+       "control": 0.5995,
+       "difference": 0.25583333333333336
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 44,
+         "n_active": 234,
+         "responders_control": 16,
+         "n_control": 233
+        },
+        "log_score": -8.568405991858697
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 59,
+         "n_active": 311,
+         "responders_control": 11,
+         "n_control": 156
+        },
+        "log_score": -8.491728854064363
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 66,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -8.247744856704111
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.30183333333333334,
+       "control": 0.2808333333333333,
+       "difference": 0.3353333333333333
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 225,
+         "responders_control": 7,
+         "n_control": 225
+        },
+        "log_score": -7.405012545002192
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 300,
+         "responders_control": 5,
+         "n_control": 150
+        },
+        "log_score": -7.3748571726766095
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 338,
+         "responders_control": 3,
+         "n_control": 112
+        },
+        "log_score": -7.189921404937664
+       }
+      }
+     }
+    }
+   },
+   "T-VASI": {
+    "data_sha256": "249569d81638d67b9d2abf4e4ac195d0dd411e81331006ebeb48ad7ff245162b",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": true,
+    "diagnostics": {
+     "max_rhat": 1.0031430661915708,
+     "min_ess_bulk": 1212.493224457539,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": null,
+    "converged": true,
+    "active": {
+     "lo90": 0.02601497420024175,
+     "lo80": 0.05153869425585496,
+     "median": 0.2153503200025275,
+     "hi80": 0.5367901750736326,
+     "hi90": 0.6456730221910746
+    },
+    "control": {
+     "lo90": 0.016103456810088106,
+     "lo80": 0.024596815923385525,
+     "median": 0.06306030796396905,
+     "hi80": 0.1440990135924028,
+     "hi90": 0.19250534801869373
+    },
+    "difference": {
+     "lo90": -0.02196310339912448,
+     "lo80": 0.0007952216698668555,
+     "median": 0.1448017359907793,
+     "hi80": 0.4156249099368753,
+     "hi90": 0.5167821891318196
+    }
+   }
+  },
+  "v0.5": {
+   "F-VASI": {
+    "data_sha256": "48a62f5f4f621bd9d98cae6aaa2584bd00dd148fc1678c4d7a98d37ce1888589",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": false,
+    "diagnostics": {
+     "max_rhat": 1.002727611319377,
+     "min_ess_bulk": 1815.200657179799,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": null,
+    "converged": true,
+    "active": {
+     "lo90": 0.029909862846742397,
+     "lo80": 0.06409951432895107,
+     "median": 0.25909092848564574,
+     "hi80": 0.5905457819292538,
+     "hi90": 0.7010315464303951
+    },
+    "control": {
+     "lo90": 0.006790032202540371,
+     "lo80": 0.012195339765082427,
+     "median": 0.040180603009354485,
+     "hi80": 0.10937835344704305,
+     "hi90": 0.15043167700794213
+    },
+    "difference": {
+     "lo90": 0.004722744430394784,
+     "lo80": 0.03742287566228419,
+     "median": 0.2121324482423187,
+     "hi80": 0.49177503272207684,
+     "hi90": 0.6052563089107448
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.3495,
+       "control": 0.7618333333333334,
+       "difference": 0.27416666666666667
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 44,
+         "n_active": 234,
+         "responders_control": 16,
+         "n_control": 233
+        },
+        "log_score": -8.702079796633033
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 59,
+         "n_active": 311,
+         "responders_control": 11,
+         "n_control": 156
+        },
+        "log_score": -8.60449540332517
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 66,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -8.316364996378228
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.3495,
+       "control": 0.3621666666666667,
+       "difference": 0.36683333333333334
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 225,
+         "responders_control": 7,
+         "n_control": 225
+        },
+        "log_score": -7.173958063330685
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 300,
+         "responders_control": 5,
+         "n_control": 150
+        },
+        "log_score": -7.177321354572356
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 338,
+         "responders_control": 3,
+         "n_control": 112
+        },
+        "log_score": -6.962344640275466
+       }
+      }
+     }
+    }
+   },
+   "T-VASI": {
+    "data_sha256": "249569d81638d67b9d2abf4e4ac195d0dd411e81331006ebeb48ad7ff245162b",
+    "matches_sealed_data": true,
+    "povorcitinib_in_data": true,
+    "diagnostics": {
+     "max_rhat": 1.0030638263254728,
+     "min_ess_bulk": 1790.961577908285,
+     "divergences": 0.0,
+     "draws": 6000.0
+    },
+    "first_try_diagnostics": null,
+    "converged": true,
+    "active": {
+     "lo90": 0.023618067600086078,
+     "lo80": 0.044316660973015023,
+     "median": 0.19758056757983097,
+     "hi80": 0.49895599386571143,
+     "hi90": 0.6165980596881939
+    },
+    "control": {
+     "lo90": 0.015098952603829317,
+     "lo80": 0.021400438370735537,
+     "median": 0.05121806863433659,
+     "hi80": 0.11897141699050164,
+     "hi90": 0.15697984859410666
+    },
+    "difference": {
+     "lo90": -0.019596871659741655,
+     "lo80": 0.002898958785747421,
+     "median": 0.13888157655539202,
+     "hi80": 0.4040520535841044,
+     "hi90": 0.5166473635474373
+    }
+   }
+  }
+ }
+}

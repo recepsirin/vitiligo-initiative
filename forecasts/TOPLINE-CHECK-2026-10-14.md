@@ -41,3 +41,7 @@ Observed rates come from secondary reports of the EADV 2026 late-breaker (HCPLiv
 - The only forecasts still able to test the model prospectively are the three pediatric ruxolitinib forecasts.
 
 Sources: [Pfizer topline, 2026-07-30](https://www.biospace.com/press-releases/pfizer-announces-positive-topline-phase-3-results-for-litfulo-in-patients-with-nonsegmental-vitiligo) · [EADV 2026 report, 2026-10-03](https://www.hcplive.com/view/phase-3-ritlecitinib-results-vitiligo-iltefat-hamzavi-md) · [AbbVie topline, 2025-10-29](https://news.abbvie.com/2025-10-29-AbbVie-Announces-Positive-Topline-Results-from-Phase-3-Pivotal-Studies-Evaluating-Upadacitinib-RINVOQ-R-in-Adults-and-Adolescents-with-Vitiligo)
+
+## Addendum, 2026-10-21: povorcitinib
+
+This search also missed povorcitinib's phase 3 toplines (STOP-V1 and STOP-V2, F-VASI75 at week 52), which Incyte published on 2026-04-28. No forecast had been sealed for these trials: the registry does not disclose the dose ("Dose A"), so automatic forecasting skipped them. The [povorcitinib check](povorcitinib-phase3/README.md) scores the models against them post hoc.

@@ -1,0 +1,145 @@
+{
+  "frozen_at": "2026-10-21T20:05:51.108223+00:00",
+  "label": "NCT06113471: Experimental: Povorcitinib Dose A vs Placebo, T-VASI50 at week 52",
+  "target": {
+    "trial": "NCT06113471",
+    "group": null,
+    "arm_label": "Experimental: Povorcitinib Dose A",
+    "control_label": "Placebo",
+    "agent": "povorcitinib",
+    "dose_value": 30.0,
+    "dose_unit": "mg",
+    "frequency": "QD",
+    "phototherapy": false,
+    "instrument": "T-VASI",
+    "threshold": 50,
+    "week": 52,
+    "registry_measure": "Proportion of Participants Achieving a >= 50% Improvement From Baseline in the Total Body Vitiligo Area Scoring Index (T-VASI50), key secondary",
+    "assumptions": [
+      "Dose A is 30 mg once daily (Incyte, 2026-04-28)"
+    ],
+    "phase3": true,
+    "key": "NCT06113471|Experimental: Povorcitinib Dose A|30mg|T-VASI50|wk52"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.2279459299187425,
+      "median": 0.16731568254630222,
+      "lo80": 0.031446229022977515,
+      "hi80": 0.5171698656398214,
+      "lo95": 0.007680184149592588,
+      "hi95": 0.7627624222960024
+    },
+    "p_control": {
+      "mean": 0.17667567493346595,
+      "median": 0.15717019797393833,
+      "lo80": 0.0868217176645146,
+      "hi80": 0.2832947171993123,
+      "lo95": 0.04836602212178663,
+      "hi95": 0.4222386418532451
+    },
+    "difference": {
+      "mean": 0.05127025498527659,
+      "median": 0.01140095121033309,
+      "lo80": -0.12972716975796553,
+      "hi80": 0.29774706120818717,
+      "lo95": -0.20918512118514254,
+      "hi95": 0.5079603207466816
+    },
+    "p_active_beats_control": 0.5361666666666667,
+    "extrapolation": [
+      "week 52 beyond this agent's data (max week 24): relies on its route's time course",
+      "placebo/vehicle data end at week 24: control response at week 52 is extrapolated"
+    ]
+  },
+  "draws_file": "nct06113471-experimental-povorcitinib-dose-a-30mg-t-vasi50-wk52.npz",
+  "draws_sha256": "81e59cfe61f7401f66c7144f92d1c37b11b2e0002ed6dba37dad43ce448a84f6",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.2",
+  "fit_settings": {
+    "draws": 1500,
+    "tune": 2000,
+    "chains": 4,
+    "target_accept": 0.995,
+    "random_seed": 20261014,
+    "version": "v0.2"
+  },
+  "first_try_diagnostics": {
+    "max_rhat": 1.0015034494615438,
+    "min_ess_bulk": 2126.677950582545,
+    "divergences": 1.0,
+    "draws": 6000.0
+  },
+  "dataset": {
+    "instrument": "T-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346",
+      "NCT05247489",
+      "NCT05750823"
+    ],
+    "agents": [
+      "povorcitinib",
+      "ritlecitinib",
+      "ruxolitinib"
+    ],
+    "reference_dose": {
+      "povorcitinib": 75.0,
+      "ritlecitinib": 50.0,
+      "ruxolitinib": 3.0
+    },
+    "agent_route": {
+      "povorcitinib": "oral",
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical"
+    },
+    "controlled_trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346"
+    ],
+    "arms": 17,
+    "active_arms": 13,
+    "observations": 64,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 104
+    },
+    "design_annotations": {}
+  },
+  "data_sha256": "6b220531dc91057e2f3cd7e707fea7ad5bd8950dd1928fecf4f322472906ce09",
+  "diagnostics": {
+    "max_rhat": 1.005867461364275,
+    "min_ess_bulk": 1974.043561694984,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "preregistration": "docs/jak-scenario-model.md",
+  "public_results_check": "Searched 2026-10-21: Incyte's first-quarter 2026 release (2026-04-28, SEC Form 8-K Exhibit 99.1), Healio (2026-05-05), Practical Dermatology (2026-04-28), EADV 2026 and the ClinicalTrials.gov and EU CTIS records. T-VASI50 at week 52 is reported only as 'statistically significant and clinically meaningful' in both studies, with no numbers; so the direction is known and only the size is forecast. The F-VASI75 results (18.9% vs 6.8% and 3.1%) were read, but no model was refitted or changed: each fit reproduces the data hash of its earlier sealed records.",
+  "code": {
+    "commit": "fe64ba10170475e6dc1c41b018129b342908dd5d"
+  },
+  "disclaimer": "Research forecast; not medical advice. The direction of this result was public when it was sealed; its size was not.",
+  "sha256": "98a7386325c473414c6096e0174a50e0079a220717020101765c8a41d5e9f6d1"
+}

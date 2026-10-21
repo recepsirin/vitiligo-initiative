@@ -1,0 +1,552 @@
+{
+ "v0.2 nct06072183-arm-1-ritlecitinib-100-milligrams-mg-100mg-f-vasi75-wk52": {
+  "sealed_active": [
+   18.8,
+   56.0,
+   90.7
+  ],
+  "now_active": [
+   17.7,
+   55.8,
+   90.9
+  ],
+  "sealed_control": [
+   1.6,
+   9.5,
+   28.5
+  ],
+  "now_control": [
+   1.5,
+   9.3,
+   29.3
+  ]
+ },
+ "v0.2 nct06072183-arm-2-ritlecitinib-50mg-50mg-f-vasi75-wk52": {
+  "sealed_active": [
+   13.8,
+   45.8,
+   84.0
+  ],
+  "now_active": [
+   12.7,
+   45.5,
+   84.5
+  ],
+  "sealed_control": [
+   1.6,
+   9.5,
+   28.5
+  ],
+  "now_control": [
+   1.5,
+   9.3,
+   29.3
+  ]
+ },
+ "v0.2 nct06118411-study-1-period-a-group-1-15mg-f-vasi75-wk48": {
+  "sealed_active": [
+   9.5,
+   37.9,
+   77.1
+  ],
+  "now_active": [
+   8.7,
+   37.3,
+   77.2
+  ],
+  "sealed_control": [
+   1.4,
+   8.6,
+   26.4
+  ],
+  "now_control": [
+   1.3,
+   8.4,
+   27.1
+  ]
+ },
+ "v0.2 nct06118411-study-2-period-a-group-1-15mg-f-vasi75-wk48": {
+  "sealed_active": [
+   9.5,
+   37.9,
+   77.1
+  ],
+  "now_active": [
+   8.7,
+   37.3,
+   77.2
+  ],
+  "sealed_control": [
+   1.4,
+   8.6,
+   26.4
+  ],
+  "now_control": [
+   1.3,
+   8.4,
+   27.1
+  ]
+ },
+ "v0.2 nct06548360-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   6.0,
+   24.0,
+   57.4
+  ],
+  "now_active": [
+   5.6,
+   23.9,
+   58.0
+  ],
+  "sealed_control": [
+   0.4,
+   2.8,
+   11.4
+  ],
+  "now_control": [
+   0.4,
+   2.8,
+   12.2
+  ]
+ },
+ "v0.2 nct06804811-ruxolitinib-0-75-cream-0-75-f-vasi75-wk24": {
+  "sealed_active": [
+   4.6,
+   20.3,
+   52.9
+  ],
+  "now_active": [
+   4.2,
+   20.3,
+   53.3
+  ],
+  "sealed_control": [
+   0.4,
+   2.8,
+   11.4
+  ],
+  "now_control": [
+   0.4,
+   2.8,
+   12.2
+  ]
+ },
+ "v0.2 nct06804811-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   6.0,
+   24.0,
+   57.4
+  ],
+  "now_active": [
+   5.6,
+   23.9,
+   58.0
+  ],
+  "sealed_control": [
+   0.4,
+   2.8,
+   11.4
+  ],
+  "now_control": [
+   0.4,
+   2.8,
+   12.2
+  ]
+ },
+ "v0.2 nct06072183-arm-1-ritlecitinib-100-milligrams-mg-100mg-t-vasi50-wk52": {
+  "sealed_active": [
+   2.2,
+   15.0,
+   52.9
+  ],
+  "now_active": [
+   2.3,
+   15.1,
+   52.5
+  ],
+  "sealed_control": [
+   8.6,
+   15.5,
+   28.8
+  ],
+  "now_control": [
+   8.4,
+   15.5,
+   27.9
+  ]
+ },
+ "v0.2 nct06072183-arm-2-ritlecitinib-50mg-50mg-t-vasi50-wk52": {
+  "sealed_active": [
+   1.8,
+   11.2,
+   40.7
+  ],
+  "now_active": [
+   1.8,
+   11.3,
+   39.7
+  ],
+  "sealed_control": [
+   8.6,
+   15.5,
+   28.8
+  ],
+  "now_control": [
+   8.4,
+   15.5,
+   27.9
+  ]
+ },
+ "v0.2 nct06118411-study-1-period-a-group-1-15mg-t-vasi50-wk48": {
+  "sealed_active": [
+   1.8,
+   15.1,
+   60.9
+  ],
+  "now_active": [
+   1.6,
+   15.4,
+   59.5
+  ],
+  "sealed_control": [
+   8.1,
+   14.5,
+   26.1
+  ],
+  "now_control": [
+   8.0,
+   14.5,
+   25.6
+  ]
+ },
+ "v0.2 nct06118411-study-2-period-a-group-1-15mg-t-vasi50-wk48": {
+  "sealed_active": [
+   1.8,
+   15.1,
+   60.9
+  ],
+  "now_active": [
+   1.6,
+   15.4,
+   59.5
+  ],
+  "sealed_control": [
+   8.1,
+   14.5,
+   26.1
+  ],
+  "now_control": [
+   8.0,
+   14.5,
+   25.6
+  ]
+ },
+ "v0.4 nct05583526-ritlecitinib-50-mg-50mg-f-vasi75-wk24": {
+  "sealed_active": [
+   1.7,
+   8.0,
+   25.1
+  ],
+  "now_active": [
+   1.7,
+   7.8,
+   24.9
+  ],
+  "sealed_control": [
+   0.3,
+   1.9,
+   7.2
+  ],
+  "now_control": [
+   0.3,
+   1.9,
+   7.3
+  ]
+ },
+ "v0.4 nct06072183-arm-2-ritlecitinib-50mg-50mg-f-vasi75-wk52": {
+  "sealed_active": [
+   6.8,
+   22.7,
+   51.0
+  ],
+  "now_active": [
+   6.8,
+   22.3,
+   51.8
+  ],
+  "sealed_control": [
+   1.3,
+   5.6,
+   16.6
+  ],
+  "now_control": [
+   1.3,
+   5.5,
+   16.8
+  ]
+ },
+ "v0.4 nct06548360-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   3.3,
+   12.8,
+   33.6
+  ],
+  "now_active": [
+   3.2,
+   12.6,
+   34.6
+  ],
+  "sealed_control": [
+   0.3,
+   1.9,
+   7.1
+  ],
+  "now_control": [
+   0.3,
+   1.9,
+   7.3
+  ]
+ },
+ "v0.4 nct06804811-ruxolitinib-0-75-cream-0-75-f-vasi75-wk24": {
+  "sealed_active": [
+   2.3,
+   9.8,
+   28.8
+  ],
+  "now_active": [
+   2.2,
+   9.6,
+   29.5
+  ],
+  "sealed_control": [
+   0.3,
+   1.9,
+   7.1
+  ],
+  "now_control": [
+   0.3,
+   1.9,
+   7.3
+  ]
+ },
+ "v0.4 nct06804811-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   3.3,
+   12.8,
+   33.6
+  ],
+  "now_active": [
+   3.2,
+   12.6,
+   34.6
+  ],
+  "sealed_control": [
+   0.3,
+   1.9,
+   7.1
+  ],
+  "now_control": [
+   0.3,
+   1.9,
+   7.3
+  ]
+ },
+ "v0.4 nct05583526-ritlecitinib-50-mg-50mg-t-vasi50-wk24": {
+  "sealed_active": [
+   1.7,
+   7.9,
+   23.0
+  ],
+  "now_active": [
+   1.8,
+   8.0,
+   23.7
+  ],
+  "sealed_control": [
+   1.2,
+   3.7,
+   8.6
+  ],
+  "now_control": [
+   1.2,
+   3.6,
+   8.8
+  ]
+ },
+ "v0.4 nct06072183-arm-2-ritlecitinib-50mg-50mg-t-vasi50-wk52": {
+  "sealed_active": [
+   3.5,
+   14.4,
+   37.7
+  ],
+  "now_active": [
+   3.7,
+   14.3,
+   38.9
+  ],
+  "sealed_control": [
+   2.4,
+   6.3,
+   14.4
+  ],
+  "now_control": [
+   2.5,
+   6.3,
+   14.4
+  ]
+ },
+ "v0.5 nct05583526-ritlecitinib-50-mg-50mg-f-vasi75-wk24": {
+  "sealed_active": [
+   1.3,
+   5.4,
+   16.8
+  ],
+  "now_active": [
+   1.3,
+   5.4,
+   16.8
+  ],
+  "sealed_control": [
+   0.3,
+   1.2,
+   4.0
+  ],
+  "now_control": [
+   0.3,
+   1.2,
+   4.0
+  ]
+ },
+ "v0.5 nct06072183-arm-2-ritlecitinib-50mg-50mg-f-vasi75-wk52": {
+  "sealed_active": [
+   6.1,
+   18.1,
+   41.8
+  ],
+  "now_active": [
+   6.1,
+   18.1,
+   41.8
+  ],
+  "sealed_control": [
+   1.2,
+   4.0,
+   10.9
+  ],
+  "now_control": [
+   1.2,
+   4.0,
+   10.9
+  ]
+ },
+ "v0.5 nct06548360-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   6.4,
+   20.3,
+   43.6
+  ],
+  "now_active": [
+   6.4,
+   20.3,
+   43.6
+  ],
+  "sealed_control": [
+   1.0,
+   4.2,
+   11.1
+  ],
+  "now_control": [
+   1.0,
+   4.2,
+   11.1
+  ]
+ },
+ "v0.5 nct06804811-ruxolitinib-0-75-cream-0-75-f-vasi75-wk24": {
+  "sealed_active": [
+   4.6,
+   16.0,
+   37.6
+  ],
+  "now_active": [
+   4.6,
+   16.0,
+   37.6
+  ],
+  "sealed_control": [
+   1.0,
+   4.2,
+   11.1
+  ],
+  "now_control": [
+   1.0,
+   4.2,
+   11.1
+  ]
+ },
+ "v0.5 nct06804811-ruxolitinib-1-5-cream-1-5-f-vasi75-wk24": {
+  "sealed_active": [
+   6.4,
+   20.3,
+   43.6
+  ],
+  "now_active": [
+   6.4,
+   20.3,
+   43.6
+  ],
+  "sealed_control": [
+   1.0,
+   4.2,
+   11.1
+  ],
+  "now_control": [
+   1.0,
+   4.2,
+   11.1
+  ]
+ },
+ "v0.5 nct05583526-ritlecitinib-50-mg-50mg-t-vasi50-wk24": {
+  "sealed_active": [
+   1.4,
+   6.7,
+   19.9
+  ],
+  "now_active": [
+   1.4,
+   6.7,
+   19.9
+  ],
+  "sealed_control": [
+   1.0,
+   2.9,
+   6.6
+  ],
+  "now_control": [
+   1.0,
+   2.9,
+   6.6
+  ]
+ },
+ "v0.5 nct06072183-arm-2-ritlecitinib-50mg-50mg-t-vasi50-wk52": {
+  "sealed_active": [
+   3.1,
+   12.4,
+   34.7
+  ],
+  "now_active": [
+   3.1,
+   12.4,
+   34.7
+  ],
+  "sealed_control": [
+   2.1,
+   5.1,
+   11.9
+  ],
+  "now_control": [
+   2.1,
+   5.1,
+   11.9
+  ]
+ }
+}
