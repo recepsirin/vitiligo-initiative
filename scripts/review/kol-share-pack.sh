@@ -48,10 +48,14 @@ mkdir -p "$OUT/jak"
 vitiligo_run report jak --json "$OUT/jak/jak-atlas.json" --markdown "$OUT/jak/jak-atlas.md" \
   --csv-dir "$OUT/jak/atlas-csv"
 vitiligo_run report jak-arms --with-papers --csv "$OUT/jak/jak-arms.csv" --json "$OUT/jak/jak-arms.json"
-cp docs/findings.md docs/jak-scenario-model.md docs/model-v0.3-preregistration.md \
-  docs/discovery-loop-plan.md "$OUT/jak/"
-cp -R forecasts "$OUT/jak/forecasts"
-cp -R curation "$OUT/jak/curation"
+# Same layout as the repository, so the documents' relative links work in the pack.
+mkdir -p "$OUT/jak/docs"
+cp docs/findings.md docs/jak-scenario-model.md docs/discovery-loop-plan.md \
+  docs/*preregistration.md "$OUT/jak/docs/"
+cp -R forecasts curation "$OUT/jak/"
+mkdir -p "$OUT/jak/lab/simulator"
+cp -R lab/simulator/README.md lab/simulator/PREREGISTRATION.md lab/simulator/results \
+  "$OUT/jak/lab/simulator/"
 
 cat >"$OUT/README.txt" <<EOF
 Vitiligo Initiative — KOL review pack (${STAMP})
@@ -66,19 +70,23 @@ Contents:
   candidate-report.json     — machine-readable candidate report
   candidate-intents.json    — research intents used for per-intent rankings
   validation-proposals/     — lab outreach one-pagers (top 3 candidates)
-  jak/findings.md           — START HERE for the JAK work: what we found, what we need checked
+  jak/docs/findings.md      — START HERE for the JAK work: what we found, what we need checked
   jak/jak-atlas.*           — every registered JAK-inhibitor vitiligo trial, with posted results
   jak/jak-arms.*            — harmonized arm x endpoint x week table (+ curated paper rows)
-  jak/jak-scenario-model.md — the scenario model, back-tests and limitations
-  jak/forecasts/            — sealed forecasts, topline check, model v0.3 evaluation
+  jak/docs/jak-scenario-model.md — the scenario model, back-tests and limitations
+  jak/forecasts/            — sealed forecasts and scoreboard (README.md), topline check,
+                              model evaluations, povorcitinib check, evidence ranking (voi/),
+                              watch triage
+  jak/docs/*preregistration.md — every pre-registration, sealed before its first result
   jak/curation/             — results taken from papers and toplines, with sources
+  jak/lab/simulator/        — the simulator trial run: plan, results, why it stopped
 
 Advisor tasks:
   1. Skim graph-review.json for drug→vitiligo and target→vitiligo edges
   2. Label retrieval-eval.json hits (advisor_relevance 1–5, advisor_comments)
   3. Review candidate-report-v1.md — validate top 10 rankings and missing drugs
   4. Note any missing Phase 3 drugs or pivotal trials
-  5. JAK work: answer the questions at the end of jak/findings.md
+  5. JAK work: answer the questions at the end of jak/docs/findings.md
 
 Generated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 Engine version: $(vitiligo_run version 2>/dev/null | tail -1 || echo unknown)

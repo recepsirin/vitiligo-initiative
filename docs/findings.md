@@ -9,6 +9,7 @@ Open research by the Vitiligo Initiative, for expert review. Not medical advice.
 - **Scenario model.** Predicts responder rates by drug, dose and week. It is judged only on trials it has not seen, and its forecasts are sealed before we look at their results.
 - **Discovery loop.** Tests claims on held-out trials with false-discovery-rate control.
 - **Simulator trial run.** A mechanistic, patient-level model of repigmentation, searched under a pre-registered plan.
+- **Evidence watch and ranking.** A weekly search for new trials, papers and filings, and a pre-registered ranking of pending results by how much they would change the model's answers ([ranking](../forecasts/voi/ranking/README.md)).
 
 Every forecast, test and model change is recorded, including the ones that failed.
 
