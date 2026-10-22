@@ -38,6 +38,13 @@ Re-scored with the fixed engine (`gate-v1.1.json`). This is post-hoc and recorde
 - **Pediatric trials:** about 0.09 each.
 - **No single result is decisive;** the comparison will take several.
 
+## Ranking of pending evidence (2026-10-22)
+
+Pre-registered ranking of 7 pending randomized trials by how much they would move the gate's questions, with a prospective test of the engine as their results become public: [`ranking/`](ranking/README.md).
+- **On F-VASI75:** the pediatric ruxolitinib trials and STOP-V form the top group.
+- **On T-VASI50:** the pediatric trials lead.
+- **Last:** Tranquillo 2's 50 mg arm.
+
 ## Weekly watch
 
 `vitiligo discover watch` (run weekly by the forecast-check workflow) recomputes this ranking for every pending target that two or more models have sealed, at the trials' arm sizes, and lists what is new: Europe PMC papers and preprints, JAK vitiligo trials registered or updated on ClinicalTrials.gov, and SEC filings mentioning vitiligo (when `SEC_USER_AGENT` names a contact). It does not rank evidence the models have no forecast for; that needs the expected-variance-reduction core and a fitted model, which the workflow does not run.

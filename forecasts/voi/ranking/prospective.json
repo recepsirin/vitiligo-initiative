@@ -1,0 +1,13 @@
+{
+ "preregistration": "docs/voi-ranking-preregistration.md",
+ "code": {
+  "commit": "e24b3e8991ea7d17e6e74fad779040e118cf7b6d"
+ },
+ "test": {
+  "resolved": 0,
+  "spearman": null,
+  "mean_surprise_ratio": null,
+  "passed": null
+ },
+ "scored": []
+}

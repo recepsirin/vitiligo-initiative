@@ -1,0 +1,187 @@
+{
+ "preregistration": "docs/voi-ranking-preregistration.md",
+ "code": {
+  "commit": "97bbbdbacd0cf9c29c9daa4bdf73bbbef619d9fe"
+ },
+ "base_model": {
+  "F-VASI": {
+   "max_rhat": 1.0031697960952677,
+   "min_ess_bulk": 2263.3506820912658,
+   "divergences": 0.0,
+   "draws": 6000.0,
+   "data_sha256": "48a62f5f4f621bd9d98cae6aaa2584bd00dd148fc1678c4d7a98d37ce1888589"
+  },
+  "T-VASI": {
+   "max_rhat": 1.0031430661915708,
+   "min_ess_bulk": 1212.493224457539,
+   "divergences": 0.0,
+   "draws": 6000.0,
+   "data_sha256": "249569d81638d67b9d2abf4e4ac195d0dd411e81331006ebeb48ad7ff245162b"
+  }
+ },
+ "order_by_f_vasi_evr": [
+  "5 ruxolitinib cream, children (NCT06804811)",
+  "1 STOP-V1",
+  "2 STOP-V2",
+  "4 ruxolitinib cream, children (NCT06548360)",
+  "3 povorcitinib China",
+  "7 zasocitinib",
+  "6 Tranquillo 2, 50 mg arm"
+ ],
+ "items": [
+  {
+   "item": "1 STOP-V1",
+   "trial": "NCT06113445",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0015087289881666585,
+   "evr_oral": 0.0005895153835361846,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 2779.8830428414303,
+   "min_ess": 3.092163877651185,
+   "outcome_public": true
+  },
+  {
+   "item": "2 STOP-V2",
+   "trial": "NCT06113471",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0015087289881666585,
+   "evr_oral": 0.0005895153835361846,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 2779.8830428414303,
+   "min_ess": 3.092163877651185,
+   "outcome_public": true
+  },
+  {
+   "item": "3 povorcitinib China",
+   "trial": "NCT07865312",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0009705135416897302,
+   "evr_oral": 0.00043472603245567424,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 3452.1510056676007,
+   "min_ess": 99.76282820762252,
+   "outcome_public": false
+  },
+  {
+   "item": "4 ruxolitinib cream, children (NCT06548360)",
+   "trial": "NCT06548360",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0013509809792068117,
+   "evr_oral": 0.00020426141777514408,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 4147.7645847859585,
+   "min_ess": 26.584360523459978,
+   "outcome_public": false
+  },
+  {
+   "item": "5 ruxolitinib cream, children (NCT06804811)",
+   "trial": "NCT06804811",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0016783098914636314,
+   "evr_oral": 0.000233698215569048,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 3670.799620611934,
+   "min_ess": 5.177111957603608,
+   "outcome_public": false
+  },
+  {
+   "item": "6 Tranquillo 2, 50 mg arm",
+   "trial": "NCT06072183",
+   "instrument": "F-VASI",
+   "evr_sum": 0.00028537128321033976,
+   "evr_oral": 0.00022057991678762134,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 3698.1733138167074,
+   "min_ess": 146.89551161804164,
+   "outcome_public": false
+  },
+  {
+   "item": "7 zasocitinib",
+   "trial": "NCT07108283",
+   "instrument": "F-VASI",
+   "evr_sum": 0.0007315157512932886,
+   "evr_oral": 0.0002018236751752918,
+   "prior_var_sum": 0.015514183846018752,
+   "mean_ess": 3459.305311256148,
+   "min_ess": 6.20542602574009,
+   "outcome_public": false
+  },
+  {
+   "item": "1 STOP-V1",
+   "trial": "NCT06113445",
+   "instrument": "T-VASI",
+   "evr_sum": 0.0008417285789291743,
+   "evr_oral": 0.0005584473464837001,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 2428.470056593254,
+   "min_ess": 14.593516930079192,
+   "outcome_public": false
+  },
+  {
+   "item": "2 STOP-V2",
+   "trial": "NCT06113471",
+   "instrument": "T-VASI",
+   "evr_sum": 0.0008417285789291743,
+   "evr_oral": 0.0005584473464837001,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 2428.470056593254,
+   "min_ess": 14.593516930079192,
+   "outcome_public": false
+  },
+  {
+   "item": "3 povorcitinib China",
+   "trial": "NCT07865312",
+   "instrument": "T-VASI",
+   "evr_sum": 0.0007933578648379124,
+   "evr_oral": 0.0005009840186512138,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 2999.7846013349667,
+   "min_ess": 88.0434593836662,
+   "outcome_public": false
+  },
+  {
+   "item": "4 ruxolitinib cream, children (NCT06548360)",
+   "trial": "NCT06548360",
+   "instrument": "T-VASI",
+   "evr_sum": 0.0021317045625521562,
+   "evr_oral": 0.00020174527770747055,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 3665.9671461286757,
+   "min_ess": 70.02310552770798,
+   "outcome_public": false
+  },
+  {
+   "item": "5 ruxolitinib cream, children (NCT06804811)",
+   "trial": "NCT06804811",
+   "instrument": "T-VASI",
+   "evr_sum": 0.002504268887015708,
+   "evr_oral": 0.00020358542142336953,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 2572.525323541461,
+   "min_ess": 18.94456465699344,
+   "outcome_public": false
+  },
+  {
+   "item": "6 Tranquillo 2, 50 mg arm",
+   "trial": "NCT06072183",
+   "instrument": "T-VASI",
+   "evr_sum": 0.00042102328182913807,
+   "evr_oral": 0.0002456477054697861,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 3720.24877759004,
+   "min_ess": 174.1091801245192,
+   "outcome_public": false
+  },
+  {
+   "item": "7 zasocitinib",
+   "trial": "NCT07108283",
+   "instrument": "T-VASI",
+   "evr_sum": 0.0004715481800636458,
+   "evr_oral": 0.0001458430898830625,
+   "prior_var_sum": 0.01598800228370473,
+   "mean_ess": 3199.3368119312545,
+   "min_ess": 12.809568637007148,
+   "outcome_public": false
+  }
+ ]
+}

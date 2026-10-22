@@ -12,7 +12,7 @@ Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-
 | [`povorcitinib-phase3/`](povorcitinib-phase3/README.md) | Out-of-sample check of v0.2, v0.4 and v0.5 against povorcitinib's phase 3 F-VASI75 (post-hoc), and sealed T-VASI50 forecasts |
 | [`2026-10-22-new-trials/`](2026-10-22-new-trials/) | v0.2, v0.4, v0.5 for new trials found by the weekly watch: povorcitinib phase 3 in China (2 targets) |
 | [`watch-triage.md`](watch-triage.md) | What was decided about each lead from the weekly watch, and why |
-| [`voi/`](voi/README.md) | Value-of-information engine: pre-registered gate (passed narrowly) and how much each pending result can tell |
+| [`voi/`](voi/README.md) | Value-of-information engine: pre-registered gate (passed narrowly), how much each pending result can tell, and the pre-registered [ranking of pending evidence](voi/ranking/README.md) |
 
 ## Scoreboard
 

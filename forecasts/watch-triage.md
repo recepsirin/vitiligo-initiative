@@ -10,6 +10,7 @@ What we decided about each lead from `vitiligo discover watch`, so that a lead t
 
 - **Povorcitinib phase 3 details (STOP-V1, STOP-V2).** Incyte plans more phase 3 data in the second half of 2026. When the arm sizes, analysis population and T-VASI50 numbers are public: score the sealed T-VASI50 forecasts ([`povorcitinib-phase3/`](povorcitinib-phase3/README.md)), then pre-register a model version that fits these toplines. Nothing that version would be tested on resolves before then, so the pre-registration waits for the data rather than guessing them.
 - **Zasocitinib doses (NCT07108283).** Seal when the doses are public.
+- **Evidence ranking items** (the watch marks them). When one's result is public: curate it into [`voi/ranking/resolved.json`](voi/ranking/README.md#prospective-test) and run `python scripts/model/voi_core.py rank-score`.
 
 ## 2026-10-22 (leads since 2026-09-01)
 
