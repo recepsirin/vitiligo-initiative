@@ -20,7 +20,7 @@ Four outcomes, each measurable. The targets are proposals, to be set with clinic
 |---|---|---|---|
 | **1. Stop spread** | No new or growing lesions at 1 year | Rarely reported as an endpoint | Most patients stable at 1 year |
 | **2. Restore pigment** | Face: F-VASI75. Body: T-VASI50. Hands | **Face:** ruxolitinib cream about 30% at week 24 and 48–53% at week 52; oral JAK inhibitors 12.5–25% at week 48–52 in phase 3. **Body:** 9–21.5% (oral, week 48–52). **Hands:** poor | Most patients reach F-VASI75 and T-VASI50 within a year, with meaningful response on the hands |
-| **3. Last** | Response kept ≥1 year after stopping or tapering | Not yet quantified by us: see [`durability/`](durability/README.md) | Most patients keep it off continuous treatment |
+| **3. Last** | Response kept ≥1 year after stopping or tapering | **Cream, near-complete responders who stopped:** most kept F-VASI75 for a year (relapse hazard ratio 0.42 for continuing vs stopping); near-complete response was lost after a median of 195 days. **Oral:** no data yet; a forecast is sealed ([`durability/`](durability/README.md)) | Most patients keep it off continuous treatment |
 | **4. Safe and reachable** | Long-term safety; cost and access | Oral JAK inhibitors carry boxed warnings; creams are costly | Acceptable for years of use, and accessible |
 
 Sources for "best today": [topline check](../forecasts/TOPLINE-CHECK-2026-10-14.md), [povorcitinib check](../forecasts/povorcitinib-phase3/README.md), [simulator exam](../lab/simulator/README.md) (TRuE-V week 52), [curated results](../curation/README.md).

@@ -37,6 +37,27 @@ The registry also posts response by visit for patients still assessed.
 
 **No oral JAK inhibitor has posted randomized withdrawal data.** Older maintenance trials of other treatments posted no results: tacrolimus (NCT01841008, terminated), NB-UVB and excimer laser (NCT03384342, NCT03384459, status unknown).
 
+## Across treatments: durability is poor, and maintenance may help
+
+From published abstracts. These numbers are not curated rows: the papers are not open access.
+
+| Study | Design | Durability |
+|---|---|---|
+| NB-UVB, "does the repigmentation last?" (J Eur Acad Dermatol Venereol 2007, PMID 17658996) | 11 responders (> 75% repigmentation) followed for 2 years after stopping | 6 relapsed, 4 of them within 6 months; 5 of 31 treated (16%) had stable > 75% repigmentation at 2 years |
+| NB-UVB, long-term follow-up (J Am Acad Dermatol 2007, PMID 17224369) | 70 patients, uncontrolled | Repigmentation stable in 14.3% of patients 4 years after stopping |
+| Tacrolimus 0.1% twice weekly as maintenance (J Invest Dermatol 2015, PMID 25521460) | Randomized, double-blind vs placebo after successful repigmentation; 35 patients, 72 patches | Depigmentation in 48.4% of placebo vs 26.8% of tacrolimus lesions (intention to treat, p = 0.059; not significant after adjusting for patients' multiple lesions); per protocol, 40% vs 9.7% |
+
+- **Relapse after stopping is the rule across treatments.** The tacrolimus paper puts it at about 40% within the first year after successful repigmentation.
+- **The one randomized maintenance trial is small** and its intention-to-treat result is not significant.
+
+## Strategies aimed at durability (hypotheses, untested)
+
+1. **Step down to a light maintenance regimen** instead of stopping: twice-weekly topical tacrolimus, or less frequent ruxolitinib cream. Tacrolimus maintenance has one small trial (above). No trial has tested maintenance after JAK-induced repigmentation.
+2. **Treat longer before stopping.** A 2026 post hoc analysis of TRuE-V studies "impact of treatment duration on response durability" (J Am Acad Dermatol, PMID 41985560). Its results are not public in open access.
+3. **Target the memory directly.** Lesional T cells in vitiligo have a resident-memory phenotype, and blocking IL-15 signalling (anti-CD122) reversed established vitiligo in mice and depleted those cells from lesions (Richmond et al., Sci Transl Med 2018, PMID 30021889).
+   - An anti-IL-15 antibody, IBI3013, is in a phase 1 trial that includes patients with active vitiligo ([NCT07554222](https://clinicaltrials.gov/study/NCT07554222); recruiting; primary completion estimated 2027-12).
+   - This is the only strategy aimed at problem 3 itself rather than at suppressing the attack.
+
 ## What is coming: two randomized tests of an oral JAK inhibitor
 
 Designs from the registry and the published protocol description ([PMC13280265](https://europepmc.org/article/PMC/PMC13280265)).
