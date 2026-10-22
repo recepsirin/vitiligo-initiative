@@ -161,3 +161,12 @@ def test_ranked_trials_come_from_the_latest_ranking(tmp_path: Path) -> None:
     (tmp_path / "ranking-2026-11-30.json").write_text(json.dumps({"items": [{"trial": "NCT3"}]}))
     (tmp_path / "monte-carlo-2026-10-22.json").write_text("{}")
     assert watch.ranked_trials(tmp_path) == {"NCT3"}
+
+
+def test_durability_trials_come_from_sealed_records(tmp_path: Path) -> None:
+    import json
+
+    assert watch.durability_trials(tmp_path) == set()
+    (tmp_path / "a.json").write_text(json.dumps({"trial": "NCT06163326"}))
+    (tmp_path / "b.json").write_text(json.dumps({"other": 1}))
+    assert watch.durability_trials(tmp_path) == {"NCT06163326"}

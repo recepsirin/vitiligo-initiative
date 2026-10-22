@@ -316,7 +316,7 @@ def forecast_target(
     return summary, p_active, p_control
 
 
-SEALED_CODE = ("src/vitiligo", "scripts/model")
+SEALED_CODE = ("src/vitiligo", "scripts/model", "scripts/durability")
 
 
 def committed_code(root: Path | None = None) -> dict[str, str]:

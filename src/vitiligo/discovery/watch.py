@@ -146,6 +146,15 @@ def ranked_trials(directory: Path) -> set[str]:
     return {item["trial"] for item in json.loads(files[-1].read_text())["items"]}
 
 
+def durability_trials(directory: Path) -> set[str]:
+    """Trials with a sealed durability forecast (``forecasts/durability/*.json``)."""
+    return {
+        record["trial"]
+        for path in sorted(directory.glob("*.json"))
+        if "trial" in (record := json.loads(path.read_text()))
+    }
+
+
 # ---------------------------------------------------------------------- news
 
 
