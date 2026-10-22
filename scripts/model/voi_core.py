@@ -8,6 +8,7 @@ Pre-registered in docs/voi-preregistration.md.
     python scripts/model/voi_core.py diagnose T-VASI # surprise and Pareto-k per item
     python scripts/model/voi_core.py discriminate    # sealed targets: which would separate models
     python scripts/model/voi_core.py rank            # pending evidence (docs/voi-ranking-preregistration.md)
+    python scripts/model/voi_core.py rank-mc         # post hoc: Monte Carlo spread of the ranking
 
 Results go to forecasts/voi/.
 """
@@ -495,6 +496,29 @@ def rank() -> None:
     )
 
 
+def rank_mc(seeds: tuple[int, ...] = (2, 3, 4, 5, 6)) -> None:
+    """Post hoc, not pre-registered: the ranking's EVR repeated with other simulation seeds."""
+    from vitiligo.discovery.forecasts import committed_code
+
+    code = committed_code()
+    rows, routes, phase3 = model_inputs_v03(with_toplines=True)
+    out: dict[str, Any] = {"code": code, "seeds": list(seeds), "items": []}
+    for instrument in ("F-VASI", "T-VASI"):
+        b = fit(build_dataset(rows, instrument, agent_routes=routes, trial_phase3=phase3), SETTINGS)
+        print(instrument, b.diagnostics, flush=True)
+        q_sum = sum(q_draws(b, sc) for sc in _questions(instrument).values())
+        for item in RANK_ITEMS:
+            arms = rank_armweeks(b, item, _threshold(instrument), routes)
+            evr = [
+                voi.expected_variance_reduction(q_sum, arms, sims=RANK_SIMS, seed=seed).evr
+                for seed in seeds
+            ]
+            out["items"].append({"item": item["item"], "instrument": instrument, "evr_sum": evr,
+                                 "mean": float(np.mean(evr)), "sd": float(np.std(evr, ddof=1))})  # fmt: skip
+            print(json.dumps(out["items"][-1]), flush=True)
+    (OUT / "ranking" / "monte-carlo-2026-10-22.json").write_text(json.dumps(out, indent=1) + "\n")
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "retro":
@@ -509,5 +533,7 @@ if __name__ == "__main__":
         discriminate()
     elif command == "rank":
         rank()
+    elif command == "rank-mc":
+        rank_mc()
     else:
         raise SystemExit(__doc__)
