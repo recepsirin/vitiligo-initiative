@@ -19,6 +19,7 @@ Every hit is a lead for a person to read, not a curated result.
 from __future__ import annotations
 
 import html
+import json
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -135,6 +136,14 @@ def rank_pending(
         )
     ranked.sort(key=lambda t: -t.mutual_information_nats)
     return ranked
+
+
+def ranked_trials(directory: Path) -> set[str]:
+    """Trials in the latest evidence ranking (``ranking-<date>.json``), if any."""
+    files = sorted(directory.glob("ranking-*.json"))
+    if not files:
+        return set()
+    return {item["trial"] for item in json.loads(files[-1].read_text())["items"]}
 
 
 # ---------------------------------------------------------------------- news

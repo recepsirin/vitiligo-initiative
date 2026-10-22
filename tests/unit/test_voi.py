@@ -115,3 +115,26 @@ def test_arms_of_one_trial_share_its_random_effects() -> None:
     # Integrating each arm separately (the old behaviour) overshoots the update.
     separate = voi.loglik(active, counts[0]) + voi.loglik(control, counts[1])
     assert abs(posterior_mean(separate) - truth) > 0.05
+
+
+def test_spearman_handles_ties_and_constant_input() -> None:
+    assert voi.spearman([1, 2, 3, 4], [10, 20, 30, 40]) == pytest.approx(1.0)
+    assert voi.spearman([1, 2, 3, 4], [4, 3, 2, 1]) == pytest.approx(-1.0)
+    # Ties get average ranks: [1, 2.5, 2.5, 4] against [1, 2, 3, 4].
+    assert voi.spearman([1, 2, 2, 3], [1, 2, 3, 4]) == pytest.approx(0.9486833, abs=1e-6)
+    assert np.isnan(voi.spearman([1, 1, 1], [1, 2, 3]))
+
+
+def test_prospective_test_waits_for_five_results() -> None:
+    evr = [1.0, 2.0, 3.0, 4.0]
+    early = voi.prospective_test(evr, [0.5, 1.0, 1.5, 2.0])
+    assert early["resolved"] == 4 and early["passed"] is None
+    assert early["spearman"] == pytest.approx(1.0)
+    assert early["mean_surprise_ratio"] == pytest.approx(np.mean([0.25, 0.5, 0.75, 1.0]))
+    # Signs of shifts do not matter (value is about squared shifts).
+    passed = voi.prospective_test([*evr, 5.0], [0.5, -1.0, 1.5, -2.0, 2.5])
+    assert passed["passed"] is True
+    failed = voi.prospective_test([*evr, 5.0], [2.5, 2.0, 1.5, 1.0, 0.5])
+    assert failed["spearman"] == pytest.approx(-1.0) and failed["passed"] is False
+    with pytest.raises(ValueError):
+        voi.prospective_test([1.0], [1.0, 2.0])

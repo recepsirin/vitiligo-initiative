@@ -1874,6 +1874,7 @@ def discover_watch_cmd(
         lines.append("| none pending | | | | |")
 
     pending_trials = {t.key[0] for t in ranked}
+    evidence_ranking = watch.ranked_trials(Path("forecasts/voi/ranking"))
     sources: list[tuple[str, Any]] = [
         ("Europe PMC", lambda: watch.europe_pmc(start)),
         ("ClinicalTrials.gov", lambda: watch.ctgov(start)),
@@ -1906,6 +1907,8 @@ def discover_watch_cmd(
             note = h.note
             if any(trial in h.title for trial in pending_trials):
                 note = f"{note}; **sealed forecast pending**".lstrip("; ")
+            if any(trial in h.title for trial in evidence_ranking):
+                note = f"{note}; **in the evidence ranking**".lstrip("; ")
             title = h.title.replace("|", "/")
             lines.append(
                 f"| {h.date} | [{title}]({h.url}) | {', '.join(h.agents) or '-'} | {note} |"

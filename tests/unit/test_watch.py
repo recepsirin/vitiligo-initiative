@@ -149,3 +149,15 @@ def test_sec_needs_a_declared_contact_and_builds_filing_links() -> None:
     assert hits[0].url == (
         "https://www.sec.gov/Archives/edgar/data/879169/000087916926000023/incy-q12026xexx991.htm"
     )
+
+
+def test_ranked_trials_come_from_the_latest_ranking(tmp_path: Path) -> None:
+    import json
+
+    assert watch.ranked_trials(tmp_path) == set()
+    (tmp_path / "ranking-2026-10-22.json").write_text(
+        json.dumps({"items": [{"trial": "NCT1"}, {"trial": "NCT2"}]})
+    )
+    (tmp_path / "ranking-2026-11-30.json").write_text(json.dumps({"items": [{"trial": "NCT3"}]}))
+    (tmp_path / "monte-carlo-2026-10-22.json").write_text("{}")
+    assert watch.ranked_trials(tmp_path) == {"NCT3"}

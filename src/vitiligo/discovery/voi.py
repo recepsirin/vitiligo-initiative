@@ -241,3 +241,45 @@ def surprise(
         j = int(rng.integers(draws))
         simulated.append(log_marginal(_simulate_item(item, j, rng)))
     return float(np.mean(np.asarray(simulated) <= observed_lp))
+
+
+def spearman(x: Sequence[float], y: Sequence[float]) -> float:
+    """Spearman rank correlation (ties get average ranks)."""
+
+    def ranks(v: Sequence[float]) -> np.ndarray:
+        a = np.asarray(v, dtype=float)
+        order = np.argsort(a, kind="stable")
+        r = np.empty(len(a))
+        r[order] = np.arange(len(a), dtype=float)
+        for value in np.unique(a):
+            tied = a == value
+            r[tied] = r[tied].mean()
+        return r
+
+    rx, ry = ranks(x), ranks(y)
+    if rx.std() == 0 or ry.std() == 0:
+        return float("nan")
+    return float(np.corrcoef(rx, ry)[0, 1])
+
+
+def prospective_test(
+    evr: Sequence[float], shift: Sequence[float], *, minimum: int = 5, threshold: float = 0.5
+) -> dict[str, float | int | bool | None]:
+    """Do predicted values track realized impact on results that were not yet public?
+
+    ``evr`` holds each resolved item's predicted expected variance reduction and
+    ``shift`` its realized shift of the question after refitting. The verdict
+    is None until ``minimum`` items have resolved.
+    """
+    n = len(evr)
+    if n != len(shift):
+        raise ValueError("one realized shift per predicted value")
+    squared = [s * s for s in shift]
+    rho = spearman(evr, squared) if n >= 2 else float("nan")
+    ratios = [s / e for s, e in zip(squared, evr, strict=True) if e > 0]
+    return {
+        "resolved": n,
+        "spearman": rho,
+        "mean_surprise_ratio": float(np.mean(ratios)) if ratios else float("nan"),
+        "passed": None if n < minimum else bool(rho >= threshold),
+    }

@@ -265,8 +265,13 @@ def load_toplines(path: Path) -> list[ArmEndpointRow]:
     Responders are derived from the reported percentage and arm size, so they
     carry rounding error of up to half a patient.
     """
+    return toplines_from(json.loads(path.read_text())["results"])
+
+
+def toplines_from(entries: list[dict[str, Any]]) -> list[ArmEndpointRow]:
+    """Arm rows from topline entries in the format of ``curation/topline-results.json``."""
     rows = []
-    for t in json.loads(path.read_text())["results"]:
+    for t in entries:
         responders = round(t["percent"] / 100 * t["n"])
         rows.append(
             ArmEndpointRow(

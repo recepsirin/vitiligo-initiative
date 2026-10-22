@@ -9,6 +9,7 @@ Pre-registered in docs/voi-preregistration.md.
     python scripts/model/voi_core.py discriminate    # sealed targets: which would separate models
     python scripts/model/voi_core.py rank            # pending evidence (docs/voi-ranking-preregistration.md)
     python scripts/model/voi_core.py rank-mc         # post hoc: Monte Carlo spread of the ranking
+    python scripts/model/voi_core.py rank-score      # prospective test on resolved items
 
 Results go to forecasts/voi/.
 """
@@ -519,6 +520,77 @@ def rank_mc(seeds: tuple[int, ...] = (2, 3, 4, 5, 6)) -> None:
     (OUT / "ranking" / "monte-carlo-2026-10-22.json").write_text(json.dumps(out, indent=1) + "\n")
 
 
+RESOLVED = OUT / "ranking" / "resolved.json"
+
+
+def rank_score() -> None:
+    """The pre-registered prospective test: realized shifts of resolved items against their EVR.
+
+    Resolved results are curated in ``forecasts/voi/ranking/resolved.json`` in the
+    format of ``curation/topline-results.json``, each with the ``item`` it resolves.
+    """
+    import hashlib
+    from dataclasses import asdict
+
+    from vitiligo.discovery.forecasts import committed_code
+    from vitiligo.reports.paper_results import toplines_from
+
+    code = committed_code()
+    ranking = json.loads((OUT / "ranking" / "ranking-2026-10-22.json").read_text())
+    predicted = {(r["item"], r["instrument"]): r for r in ranking["items"]}
+    entries = json.loads(RESOLVED.read_text())["results"] if RESOLVED.exists() else []
+    pairs: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for e in entries:
+        if (e["item"], e["instrument"]) not in predicted:
+            raise SystemExit(f"not a ranked item-instrument pair: {e['item']}, {e['instrument']}")
+        pairs.setdefault((e["item"], e["instrument"]), []).append(e)
+    rows, routes, phase3 = model_inputs_v03(with_toplines=True)
+    item_phase3 = {i["item"]: i["phase3"] for i in RANK_ITEMS}
+    scored = []
+    for instrument in ("F-VASI", "T-VASI"):
+        todo = {k: v for k, v in pairs.items() if k[1] == instrument}
+        if not todo:
+            continue
+        data = build_dataset(rows, instrument, agent_routes=routes, trial_phase3=phase3)
+        observations = [asdict(o) for o in data.observations]
+        data_sha = hashlib.sha256(json.dumps(observations, sort_keys=True).encode()).hexdigest()
+        if not data_sha.startswith(B_DATA_SHA256[instrument]):
+            raise SystemExit(f"{instrument}: data {data_sha[:12]} is not the sealed v0.4 data")
+        b = fit(data, SETTINGS)
+        questions = _questions(instrument)
+        q0 = sum(q_draws(b, sc) for sc in questions.values())
+        for (item, _instrument), item_entries in sorted(todo.items()):
+            new_rows = toplines_from(item_entries)
+            item_flags = dict.fromkeys({r.source_id for r in new_rows}, item_phase3[item])
+            refit = fit(
+                build_dataset(rows + new_rows, instrument, agent_routes=routes,
+                              trial_phase3=phase3 | item_flags),
+                SETTINGS,
+            )  # fmt: skip
+            d = refit.diagnostics
+            ok = d["max_rhat"] <= 1.01 and d["min_ess_bulk"] >= 400 and d["divergences"] == 0
+            q1 = sum(q_draws(refit, sc) for sc in questions.values())
+            p = predicted[(item, instrument)]
+            scored.append({
+                "item": item, "instrument": instrument, "evr_sum": p["evr_sum"],
+                "realized_shift_sum": float(q1.mean() - q0.mean()),
+                "outcome_public_at_sealing": p["outcome_public"], "refit_converged": ok,
+                "refit_diagnostics": d, "sources": sorted({e["source_url"] for e in item_entries}),
+            })  # fmt: skip
+            print(json.dumps(scored[-1]), flush=True)
+    eligible = [s for s in scored if not s["outcome_public_at_sealing"] and s["refit_converged"]]
+    result = {
+        "preregistration": "docs/voi-ranking-preregistration.md",
+        "code": code,
+        "test": voi.prospective_test(
+            [s["evr_sum"] for s in eligible], [s["realized_shift_sum"] for s in eligible]
+        ),
+        "scored": scored,
+    }
+    (OUT / "ranking" / "prospective.json").write_text(json.dumps(result, indent=1) + "\n")
+    print(json.dumps(result["test"]))
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "retro":
@@ -535,5 +607,7 @@ if __name__ == "__main__":
         rank()
     elif command == "rank-mc":
         rank_mc()
+    elif command == "rank-score":
+        rank_score()
     else:
         raise SystemExit(__doc__)
