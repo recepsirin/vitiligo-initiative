@@ -277,9 +277,10 @@ def prospective_test(
     squared = [s * s for s in shift]
     rho = spearman(evr, squared) if n >= 2 else float("nan")
     ratios = [s / e for s, e in zip(squared, evr, strict=True) if e > 0]
+    defined = not math.isnan(rho)  # None, not NaN, in the output: NaN is not valid JSON
     return {
         "resolved": n,
-        "spearman": rho,
-        "mean_surprise_ratio": float(np.mean(ratios)) if ratios else float("nan"),
-        "passed": None if n < minimum else bool(rho >= threshold),
+        "spearman": rho if defined else None,
+        "mean_surprise_ratio": float(np.mean(ratios)) if ratios else None,
+        "passed": None if n < minimum else bool(defined and rho >= threshold),
     }

@@ -138,3 +138,6 @@ def test_prospective_test_waits_for_five_results() -> None:
     assert failed["spearman"] == pytest.approx(-1.0) and failed["passed"] is False
     with pytest.raises(ValueError):
         voi.prospective_test([1.0], [1.0, 2.0])
+    assert voi.prospective_test([], []) == {
+        "resolved": 0, "spearman": None, "mean_surprise_ratio": None, "passed": None
+    }  # fmt: skip
