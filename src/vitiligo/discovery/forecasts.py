@@ -135,15 +135,35 @@ class _RegistryArm:
         return f"{self.label} {self.description}"
 
 
+def _own_intervention(module: dict[str, Any], label: str) -> str:
+    """Description of the one intervention only this arm uses ("" if none or ambiguous).
+
+    Some registries state the dose only on the intervention ("30 mg orally once
+    daily"). An intervention shared by several arms may list several doses, so
+    it is never used.
+    """
+    own = [
+        i
+        for i in module.get("interventions") or []
+        if (i.get("armGroupLabels") or []) == [label]
+        and str(i.get("type") or "").upper() in {"DRUG", "BIOLOGICAL"}
+    ]
+    return str(own[0].get("description") or "") if len(own) == 1 else ""
+
+
 def _parse_arms(protocol: dict[str, Any]) -> list[_RegistryArm]:
+    module = protocol.get("armsInterventionsModule") or {}
     arms = []
-    for arm in (protocol.get("armsInterventionsModule") or {}).get("armGroups") or []:
+    for arm in module.get("armGroups") or []:
         label = str(arm.get("label") or "")
         group = _GROUP_RE.match(label)
+        description = str(arm.get("description") or "")
+        if _dose(f"{label} {description}") is None:
+            description = f"{description} {_own_intervention(module, label)}".strip()
         arms.append(
             _RegistryArm(
                 label=label,
-                description=str(arm.get("description") or ""),
+                description=description,
                 kind=arm.get("type"),
                 group=group.group(1).strip() if group else None,
             )

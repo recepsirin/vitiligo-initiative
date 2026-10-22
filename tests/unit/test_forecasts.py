@@ -69,6 +69,40 @@ def _protocol(arms: list[dict[str, str]], primaries: list[tuple[str, str]]) -> d
 F75_W52 = ("Response based on F-VASI75 at Week 52", "52 Weeks")
 
 
+def test_dose_stated_only_on_an_arms_own_intervention() -> None:
+    def protocol(interventions: list[dict[str, Any]]) -> dict[str, Any]:
+        base = _protocol(
+            [
+                {"type": "EXPERIMENTAL", "label": "Povorcitinib phosphate"},
+                {"type": "EXPERIMENTAL", "label": "Povorcitinib high"},
+                {"type": "PLACEBO_COMPARATOR", "label": "Placebo"},
+            ],
+            [F75_W52],
+        )
+        base["armsInterventionsModule"]["interventions"] = interventions
+        return base
+
+    own = protocol([
+        {"type": "DRUG", "name": "Povorcitinib phosphate", "armGroupLabels": ["Povorcitinib phosphate"],
+         "description": "Povorcitinib phosphate tablets, 30 mg orally once daily for 52 weeks."},
+    ])  # fmt: skip
+    targets, _skips = fc.registry_targets([("NCTO", "NOT_YET_RECRUITING", own)])
+    assert [(t.arm_label, t.dose_value, t.frequency) for t in targets] == [
+        ("Povorcitinib phosphate", 30.0, "QD")
+    ]
+    # An intervention shared by two arms says nothing about either arm's dose.
+    shared = protocol([
+        {"type": "DRUG", "name": "Povorcitinib", "description": "30 mg once daily",
+         "armGroupLabels": ["Povorcitinib phosphate", "Povorcitinib high"]},
+    ])  # fmt: skip
+    targets, skips = fc.registry_targets([("NCTS", "RECRUITING", shared)])
+    assert targets == []
+    assert {s.reason for s in skips} == {
+        "arm 'Povorcitinib phosphate': dose not disclosed",
+        "arm 'Povorcitinib high': dose not disclosed",
+    }
+
+
 def test_registry_targets_follow_the_registered_design() -> None:
     tranquillo2 = _protocol(
         [
