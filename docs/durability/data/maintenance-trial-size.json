@@ -1,0 +1,79 @@
+{
+ "alpha": 0.05,
+ "power": 0.8,
+ "dropout": 0.15,
+ "rows": [
+  {
+   "stop_loss_52w": 0.27,
+   "hazard_ratio": 0.4,
+   "maintenance_loss_52w": 0.118,
+   "events": 38,
+   "patients_total": 227,
+   "per_arm": 114
+  },
+  {
+   "stop_loss_52w": 0.27,
+   "hazard_ratio": 0.5,
+   "maintenance_loss_52w": 0.146,
+   "events": 66,
+   "patients_total": 370,
+   "per_arm": 185
+  },
+  {
+   "stop_loss_52w": 0.27,
+   "hazard_ratio": 0.6,
+   "maintenance_loss_52w": 0.172,
+   "events": 121,
+   "patients_total": 641,
+   "per_arm": 321
+  },
+  {
+   "stop_loss_52w": 0.58,
+   "hazard_ratio": 0.4,
+   "maintenance_loss_52w": 0.293,
+   "events": 38,
+   "patients_total": 101,
+   "per_arm": 51
+  },
+  {
+   "stop_loss_52w": 0.58,
+   "hazard_ratio": 0.5,
+   "maintenance_loss_52w": 0.352,
+   "events": 66,
+   "patients_total": 165,
+   "per_arm": 83
+  },
+  {
+   "stop_loss_52w": 0.58,
+   "hazard_ratio": 0.6,
+   "maintenance_loss_52w": 0.406,
+   "events": 121,
+   "patients_total": 288,
+   "per_arm": 144
+  },
+  {
+   "stop_loss_52w": 0.73,
+   "hazard_ratio": 0.4,
+   "maintenance_loss_52w": 0.408,
+   "events": 38,
+   "patients_total": 78,
+   "per_arm": 39
+  },
+  {
+   "stop_loss_52w": 0.73,
+   "hazard_ratio": 0.5,
+   "maintenance_loss_52w": 0.48,
+   "events": 66,
+   "patients_total": 128,
+   "per_arm": 64
+  },
+  {
+   "stop_loss_52w": 0.73,
+   "hazard_ratio": 0.6,
+   "maintenance_loss_52w": 0.544,
+   "events": 121,
+   "patients_total": 223,
+   "per_arm": 112
+  }
+ ]
+}

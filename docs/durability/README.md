@@ -101,6 +101,10 @@ Neither has results, so forecasts sealed now are prospective. Povorcitinib's pha
 
 **2. Tapering: waits for Tranquillo 2's Part Ia results.** How much 50 mg keeps compared with 100 mg is best informed by Part Ia's 50 vs 100 mg comparison. That will be public before Part Ib's results, so the forecast is sealed then, still prospectively, rather than guessed now.
 
+## A trial that would answer it: stop or step down
+
+A concept for an investigator-initiated trial: responders to ruxolitinib cream are randomized to twice-weekly tacrolimus maintenance or to stopping, and the trial runs until 66 losses of response have occurred. That is about 64–185 patients per arm, depending on how often responses are lost after stopping: [`maintenance-trial-concept.md`](maintenance-trial-concept.md). It needs a clinical lead.
+
 ## Who keeps it: patient-level data
 
 "Who keeps their response" needs patient-level data.
