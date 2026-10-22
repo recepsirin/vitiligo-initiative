@@ -10,6 +10,8 @@ Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-
 | [`v0.3/`](v0.3/README.md) | Pre-registered evaluation of model v0.3 (not adopted) |
 | [`v0.4/`](v0.4/README.md), [`v0.5/`](v0.5/README.md) | Challenger models, sealed for the same 7 targets as v0.2 |
 | [`povorcitinib-phase3/`](povorcitinib-phase3/README.md) | Out-of-sample check of v0.2, v0.4 and v0.5 against povorcitinib's phase 3 F-VASI75 (post-hoc), and sealed T-VASI50 forecasts |
+| [`2026-10-22-new-trials/`](2026-10-22-new-trials/) | v0.2, v0.4, v0.5 for new trials found by the weekly watch: povorcitinib phase 3 in China (2 targets) |
+| [`watch-triage.md`](watch-triage.md) | What was decided about each lead from the weekly watch, and why |
 | [`voi/`](voi/README.md) | Value-of-information engine: pre-registered gate (passed narrowly) and how much each pending result can tell |
 
 ## Scoreboard
@@ -28,15 +30,22 @@ The 7 targets whose results were not public at sealing. F-VASI75 unless noted; a
 
 \* Sealed without draws, so not scored.
 
-**Sealed with the direction public** (2026-10-21; [details](povorcitinib-phase3/README.md)). Povorcitinib 30 mg, T-VASI50 at week 52, STOP-V1 and STOP-V2 (same forecast for both):
+**Rule** (pre-registered): once at least 4 of these 7 targets, scored by every compared model, have resolved, the model with the highest summed log score becomes the default. Forecasts sealed later are scored too, but do not enter this rule.
 
-| Target | v0.2 (default) | v0.4 | v0.5 |
-|---|---|---|---|
-| Povorcitinib 30 mg, T-VASI50 wk 52 | 16.7% (3–52) / 15.7% | 21.5% (5–54) / 6.3% | 19.8% (4–50) / 5.1% |
+**How much one result can tell us** (`vitiligo discover watch`, weekly; [`voi/discrimination.json`](voi/discrimination.json) for the original 7): little. The models' medians differ, but their intervals overlap, so no single target is decisive. The most informative, Tranquillo 2's T-VASI50, carries 0.30 of a possible 1.10 nats about which model is right; each pediatric trial carries about 0.09. The comparison will take several results.
 
-**Rule** (pre-registered): once at least 4 targets that every compared model has scored have resolved, the model with the highest summed log score becomes the default.
+### Sealed later (scored, not part of the rule)
 
-**How much one result can tell us** ([`voi/discrimination.json`](voi/discrimination.json)): little. The models' medians differ, but their intervals overlap, so no single target is decisive. The most informative, Tranquillo 2's T-VASI50, carries 0.30 of a possible 1.10 nats about which model is right; each pediatric trial carries about 0.09. The comparison will take several results.
+Povorcitinib 30 mg vs placebo at week 52, active arm then placebo.
+
+| Target | Sealed | v0.2 (default) | v0.4 | v0.5 |
+|---|---|---|---|---|
+| T-VASI50, STOP-V1 and STOP-V2 ([details](povorcitinib-phase3/README.md)) | 2026-10-21, direction already public | 16.7% (3–52) / 15.7% | 21.5% (5–54) / 6.3% | 19.8% (4–50) / 5.1% |
+| F-VASI75, China phase 3 (NCT07865312) | 2026-10-22, before recruitment | 46.6% (9–88) / 9.4% | 29.6% (7–66) / 5.5% | 25.9% (6–59) / 4.0% |
+| T-VASI50, China phase 3 (NCT07865312) | 2026-10-22, before recruitment | 16.7% (3–52) / 15.7% | 21.5% (5–54) / 6.3% | 19.8% (4–50) / 5.1% |
+
+- **The China forecasts equal the STOP-V ones.** The models have no term for population or region, so a new povorcitinib phase 3 trial gets the same forecast anywhere. The China result (primary completion estimated 2028-05) will test that.
+- **STOP-V's F-VASI75 is already public:** 18.9% vs 6.8% and 3.1%. None of the models has it, so all three China F-VASI75 forecasts are made without it ([triage](watch-triage.md)).
 
 ## Reproducibility
 

@@ -1,0 +1,144 @@
+{
+  "frozen_at": "2026-10-22T20:12:04.763111+00:00",
+  "label": "NCT07865312: Povorcitinib phosphate vs Placebo, T-VASI50 at week 52",
+  "target": {
+    "trial": "NCT07865312",
+    "group": null,
+    "arm_label": "Povorcitinib phosphate",
+    "control_label": "Placebo",
+    "agent": "povorcitinib",
+    "dose_value": 30.0,
+    "dose_unit": "mg",
+    "frequency": "QD",
+    "phototherapy": false,
+    "instrument": "T-VASI",
+    "threshold": 50,
+    "week": 52,
+    "registry_measure": "Proportion of participants achieving T-VASI 50/75/90 at Week 52",
+    "assumptions": [],
+    "phase3": true,
+    "key": "NCT07865312|Povorcitinib phosphate|30mg|T-VASI50|wk52"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.2279459299187425,
+      "median": 0.16731568254630222,
+      "lo80": 0.031446229022977515,
+      "hi80": 0.5171698656398214,
+      "lo95": 0.007680184149592588,
+      "hi95": 0.7627624222960024
+    },
+    "p_control": {
+      "mean": 0.17667567493346595,
+      "median": 0.15717019797393833,
+      "lo80": 0.0868217176645146,
+      "hi80": 0.2832947171993123,
+      "lo95": 0.04836602212178663,
+      "hi95": 0.4222386418532451
+    },
+    "difference": {
+      "mean": 0.05127025498527659,
+      "median": 0.01140095121033309,
+      "lo80": -0.12972716975796553,
+      "hi80": 0.29774706120818717,
+      "lo95": -0.20918512118514254,
+      "hi95": 0.5079603207466816
+    },
+    "p_active_beats_control": 0.5361666666666667,
+    "extrapolation": [
+      "week 52 beyond this agent's data (max week 24): relies on its route's time course",
+      "placebo/vehicle data end at week 24: control response at week 52 is extrapolated"
+    ]
+  },
+  "draws_file": "nct07865312-povorcitinib-phosphate-30mg-t-vasi50-wk52.npz",
+  "draws_sha256": "81e59cfe61f7401f66c7144f92d1c37b11b2e0002ed6dba37dad43ce448a84f6",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.2",
+  "fit_settings": {
+    "draws": 1500,
+    "tune": 2000,
+    "chains": 4,
+    "target_accept": 0.995,
+    "random_seed": 20261014,
+    "version": "v0.2"
+  },
+  "first_try_diagnostics": {
+    "max_rhat": 1.0015034494615438,
+    "min_ess_bulk": 2126.677950582545,
+    "divergences": 1.0,
+    "draws": 6000.0
+  },
+  "dataset": {
+    "instrument": "T-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346",
+      "NCT05247489",
+      "NCT05750823"
+    ],
+    "agents": [
+      "povorcitinib",
+      "ritlecitinib",
+      "ruxolitinib"
+    ],
+    "reference_dose": {
+      "povorcitinib": 75.0,
+      "ritlecitinib": 50.0,
+      "ruxolitinib": 3.0
+    },
+    "agent_route": {
+      "povorcitinib": "oral",
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical"
+    },
+    "controlled_trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346"
+    ],
+    "arms": 17,
+    "active_arms": 13,
+    "observations": 64,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 104
+    },
+    "design_annotations": {}
+  },
+  "data_sha256": "6b220531dc91057e2f3cd7e707fea7ad5bd8950dd1928fecf4f322472906ce09",
+  "diagnostics": {
+    "max_rhat": 1.005867461364275,
+    "min_ess_bulk": 1974.043561694984,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "preregistration": "docs/jak-scenario-model.md",
+  "registry_last_update": "2026-10-08",
+  "public_results_check": "Searched 2026-10-22: ClinicalTrials.gov (not yet recruiting; estimated start 2026-11, primary completion 2028-05), and the web for the sponsor (Dermavon, CMS) and the trial: only the registry record and licensing news (CMS-Incyte agreement, 2024-04-01). No results can exist yet. Disclosed: povorcitinib's global phase 3 F-VASI75 at week 52 (STOP-V1/V2, 18.9% vs 6.8% and 3.1%) is public and was read, but no model has it (curation/topline-pending.json); each model is fitted on the data hash of its earlier sealed records.",
+  "code": {
+    "commit": "6ed3819e8cea360fe6c33ec756812d911b8c944c"
+  },
+  "disclaimer": "Research forecast; not medical advice. No results for this trial existed when it was sealed.",
+  "sha256": "96d4113153181f949cb2718713e75deb76a1fb2bbfa2d3eca269d536d0fa303b"
+}

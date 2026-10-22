@@ -1,0 +1,158 @@
+{
+  "frozen_at": "2026-10-22T20:17:08.271845+00:00",
+  "label": "NCT07865312: Povorcitinib phosphate vs Placebo, T-VASI50 at week 52",
+  "target": {
+    "trial": "NCT07865312",
+    "group": null,
+    "arm_label": "Povorcitinib phosphate",
+    "control_label": "Placebo",
+    "agent": "povorcitinib",
+    "dose_value": 30.0,
+    "dose_unit": "mg",
+    "frequency": "QD",
+    "phototherapy": false,
+    "instrument": "T-VASI",
+    "threshold": 50,
+    "week": 52,
+    "registry_measure": "Proportion of participants achieving T-VASI 50/75/90 at Week 52",
+    "assumptions": [],
+    "phase3": true,
+    "key": "NCT07865312|Povorcitinib phosphate|30mg|T-VASI50|wk52"
+  },
+  "prediction": {
+    "p_active": {
+      "mean": 0.259944282033285,
+      "median": 0.2153503200025275,
+      "lo80": 0.05153869425585496,
+      "hi80": 0.5367901750736326,
+      "lo95": 0.013212319643018637,
+      "hi95": 0.7388187379281613
+    },
+    "p_control": {
+      "mean": 0.07811995936801103,
+      "median": 0.06306030796396905,
+      "lo80": 0.024596815923385525,
+      "hi80": 0.1440990135924028,
+      "lo95": 0.01046068692327677,
+      "hi95": 0.2556003980153505
+    },
+    "difference": {
+      "mean": 0.181824322665274,
+      "median": 0.1448017359907793,
+      "lo80": 0.0007952216698668555,
+      "hi80": 0.4156249099368753,
+      "lo95": -0.04233385755818846,
+      "hi95": 0.6002451942639753
+    },
+    "p_active_beats_control": 0.9023333333333333,
+    "extrapolation": [
+      "week 52 beyond this agent's data (max week 24): relies on its route's time course"
+    ]
+  },
+  "draws_file": "nct07865312-povorcitinib-phosphate-30mg-t-vasi50-wk52.npz",
+  "draws_sha256": "15568b1b271b519f0bbf7f25bdcf80d645ad89ff26587343f24e29720145e48c",
+  "engine_version": "1.0.0",
+  "model": "jak_mbma ordered-probit v0.4 (challenger)",
+  "fit_settings": {
+    "draws": 1500,
+    "tune": 2000,
+    "chains": 4,
+    "target_accept": 0.995,
+    "random_seed": 20261014,
+    "version": "v0.3"
+  },
+  "first_try_diagnostics": null,
+  "dataset": {
+    "instrument": "T-VASI",
+    "thresholds": [
+      25,
+      50,
+      75,
+      90,
+      100
+    ],
+    "trials": [
+      "NCT03099304",
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346",
+      "NCT04927975",
+      "NCT05247489",
+      "NCT05583526",
+      "NCT05750823",
+      "NCT06072183",
+      "NCT06118411-S1",
+      "NCT06118411-S2"
+    ],
+    "agents": [
+      "povorcitinib",
+      "ritlecitinib",
+      "ruxolitinib",
+      "upadacitinib"
+    ],
+    "reference_dose": {
+      "povorcitinib": 75.0,
+      "ritlecitinib": 100.0,
+      "ruxolitinib": 3.0,
+      "upadacitinib": 22.0
+    },
+    "agent_route": {
+      "povorcitinib": "oral",
+      "ritlecitinib": "oral",
+      "ruxolitinib": "topical",
+      "upadacitinib": "oral"
+    },
+    "controlled_trials": [
+      "NCT03715829",
+      "NCT04052425",
+      "NCT04057573",
+      "NCT04818346",
+      "NCT04927975",
+      "NCT05583526",
+      "NCT06072183",
+      "NCT06118411-S1",
+      "NCT06118411-S2"
+    ],
+    "arms": 30,
+    "active_arms": 21,
+    "observations": 78,
+    "weeks": [
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      52
+    ],
+    "excluded_rows": {
+      "treatment switch or extension study": 104,
+      "as-observed population (not comparable with non-responder imputation)": 7
+    },
+    "design_annotations": {
+      "NCT03099304": {
+        "max_week": 24,
+        "reason": "After week 24 arms were re-assigned (registry arm labels such as 'Vehicle/Ruxolitinib Cream 0.15% QD to 0.5% QD: 1.5% BID'), so arms observed later are selected subsets, not the randomized population."
+      }
+    }
+  },
+  "data_sha256": "249569d81638d67b9d2abf4e4ac195d0dd411e81331006ebeb48ad7ff245162b",
+  "diagnostics": {
+    "max_rhat": 1.0031430661915708,
+    "min_ess_bulk": 1212.493224457539,
+    "divergences": 0.0,
+    "draws": 6000.0
+  },
+  "preregistration": "docs/model-v0.4-preregistration.md",
+  "registry_last_update": "2026-10-08",
+  "public_results_check": "Searched 2026-10-22: ClinicalTrials.gov (not yet recruiting; estimated start 2026-11, primary completion 2028-05), and the web for the sponsor (Dermavon, CMS) and the trial: only the registry record and licensing news (CMS-Incyte agreement, 2024-04-01). No results can exist yet. Disclosed: povorcitinib's global phase 3 F-VASI75 at week 52 (STOP-V1/V2, 18.9% vs 6.8% and 3.1%) is public and was read, but no model has it (curation/topline-pending.json); each model is fitted on the data hash of its earlier sealed records.",
+  "code": {
+    "commit": "6ed3819e8cea360fe6c33ec756812d911b8c944c"
+  },
+  "disclaimer": "Research forecast; not medical advice. No results for this trial existed when it was sealed.",
+  "sha256": "a3d007e5c2eb8338fa13c8950f6966ffdbb27dec66d0a517865ea8fee97b904c"
+}
