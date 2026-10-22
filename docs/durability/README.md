@@ -88,6 +88,12 @@ Neither has results, so forecasts sealed now are prospective. Povorcitinib's pha
 
 **2. Tapering: waits for Tranquillo 2's Part Ia results.** How much 50 mg keeps compared with 100 mg is best informed by Part Ia's 50 vs 100 mg comparison. That will be public before Part Ib's results, so the forecast is sealed then, still prospectively, rather than guessed now.
 
+## Who keeps it: patient-level data
+
+"Who keeps their response" needs patient-level data.
+- **Topical (ruxolitinib cream).** Incyte's published policy appears to allow a request for TRuE-V's data now. A request is drafted: [`data-request-draft.md`](data-request-draft.md). It needs a named team with a biostatistician before it can be sent.
+- **Oral (ritlecitinib).** Pfizer shares data only for approved indications, 18 months after primary completion, so the Tranquillo data are not available until ritlecitinib is approved for vitiligo.
+
 ## What the forecast must handle
 
 - **No oral data.** The only randomized withdrawal data are for a cream, so the forecast must carry an explicit, wide uncertainty about transfer from topical to oral.
