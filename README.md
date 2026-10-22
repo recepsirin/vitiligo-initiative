@@ -61,7 +61,7 @@ vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --thre
 
 ## Status
 
-v1.0.0 is tagged and runs local-first; a public URL is not live yet. The quality gate is 442 tests (422 run in CI) and `./scripts/audit/smoke-all.sh` runs the full local gate.
+v1.0.0 is tagged and runs local-first; a public URL is not live yet. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
 
 ## Screenshots
 

@@ -1,0 +1,53 @@
+{
+ "truth drawn from the forecast": {
+  "25 per arm": {
+   "mean_advantage_nats": 0.5318634666066936,
+   "forecast_wins": 0.8280590717299579,
+   "hr_estimable": 0.948
+  },
+  "35 per arm": {
+   "mean_advantage_nats": 0.6037456947989891,
+   "forecast_wins": 0.8405050244782273,
+   "hr_estimable": 0.97025
+  },
+  "45 per arm": {
+   "mean_advantage_nats": 0.6284658337308655,
+   "forecast_wins": 0.8464285714285714,
+   "hr_estimable": 0.98
+  }
+ },
+ "continuing does nothing (HR 1, S_w 0.5)": {
+  "25 per arm": {
+   "mean_advantage_nats": -0.8457787796448534,
+   "forecast_wins": 0.19125,
+   "hr_estimable": 1.0
+  },
+  "35 per arm": {
+   "mean_advantage_nats": -0.9585041712036395,
+   "forecast_wins": 0.13,
+   "hr_estimable": 1.0
+  },
+  "45 per arm": {
+   "mean_advantage_nats": -1.0190751785138745,
+   "forecast_wins": 0.09325,
+   "hr_estimable": 1.0
+  }
+ },
+ "responses mostly last (S_w 0.9, HR 0.5)": {
+  "25 per arm": {
+   "mean_advantage_nats": 0.14594422208499394,
+   "forecast_wins": 0.6479536399855125,
+   "hr_estimable": 0.69025
+  },
+  "35 per arm": {
+   "mean_advantage_nats": 0.1581449164609022,
+   "forecast_wins": 0.6685835351089588,
+   "hr_estimable": 0.826
+  },
+  "45 per arm": {
+   "mean_advantage_nats": 0.18670800094526685,
+   "forecast_wins": 0.6772663877266387,
+   "hr_estimable": 0.89625
+  }
+ }
+}

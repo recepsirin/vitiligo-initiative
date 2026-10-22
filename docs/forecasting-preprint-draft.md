@@ -28,7 +28,7 @@
 - **Other pre-registered attempts.** A mechanistic simulator failed its locked exam. A discovery loop with false-discovery-rate control made 4 discoveries in its first run (ruxolitinib cream beats vehicle), then abstained on all 188 open comparisons (drug vs placebo, dose vs dose, regimen vs regimen) for lack of power.
 - **Value of information.** The engine passed its retrospective gate narrowly (Spearman 0.53, 0.68 after a bug fix reported as post hoc).
 - **Reproducibility.** Refitting sealed forecasts showed that some had been sealed on uncommitted code; their medians moved by at most 0.6 points.
-- **Pending.** 41 sealed forecasts await results; 7 of them decide the default model.
+- **Pending.** 41 sealed response-rate forecasts and 1 sealed durability forecast await results; 7 of the first kind decide the default model.
 
 **Conclusions.**
 - Sealing and pre-registration turned several plausible improvements into recorded failures, and exposed a large phase 2 → phase 3 gap for oral JAK inhibitors that the default model misses.
@@ -101,6 +101,7 @@
 | Discovery loop | v0.1: 4 discoveries (ruxolitinib cream beats vehicle, TRuE-V); v1: 188 comparisons, 0 tests run (all underpowered) | [`discovery-loop-plan.md`](discovery-loop-plan.md) |
 | VOI retrospective gate | passed; Spearman 0.53 (0.68 after a post-hoc fix) | [`forecasts/voi/`](../forecasts/voi/README.md) |
 | VOI ranking of pending evidence | pediatric ruxolitinib trials and STOP-V lead on F-VASI75; pediatric trials lead on T-VASI50 | [`voi/ranking/`](../forecasts/voi/ranking/README.md) |
+| Durability after stopping an oral JAK inhibitor (sealed, pending) | Tranquillo LTE: still responding after stopping 42% (80%: 14–76%); hazard ratio continue vs stop 0.35 (0.17–0.69) | [`docs/durability/`](durability/README.md) |
 | Reproducibility of sealed forecasts | v0.2, v0.4 within 1.4 points; v0.5 exact | [`forecasts/README.md`](../forecasts/README.md#reproducibility) |
 
 Figures to make from these files:

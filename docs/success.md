@@ -10,7 +10,7 @@ Vitiligo is three problems at once. A treatment that solves the disease has to b
 2. **The loss.** Destroyed melanocytes must be regrown. Hands and feet, with few hair follicles to regrow from, respond worst.
 3. **The memory.** Immune cells that stay resident in the skin bring the disease back when treatment stops.
 
-Today's best treatments, JAK inhibitors, suppress the attack only while they are taken.
+Today's best treatments, JAK inhibitors, suppress the attack. After they are stopped, the best results fade for many patients, and body response fades more.
 
 ## The north star
 

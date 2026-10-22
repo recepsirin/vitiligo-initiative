@@ -86,6 +86,19 @@ Neither has results, so forecasts sealed now are prospective. Povorcitinib's pha
 - **It gives a 61% chance that most responders lose their response within a year of stopping.**
 - **How it will be judged.** The topical evidence counts as transferring if the forecast's log score for the posted hazard ratio beats an uninformed forecast's.
 
+**What the test can tell us** (post hoc: computed after sealing, though it was planned before; [`informativeness.json`](data/informativeness.json), `scripts/durability/informativeness.py`). The trial is simulated at 25–45 per arm:
+
+| If the truth is | Forecast beats the benchmark | Hazard ratio estimable |
+|---|---|---|
+| As forecast | 83–85% | 95–98% |
+| Continuing does nothing (HR 1) | 9–19% | 100% |
+| Responses mostly last after stopping (90%, HR 0.5) | 65–68% | 69–90% |
+
+- **The primary test checks how much continuing helps.** It would refute the forecast if continuing made little difference.
+- **It cannot tell how many people lose response after stopping.** A world where most responses last still scores the forecast as a win most of the time.
+- **So whether "most lose response within a year" is right depends on the secondary score**, which needs Kaplan–Meier retention at week 52 to be reported.
+- **If responses mostly last, events are few** and the hazard ratio may not be estimable.
+
 **2. Tapering: waits for Tranquillo 2's Part Ia results.** How much 50 mg keeps compared with 100 mg is best informed by Part Ia's 50 vs 100 mg comparison. That will be public before Part Ib's results, so the forecast is sealed then, still prospectively, rather than guessed now.
 
 ## Who keeps it: patient-level data
@@ -94,11 +107,11 @@ Neither has results, so forecasts sealed now are prospective. Povorcitinib's pha
 - **Topical (ruxolitinib cream).** Incyte's published policy appears to allow a request for TRuE-V's data now. A request is drafted: [`data-request-draft.md`](data-request-draft.md). It needs a named team with a biostatistician before it can be sent.
 - **Oral (ritlecitinib).** Pfizer shares data only for approved indications, 18 months after primary completion, so the Tranquillo data are not available until ritlecitinib is approved for vitiligo.
 
-## What the forecast must handle
+## What the forecast had to handle
 
 - **No oral data.** The only randomized withdrawal data are for a cream, so the forecast must carry an explicit, wide uncertainty about transfer from topical to oral.
 - **Different definitions.** TRuE-V randomized near-complete facial responders and counted relapse below F-VASI75. Tranquillo LTE randomizes anyone above F-VASI75 or T-VASI50, and counts loss as falling below both.
 - **Only summaries posted.** From the registry we have hazard ratios and medians, not event counts. The two 2026 papers report more, and need full-text access.
-- **Small arms.** Uncertainty will be wide. Before sealing, check how much each test can actually tell us.
+- **Small arms.** Uncertainty will be wide; see what the test can tell us, above.
 
 Data: [`data/nct04530344-results.json`](data/nct04530344-results.json), extracted by `python scripts/durability/registry_results.py NCT04530344 docs/durability/data/nct04530344-results.json`.
