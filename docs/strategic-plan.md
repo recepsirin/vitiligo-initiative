@@ -2,6 +2,8 @@
 
 Living document, v1.1 (October 2026). It covers the initiative as a whole, not only the software in this repository.
 
+**Success is defined in [`success.md`](success.md):** four outcomes (stop spread, restore pigment, last, safe and reachable), and what counts as our contribution. Current focus: [durability](durability/README.md).
+
 ## Mission
 
 **Stop the spread of vitiligo and restore pigmentation to affected skin.** We use AI to find, rank and test the most promising treatments, combinations and protocols, then partner with labs and clinics to validate them.

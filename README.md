@@ -46,6 +46,7 @@ vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --thre
 
 | Doc | Contents |
 |---|---|
+| [`docs/success.md`](docs/success.md) | **What we are trying to solve:** the outcomes that define success, and the current focus (durability) |
 | [`docs/findings.md`](docs/findings.md) | **Start here:** what the JAK work found, and what we need experts to check |
 | [`docs/engine.md`](docs/engine.md) | Setup, every CLI command, adding a source |
 | [`docs/architecture.md`](docs/architecture.md) | Modules, data flow, web API |

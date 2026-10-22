@@ -1,0 +1,4814 @@
+{
+ "nct_id": "NCT04530344",
+ "title": "A Double-Blind, Vehicle-Controlled, Randomized Withdrawal and Treatment Extension Study to Assess the Long-Term Efficacy and Safety of Ruxolitinib Cream in Participants With Vitiligo",
+ "results_first_posted": "2023-07-19",
+ "last_update_posted": "2025-08-14",
+ "retrieved": "2026-10-22",
+ "source": "https://clinicaltrials.gov/study/NCT04530344?tab=results",
+ "arms": [
+  {
+   "label": "Cohort A : ruxolitinib cream",
+   "description": "Participants who achieve complete or almost complete facial repigmentation (achieve ≥ F VASI90) at Week 52 in the parent study will be assigned to Cohort A and will be randomized 1:1 to ruxolitinib cream."
+  },
+  {
+   "label": "Cohort A : Vehicle",
+   "description": "Participants who achieve complete or almost complete facial repigmentation (ie, achieve ≥ F VASI90) at Week 52 in the parent study will be assigned to Cohort A and will be randomized 1:1 to vehicle cream."
+  },
+  {
+   "label": "Cohort B : roxolitinib cream",
+   "description": "Participants who did not achieve ≥ F-VASI90 at Week 52 of the parent studies will be assigned to Cohort B and will continue ruxolitinib cream."
+  }
+ ],
+ "outcome_measures": [
+  {
+   "type": "PRIMARY",
+   "title": "Time to Relapse (Defined as <F-VASI75)",
+   "description": "Relapse was defined as a loss of 75% improvement from Baseline in the Face Vitiligo Area Scoring Index score (F-VASI75) response, assessed as percentage improvement in the F-VASI score at Baseline (Day 1 of the parent study) to \\<75%.",
+   "time_frame": "from Week 52 (first visit of this Treatment Extension study) to Week 104 (end of treatment in this Treatment Extension study)",
+   "population": "Intent-to-Treat Long-term Extension (ITT-Ext) Population: randomized participants who achieved ≥90% improvement from Baseline in the F-VASI score (≥F-VASI90) at Week 52. Treatment groups were defined according to the treatment assignment at randomization regardless of the actual study medication the participant received. Week 52 was the first visit of this Treatment Extension study (visits were named to reflect continuation from the parent studies). Only participants in Cohort A were analyzed.",
+   "param_type": "MEDIAN",
+   "dispersion": "95% Confidence Interval",
+   "unit": "days",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "56",
+    "OG001": "55",
+    "OG002": "0",
+    "OG003": "0"
+   },
+   "values": [
+    {
+     "class": null,
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "NA",
+       "lowerLimit": "238.0",
+       "upperLimit": "NA",
+       "comment": "The median and the upper limit of the confidence interval were not estimable because there were too few events of loss of F-VASI75 response."
+      },
+      "OG001": {
+       "value": "NA",
+       "lowerLimit": "NA",
+       "upperLimit": "NA",
+       "comment": "The median and the upper and lower limits of the confidence interval were not estimable because there were too few events of loss of F-VASI75 response."
+      }
+     }
+    }
+   ],
+   "analyses": [
+    {
+     "groupIds": [
+      "OG000",
+      "OG001"
+     ],
+     "statisticalMethod": "Log Rank",
+     "pValue": "0.0414",
+     "paramType": "Hazard Ratio (HR)",
+     "paramValue": "0.422",
+     "ciPctValue": "95",
+     "ciLowerLimit": "0.180",
+     "ciUpperLimit": "0.990"
+    }
+   ]
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Time to Loss of Adequate Response",
+   "description": "Loss of adequate response was defined as a loss of 90% improvement from Baseline in the F-VASI score (F-VASI90) response, assessed as percentage improvement in the F-VASI score at Baseline (Day 1 of the parent study) to \\<90%.",
+   "time_frame": "from Week 52 (first visit of this Treatment Extension study) to Week 104 (end of treatment in this Treatment Extension study)",
+   "population": "ITT-Ext Population. Week 52 was the first visit of this Treatment Extension study (visits were named to reflect continuation from the parent studies). Only participants in Cohort A were analyzed.",
+   "param_type": "MEDIAN",
+   "dispersion": "95% Confidence Interval",
+   "unit": "days",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "56",
+    "OG001": "55",
+    "OG002": "0",
+    "OG003": "0"
+   },
+   "values": [
+    {
+     "class": null,
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "195.0",
+       "lowerLimit": "113.0",
+       "upperLimit": "372.0"
+      },
+      "OG001": {
+       "value": "NA",
+       "lowerLimit": "NA",
+       "upperLimit": "NA",
+       "comment": "The median and the upper and lower limits of the confidence interval were not estimable because there were too few events of loss of F-VASI90 response."
+      }
+     }
+    }
+   ],
+   "analyses": [
+    {
+     "groupIds": [
+      "OG000",
+      "OG001"
+     ],
+     "statisticalMethod": "Log Rank",
+     "pValue": "0.0003",
+     "paramType": "Hazard Ratio (HR)",
+     "paramValue": "0.316",
+     "ciPctValue": "95",
+     "ciLowerLimit": "0.165",
+     "ciUpperLimit": "0.606"
+    }
+   ]
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥50% Improvement From Baseline in the Face Vitiligo Area Scoring Index (F-VASI50) Score During the Extension Treatment Period",
+   "description": "An F-VASI50 responder achieved at least 50% improvement from Baseline in F-VASI, measured by the percentage of vitiligo involvement (percentage of body surface area \\[BSA\\]) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "Full Analysis Set (FAS) without non-compliant site: all participants who received at least 1 dose of study drug at or after Week 52 (Baseline of Treatment Extension study). For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "98.2",
+       "lowerLimit": "90.6",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "98.2",
+       "lowerLimit": "90.6",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "45.8",
+       "lowerLimit": "36.6",
+       "upperLimit": "55.2"
+      },
+      "OG003": {
+       "value": "65.6",
+       "lowerLimit": "58.9",
+       "upperLimit": "71.9"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "98.2",
+       "lowerLimit": "90.4",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "96.4",
+       "lowerLimit": "87.5",
+       "upperLimit": "99.6"
+      },
+      "OG002": {
+       "value": "50.0",
+       "lowerLimit": "40.2",
+       "upperLimit": "59.8"
+      },
+      "OG003": {
+       "value": "69.4",
+       "lowerLimit": "62.8",
+       "upperLimit": "75.5"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "97.9",
+       "lowerLimit": "88.9",
+       "upperLimit": "99.9"
+      },
+      "OG001": {
+       "value": "98.1",
+       "lowerLimit": "89.7",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "54.2",
+       "lowerLimit": "44.3",
+       "upperLimit": "63.9"
+      },
+      "OG003": {
+       "value": "69.2",
+       "lowerLimit": "62.5",
+       "upperLimit": "75.4"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "97.7",
+       "lowerLimit": "87.7",
+       "upperLimit": "99.9"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "92.1",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "58.3",
+       "lowerLimit": "48.5",
+       "upperLimit": "67.7"
+      },
+      "OG003": {
+       "value": "72.0",
+       "lowerLimit": "65.3",
+       "upperLimit": "78.0"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "95.1",
+       "lowerLimit": "83.5",
+       "upperLimit": "99.4"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "92.1",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "63.6",
+       "lowerLimit": "53.7",
+       "upperLimit": "72.6"
+      },
+      "OG003": {
+       "value": "77.1",
+       "lowerLimit": "70.9",
+       "upperLimit": "82.6"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "96.7",
+       "lowerLimit": "82.8",
+       "upperLimit": "99.9"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "92.1",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "65.7",
+       "lowerLimit": "55.4",
+       "upperLimit": "74.9"
+      },
+      "OG003": {
+       "value": "78.9",
+       "lowerLimit": "72.4",
+       "upperLimit": "84.4"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "100.0",
+       "lowerLimit": "85.2",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "97.7",
+       "lowerLimit": "87.7",
+       "upperLimit": "99.9"
+      },
+      "OG002": {
+       "value": "66.0",
+       "lowerLimit": "55.5",
+       "upperLimit": "75.4"
+      },
+      "OG003": {
+       "value": "84.4",
+       "lowerLimit": "78.2",
+       "upperLimit": "89.3"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "95.7",
+       "lowerLimit": "78.1",
+       "upperLimit": "99.9"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "90.7",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "69.9",
+       "lowerLimit": "59.5",
+       "upperLimit": "79.0"
+      },
+      "OG003": {
+       "value": "86.4",
+       "lowerLimit": "80.5",
+       "upperLimit": "91.1"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥75% Improvement From Baseline in the F-VASI (F-VASI75) Score During the Extension Treatment Period",
+   "description": "An F-VASI75 responder achieved at least 75% improvement from Baseline in F-VASI, measured by the percentage of vitiligo involvement (percentage of BSA) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "98.2",
+       "lowerLimit": "90.6",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "98.2",
+       "lowerLimit": "90.6",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "16.1",
+       "lowerLimit": "10.0",
+       "upperLimit": "24.0"
+      },
+      "OG003": {
+       "value": "30.8",
+       "lowerLimit": "24.8",
+       "upperLimit": "37.3"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "96.4",
+       "lowerLimit": "87.7",
+       "upperLimit": "99.6"
+      },
+      "OG001": {
+       "value": "96.4",
+       "lowerLimit": "87.5",
+       "upperLimit": "99.6"
+      },
+      "OG002": {
+       "value": "23.1",
+       "lowerLimit": "15.6",
+       "upperLimit": "32.2"
+      },
+      "OG003": {
+       "value": "34.7",
+       "lowerLimit": "28.4",
+       "upperLimit": "41.5"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "95.8",
+       "lowerLimit": "85.7",
+       "upperLimit": "99.5"
+      },
+      "OG001": {
+       "value": "90.4",
+       "lowerLimit": "79.0",
+       "upperLimit": "96.8"
+      },
+      "OG002": {
+       "value": "29.0",
+       "lowerLimit": "20.6",
+       "upperLimit": "38.5"
+      },
+      "OG003": {
+       "value": "40.8",
+       "lowerLimit": "34.1",
+       "upperLimit": "47.7"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "95.3",
+       "lowerLimit": "84.2",
+       "upperLimit": "99.4"
+      },
+      "OG001": {
+       "value": "97.8",
+       "lowerLimit": "88.2",
+       "upperLimit": "99.9"
+      },
+      "OG002": {
+       "value": "30.6",
+       "lowerLimit": "22.1",
+       "upperLimit": "40.2"
+      },
+      "OG003": {
+       "value": "43.5",
+       "lowerLimit": "36.6",
+       "upperLimit": "50.5"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "87.8",
+       "lowerLimit": "73.8",
+       "upperLimit": "95.9"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "92.1",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "34.6",
+       "lowerLimit": "25.6",
+       "upperLimit": "44.4"
+      },
+      "OG003": {
+       "value": "48.6",
+       "lowerLimit": "41.6",
+       "upperLimit": "55.5"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "90.0",
+       "lowerLimit": "73.5",
+       "upperLimit": "97.9"
+      },
+      "OG001": {
+       "value": "100.0",
+       "lowerLimit": "92.1",
+       "upperLimit": "100.0"
+      },
+      "OG002": {
+       "value": "43.4",
+       "lowerLimit": "33.5",
+       "upperLimit": "53.8"
+      },
+      "OG003": {
+       "value": "54.6",
+       "lowerLimit": "47.4",
+       "upperLimit": "61.8"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "100.0",
+       "lowerLimit": "85.2",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "97.7",
+       "lowerLimit": "87.7",
+       "upperLimit": "99.9"
+      },
+      "OG002": {
+       "value": "47.9",
+       "lowerLimit": "37.5",
+       "upperLimit": "58.4"
+      },
+      "OG003": {
+       "value": "60.3",
+       "lowerLimit": "52.8",
+       "upperLimit": "67.6"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "95.7",
+       "lowerLimit": "78.1",
+       "upperLimit": "99.9"
+      },
+      "OG001": {
+       "value": "97.4",
+       "lowerLimit": "86.2",
+       "upperLimit": "99.9"
+      },
+      "OG002": {
+       "value": "47.3",
+       "lowerLimit": "36.9",
+       "upperLimit": "57.9"
+      },
+      "OG003": {
+       "value": "66.1",
+       "lowerLimit": "58.6",
+       "upperLimit": "73.0"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥90% Improvement From Baseline in the F-VASI (F-VASI90) Score During the Extension Treatment Period",
+   "description": "An F-VASI90 responder achieved at least 90% improvement from Baseline in F-VASI, measured by the percentage of vitiligo involvement (percentage of BSA) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "98.2",
+       "lowerLimit": "90.6",
+       "upperLimit": "100.0"
+      },
+      "OG001": {
+       "value": "96.5",
+       "lowerLimit": "87.9",
+       "upperLimit": "99.6"
+      },
+      "OG002": {
+       "value": "0.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "3.1"
+      },
+      "OG003": {
+       "value": "2.3",
+       "lowerLimit": "0.7",
+       "upperLimit": "5.2"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "89.3",
+       "lowerLimit": "78.1",
+       "upperLimit": "96.0"
+      },
+      "OG001": {
+       "value": "94.5",
+       "lowerLimit": "84.9",
+       "upperLimit": "98.9"
+      },
+      "OG002": {
+       "value": "3.7",
+       "lowerLimit": "1.0",
+       "upperLimit": "9.2"
+      },
+      "OG003": {
+       "value": "8.3",
+       "lowerLimit": "5.0",
+       "upperLimit": "12.9"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "83.3",
+       "lowerLimit": "69.8",
+       "upperLimit": "92.5"
+      },
+      "OG001": {
+       "value": "86.5",
+       "lowerLimit": "74.2",
+       "upperLimit": "94.4"
+      },
+      "OG002": {
+       "value": "8.4",
+       "lowerLimit": "3.9",
+       "upperLimit": "15.4"
+      },
+      "OG003": {
+       "value": "15.2",
+       "lowerLimit": "10.6",
+       "upperLimit": "20.7"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "72.1",
+       "lowerLimit": "56.3",
+       "upperLimit": "84.7"
+      },
+      "OG001": {
+       "value": "93.3",
+       "lowerLimit": "81.7",
+       "upperLimit": "98.6"
+      },
+      "OG002": {
+       "value": "11.1",
+       "lowerLimit": "5.9",
+       "upperLimit": "18.6"
+      },
+      "OG003": {
+       "value": "15.5",
+       "lowerLimit": "10.8",
+       "upperLimit": "21.1"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "68.3",
+       "lowerLimit": "51.9",
+       "upperLimit": "81.9"
+      },
+      "OG001": {
+       "value": "95.6",
+       "lowerLimit": "84.9",
+       "upperLimit": "99.5"
+      },
+      "OG002": {
+       "value": "12.1",
+       "lowerLimit": "6.6",
+       "upperLimit": "19.9"
+      },
+      "OG003": {
+       "value": "22.4",
+       "lowerLimit": "16.9",
+       "upperLimit": "28.6"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "80.0",
+       "lowerLimit": "61.4",
+       "upperLimit": "92.3"
+      },
+      "OG001": {
+       "value": "97.8",
+       "lowerLimit": "88.2",
+       "upperLimit": "99.9"
+      },
+      "OG002": {
+       "value": "22.2",
+       "lowerLimit": "14.5",
+       "upperLimit": "31.7"
+      },
+      "OG003": {
+       "value": "30.4",
+       "lowerLimit": "24.0",
+       "upperLimit": "37.4"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "78.3",
+       "lowerLimit": "56.3",
+       "upperLimit": "92.5"
+      },
+      "OG001": {
+       "value": "93.0",
+       "lowerLimit": "80.9",
+       "upperLimit": "98.5"
+      },
+      "OG002": {
+       "value": "24.5",
+       "lowerLimit": "16.2",
+       "upperLimit": "34.4"
+      },
+      "OG003": {
+       "value": "32.4",
+       "lowerLimit": "25.6",
+       "upperLimit": "39.8"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "69.6",
+       "lowerLimit": "47.1",
+       "upperLimit": "86.8"
+      },
+      "OG001": {
+       "value": "92.1",
+       "lowerLimit": "78.6",
+       "upperLimit": "98.3"
+      },
+      "OG002": {
+       "value": "28.0",
+       "lowerLimit": "19.1",
+       "upperLimit": "38.2"
+      },
+      "OG003": {
+       "value": "33.9",
+       "lowerLimit": "27.0",
+       "upperLimit": "41.4"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Mean F-VASI Scores During the Extension Treatment Period",
+   "description": "F-VASI was measured by the percentage of vitiligo involvement (percentage of BSA) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Baseline",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.86",
+       "spread": "0.492"
+      },
+      "OG001": {
+       "value": "0.99",
+       "spread": "0.644"
+      },
+      "OG002": {
+       "value": "0.88",
+       "spread": "0.543"
+      },
+      "OG003": {
+       "value": "0.91",
+       "spread": "0.550"
+      }
+     }
+    },
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.05",
+       "spread": "0.110"
+      },
+      "OG001": {
+       "value": "0.07",
+       "spread": "0.181"
+      },
+      "OG002": {
+       "value": "0.51",
+       "spread": "0.459"
+      },
+      "OG003": {
+       "value": "0.39",
+       "spread": "0.374"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.05",
+       "spread": "0.108"
+      },
+      "OG001": {
+       "value": "0.07",
+       "spread": "0.186"
+      },
+      "OG002": {
+       "value": "0.50",
+       "spread": "0.475"
+      },
+      "OG003": {
+       "value": "0.38",
+       "spread": "0.372"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.06",
+       "spread": "0.145"
+      },
+      "OG001": {
+       "value": "0.09",
+       "spread": "0.186"
+      },
+      "OG002": {
+       "value": "0.45",
+       "spread": "0.450"
+      },
+      "OG003": {
+       "value": "0.35",
+       "spread": "0.375"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.08",
+       "spread": "0.131"
+      },
+      "OG001": {
+       "value": "0.08",
+       "spread": "0.230"
+      },
+      "OG002": {
+       "value": "0.43",
+       "spread": "0.456"
+      },
+      "OG003": {
+       "value": "0.33",
+       "spread": "0.350"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.11",
+       "spread": "0.199"
+      },
+      "OG001": {
+       "value": "0.04",
+       "spread": "0.081"
+      },
+      "OG002": {
+       "value": "0.40",
+       "spread": "0.430"
+      },
+      "OG003": {
+       "value": "0.31",
+       "spread": "0.352"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.05",
+       "spread": "0.082"
+      },
+      "OG001": {
+       "value": "0.04",
+       "spread": "0.108"
+      },
+      "OG002": {
+       "value": "0.36",
+       "spread": "0.426"
+      },
+      "OG003": {
+       "value": "0.27",
+       "spread": "0.345"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.04",
+       "spread": "0.055"
+      },
+      "OG001": {
+       "value": "0.04",
+       "spread": "0.076"
+      },
+      "OG002": {
+       "value": "0.38",
+       "spread": "0.471"
+      },
+      "OG003": {
+       "value": "0.23",
+       "spread": "0.281"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.06",
+       "spread": "0.109"
+      },
+      "OG001": {
+       "value": "0.04",
+       "spread": "0.083"
+      },
+      "OG002": {
+       "value": "0.37",
+       "spread": "0.493"
+      },
+      "OG003": {
+       "value": "0.21",
+       "spread": "0.280"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Baseline in F-VASI Scores During the Extension Treatment Period",
+   "description": "F-VASI was measured by the percentage of vitiligo involvement (percentage of BSA) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement). Change from Baseline was calculated as the post-Baseline value minus the Baseline value.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.81",
+       "spread": "0.464"
+      },
+      "OG001": {
+       "value": "-0.92",
+       "spread": "0.591"
+      },
+      "OG002": {
+       "value": "-0.37",
+       "spread": "0.346"
+      },
+      "OG003": {
+       "value": "-0.51",
+       "spread": "0.448"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.82",
+       "spread": "0.492"
+      },
+      "OG001": {
+       "value": "-0.90",
+       "spread": "0.594"
+      },
+      "OG002": {
+       "value": "-0.39",
+       "spread": "0.370"
+      },
+      "OG003": {
+       "value": "-0.54",
+       "spread": "0.457"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.84",
+       "spread": "0.447"
+      },
+      "OG001": {
+       "value": "-0.87",
+       "spread": "0.570"
+      },
+      "OG002": {
+       "value": "-0.43",
+       "spread": "0.402"
+      },
+      "OG003": {
+       "value": "-0.55",
+       "spread": "0.457"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.80",
+       "spread": "0.442"
+      },
+      "OG001": {
+       "value": "-0.87",
+       "spread": "0.527"
+      },
+      "OG002": {
+       "value": "-0.44",
+       "spread": "0.423"
+      },
+      "OG003": {
+       "value": "-0.58",
+       "spread": "0.452"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.73",
+       "spread": "0.316"
+      },
+      "OG001": {
+       "value": "-0.86",
+       "spread": "0.518"
+      },
+      "OG002": {
+       "value": "-0.46",
+       "spread": "0.437"
+      },
+      "OG003": {
+       "value": "-0.61",
+       "spread": "0.476"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.75",
+       "spread": "0.360"
+      },
+      "OG001": {
+       "value": "-0.86",
+       "spread": "0.508"
+      },
+      "OG002": {
+       "value": "-0.49",
+       "spread": "0.471"
+      },
+      "OG003": {
+       "value": "-0.64",
+       "spread": "0.478"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.76",
+       "spread": "0.341"
+      },
+      "OG001": {
+       "value": "-0.87",
+       "spread": "0.548"
+      },
+      "OG002": {
+       "value": "-0.48",
+       "spread": "0.531"
+      },
+      "OG003": {
+       "value": "-0.69",
+       "spread": "0.488"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.72",
+       "spread": "0.380"
+      },
+      "OG001": {
+       "value": "-0.92",
+       "spread": "0.561"
+      },
+      "OG002": {
+       "value": "-0.50",
+       "spread": "0.557"
+      },
+      "OG003": {
+       "value": "-0.68",
+       "spread": "0.514"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percent Change From Baseline in F-VASI Scores During the Extension Treatment Period",
+   "description": "F-VASI was measured by the percentage of vitiligo involvement (percentage of BSA) and the degree of depigmentation: 0% (no depigmentation), 10% (only specks of depigmentation), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment), or 100% (no pigment). The percentage of BSA (hand unit) vitiligo involvement was estimated to the nearest 0.1% by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate the percentage of BSA vitiligo involvement. F-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site on the face and summing the values of all sites (possible range: 0-3; lower scores indicate increased improvement). Percentage change = (\\[post-BL value minus BL value\\]/BL value) X 100.",
+   "time_frame": "Baseline (BL); up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage change",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-94.45",
+       "spread": "14.069"
+      },
+      "OG001": {
+       "value": "-94.50",
+       "spread": "8.990"
+      },
+      "OG002": {
+       "value": "-44.32",
+       "spread": "27.775"
+      },
+      "OG003": {
+       "value": "-54.72",
+       "spread": "31.006"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-93.79",
+       "spread": "14.981"
+      },
+      "OG001": {
+       "value": "-93.21",
+       "spread": "12.573"
+      },
+      "OG002": {
+       "value": "-46.19",
+       "spread": "30.728"
+      },
+      "OG003": {
+       "value": "-57.38",
+       "spread": "31.256"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-93.85",
+       "spread": "9.087"
+      },
+      "OG001": {
+       "value": "-92.04",
+       "spread": "13.198"
+      },
+      "OG002": {
+       "value": "-50.55",
+       "spread": "30.537"
+      },
+      "OG003": {
+       "value": "-60.17",
+       "spread": "30.147"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-89.64",
+       "spread": "23.562"
+      },
+      "OG001": {
+       "value": "-94.87",
+       "spread": "8.079"
+      },
+      "OG002": {
+       "value": "-52.32",
+       "spread": "32.826"
+      },
+      "OG003": {
+       "value": "-62.94",
+       "spread": "27.427"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-87.98",
+       "spread": "19.644"
+      },
+      "OG001": {
+       "value": "-96.25",
+       "spread": "4.633"
+      },
+      "OG002": {
+       "value": "-55.27",
+       "spread": "32.433"
+      },
+      "OG003": {
+       "value": "-65.55",
+       "spread": "30.388"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-93.24",
+       "spread": "13.062"
+      },
+      "OG001": {
+       "value": "-96.65",
+       "spread": "4.683"
+      },
+      "OG002": {
+       "value": "-58.60",
+       "spread": "34.839"
+      },
+      "OG003": {
+       "value": "-69.38",
+       "spread": "29.091"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-95.77",
+       "spread": "5.586"
+      },
+      "OG001": {
+       "value": "-94.95",
+       "spread": "10.366"
+      },
+      "OG002": {
+       "value": "-55.44",
+       "spread": "49.855"
+      },
+      "OG003": {
+       "value": "-73.77",
+       "spread": "25.490"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-90.53",
+       "spread": "17.763"
+      },
+      "OG001": {
+       "value": "-95.86",
+       "spread": "7.213"
+      },
+      "OG002": {
+       "value": "-56.53",
+       "spread": "57.087"
+      },
+      "OG003": {
+       "value": "-73.84",
+       "spread": "31.780"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥50% Improvement From Baseline in the Total Body Vitiligo Area Scoring Index (T-VASI50) Score During the Extension Treatment Period",
+   "description": "A T-VASI50 responder achieved at least 50% improvement from Baseline in T-VASI, calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "80.7",
+       "lowerLimit": "68.1",
+       "upperLimit": "90.0"
+      },
+      "OG001": {
+       "value": "71.9",
+       "lowerLimit": "58.5",
+       "upperLimit": "83.0"
+      },
+      "OG002": {
+       "value": "16.9",
+       "lowerLimit": "10.7",
+       "upperLimit": "25.0"
+      },
+      "OG003": {
+       "value": "42.5",
+       "lowerLimit": "35.9",
+       "upperLimit": "49.3"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "76.8",
+       "lowerLimit": "63.6",
+       "upperLimit": "87.0"
+      },
+      "OG001": {
+       "value": "72.7",
+       "lowerLimit": "59.0",
+       "upperLimit": "83.9"
+      },
+      "OG002": {
+       "value": "16.7",
+       "lowerLimit": "10.2",
+       "upperLimit": "25.1"
+      },
+      "OG003": {
+       "value": "45.8",
+       "lowerLimit": "39.1",
+       "upperLimit": "52.7"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "83.3",
+       "lowerLimit": "69.8",
+       "upperLimit": "92.5"
+      },
+      "OG001": {
+       "value": "75.0",
+       "lowerLimit": "61.1",
+       "upperLimit": "86.0"
+      },
+      "OG002": {
+       "value": "19.6",
+       "lowerLimit": "12.6",
+       "upperLimit": "28.4"
+      },
+      "OG003": {
+       "value": "49.8",
+       "lowerLimit": "42.8",
+       "upperLimit": "56.7"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "74.4",
+       "lowerLimit": "58.8",
+       "upperLimit": "86.5"
+      },
+      "OG001": {
+       "value": "82.2",
+       "lowerLimit": "67.9",
+       "upperLimit": "92.0"
+      },
+      "OG002": {
+       "value": "21.3",
+       "lowerLimit": "14.0",
+       "upperLimit": "30.2"
+      },
+      "OG003": {
+       "value": "50.7",
+       "lowerLimit": "43.7",
+       "upperLimit": "57.7"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "70.7",
+       "lowerLimit": "54.5",
+       "upperLimit": "83.9"
+      },
+      "OG001": {
+       "value": "84.4",
+       "lowerLimit": "70.5",
+       "upperLimit": "93.5"
+      },
+      "OG002": {
+       "value": "29.9",
+       "lowerLimit": "21.4",
+       "upperLimit": "39.5"
+      },
+      "OG003": {
+       "value": "54.3",
+       "lowerLimit": "47.3",
+       "upperLimit": "61.2"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "80.0",
+       "lowerLimit": "61.4",
+       "upperLimit": "92.3"
+      },
+      "OG001": {
+       "value": "86.7",
+       "lowerLimit": "73.2",
+       "upperLimit": "94.9"
+      },
+      "OG002": {
+       "value": "39.4",
+       "lowerLimit": "29.7",
+       "upperLimit": "49.7"
+      },
+      "OG003": {
+       "value": "57.7",
+       "lowerLimit": "50.4",
+       "upperLimit": "64.8"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "73.9",
+       "lowerLimit": "51.6",
+       "upperLimit": "89.8"
+      },
+      "OG001": {
+       "value": "86.0",
+       "lowerLimit": "72.1",
+       "upperLimit": "94.7"
+      },
+      "OG002": {
+       "value": "48.9",
+       "lowerLimit": "38.5",
+       "upperLimit": "59.5"
+      },
+      "OG003": {
+       "value": "61.5",
+       "lowerLimit": "53.9",
+       "upperLimit": "68.6"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "60.9",
+       "lowerLimit": "38.5",
+       "upperLimit": "80.3"
+      },
+      "OG001": {
+       "value": "89.5",
+       "lowerLimit": "75.2",
+       "upperLimit": "97.1"
+      },
+      "OG002": {
+       "value": "54.8",
+       "lowerLimit": "44.2",
+       "upperLimit": "65.2"
+      },
+      "OG003": {
+       "value": "63.8",
+       "lowerLimit": "56.3",
+       "upperLimit": "70.9"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥75% Improvement From Baseline in the T-VASI (T-VASI75) Score During the Extension Treatment Period",
+   "description": "A T-VASI75 responder achieved at least 75% improvement from Baseline in T-VASI, calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "38.6",
+       "lowerLimit": "26.0",
+       "upperLimit": "52.4"
+      },
+      "OG001": {
+       "value": "42.1",
+       "lowerLimit": "29.1",
+       "upperLimit": "55.9"
+      },
+      "OG002": {
+       "value": "3.4",
+       "lowerLimit": "0.9",
+       "upperLimit": "8.5"
+      },
+      "OG003": {
+       "value": "12.2",
+       "lowerLimit": "8.2",
+       "upperLimit": "17.3"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "42.9",
+       "lowerLimit": "29.7",
+       "upperLimit": "56.8"
+      },
+      "OG001": {
+       "value": "43.6",
+       "lowerLimit": "30.3",
+       "upperLimit": "57.7"
+      },
+      "OG002": {
+       "value": "4.6",
+       "lowerLimit": "1.5",
+       "upperLimit": "10.5"
+      },
+      "OG003": {
+       "value": "13.4",
+       "lowerLimit": "9.2",
+       "upperLimit": "18.7"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "45.8",
+       "lowerLimit": "31.4",
+       "upperLimit": "60.8"
+      },
+      "OG001": {
+       "value": "38.5",
+       "lowerLimit": "25.3",
+       "upperLimit": "53.0"
+      },
+      "OG002": {
+       "value": "4.7",
+       "lowerLimit": "1.5",
+       "upperLimit": "10.6"
+      },
+      "OG003": {
+       "value": "14.2",
+       "lowerLimit": "9.8",
+       "upperLimit": "19.7"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "39.5",
+       "lowerLimit": "25.0",
+       "upperLimit": "55.6"
+      },
+      "OG001": {
+       "value": "48.9",
+       "lowerLimit": "33.7",
+       "upperLimit": "64.2"
+      },
+      "OG002": {
+       "value": "3.7",
+       "lowerLimit": "1.0",
+       "upperLimit": "9.2"
+      },
+      "OG003": {
+       "value": "16.9",
+       "lowerLimit": "12.1",
+       "upperLimit": "22.7"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "39.0",
+       "lowerLimit": "24.2",
+       "upperLimit": "55.5"
+      },
+      "OG001": {
+       "value": "42.2",
+       "lowerLimit": "27.7",
+       "upperLimit": "57.8"
+      },
+      "OG002": {
+       "value": "6.5",
+       "lowerLimit": "2.7",
+       "upperLimit": "13.0"
+      },
+      "OG003": {
+       "value": "22.4",
+       "lowerLimit": "16.9",
+       "upperLimit": "28.6"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "53.3",
+       "lowerLimit": "34.3",
+       "upperLimit": "71.7"
+      },
+      "OG001": {
+       "value": "48.9",
+       "lowerLimit": "33.7",
+       "upperLimit": "64.2"
+      },
+      "OG002": {
+       "value": "10.1",
+       "lowerLimit": "5.0",
+       "upperLimit": "17.8"
+      },
+      "OG003": {
+       "value": "23.7",
+       "lowerLimit": "17.9",
+       "upperLimit": "30.3"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "43.5",
+       "lowerLimit": "23.2",
+       "upperLimit": "65.5"
+      },
+      "OG001": {
+       "value": "53.5",
+       "lowerLimit": "37.7",
+       "upperLimit": "68.8"
+      },
+      "OG002": {
+       "value": "12.8",
+       "lowerLimit": "6.8",
+       "upperLimit": "21.2"
+      },
+      "OG003": {
+       "value": "29.1",
+       "lowerLimit": "22.5",
+       "upperLimit": "36.3"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "39.1",
+       "lowerLimit": "19.7",
+       "upperLimit": "61.5"
+      },
+      "OG001": {
+       "value": "55.3",
+       "lowerLimit": "38.3",
+       "upperLimit": "71.4"
+      },
+      "OG002": {
+       "value": "18.3",
+       "lowerLimit": "11.0",
+       "upperLimit": "27.6"
+      },
+      "OG003": {
+       "value": "30.5",
+       "lowerLimit": "23.8",
+       "upperLimit": "37.9"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a ≥90% Improvement From Baseline in the T-VASI (T-VASI90) Score During the Extension Treatment Period",
+   "description": "A T-VASI90 responder achieved at least 90% improvement from Baseline in T-VASI, calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "12.3",
+       "lowerLimit": "5.1",
+       "upperLimit": "23.7"
+      },
+      "OG001": {
+       "value": "12.3",
+       "lowerLimit": "5.1",
+       "upperLimit": "23.7"
+      },
+      "OG002": {
+       "value": "0.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "3.1"
+      },
+      "OG003": {
+       "value": "2.3",
+       "lowerLimit": "0.7",
+       "upperLimit": "5.2"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "12.5",
+       "lowerLimit": "5.2",
+       "upperLimit": "24.1"
+      },
+      "OG001": {
+       "value": "14.5",
+       "lowerLimit": "6.5",
+       "upperLimit": "26.7"
+      },
+      "OG002": {
+       "value": "0.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "3.4"
+      },
+      "OG003": {
+       "value": "3.2",
+       "lowerLimit": "1.3",
+       "upperLimit": "6.6"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "16.7",
+       "lowerLimit": "7.5",
+       "upperLimit": "30.2"
+      },
+      "OG001": {
+       "value": "17.3",
+       "lowerLimit": "8.2",
+       "upperLimit": "30.3"
+      },
+      "OG002": {
+       "value": "0.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "3.4"
+      },
+      "OG003": {
+       "value": "3.8",
+       "lowerLimit": "1.7",
+       "upperLimit": "7.3"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "20.9",
+       "lowerLimit": "10.0",
+       "upperLimit": "36.0"
+      },
+      "OG001": {
+       "value": "20.0",
+       "lowerLimit": "9.6",
+       "upperLimit": "34.6"
+      },
+      "OG002": {
+       "value": "0.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "3.4"
+      },
+      "OG003": {
+       "value": "2.9",
+       "lowerLimit": "1.1",
+       "upperLimit": "6.2"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "22.0",
+       "lowerLimit": "10.6",
+       "upperLimit": "37.6"
+      },
+      "OG001": {
+       "value": "20.0",
+       "lowerLimit": "9.6",
+       "upperLimit": "34.6"
+      },
+      "OG002": {
+       "value": "0.9",
+       "lowerLimit": "0.0",
+       "upperLimit": "5.1"
+      },
+      "OG003": {
+       "value": "4.3",
+       "lowerLimit": "2.0",
+       "upperLimit": "8.0"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "20.0",
+       "lowerLimit": "7.7",
+       "upperLimit": "38.6"
+      },
+      "OG001": {
+       "value": "20.0",
+       "lowerLimit": "9.6",
+       "upperLimit": "34.6"
+      },
+      "OG002": {
+       "value": "1.0",
+       "lowerLimit": "0.0",
+       "upperLimit": "5.5"
+      },
+      "OG003": {
+       "value": "6.7",
+       "lowerLimit": "3.6",
+       "upperLimit": "11.2"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "21.7",
+       "lowerLimit": "7.5",
+       "upperLimit": "43.7"
+      },
+      "OG001": {
+       "value": "20.9",
+       "lowerLimit": "10.0",
+       "upperLimit": "36.0"
+      },
+      "OG002": {
+       "value": "2.1",
+       "lowerLimit": "0.3",
+       "upperLimit": "7.5"
+      },
+      "OG003": {
+       "value": "8.9",
+       "lowerLimit": "5.2",
+       "upperLimit": "14.1"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "21.7",
+       "lowerLimit": "7.5",
+       "upperLimit": "43.7"
+      },
+      "OG001": {
+       "value": "23.7",
+       "lowerLimit": "11.4",
+       "upperLimit": "40.2"
+      },
+      "OG002": {
+       "value": "3.2",
+       "lowerLimit": "0.7",
+       "upperLimit": "9.1"
+      },
+      "OG003": {
+       "value": "9.6",
+       "lowerLimit": "5.7",
+       "upperLimit": "14.9"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Mean T-VASI Scores During the Extension Treatment Period",
+   "description": "T-VASI was calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement).",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Baseline",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "6.06",
+       "spread": "2.056"
+      },
+      "OG001": {
+       "value": "6.27",
+       "spread": "2.030"
+      },
+      "OG002": {
+       "value": "6.69",
+       "spread": "2.150"
+      },
+      "OG003": {
+       "value": "6.74",
+       "spread": "2.006"
+      }
+     }
+    },
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.38",
+       "spread": "2.206"
+      },
+      "OG001": {
+       "value": "2.36",
+       "spread": "1.805"
+      },
+      "OG002": {
+       "value": "5.25",
+       "spread": "3.248"
+      },
+      "OG003": {
+       "value": "3.90",
+       "spread": "2.132"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.39",
+       "spread": "2.253"
+      },
+      "OG001": {
+       "value": "2.31",
+       "spread": "1.843"
+      },
+      "OG002": {
+       "value": "5.06",
+       "spread": "3.151"
+      },
+      "OG003": {
+       "value": "3.80",
+       "spread": "2.213"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.21",
+       "spread": "2.176"
+      },
+      "OG001": {
+       "value": "2.30",
+       "spread": "1.841"
+      },
+      "OG002": {
+       "value": "4.86",
+       "spread": "3.150"
+      },
+      "OG003": {
+       "value": "3.58",
+       "spread": "2.122"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.33",
+       "spread": "2.210"
+      },
+      "OG001": {
+       "value": "1.94",
+       "spread": "1.717"
+      },
+      "OG002": {
+       "value": "4.85",
+       "spread": "3.317"
+      },
+      "OG003": {
+       "value": "3.57",
+       "spread": "2.051"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.45",
+       "spread": "2.231"
+      },
+      "OG001": {
+       "value": "1.76",
+       "spread": "1.378"
+      },
+      "OG002": {
+       "value": "4.51",
+       "spread": "3.060"
+      },
+      "OG003": {
+       "value": "3.43",
+       "spread": "2.160"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.05",
+       "spread": "2.233"
+      },
+      "OG001": {
+       "value": "1.73",
+       "spread": "1.331"
+      },
+      "OG002": {
+       "value": "4.18",
+       "spread": "3.036"
+      },
+      "OG003": {
+       "value": "3.18",
+       "spread": "2.017"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.17",
+       "spread": "1.913"
+      },
+      "OG001": {
+       "value": "1.65",
+       "spread": "1.244"
+      },
+      "OG002": {
+       "value": "4.12",
+       "spread": "3.477"
+      },
+      "OG003": {
+       "value": "3.04",
+       "spread": "2.128"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.86",
+       "spread": "3.269"
+      },
+      "OG001": {
+       "value": "1.54",
+       "spread": "1.227"
+      },
+      "OG002": {
+       "value": "4.00",
+       "spread": "4.208"
+      },
+      "OG003": {
+       "value": "2.92",
+       "spread": "2.061"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Baseline in T-VASI Scores During the Extension Treatment Period",
+   "description": "T-VASI was calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement). Change from Baseline=post-Baseline value minus the Baseline value.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.68",
+       "spread": "1.564"
+      },
+      "OG001": {
+       "value": "-3.91",
+       "spread": "1.526"
+      },
+      "OG002": {
+       "value": "-1.45",
+       "spread": "2.271"
+      },
+      "OG003": {
+       "value": "-2.83",
+       "spread": "1.938"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.71",
+       "spread": "1.615"
+      },
+      "OG001": {
+       "value": "-3.91",
+       "spread": "1.503"
+      },
+      "OG002": {
+       "value": "-1.69",
+       "spread": "2.217"
+      },
+      "OG003": {
+       "value": "-2.97",
+       "spread": "2.086"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.79",
+       "spread": "1.692"
+      },
+      "OG001": {
+       "value": "-3.95",
+       "spread": "1.585"
+      },
+      "OG002": {
+       "value": "-1.83",
+       "spread": "2.161"
+      },
+      "OG003": {
+       "value": "-3.16",
+       "spread": "2.027"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.60",
+       "spread": "2.033"
+      },
+      "OG001": {
+       "value": "-4.20",
+       "spread": "1.569"
+      },
+      "OG002": {
+       "value": "-1.84",
+       "spread": "2.375"
+      },
+      "OG003": {
+       "value": "-3.21",
+       "spread": "2.060"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.44",
+       "spread": "1.789"
+      },
+      "OG001": {
+       "value": "-4.24",
+       "spread": "1.534"
+      },
+      "OG002": {
+       "value": "-2.21",
+       "spread": "2.273"
+      },
+      "OG003": {
+       "value": "-3.35",
+       "spread": "2.143"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.79",
+       "spread": "1.663"
+      },
+      "OG001": {
+       "value": "-4.26",
+       "spread": "1.519"
+      },
+      "OG002": {
+       "value": "-2.49",
+       "spread": "2.175"
+      },
+      "OG003": {
+       "value": "-3.55",
+       "spread": "2.109"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.85",
+       "spread": "1.545"
+      },
+      "OG001": {
+       "value": "-4.33",
+       "spread": "1.673"
+      },
+      "OG002": {
+       "value": "-2.61",
+       "spread": "2.624"
+      },
+      "OG003": {
+       "value": "-3.73",
+       "spread": "2.246"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.05",
+       "spread": "2.156"
+      },
+      "OG001": {
+       "value": "-4.48",
+       "spread": "1.702"
+      },
+      "OG002": {
+       "value": "-2.71",
+       "spread": "3.479"
+      },
+      "OG003": {
+       "value": "-3.84",
+       "spread": "2.151"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percent Change From Baseline in T-VASI Scores During the Extension Treatment Period",
+   "description": "T-VASI was calculated with contributions from 6 sites. The percentage of vitiligo involvement was estimated in hand units (percentage of BSA estimated to nearest 0.1%) by the Investigator using the Palmar Method. The Investigator used his/her hand to mimic the participant's hand size to evaluate percent BSA vitiligo involvement. The degree of depigmentation for each site was estimated to the nearest percentage: 0% (no depigmentation present), 10% (only specks of depigmentation present), 25% (pigmented area exceeded depigmented area), 50% (depigmented and pigmented area was equal), 75% (depigmented area exceeded pigmented area), 90% (specks of pigment present), 100% (no pigment present). T-VASI was then derived by multiplying the values assessed for the vitiligo involvement by the percentage of affected skin for each site and summing the values (range: 0-100; lower scores indicate increased improvement). Percentage change = (\\[post-BL value minus BL value\\]/BL value) X 100.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage change",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-65.01",
+       "spread": "23.969"
+      },
+      "OG001": {
+       "value": "-64.95",
+       "spread": "21.547"
+      },
+      "OG002": {
+       "value": "-24.75",
+       "spread": "2.271"
+      },
+      "OG003": {
+       "value": "-42.14",
+       "spread": "25.783"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-65.16",
+       "spread": "24.916"
+      },
+      "OG001": {
+       "value": "-65.69",
+       "spread": "22.042"
+      },
+      "OG002": {
+       "value": "-28.05",
+       "spread": "30.487"
+      },
+      "OG003": {
+       "value": "-43.91",
+       "spread": "27.408"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-66.83",
+       "spread": "26.478"
+      },
+      "OG001": {
+       "value": "-65.58",
+       "spread": "22.910"
+      },
+      "OG002": {
+       "value": "-31.01",
+       "spread": "28.944"
+      },
+      "OG003": {
+       "value": "-47.00",
+       "spread": "26.089"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-62.82",
+       "spread": "33.328"
+      },
+      "OG001": {
+       "value": "-70.44",
+       "spread": "20.212"
+      },
+      "OG002": {
+       "value": "-30.85",
+       "spread": "32.898"
+      },
+      "OG003": {
+       "value": "-46.96",
+       "spread": "26.395"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-61.40",
+       "spread": "29.204"
+      },
+      "OG001": {
+       "value": "-71.89",
+       "spread": "17.942"
+      },
+      "OG002": {
+       "value": "-35.53",
+       "spread": "32.135"
+      },
+      "OG003": {
+       "value": "-49.41",
+       "spread": "27.629"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-68.99",
+       "spread": "26.870"
+      },
+      "OG001": {
+       "value": "-72.21",
+       "spread": "17.852"
+      },
+      "OG002": {
+       "value": "-40.97",
+       "spread": "30.033"
+      },
+      "OG003": {
+       "value": "-52.48",
+       "spread": "26.991"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-66.95",
+       "spread": "24.885"
+      },
+      "OG001": {
+       "value": "-72.55",
+       "spread": "19.152"
+      },
+      "OG002": {
+       "value": "-43.34",
+       "spread": "34.425"
+      },
+      "OG003": {
+       "value": "-55.00",
+       "spread": "28.995"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-58.38",
+       "spread": "35.533"
+      },
+      "OG001": {
+       "value": "-74.66",
+       "spread": "17.727"
+      },
+      "OG002": {
+       "value": "-45.52",
+       "spread": "41.968"
+      },
+      "OG003": {
+       "value": "-56.96",
+       "spread": "27.409"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Mean Facial Body Surface Area (F-BSA) During the Extension Treatment Period",
+   "description": "F-BSA involvement was the proportion of the facial body surface area with vitiligo. The area \"Face\" was defined as including the area on the forehead to the original hairline, on the cheek to the jawline vertically to the jawline and laterally from the corner of the mouth to the tragus. The area \"Face\" did not include surface area of the lips, scalp, ears, or neck, but included the nose and eyelids. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Data are presented as the percentage of BSA involvement in the face as compared to total BSA.",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage BSA",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Baseline",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.92",
+       "spread": "0.498"
+      },
+      "OG001": {
+       "value": "1.10",
+       "spread": "0.745"
+      },
+      "OG002": {
+       "value": "1.01",
+       "spread": "0.632"
+      },
+      "OG003": {
+       "value": "1.02",
+       "spread": "0.636"
+      }
+     }
+    },
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.18",
+       "spread": "0.240"
+      },
+      "OG001": {
+       "value": "0.27",
+       "spread": "0.401"
+      },
+      "OG002": {
+       "value": "0.81",
+       "spread": "0.641"
+      },
+      "OG003": {
+       "value": "0.70",
+       "spread": "0.568"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.18",
+       "spread": "0.198"
+      },
+      "OG001": {
+       "value": "0.27",
+       "spread": "0.416"
+      },
+      "OG002": {
+       "value": "0.77",
+       "spread": "0.638"
+      },
+      "OG003": {
+       "value": "0.67",
+       "spread": "0.572"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.20",
+       "spread": "0.225"
+      },
+      "OG001": {
+       "value": "0.25",
+       "spread": "0.309"
+      },
+      "OG002": {
+       "value": "0.73",
+       "spread": "0.616"
+      },
+      "OG003": {
+       "value": "0.63",
+       "spread": "0.557"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.20",
+       "spread": "0.206"
+      },
+      "OG001": {
+       "value": "0.20",
+       "spread": "0.271"
+      },
+      "OG002": {
+       "value": "0.71",
+       "spread": "0.607"
+      },
+      "OG003": {
+       "value": "0.61",
+       "spread": "0.566"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.22",
+       "spread": "0.258"
+      },
+      "OG001": {
+       "value": "0.16",
+       "spread": "0.183"
+      },
+      "OG002": {
+       "value": "0.67",
+       "spread": "0.581"
+      },
+      "OG003": {
+       "value": "0.57",
+       "spread": "0.548"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.12",
+       "spread": "0.138"
+      },
+      "OG001": {
+       "value": "0.15",
+       "spread": "0.200"
+      },
+      "OG002": {
+       "value": "0.62",
+       "spread": "0.565"
+      },
+      "OG003": {
+       "value": "0.55",
+       "spread": "0.564"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.10",
+       "spread": "0.130"
+      },
+      "OG001": {
+       "value": "0.15",
+       "spread": "0.180"
+      },
+      "OG002": {
+       "value": "0.64",
+       "spread": "0.595"
+      },
+      "OG003": {
+       "value": "0.49",
+       "spread": "0.527"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.13",
+       "spread": "0.154"
+      },
+      "OG001": {
+       "value": "0.15",
+       "spread": "0.181"
+      },
+      "OG002": {
+       "value": "0.62",
+       "spread": "0.602"
+      },
+      "OG003": {
+       "value": "0.47",
+       "spread": "0.509"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Baseline in F-BSA During the Extension Treatment Period",
+   "description": "F-BSA involvement was the proportion of the facial body surface area with vitiligo. The area \"Face\" was defined as including the area on the forehead to the original hairline, on the cheek to the jawline vertically to the jawline and laterally from the corner of the mouth to the tragus. The area \"Face\" did not include surface area of the lips, scalp, ears, or neck, but included the nose and eyelids. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Change from Baseline was calculated as the post-Baseline value minus the Baseline value. Data are presented as the percentage of BSA involvement in the face as compared to total BSA.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage BSA",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.74",
+       "spread": "0.402"
+      },
+      "OG001": {
+       "value": "-0.83",
+       "spread": "0.638"
+      },
+      "OG002": {
+       "value": "-0.20",
+       "spread": "0.313"
+      },
+      "OG003": {
+       "value": "-0.31",
+       "spread": "0.435"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.76",
+       "spread": "0.458"
+      },
+      "OG001": {
+       "value": "-0.82",
+       "spread": "0.672"
+      },
+      "OG002": {
+       "value": "-0.25",
+       "spread": "0.345"
+      },
+      "OG003": {
+       "value": "-0.35",
+       "spread": "0.433"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.77",
+       "spread": "0.441"
+      },
+      "OG001": {
+       "value": "-0.80",
+       "spread": "0.601"
+      },
+      "OG002": {
+       "value": "-0.28",
+       "spread": "0.364"
+      },
+      "OG003": {
+       "value": "-0.38",
+       "spread": "0.454"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.74",
+       "spread": "0.446"
+      },
+      "OG001": {
+       "value": "-0.83",
+       "spread": "0.625"
+      },
+      "OG002": {
+       "value": "-0.29",
+       "spread": "0.417"
+      },
+      "OG003": {
+       "value": "-0.41",
+       "spread": "0.457"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.69",
+       "spread": "0.345"
+      },
+      "OG001": {
+       "value": "-0.86",
+       "spread": "0.657"
+      },
+      "OG002": {
+       "value": "-0.31",
+       "spread": "0.425"
+      },
+      "OG003": {
+       "value": "-0.45",
+       "spread": "0.489"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.74",
+       "spread": "0.381"
+      },
+      "OG001": {
+       "value": "-0.87",
+       "spread": "0.637"
+      },
+      "OG002": {
+       "value": "-0.37",
+       "spread": "0.494"
+      },
+      "OG003": {
+       "value": "-0.48",
+       "spread": "0.521"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.76",
+       "spread": "0.374"
+      },
+      "OG001": {
+       "value": "-0.87",
+       "spread": "0.678"
+      },
+      "OG002": {
+       "value": "-0.36",
+       "spread": "0.558"
+      },
+      "OG003": {
+       "value": "-0.54",
+       "spread": "0.532"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.70",
+       "spread": "0.400"
+      },
+      "OG001": {
+       "value": "-0.93",
+       "spread": "0.716"
+      },
+      "OG002": {
+       "value": "-0.39",
+       "spread": "0.604"
+      },
+      "OG003": {
+       "value": "-0.54",
+       "spread": "0.548"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percent Change From Baseline in F-BSA During the Extension Treatment Period",
+   "description": "F-BSA involvement was the proportion of the facial body surface area with vitiligo. The area \"Face\" was defined as including the area on the forehead to the original hairline, on the cheek to the jawline vertically to the jawline and laterally from the corner of the mouth to the tragus. The area \"Face\" did not include surface area of the lips, scalp, ears, or neck, but included the nose and eyelids. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Percentage change = (\\[post-Baseline (BL) value minus BL value\\]/BL value) X 100.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage change",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-80.75",
+       "spread": "18.726"
+      },
+      "OG001": {
+       "value": "-76.75",
+       "spread": "23.470"
+      },
+      "OG002": {
+       "value": "-22.15",
+       "spread": "28.268"
+      },
+      "OG003": {
+       "value": "-29.06",
+       "spread": "36.354"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-80.23",
+       "spread": "21.828"
+      },
+      "OG001": {
+       "value": "-74.42",
+       "spread": "35.048"
+      },
+      "OG002": {
+       "value": "-26.20",
+       "spread": "30.604"
+      },
+      "OG003": {
+       "value": "-33.66",
+       "spread": "33.944"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-79.20",
+       "spread": "19.463"
+      },
+      "OG001": {
+       "value": "-77.67",
+       "spread": "20.946"
+      },
+      "OG002": {
+       "value": "-30.04",
+       "spread": "30.751"
+      },
+      "OG003": {
+       "value": "-36.86",
+       "spread": "33.289"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-75.92",
+       "spread": "32.175"
+      },
+      "OG001": {
+       "value": "-80.06",
+       "spread": "22.142"
+      },
+      "OG002": {
+       "value": "-30.67",
+       "spread": "33.473"
+      },
+      "OG003": {
+       "value": "-39.58",
+       "spread": "31.992"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-77.11",
+       "spread": "23.565"
+      },
+      "OG001": {
+       "value": "-83.14",
+       "spread": "21.999"
+      },
+      "OG002": {
+       "value": "-32.60",
+       "spread": "34.575"
+      },
+      "OG003": {
+       "value": "-43.61",
+       "spread": "32.549"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-84.55",
+       "spread": "18.730"
+      },
+      "OG001": {
+       "value": "-84.67",
+       "spread": "22.014"
+      },
+      "OG002": {
+       "value": "-36.79",
+       "spread": "36.826"
+      },
+      "OG003": {
+       "value": "-46.38",
+       "spread": "34.407"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-87.81",
+       "spread": "15.738"
+      },
+      "OG001": {
+       "value": "-83.24",
+       "spread": "23.746"
+      },
+      "OG002": {
+       "value": "-34.05",
+       "spread": "50.762"
+      },
+      "OG003": {
+       "value": "-51.96",
+       "spread": "31.510"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-82.87",
+       "spread": "23.245"
+      },
+      "OG001": {
+       "value": "-84.09",
+       "spread": "22.920"
+      },
+      "OG002": {
+       "value": "-35.82",
+       "spread": "52.646"
+      },
+      "OG003": {
+       "value": "-52.85",
+       "spread": "32.983"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Mean Total Body Surface Area (T-BSA) During the Extension Treatment Period",
+   "description": "T-BSA involvement was the proportion of the body surface area with vitiligo. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Data are presented as the percentage of BSA involvement in the total body.",
+   "time_frame": "up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage BSA",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Baseline",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "6.79",
+       "spread": "2.157"
+      },
+      "OG001": {
+       "value": "6.85",
+       "spread": "1.924"
+      },
+      "OG002": {
+       "value": "7.42",
+       "spread": "2.064"
+      },
+      "OG003": {
+       "value": "7.49",
+       "spread": "2.006"
+      }
+     }
+    },
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "4.09",
+       "spread": "2.838"
+      },
+      "OG001": {
+       "value": "4.20",
+       "spread": "2.640"
+      },
+      "OG002": {
+       "value": "6.95",
+       "spread": "3.403"
+      },
+      "OG003": {
+       "value": "5.96",
+       "spread": "2.352"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "4.11",
+       "spread": "2.880"
+      },
+      "OG001": {
+       "value": "4.13",
+       "spread": "2.788"
+      },
+      "OG002": {
+       "value": "6.73",
+       "spread": "3.281"
+      },
+      "OG003": {
+       "value": "5.81",
+       "spread": "2.558"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "3.77",
+       "spread": "2.756"
+      },
+      "OG001": {
+       "value": "4.09",
+       "spread": "2.833"
+      },
+      "OG002": {
+       "value": "6.61",
+       "spread": "3.262"
+      },
+      "OG003": {
+       "value": "5.64",
+       "spread": "2.479"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "3.98",
+       "spread": "3.087"
+      },
+      "OG001": {
+       "value": "3.49",
+       "spread": "2.452"
+      },
+      "OG002": {
+       "value": "6.67",
+       "spread": "3.448"
+      },
+      "OG003": {
+       "value": "5.64",
+       "spread": "2.483"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "3.92",
+       "spread": "2.813"
+      },
+      "OG001": {
+       "value": "3.27",
+       "spread": "2.310"
+      },
+      "OG002": {
+       "value": "6.46",
+       "spread": "3.239"
+      },
+      "OG003": {
+       "value": "5.51",
+       "spread": "2.682"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "3.72",
+       "spread": "3.151"
+      },
+      "OG001": {
+       "value": "3.18",
+       "spread": "2.232"
+      },
+      "OG002": {
+       "value": "6.09",
+       "spread": "3.313"
+      },
+      "OG003": {
+       "value": "5.27",
+       "spread": "2.581"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "3.94",
+       "spread": "2.834"
+      },
+      "OG001": {
+       "value": "3.04",
+       "spread": "2.194"
+      },
+      "OG002": {
+       "value": "5.96",
+       "spread": "3.646"
+      },
+      "OG003": {
+       "value": "5.15",
+       "spread": "2.741"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "4.56",
+       "spread": "4.156"
+      },
+      "OG001": {
+       "value": "2.93",
+       "spread": "2.301"
+      },
+      "OG002": {
+       "value": "5.91",
+       "spread": "4.475"
+      },
+      "OG003": {
+       "value": "5.07",
+       "spread": "2.699"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Baseline in T-BSA During the Extension Treatment Period",
+   "description": "T-BSA involvement was the proportion of the body surface area with vitiligo. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Change from Baseline was calculated as the post-Baseline value minus the Baseline value. Data are presented as the percentage of BSA involvement in the total body.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage BSA",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.70",
+       "spread": "1.830"
+      },
+      "OG001": {
+       "value": "-2.64",
+       "spread": "1.906"
+      },
+      "OG002": {
+       "value": "-0.47",
+       "spread": "2.325"
+      },
+      "OG003": {
+       "value": "-1.52",
+       "spread": "1.711"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.74",
+       "spread": "1.918"
+      },
+      "OG001": {
+       "value": "-2.70",
+       "spread": "1.983"
+      },
+      "OG002": {
+       "value": "-0.73",
+       "spread": "2.238"
+      },
+      "OG003": {
+       "value": "-1.71",
+       "spread": "2.059"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.95",
+       "spread": "1.910"
+      },
+      "OG001": {
+       "value": "-2.75",
+       "spread": "2.195"
+      },
+      "OG002": {
+       "value": "-0.80",
+       "spread": "2.128"
+      },
+      "OG003": {
+       "value": "-1.86",
+       "spread": "1.978"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.73",
+       "spread": "2.528"
+      },
+      "OG001": {
+       "value": "-3.22",
+       "spread": "1.883"
+      },
+      "OG002": {
+       "value": "-0.73",
+       "spread": "2.432"
+      },
+      "OG003": {
+       "value": "-1.90",
+       "spread": "2.052"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.73",
+       "spread": "1.958"
+      },
+      "OG001": {
+       "value": "-3.34",
+       "spread": "1.922"
+      },
+      "OG002": {
+       "value": "-0.98",
+       "spread": "2.262"
+      },
+      "OG003": {
+       "value": "-2.03",
+       "spread": "2.180"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.05",
+       "spread": "2.083"
+      },
+      "OG001": {
+       "value": "-3.42",
+       "spread": "1.809"
+      },
+      "OG002": {
+       "value": "-1.31",
+       "spread": "2.341"
+      },
+      "OG003": {
+       "value": "-2.21",
+       "spread": "2.169"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-3.03",
+       "spread": "1.664"
+      },
+      "OG001": {
+       "value": "-3.58",
+       "spread": "1.938"
+      },
+      "OG002": {
+       "value": "-1.49",
+       "spread": "2.753"
+      },
+      "OG003": {
+       "value": "-2.36",
+       "spread": "2.380"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.18",
+       "spread": "2.723"
+      },
+      "OG001": {
+       "value": "-3.72",
+       "spread": "2.075"
+      },
+      "OG002": {
+       "value": "-1.52",
+       "spread": "3.672"
+      },
+      "OG003": {
+       "value": "-2.42",
+       "spread": "2.307"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percent Change From Baseline in T-BSA During the Extension Treatment Period",
+   "description": "T-BSA involvement was the proportion of the body surface area with vitiligo. Body surface area assessment was performed by the Palmar Method. Body surface area was estimated to the nearest 0.1%. The approximate size of the participant's entire palmar surface (i.e., the palm plus 5 digits) was considered as 1% BSA, and the approximate size of the participant's thumb was considered as 0.1% BSA. Percentage change = (\\[post-Baseline (BL) value minus BL value\\]/BL value) X 100.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "percentage change",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-43.81",
+       "spread": "27.916"
+      },
+      "OG001": {
+       "value": "-41.50",
+       "spread": "28.747"
+      },
+      "OG002": {
+       "value": "-8.54",
+       "spread": "28.806"
+      },
+      "OG003": {
+       "value": "-20.57",
+       "spread": "23.042"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-44.22",
+       "spread": "29.590"
+      },
+      "OG001": {
+       "value": "-43.12",
+       "spread": "29.489"
+      },
+      "OG002": {
+       "value": "-11.96",
+       "spread": "28.156"
+      },
+      "OG003": {
+       "value": "-22.98",
+       "spread": "26.032"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-47.61",
+       "spread": "29.237"
+      },
+      "OG001": {
+       "value": "-43.09",
+       "spread": "31.608"
+      },
+      "OG002": {
+       "value": "-13.40",
+       "spread": "26.410"
+      },
+      "OG003": {
+       "value": "-25.12",
+       "spread": "25.564"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-43.29",
+       "spread": "40.045"
+      },
+      "OG001": {
+       "value": "-50.59",
+       "spread": "27.166"
+      },
+      "OG002": {
+       "value": "-12.00",
+       "spread": "30.202"
+      },
+      "OG003": {
+       "value": "-25.15",
+       "spread": "26.860"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-44.53",
+       "spread": "30.086"
+      },
+      "OG001": {
+       "value": "-52.51",
+       "spread": "26.921"
+      },
+      "OG002": {
+       "value": "-15.01",
+       "spread": "29.093"
+      },
+      "OG003": {
+       "value": "-27.59",
+       "spread": "28.476"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-50.51",
+       "spread": "33.794"
+      },
+      "OG001": {
+       "value": "-53.98",
+       "spread": "25.682"
+      },
+      "OG002": {
+       "value": "-20.22",
+       "spread": "30.154"
+      },
+      "OG003": {
+       "value": "-29.92",
+       "spread": "27.996"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-48.53",
+       "spread": "29.457"
+      },
+      "OG001": {
+       "value": "-55.56",
+       "spread": "26.401"
+      },
+      "OG002": {
+       "value": "-22.84",
+       "spread": "33.708"
+      },
+      "OG003": {
+       "value": "-31.98",
+       "spread": "30.805"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-40.84",
+       "spread": "40.076"
+      },
+      "OG001": {
+       "value": "-57.40",
+       "spread": "27.898"
+      },
+      "OG002": {
+       "value": "-24.26",
+       "spread": "42.193"
+      },
+      "OG003": {
+       "value": "-32.96",
+       "spread": "29.907"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Percentage of Participants Achieving a Vitiligo Noticeability Scale (VNS) Score of 4 or 5 During the Extension Treatment Period",
+   "description": "The VNS is a patient-reported measure of vitiligo treatment success that is rated on a 5-point scale. The Baseline facial photograph was shown to the participants for reference, and a mirror was provided for the participants to assess the vitiligo on their face. The participant was asked to respond to the following query: Compared with before treatment, how noticeable is the vitiligo now? Responses: (1) more noticeable, (2) as noticeable, (3) slightly less noticeable, (4) a lot less noticeable, and (5) no longer noticeable.",
+   "time_frame": "Baseline; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants with available data were analyzed.",
+   "param_type": "NUMBER",
+   "dispersion": "95% Confidence Interval",
+   "unit": "percentage of participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "57",
+    "OG001": "57",
+    "OG002": "118",
+    "OG003": "222"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "49.1",
+       "lowerLimit": "35.6",
+       "upperLimit": "62.7"
+      },
+      "OG001": {
+       "value": "42.1",
+       "lowerLimit": "29.1",
+       "upperLimit": "55.9"
+      },
+      "OG002": {
+       "value": "11.9",
+       "lowerLimit": "6.6",
+       "upperLimit": "19.1"
+      },
+      "OG003": {
+       "value": "35.3",
+       "lowerLimit": "29.0",
+       "upperLimit": "42.0"
+      }
+     }
+    },
+    {
+     "class": "Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "48.2",
+       "lowerLimit": "34.7",
+       "upperLimit": "62.0"
+      },
+      "OG001": {
+       "value": "34.5",
+       "lowerLimit": "22.2",
+       "upperLimit": "48.6"
+      },
+      "OG002": {
+       "value": "20.4",
+       "lowerLimit": "13.2",
+       "upperLimit": "29.2"
+      },
+      "OG003": {
+       "value": "30.1",
+       "lowerLimit": "24.1",
+       "upperLimit": "36.7"
+      }
+     }
+    },
+    {
+     "class": "Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "46.9",
+       "lowerLimit": "32.5",
+       "upperLimit": "61.7"
+      },
+      "OG001": {
+       "value": "28.8",
+       "lowerLimit": "17.1",
+       "upperLimit": "43.1"
+      },
+      "OG002": {
+       "value": "19.6",
+       "lowerLimit": "12.6",
+       "upperLimit": "28.4"
+      },
+      "OG003": {
+       "value": "27.6",
+       "lowerLimit": "21.7",
+       "upperLimit": "34.2"
+      }
+     }
+    },
+    {
+     "class": "Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "53.5",
+       "lowerLimit": "37.7",
+       "upperLimit": "68.8"
+      },
+      "OG001": {
+       "value": "37.8",
+       "lowerLimit": "23.8",
+       "upperLimit": "53.5"
+      },
+      "OG002": {
+       "value": "23.1",
+       "lowerLimit": "15.6",
+       "upperLimit": "32.2"
+      },
+      "OG003": {
+       "value": "28.2",
+       "lowerLimit": "22.1",
+       "upperLimit": "34.8"
+      }
+     }
+    },
+    {
+     "class": "Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "46.3",
+       "lowerLimit": "30.7",
+       "upperLimit": "62.6"
+      },
+      "OG001": {
+       "value": "46.7",
+       "lowerLimit": "31.7",
+       "upperLimit": "62.1"
+      },
+      "OG002": {
+       "value": "20.6",
+       "lowerLimit": "13.4",
+       "upperLimit": "29.5"
+      },
+      "OG003": {
+       "value": "33.8",
+       "lowerLimit": "27.4",
+       "upperLimit": "40.6"
+      }
+     }
+    },
+    {
+     "class": "Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "38.7",
+       "lowerLimit": "21.8",
+       "upperLimit": "57.8"
+      },
+      "OG001": {
+       "value": "42.2",
+       "lowerLimit": "27.7",
+       "upperLimit": "57.8"
+      },
+      "OG002": {
+       "value": "28.3",
+       "lowerLimit": "19.7",
+       "upperLimit": "38.2"
+      },
+      "OG003": {
+       "value": "32.8",
+       "lowerLimit": "26.3",
+       "upperLimit": "39.9"
+      }
+     }
+    },
+    {
+     "class": "Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "39.1",
+       "lowerLimit": "19.7",
+       "upperLimit": "61.5"
+      },
+      "OG001": {
+       "value": "37.2",
+       "lowerLimit": "23.0",
+       "upperLimit": "53.3"
+      },
+      "OG002": {
+       "value": "28.4",
+       "lowerLimit": "19.6",
+       "upperLimit": "38.6"
+      },
+      "OG003": {
+       "value": "41.1",
+       "lowerLimit": "33.8",
+       "upperLimit": "48.7"
+      }
+     }
+    },
+    {
+     "class": "Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "56.5",
+       "lowerLimit": "34.5",
+       "upperLimit": "76.8"
+      },
+      "OG001": {
+       "value": "50.0",
+       "lowerLimit": "33.4",
+       "upperLimit": "66.6"
+      },
+      "OG002": {
+       "value": "30.1",
+       "lowerLimit": "21.0",
+       "upperLimit": "40.5"
+      },
+      "OG003": {
+       "value": "43.3",
+       "lowerLimit": "35.9",
+       "upperLimit": "50.9"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Week 52 in Dermatology Life Quality Index (DLQI) Total Score During the Extension Treatment Period",
+   "description": "The DLQI is a simple, 10-question validated questionnaire to measure how much the skin problem has affected the participant over the previous 7 days. Participants age ≥16 years answered the questionnaire with: (1) very much; (2) a lot; (3) a little; or (4) not at all. The questionnaire was analyzed under 6 headings: Symptoms and feelings (Questions 1 and 2); Daily activities (Questions 3 and 4); Leisure (Questions 5 and 6); Work and school (Question 7); Personal relations (Questions 8 and 9); and Treatment (Question 10). The scoring of each question is as follows: very much = 3; a lot = 2; a little = 1; not at all = 0; not relevant = 0. For Question 7, \"prevented work or studying\"=3. The total score ranges from 0 to 30; higher scores indicate higher quality of life. Change from Week 52 was calculated as the post-Week 52 value minus the Week 52 value.",
+   "time_frame": "Week 52; up to up to Week 104 of Extension Study (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants who were ≥16 years old with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "54",
+    "OG001": "51",
+    "OG002": "114",
+    "OG003": "200"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "2.87",
+       "spread": "3.059"
+      },
+      "OG001": {
+       "value": "4.10",
+       "spread": "4.784"
+      },
+      "OG002": {
+       "value": "3.69",
+       "spread": "3.428"
+      },
+      "OG003": {
+       "value": "3.53",
+       "spread": "4.150"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.11",
+       "spread": "2.054"
+      },
+      "OG001": {
+       "value": "-0.47",
+       "spread": "1.757"
+      },
+      "OG002": {
+       "value": "-0.05",
+       "spread": "2.138"
+      },
+      "OG003": {
+       "value": "-0.22",
+       "spread": "2.483"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.37",
+       "spread": "2.388"
+      },
+      "OG001": {
+       "value": "0.13",
+       "spread": "2.227"
+      },
+      "OG002": {
+       "value": "0.28",
+       "spread": "2.491"
+      },
+      "OG003": {
+       "value": "0.24",
+       "spread": "2.929"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.35",
+       "spread": "2.578"
+      },
+      "OG001": {
+       "value": "0.18",
+       "spread": "2.630"
+      },
+      "OG002": {
+       "value": "-0.06",
+       "spread": "2.712"
+      },
+      "OG003": {
+       "value": "-0.14",
+       "spread": "2.350"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.08",
+       "spread": "2.508"
+      },
+      "OG001": {
+       "value": "-0.15",
+       "spread": "2.202"
+      },
+      "OG002": {
+       "value": "-0.17",
+       "spread": "2.501"
+      },
+      "OG003": {
+       "value": "0.08",
+       "spread": "2.454"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.03",
+       "spread": "3.006"
+      },
+      "OG001": {
+       "value": "-0.23",
+       "spread": "2.315"
+      },
+      "OG002": {
+       "value": "-0.77",
+       "spread": "2.871"
+      },
+      "OG003": {
+       "value": "-0.13",
+       "spread": "2.809"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.27",
+       "spread": "2.354"
+      },
+      "OG001": {
+       "value": "-0.23",
+       "spread": "1.898"
+      },
+      "OG002": {
+       "value": "-0.89",
+       "spread": "2.383"
+      },
+      "OG003": {
+       "value": "-0.22",
+       "spread": "2.941"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.57",
+       "spread": "2.135"
+      },
+      "OG001": {
+       "value": "-0.40",
+       "spread": "1.538"
+      },
+      "OG002": {
+       "value": "-0.48",
+       "spread": "2.277"
+      },
+      "OG003": {
+       "value": "-0.06",
+       "spread": "2.813"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Change From Week 52 in Children's Dermatology Life Quality Index (CDLQI) Total Score During the Extension Treatment Period",
+   "description": "The CDLQI is the youth/children's version of the DLQI. The DLQI is a simple, 10-question validated questionnaire to measure how much the skin problem has affected the participant over the previous 7 days. Participants age \\<16 years answered the questionnaire with: (1) very much; (2) a lot; (3) a little; or (4) not at all. The questionnaire was analyzed under 6 headings: Symptoms and feelings (Questions 1 and 2); Leisure (Questions 4, 5, and 6); School or holidays (Question 7); Personal relationships (Questions 3 and 8); Sleep (Question 9); and Treatment (Question 10). The scoring of each question is as follows: very much = 3; quite a lot = 2; only a little = 1; not at all = 0; question unanswered = 0. The total score ranges from 0 to 30; higher scores indicate higher quality of life. Change from Week 52 was calculated as the post-Week 52 value minus the Week 52 value.",
+   "time_frame": "Week 52; up to Week 104 of Treatment Extension (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS without non-compliant site. For participants who experienced relapse (\\<F-VASI75) and received open-label rescue treatment, only results before receiving open-label rescue treatment have been included. Only participants who were \\<16 years old with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "scores on a scale",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "3",
+    "OG001": "6",
+    "OG002": "4",
+    "OG003": "22"
+   },
+   "values": [
+    {
+     "class": "Week 52",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "1.67",
+       "spread": "2.887"
+      },
+      "OG001": {
+       "value": "1.00",
+       "spread": "0.632"
+      },
+      "OG002": {
+       "value": "1.25",
+       "spread": "1.893"
+      },
+      "OG003": {
+       "value": "2.32",
+       "spread": "3.872"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 56",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-1.00",
+       "spread": "2.646"
+      },
+      "OG001": {
+       "value": "-0.17",
+       "spread": "0.753"
+      },
+      "OG002": {
+       "value": "0.00",
+       "spread": "0.816"
+      },
+      "OG003": {
+       "value": "0.36",
+       "spread": "1.989"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 60",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "0.00",
+       "spread": "0.000"
+      },
+      "OG001": {
+       "value": "-0.50",
+       "spread": "0.548"
+      },
+      "OG002": {
+       "value": "-0.50",
+       "spread": "0.577"
+      },
+      "OG003": {
+       "value": "-0.41",
+       "spread": "2.108"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 64",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-1.33",
+       "spread": "2.309"
+      },
+      "OG001": {
+       "value": "0.00",
+       "spread": "0.707"
+      },
+      "OG002": {
+       "value": "-1.00",
+       "spread": "1.414"
+      },
+      "OG003": {
+       "value": "-0.36",
+       "spread": "1.399"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 68",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.67",
+       "spread": "1.155"
+      },
+      "OG001": {
+       "value": "0.40",
+       "spread": "1.140"
+      },
+      "OG002": {
+       "value": "0.50",
+       "spread": "0.577"
+      },
+      "OG003": {
+       "value": "-0.23",
+       "spread": "1.541"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 80",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-2.00",
+       "spread": "2.828"
+      },
+      "OG001": {
+       "value": "-0.40",
+       "spread": "0.548"
+      },
+      "OG002": {
+       "value": "-0.75",
+       "spread": "1.708"
+      },
+      "OG003": {
+       "value": "0.15",
+       "spread": "1.814"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 92",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "NA",
+       "spread": "NA",
+       "comment": "The mean and standard deviation cannot be calculated for a single participant."
+      },
+      "OG001": {
+       "value": "0.25",
+       "spread": "1.258"
+      },
+      "OG002": {
+       "value": "-0.25",
+       "spread": "0.957"
+      },
+      "OG003": {
+       "value": "0.70",
+       "spread": "3.614"
+      }
+     }
+    },
+    {
+     "class": "Change from Week 52 at Week 104",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "-0.50",
+       "spread": "0.707"
+      },
+      "OG001": {
+       "value": "-0.67",
+       "spread": "1.155"
+      },
+      "OG002": {
+       "value": "-1.25",
+       "spread": "1.893"
+      },
+      "OG003": {
+       "value": "-0.20",
+       "spread": "4.086"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Number of Participants With Any Treatment-emergent Adverse Event (TEAE)",
+   "description": "A TEAE was defined as any adverse event (AE) reported for the first time or the worsening of a pre-existing event after the first application of study drug in this study. An AE was defined as any untoward medical occurrence associated with the use of a drug in humans, whether or not considered drug-related. An AE could therefore have been any unfavorable and unintended sign (including an abnormal laboratory finding), symptom, or disease (new or exacerbated) temporally associated with the use of study treatment.",
+   "time_frame": "up to approximately Week 108 (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "FAS",
+   "param_type": "COUNT_OF_PARTICIPANTS",
+   "dispersion": null,
+   "unit": "Participants",
+   "groups": {
+    "OG000": "Cohort A: Vehicle Cream BID",
+    "OG001": "Cohort A: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG003": "Cohort B: Vehicle Cream BID to Ruxolitinib 1.5% Cream BID",
+    "OG004": "Cohort B: Ruxolitinib 1.5% Cream BID to Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "58",
+    "OG001": "23",
+    "OG002": "58",
+    "OG003": "118",
+    "OG004": "224"
+   },
+   "values": [
+    {
+     "class": null,
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "21"
+      },
+      "OG001": {
+       "value": "3"
+      },
+      "OG002": {
+       "value": "32"
+      },
+      "OG003": {
+       "value": "59"
+      },
+      "OG004": {
+       "value": "114"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  },
+  {
+   "type": "SECONDARY",
+   "title": "Trough Plasma Concentrations of Ruxolitinib at Week 80 and Week 104",
+   "description": "The steady-state plasma concentration was assessed. Pharmacokinetic blood samples could have been collected at any time prior to study drug application at the site at the Week 80 visit and at any time at the Week 104 (End of Trial) visit. Results from the two parent studies indicated that steady state was reached at or before Week 4, and that, hence, the use of vehicle or ruxolitinib 1.5% in the first 52 weeks of treatment had no impact on the ruxolitinib plasma concentration at the Week 80 and Week 104 (End of Treatment) visits. Thus, the two Cohort B cohorts were combined into a single arm for data analysis in this study.",
+   "time_frame": "Weeks 80 (predose); Week 104 (any time post-dose) (Week 52 was the first visit of this Treatment Extension study.)",
+   "population": "Pharmacokinetic (PK) Evaluable Population: all participants who received at least 1 dose of ruxolitinib cream and provided at least 1 measurable post-dose PK sample/assessment. Only participants with available data were analyzed.",
+   "param_type": "MEAN",
+   "dispersion": "Standard Deviation",
+   "unit": "nanomolar",
+   "groups": {
+    "OG000": "Cohort A: Ruxolitinib 1.5% Cream BID",
+    "OG001": "Cohort B: Ruxolitinib 1.5% Cream BID",
+    "OG002": "Cohorts A and B: Ruxolitinib 1.5% Cream BID"
+   },
+   "denominators": {
+    "OG000": "54",
+    "OG001": "293",
+    "OG002": "347"
+   },
+   "values": [
+    {
+     "class": "12 to <18 years",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "7.28",
+       "spread": "11.7"
+      },
+      "OG001": {
+       "value": "5.56",
+       "spread": "10.5"
+      },
+      "OG002": {
+       "value": "5.85",
+       "spread": "10.6"
+      }
+     }
+    },
+    {
+     "class": "18 to <65 years",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "15.1",
+       "spread": "19.5"
+      },
+      "OG001": {
+       "value": "12.7",
+       "spread": "17.2"
+      },
+      "OG002": {
+       "value": "13.1",
+       "spread": "17.6"
+      }
+     }
+    },
+    {
+     "class": "≥65 years",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "13.0",
+       "spread": "9.44"
+      },
+      "OG001": {
+       "value": "25.7",
+       "spread": "20.9"
+      },
+      "OG002": {
+       "value": "24.3",
+       "spread": "20.2"
+      }
+     }
+    },
+    {
+     "class": "Overall",
+     "category": null,
+     "by_group": {
+      "OG000": {
+       "value": "13.8",
+       "spread": "18.1"
+      },
+      "OG001": {
+       "value": "12.8",
+       "spread": "17.4"
+      },
+      "OG002": {
+       "value": "12.9",
+       "spread": "17.5"
+      }
+     }
+    }
+   ],
+   "analyses": []
+  }
+ ]
+}

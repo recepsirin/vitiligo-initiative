@@ -1,0 +1,66 @@
+# Durability: does repigmentation last when JAK treatment is reduced or stopped?
+
+Outcome 3 of [what success means](../success.md). This page maps the evidence and sets out the first tests. Nothing here is sealed yet.
+
+**The question.** For a patient who has responded to a JAK inhibitor:
+- how likely is the response to last if treatment is **stopped** or the dose **reduced**;
+- how quickly is it lost;
+- who keeps it?
+
+## What exists: one randomized withdrawal study
+
+**TRuE-V long-term extension** ([NCT04530344](https://clinicaltrials.gov/study/NCT04530344?tab=results); results posted 2023-07-19; [extracted](data/nct04530344-results.json)), ruxolitinib 1.5% cream:
+- **Who was randomized.** Patients with near-complete facial repigmentation (≥ F-VASI90) at week 52.
+- **To what.** 1:1 to continue the cream (55) or switch to vehicle (56), for 52 more weeks.
+
+| Outcome, randomized analysis | Stopped (vehicle) | Continued | Comparison |
+|---|---|---|---|
+| Time to relapse, defined as < F-VASI75 | Median not reached (lower 95% limit 238 days) | Median not reached | Hazard ratio 0.42 (95% CI 0.18–0.99), p = 0.04 |
+| Time to losing F-VASI90 | **Median 195 days** (95% CI 113–372) | Median not reached | Hazard ratio 0.32 (0.17–0.61), p < 0.001 |
+
+The registry also posts response by visit for patients still assessed.
+
+| Week 52 → 104, among those assessed | Stopped | Continued |
+|---|---|---|
+| F-VASI90 | 98% → 70% | 97% → 92% |
+| T-VASI50 | 81% → 61% | 72% → 90% |
+
+**What it says.**
+- **The face mostly held.** For near-complete responders to a cream, most facial repigmentation lasted a year without treatment.
+- **The best results eroded.** Near-complete facial response, and body response, wore off within months. Continuing treatment protected both.
+
+**Caveats.**
+- **The by-visit table flatters durability.** It counts only patients still assessed; those who relapsed and took rescue treatment drop out (about 23 of the 57 who stopped were still assessed at week 104). The randomized time-to-event rows are the valid comparison.
+- **Highly selected patients.** These were near-complete responders, the people most likely to keep their response.
+- **Topical only.** We do not know whether stopping an oral drug behaves the same.
+- **Proportions not public.** Kaplan–Meier proportions are in two 2026 papers (Br J Dermatol; J Am Acad Dermatol post hoc analysis of treatment duration), neither open access.
+
+**No oral JAK inhibitor has posted randomized withdrawal data.** Older maintenance trials of other treatments posted no results: tacrolimus (NCT01841008, terminated), NB-UVB and excimer laser (NCT03384342, NCT03384459, status unknown).
+
+## What is coming: two randomized tests of an oral JAK inhibitor
+
+Designs from the registry and the published protocol description ([PMC13280265](https://europepmc.org/article/PMC/PMC13280265)).
+
+| | **Stopping:** Tranquillo LTE ([NCT06163326](https://clinicaltrials.gov/study/NCT06163326)) | **Tapering:** Tranquillo 2, Part Ib ([NCT06072183](https://clinicaltrials.gov/study/NCT06072183)) |
+|---|---|---|
+| Who is randomized | Responders to ritlecitinib 50 mg at week 52 of Tranquillo (≥ F-VASI75 and/or ≥ T-VASI50) | Responders to ritlecitinib 100 mg at week 52 (same definition) |
+| Comparison (1:1, 52 weeks) | Continue 50 mg vs **switch to placebo** | Continue 100 mg vs **step down to 50 mg** |
+| Loss of response | < F-VASI75 **and** < T-VASI50 at the same visit | Responses at weeks 56–104 |
+| Status | Enrolled 394; primary completion 2027-03 (estimated) | Part Ia primary completion 2027-07 (estimated); Part Ib follows |
+| Expected size | Small: Tranquillo's 50 mg arm (401) had 12.5% F-VASI75 and 9% T-VASI50 responders, so about 50–90 responders in total, roughly 25–45 per arm | Larger: Tranquillo 2's 100 mg arm (622) had 21.9% F-VASI75 and 13% T-VASI50 |
+
+Neither has results, so forecasts sealed now are prospective. Povorcitinib's phase 3 trials continue to week 104, but without randomized withdrawal; they will show only whether response keeps building on continued treatment.
+
+## The first tests (to be pre-registered)
+
+1. **Stopping.** In Tranquillo LTE, the share of responders who lose response within 52 weeks on placebo vs on continued 50 mg, and the hazard ratio.
+2. **Tapering.** In Tranquillo 2 Part Ib, response at week 104 on 50 mg vs continued 100 mg among 100 mg responders.
+
+## What the forecast must handle
+
+- **No oral data.** The only randomized withdrawal data are for a cream, so the forecast must carry an explicit, wide uncertainty about transfer from topical to oral.
+- **Different definitions.** TRuE-V randomized near-complete facial responders and counted relapse below F-VASI75. Tranquillo LTE randomizes anyone above F-VASI75 or T-VASI50, and counts loss as falling below both.
+- **Only summaries posted.** From the registry we have hazard ratios and medians, not event counts. The two 2026 papers report more, and need full-text access.
+- **Small arms.** Uncertainty will be wide. Before sealing, check how much each test can actually tell us.
+
+Data: [`data/nct04530344-results.json`](data/nct04530344-results.json), extracted by `python scripts/durability/registry_results.py NCT04530344 docs/durability/data/nct04530344-results.json`.
