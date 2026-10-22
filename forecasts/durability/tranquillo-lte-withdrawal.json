@@ -1,0 +1,43 @@
+{
+  "frozen_at": "2026-10-22T22:15:15.620329+00:00",
+  "label": "Tranquillo LTE (NCT06163326): randomized withdrawal of ritlecitinib 50 mg, loss of response (< F-VASI75 and < T-VASI50) within 52 weeks",
+  "trial": "NCT06163326",
+  "preregistration": "docs/durability-forecast-preregistration.md",
+  "reference": "docs/durability/data/truev-reference.json",
+  "reference_sha256": "099d846749dfefedf3934ded596c40e3601127bb4b21b81727b35a04fedcf0aa",
+  "parameters": {
+    "analog_a_retention": 0.2742062449236565,
+    "analog_b_retention": 0.7344121997124622,
+    "logit_s_w_mean": -0.30988191004694743,
+    "logit_s_w_sd": 1.149867786410609,
+    "log_hr_mean": -1.0555920319121916,
+    "log_hr_sd": 0.5423227021010023
+  },
+  "forecast": {
+    "retention_stopped_s_w": {
+      "q10": 0.1442131028723175,
+      "median": 0.4228938470327811,
+      "q90": 0.760919749092032
+    },
+    "retention_continued_s_c": {
+      "q10": 0.42252571846174786,
+      "median": 0.7497500503455407,
+      "q90": 0.923396773829472
+    },
+    "hazard_ratio_continue_vs_stop": {
+      "q10": 0.173860833590434,
+      "median": 0.3491065401510251,
+      "q90": 0.6937530733849386
+    },
+    "p_most_lose_response_after_stopping": 0.60795
+  },
+  "draws_file": "tranquillo-lte-withdrawal.npz",
+  "draws_sha256": "0980ca487bf89fff7db7f175c2be359ddff3849bbc56d673126644180aa8b0d5",
+  "seed": 20261023,
+  "code": {
+    "commit": "05bc260fe3602404db4800cbecc75496ac029a71"
+  },
+  "public_results_check": "Searched 2026-10-23: ClinicalTrials.gov (NCT06163326 active, not recruiting; no results), Europe PMC (titles and abstracts on ritlecitinib, vitiligo and withdrawal or relapse), and the Tranquillo protocol description (PMC13280265), and the web (Tranquillo LTE withdrawal, relapse, loss of response). No Tranquillo LTE results found; a 2024 'long-term trial' report on ritlecitinib concerns alopecia areata (ALLEGRO-LT).",
+  "disclaimer": "Research forecast; not medical advice.",
+  "sha256": "3ddd4600fab15712814acbe5ecb50936ac4ac9262f35a44f0da4902b57876b75"
+}

@@ -1,6 +1,6 @@
 # Durability: does repigmentation last when JAK treatment is reduced or stopped?
 
-Outcome 3 of [what success means](../success.md). This page maps the evidence and sets out the first tests. Nothing here is sealed yet.
+Outcome 3 of [what success means](../success.md). This page maps the evidence and sets out the first tests.
 
 **The question.** For a patient who has responded to a JAK inhibitor:
 - how likely is the response to last if treatment is **stopped** or the dose **reduced**;
@@ -51,10 +51,21 @@ Designs from the registry and the published protocol description ([PMC13280265](
 
 Neither has results, so forecasts sealed now are prospective. Povorcitinib's phase 3 trials continue to week 104, but without randomized withdrawal; they will show only whether response keeps building on continued treatment.
 
-## The first tests (to be pre-registered)
+## The first tests
 
-1. **Stopping.** In Tranquillo LTE, the share of responders who lose response within 52 weeks on placebo vs on continued 50 mg, and the hazard ratio.
-2. **Tapering.** In Tranquillo 2 Part Ib, response at week 104 on 50 mg vs continued 100 mg among 100 mg responders.
+**1. Stopping: sealed 2026-10-23** ([pre-registration](../durability-forecast-preregistration.md), [record](../../forecasts/durability/tranquillo-lte-withdrawal.json)). In Tranquillo LTE's randomized withdrawal, the forecast for loss of response within 52 weeks is:
+
+| | Median | 80% range |
+|---|---|---|
+| Still responding after stopping | 42% | 14–76% |
+| Still responding on continued 50 mg | 75% | 42–92% |
+| Hazard ratio, continue vs stop | 0.35 | 0.17–0.69 |
+
+- **What the forecast is.** It is fixed from TRuE-V alone: two analogs weighted 2:1, with explicit uncertainty for transfer from topical to oral.
+- **It gives a 61% chance that most responders lose their response within a year of stopping.**
+- **How it will be judged.** The topical evidence counts as transferring if the forecast's log score for the posted hazard ratio beats an uninformed forecast's.
+
+**2. Tapering: waits for Tranquillo 2's Part Ia results.** How much 50 mg keeps compared with 100 mg is best informed by Part Ia's 50 vs 100 mg comparison. That will be public before Part Ib's results, so the forecast is sealed then, still prospectively, rather than guessed now.
 
 ## What the forecast must handle
 

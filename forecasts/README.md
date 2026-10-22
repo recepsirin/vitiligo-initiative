@@ -11,6 +11,7 @@ Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-
 | [`v0.4/`](v0.4/README.md), [`v0.5/`](v0.5/README.md) | Challenger models, sealed for the same 7 targets as v0.2 |
 | [`povorcitinib-phase3/`](povorcitinib-phase3/README.md) | Out-of-sample check of v0.2, v0.4 and v0.5 against povorcitinib's phase 3 F-VASI75 (post-hoc), and sealed T-VASI50 forecasts |
 | [`2026-10-22-new-trials/`](2026-10-22-new-trials/) | v0.2, v0.4, v0.5 for new trials found by the weekly watch: povorcitinib phase 3 in China (2 targets) |
+| [`durability/`](durability/) | Durability forecasts: stopping ritlecitinib in Tranquillo LTE ([plan](../docs/durability-forecast-preregistration.md), [evidence](../docs/durability/README.md)) |
 | [`watch-triage.md`](watch-triage.md) | What was decided about each lead from the weekly watch, and why |
 | [`voi/`](voi/README.md) | Value-of-information engine: pre-registered gate (passed narrowly), how much each pending result can tell, and the pre-registered [ranking of pending evidence](voi/ranking/README.md) |
 
