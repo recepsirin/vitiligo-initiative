@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+from collections.abc import Sequence
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any
@@ -266,6 +267,22 @@ def load_toplines(path: Path) -> list[ArmEndpointRow]:
     carry rounding error of up to half a patient.
     """
     return toplines_from(json.loads(path.read_text())["results"])
+
+
+def overlapping_rows(
+    existing: Sequence[ArmEndpointRow], new: Sequence[ArmEndpointRow]
+) -> list[ArmEndpointRow]:
+    """Rows of ``new`` for an arm-week (same arm, endpoint and week) already in ``existing``.
+
+    Adding such a row would count the same result twice.
+    """
+
+    def key(r: ArmEndpointRow) -> tuple[Any, ...]:
+        return (r.source_id, r.arm_role, r.arm_agent, r.dose_value, r.frequency,
+                r.instrument, r.threshold, r.week)  # fmt: skip
+
+    seen = {key(r) for r in existing}
+    return [r for r in new if key(r) in seen]
 
 
 def toplines_from(entries: list[dict[str, Any]]) -> list[ArmEndpointRow]:

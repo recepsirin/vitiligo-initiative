@@ -26,6 +26,13 @@ The scenario model does not use these rows. Adding them is a model change, so it
 
 Most other new results (povorcitinib body regions, PMC13619760; late ruxolitinib responders, PMC13425443; ruxolitinib body regions, PMC11851260) are only in figures. They are not curated, because reading values off plots is not reliable enough.
 
+## Phase 3 toplines
+
+- **`topline-results.json`:** public phase 3 toplines (Tranquillo, Tranquillo 2, Viti-Up), with sources.
+  - It defines the data of v0.4, v0.5 and the evidence ranking's base model. Their sealed data hashes depend on it, so it is frozen; a test fails if it changes.
+  - Its own description predates v0.4 ("used by the v0.3 production fit only") and is left as sealed.
+- **`topline-pending.json`:** toplines no model reads yet, such as povorcitinib's STOP-V1/V2. A model that fits them needs a new curation file and its own pre-registration.
+
 ## What the new rows show (exploratory)
 
 - **Oral response keeps rising after week 24.** Upadacitinib 11 mg reached F-VASI75 in 19.1% at week 24 (registry). At week 52 it was 24 of 38 still assessed (63.2%). Counting the 9 dropouts as non-responders still gives at least 51%.

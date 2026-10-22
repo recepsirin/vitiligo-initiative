@@ -237,11 +237,14 @@ def seal() -> None:
         )
         for trial in ("NCT06113445", "NCT06113471")
     ]
-    for model, (label, prereg) in MODEL_LABELS.items():
-        fitted = _fit(model, "T-VASI")
-        posterior = fitted["posterior"]
-        if not converged(posterior):
+    # Fit every model before sealing anything, so a failed fit cannot leave a partial set.
+    fits = {model: _fit(model, "T-VASI") for model in MODEL_LABELS}
+    for model, fitted in fits.items():
+        if not converged(fitted["posterior"]):
             raise SystemExit(f"{model} T-VASI fit did not converge; nothing sealed")
+    for model, (label, prereg) in MODEL_LABELS.items():
+        fitted = fits[model]
+        posterior = fitted["posterior"]
         for target in targets:
             summary, p_active, p_control = forecast_target(
                 posterior, target, routes=fitted["routes"]

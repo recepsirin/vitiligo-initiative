@@ -65,13 +65,20 @@ def main() -> None:
             primary,
             replace(primary, instrument="T-VASI", threshold=50, registry_measure=secondary),
         ]
+    # Fit every model before sealing anything, so a failed fit cannot leave a partial set.
+    fits = {
+        model: {instrument: _fit(model, instrument) for instrument in ("F-VASI", "T-VASI")}
+        for model in MODEL_LABELS
+    }
+    for model, fitted in fits.items():
+        for instrument, f in fitted.items():
+            if not converged(f["posterior"]):
+                raise SystemExit(f"{model} {instrument} did not converge; nothing sealed")
     for model, (label, prereg) in MODEL_LABELS.items():
-        fitted = {instrument: _fit(model, instrument) for instrument in ("F-VASI", "T-VASI")}
+        fitted = fits[model]
         for target in targets:
             f = fitted[target.instrument]
             posterior = f["posterior"]
-            if not converged(posterior):
-                raise SystemExit(f"{model} {target.instrument} did not converge; nothing sealed")
             summary, p_active, p_control = forecast_target(posterior, target, routes=f["routes"])
             last_update = studies[target.trial]["protocolSection"]["statusModule"][
                 "lastUpdatePostDateStruct"

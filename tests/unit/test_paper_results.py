@@ -118,3 +118,37 @@ def test_curation_file_is_well_formed() -> None:
     assert all(
         0 <= r.responders <= r.n_analyzed for r in rows if r.responders is not None and r.n_analyzed
     )
+
+
+def test_overlapping_rows_catch_a_result_counted_twice() -> None:
+    def entry(arm_role: str, dose: float | None, week: int) -> dict[str, object]:
+        return {
+            "trial": "NCT06072183", "arm_label": f"{arm_role} {dose}", "arm_role": arm_role,
+            "agent": "ritlecitinib" if dose else None, "dose_value": dose,
+            "dose_unit": "mg" if dose else None, "frequency": "QD" if dose else None,
+            "route": "oral" if dose else None, "instrument": "F-VASI", "threshold": 75,
+            "week": week, "n": 200, "percent": 10.0, "source_url": "u", "public_on": "d",
+            "source": "s", "population": "nri",
+        }  # fmt: skip
+
+    existing = pr.toplines_from([entry("active", 100.0, 52), entry("placebo", None, 52)])
+    new = pr.toplines_from(
+        [entry("active", 50.0, 52), entry("placebo", None, 52), entry("placebo", None, 36)]
+    )
+    overlap = pr.overlapping_rows(existing, new)
+    assert [(r.arm_role, r.week) for r in overlap] == [("placebo", 52)]
+
+
+def test_topline_curation_is_frozen() -> None:
+    """v0.4, v0.5 and the evidence ranking's base model are defined by this file.
+
+    Their sealed data hashes, and the scripts that check them, rely on it staying
+    as it is. New toplines go in a new file under a new pre-registration.
+    """
+    import hashlib
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "curation" / "topline-results.json"
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "8abd1de39294cd82c2748ba1d1f6bc67e3745e854f057491aa03351753e5a85e"
+    )

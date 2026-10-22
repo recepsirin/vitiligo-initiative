@@ -533,7 +533,7 @@ def rank_score() -> None:
     from dataclasses import asdict
 
     from vitiligo.discovery.forecasts import committed_code
-    from vitiligo.reports.paper_results import toplines_from
+    from vitiligo.reports.paper_results import overlapping_rows, toplines_from
 
     code = committed_code()
     ranking = json.loads((OUT / "ranking" / "ranking-2026-10-22.json").read_text())
@@ -561,6 +561,9 @@ def rank_score() -> None:
         q0 = sum(q_draws(b, sc) for sc in questions.values())
         for (item, _instrument), item_entries in sorted(todo.items()):
             new_rows = toplines_from(item_entries)
+            if overlap := overlapping_rows(rows, new_rows):
+                twice = [(r.source_id, r.arm_label, r.instrument, r.week) for r in overlap]
+                raise SystemExit(f"{item}: already in B's data, would count twice: {twice}")
             item_flags = dict.fromkeys({r.source_id for r in new_rows}, item_phase3[item])
             refit = fit(
                 build_dataset(rows + new_rows, instrument, agent_routes=routes,
