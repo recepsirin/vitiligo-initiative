@@ -49,6 +49,7 @@ In v1 every unit abstained. A discovery at test 5 needs e ≥ 82, and the phase 
 | `discovery/policy.py` | Thompson-sampling bandit over claim templates |
 | `discovery/loop.py` | Rounds: hold out a trial → fit without it → propose → test → record → update the policy |
 | `discovery/forecasts.py` | Sealed forecasts for unreported trials, and their scoring when results post (`check-forecasts` runs weekly in CI) |
+| `discovery/watch.py` | Weekly watch: ranks pending results by what they would tell us; lists new Europe PMC papers, ClinicalTrials.gov trials and SEC filings (`watch` runs weekly in CI) |
 | `discovery/voi.py` | Value of information: how much evidence would move an answer, or separate models, before it is seen ([results](../forecasts/voi/README.md)) |
 
 ## Phases

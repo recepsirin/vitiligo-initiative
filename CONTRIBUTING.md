@@ -33,6 +33,8 @@ python scripts/test/build_regression_db.py
 pytest -m confidence
 ```
 
+**CI installs only `[dev]`**, without the `[model]` extra (PyMC, and with it SciPy and ArviZ). A test that imports them passes locally with `[model]` installed and fails in CI. Guard such imports with `pytest.importorskip`, or write the test with NumPy only. To check, run the commands above in a fresh virtual environment with only `pip install -e ".[dev]"`.
+
 Full local release gate (optional): `./scripts/audit/smoke-all.sh`. Tests that need the full corpus (`corpus`, `smoke` markers) are documented in [`tests/README.md`](tests/README.md).
 
 ## Pull request guidelines

@@ -78,9 +78,10 @@ Metrics: coverage of the 80% and 95% predictive intervals (well calibrated ≈ 0
 
 ## Forecasting policy
 
-- Forecasts of unreported trials are sealed (timestamp plus SHA-256) before their results are looked up. The record holds the data fingerprint, priors, diagnostics and the search for already-public results (`--public-results-check`; registry status alone missed public toplines).
+- Forecasts of unreported trials are sealed (timestamp plus SHA-256) before their results are looked up. The record holds the data fingerprint, priors, diagnostics, the search for already-public results (`--public-results-check`; registry status alone missed public toplines) and the git commit of the code. Sealing refuses to run while the model code has uncommitted changes.
 - Model changes are pre-registered and hash-sealed before their first fit; `python scripts/model/verify_preregistrations.py` checks the seals.
-- A weekly job (`vitiligo discover check-forecasts`) scores the forecasts as results post. All forecasts and the model scoreboard are in [`forecasts/`](../forecasts/README.md).
+- A weekly job (`vitiligo discover check-forecasts`) scores the forecasts as results post. Only the 7 targets named in the v0.4/v0.5 pre-registrations decide the default model; forecasts sealed later are scored but do not count. All forecasts and the model scoreboard are in [`forecasts/`](../forecasts/README.md).
+- The same job runs `vitiligo discover watch`: it ranks pending results by how much they would tell us about which model is right, and lists new papers, trials and SEC filings. Each lead is triaged in [`forecasts/watch-triage.md`](../forecasts/watch-triage.md).
 
 ## Results (v0.2, back-tests run 2026-10-14)
 
