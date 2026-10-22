@@ -79,4 +79,4 @@ v1.0.0 is tagged and runs local-first; a public URL is not live yet. The quality
 
 Questions and ideas: [Discussions](https://github.com/recepsirin/vitiligo-initiative/discussions). Bugs: [Issues](https://github.com/recepsirin/vitiligo-initiative/issues). Support: [GitHub Sponsors](https://github.com/sponsors/recepsirin). Licensed [Apache 2.0](LICENSE) ([NOTICE](NOTICE)).
 
-If you use this software in research, cite the repository; a methods preprint is in preparation ([`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md)).
+If you use this software in research, cite the repository. Two preprints are in preparation: the engine ([`docs/methods-preprint-draft.md`](docs/methods-preprint-draft.md)) and the sealed-forecast work ([`docs/forecasting-preprint-draft.md`](docs/forecasting-preprint-draft.md)).
