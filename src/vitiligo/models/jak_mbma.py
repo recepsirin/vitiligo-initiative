@@ -726,6 +726,45 @@ def predict_pair_draws(
     return _phi(base + effect_first), _phi(base + effect_second)
 
 
+def predict_trial_draws(
+    posterior: Posterior,
+    regimens: Sequence[Scenario],
+    *,
+    seed: int = 7,
+) -> tuple[np.ndarray, list[np.ndarray]]:
+    """Joint draws of a *new* trial: its control arm and any number of regimens of one agent.
+
+    As in ``predict_pair_draws`` (and in the same random order, so two regimens
+    give exactly its draws): the arms share the trial baseline, the time course,
+    the agent's effect and the trial effect, including any phase 3 shift; each
+    regimen gets its own new-arm deviation. Returns (control, [regimen, ...]).
+    """
+    if not regimens:
+        raise ValueError("at least one regimen is needed")
+    first = regimens[0]
+    for other in regimens[1:]:
+        if (other.agent, other.week, other.threshold, other.dose_unit, other.phase3) != (
+            first.agent,
+            first.week,
+            first.threshold,
+            first.dose_unit,
+            first.phase3,
+        ):
+            raise ValueError("all regimens need the same agent, dose unit, week, threshold, phase")
+    rng = np.random.default_rng(seed)
+    d = posterior.draws
+    baseline = _new_baseline(posterior, first, rng)
+    h = _h(float(first.week), _scenario_t50(posterior, first, None, rng))
+    base = baseline + d["pi"] * (h - 1.0) - posterior.cutpoint(first.threshold)
+    params = _agent_params(posterior, first, rng)
+    shared = _trial_effect(posterior, first, None, rng)  # one trial: one trial effect
+    arms = [
+        _phi(base + (_regimen_effect(posterior, regimen, params, rng) + shared) * h)
+        for regimen in regimens
+    ]
+    return _phi(base), arms
+
+
 def predict(
     posterior: Posterior,
     scenario: Scenario,

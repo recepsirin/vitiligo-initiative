@@ -7,6 +7,7 @@ Pre-registered in docs/voi-preregistration.md.
     python scripts/model/voi_core.py gate            # G1 and G2 over the 11 items
     python scripts/model/voi_core.py diagnose T-VASI # surprise and Pareto-k per item
     python scripts/model/voi_core.py discriminate    # sealed targets: which would separate models
+    python scripts/model/voi_core.py rank            # pending evidence (docs/voi-ranking-preregistration.md)
 
 Results go to forecasts/voi/.
 """
@@ -370,6 +371,130 @@ def discriminate() -> None:
               f"P(true model >= 75%) {r['p_true_model_gets_75pct']:.2f}  {r['target']}  {r['models']}")  # fmt: skip
 
 
+# Items of docs/voi-ranking-preregistration.md (sealed 2026-10-22), transcribed as
+# (daily dose per regimen, arm size). Drugs B has no data for get a nominal dose of 1:
+# their predictions do not depend on dose, so the arms differ only by arm deviations.
+RANK_ITEMS: list[dict[str, Any]] = [
+    {"item": "1 STOP-V1", "trial": "NCT06113445", "agent": "povorcitinib", "unit": "mg",
+     "frequency": "QD", "week": 52, "phase3": True, "arms": [(30.0, 222)], "control": 222,
+     "public": ["F-VASI"]},
+    {"item": "2 STOP-V2", "trial": "NCT06113471", "agent": "povorcitinib", "unit": "mg",
+     "frequency": "QD", "week": 52, "phase3": True, "arms": [(30.0, 222)], "control": 222,
+     "public": ["F-VASI"]},
+    {"item": "3 povorcitinib China", "trial": "NCT07865312", "agent": "povorcitinib",
+     "unit": "mg", "frequency": "QD", "week": 52, "phase3": True, "arms": [(30.0, 87)],
+     "control": 87, "public": []},
+    {"item": "4 ruxolitinib cream, children (NCT06548360)", "trial": "NCT06548360",
+     "agent": "ruxolitinib", "unit": "%", "frequency": "BID", "week": 24, "phase3": True,
+     "arms": [(1.5, 90)], "control": 90, "public": []},
+    {"item": "5 ruxolitinib cream, children (NCT06804811)", "trial": "NCT06804811",
+     "agent": "ruxolitinib", "unit": "%", "frequency": "BID", "week": 24, "phase3": True,
+     "arms": [(0.75, 83), (1.5, 83)], "control": 84, "public": []},
+    {"item": "6 Tranquillo 2, 50 mg arm", "trial": "NCT06072183", "agent": "ritlecitinib",
+     "unit": "mg", "frequency": "QD", "week": 52, "phase3": True, "arms": [(50.0, 206)],
+     "control": None, "public": []},
+    {"item": "7 zasocitinib", "trial": "NCT07108283", "agent": "zasocitinib", "unit": "mg",
+     "frequency": "QD", "week": 24, "phase3": False, "arms": [(1.0, 40)] * 3, "control": 80,
+     "public": []},
+]  # fmt: skip
+B_DATA_SHA256 = {"F-VASI": "48a62f5f4f62", "T-VASI": "249569d81638"}  # the sealed v0.4 records
+RANK_SIMS = 1000
+
+
+def rank_armweeks(
+    posterior: Posterior, item: dict[str, Any], threshold: int, routes: dict[str, str]
+) -> list[voi.ArmWeek]:
+    """An item's arm-weeks: K_ITEM shared replicates of a new trial, or a trial B has fitted."""
+    from vitiligo.models.jak_mbma import predict_draws, predict_trial_draws
+
+    regimens = [
+        Scenario(agent=item["agent"], dose=dose, dose_unit=item["unit"],
+                 frequency=item["frequency"], week=item["week"], threshold=threshold,
+                 phase3=item["phase3"], route=routes.get(item["agent"], "oral"))
+        for dose, _n in item["arms"]
+    ]  # fmt: skip
+    draws = len(posterior.draws["mu0"])
+    if item["trial"] in posterior.data.trials:
+        # A new arm in a fitted trial: the trial's fitted baseline and effects, a new deviation.
+        assert item["control"] is None and len(regimens) == 1
+        cumulative = np.zeros((K_ITEM, draws, 1))
+        for k in range(K_ITEM):
+            cumulative[k, :, 0] = predict_draws(
+                posterior, regimens[0], trial=item["trial"], seed=7 + k
+            )[0]
+        return [voi.ArmWeek(cumulative=cumulative, n=item["arms"][0][1])]
+    arms = np.zeros((len(regimens), K_ITEM, draws, 1))
+    control = np.zeros((K_ITEM, draws, 1))
+    for k in range(K_ITEM):
+        p_control, p_arms = predict_trial_draws(posterior, regimens, seed=7 + k)
+        control[k, :, 0] = p_control
+        for a, p in enumerate(p_arms):
+            arms[a, k, :, 0] = p
+    out = [voi.ArmWeek(cumulative=arms[a], n=n) for a, (_dose, n) in enumerate(item["arms"])]
+    return [*out, voi.ArmWeek(cumulative=control, n=item["control"])]
+
+
+def rank() -> None:
+    import hashlib
+    from dataclasses import asdict
+
+    from vitiligo.discovery.forecasts import committed_code
+
+    code = committed_code()
+    rows, routes, phase3 = model_inputs_v03(with_toplines=True)
+    results = []
+    diagnostics = {}
+    for instrument in ("F-VASI", "T-VASI"):
+        data = build_dataset(rows, instrument, agent_routes=routes, trial_phase3=phase3)
+        observations = [asdict(o) for o in data.observations]
+        data_sha = hashlib.sha256(json.dumps(observations, sort_keys=True).encode()).hexdigest()
+        if not data_sha.startswith(B_DATA_SHA256[instrument]):
+            raise SystemExit(f"{instrument}: data {data_sha[:12]} is not the sealed v0.4 data")
+        b = fit(data, SETTINGS)
+        print(instrument, b.diagnostics, flush=True)
+        d = b.diagnostics
+        if not (d["max_rhat"] <= 1.01 and d["min_ess_bulk"] >= 400 and d["divergences"] == 0):
+            raise SystemExit(f"{instrument}: B did not converge; nothing ranked")
+        diagnostics[instrument] = {**d, "data_sha256": data_sha}
+        questions = _questions(instrument)
+        q = {name: q_draws(b, sc) for name, sc in questions.items()}
+        q_sum = q["oral"] + q["topical"]
+        for item in RANK_ITEMS:
+            arms = rank_armweeks(b, item, _threshold(instrument), routes)
+            total = voi.expected_variance_reduction(q_sum, arms, sims=RANK_SIMS, seed=1)
+            oral = voi.expected_variance_reduction(q["oral"], arms, sims=RANK_SIMS, seed=1)
+            results.append({
+                "item": item["item"], "trial": item["trial"], "instrument": instrument,
+                "evr_sum": total.evr, "evr_oral": oral.evr, "prior_var_sum": total.prior_var,
+                "mean_ess": total.mean_ess, "min_ess": total.min_ess,
+                "outcome_public": instrument in item["public"],
+            })  # fmt: skip
+            print(json.dumps(results[-1]), flush=True)
+    order = sorted(
+        {r["item"] for r in results},
+        key=lambda name: (
+            -next(
+                r["evr_sum"] for r in results if r["item"] == name and r["instrument"] == "F-VASI"
+            )
+        ),
+    )
+    out = OUT / "ranking"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "ranking-2026-10-22.json").write_text(
+        json.dumps(
+            {
+                "preregistration": "docs/voi-ranking-preregistration.md",
+                "code": code,
+                "base_model": diagnostics,
+                "order_by_f_vasi_evr": order,
+                "items": results,
+            },
+            indent=1,
+        )
+        + "\n"
+    )
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else ""
     if command == "retro":
@@ -382,5 +507,7 @@ if __name__ == "__main__":
         diagnose(sys.argv[2])
     elif command == "discriminate":
         discriminate()
+    elif command == "rank":
+        rank()
     else:
         raise SystemExit(__doc__)

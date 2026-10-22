@@ -439,6 +439,52 @@ def test_pair_draws_share_trial_and_agent_but_not_arm_deviations(agent: str) -> 
         )
 
 
+def _stub_posterior_v03(tau: float) -> Any:
+    """The stub with v0.3's trial-by-treatment effect and a phase 3 shift."""
+    posterior = _stub_posterior(tau)
+    n = posterior.draws["mu0"].shape[0]
+    posterior.draws |= {"sigma_gamma": np.full(n, 0.4), "kappa": np.full((n, 1), -0.8)}
+    return posterior
+
+
+@pytest.mark.parametrize("agent", ["seen", "unseen"])
+def test_trial_draws_extend_pair_draws_to_any_number_of_arms(agent: str) -> None:
+    pytest.importorskip("scipy")  # installed with the optional [model] extra
+    from vitiligo.models.jak_mbma import (
+        Scenario,
+        predict_draws,
+        predict_pair_draws,
+        predict_trial_draws,
+    )
+
+    def sc(dose: float, phase3: bool = True) -> Scenario:
+        return Scenario(agent=agent, dose=dose, dose_unit="mg", frequency=None, week=24,
+                        threshold=50, route="oral", phase3=phase3)  # fmt: skip
+
+    posterior = _stub_posterior_v03(tau=0.3)
+    # Two regimens: exactly the pair draws; the control arm: exactly predict_draws' control.
+    control, (high, low) = predict_trial_draws(posterior, [sc(50.0), sc(10.0)], seed=3)
+    pair_high, pair_low = predict_pair_draws(posterior, sc(50.0), sc(10.0), seed=3)
+    np.testing.assert_array_equal(high, pair_high)
+    np.testing.assert_array_equal(low, pair_low)
+    np.testing.assert_array_equal(control, predict_draws(posterior, sc(50.0), seed=3)[1])
+    # Three regimens, no arm deviations: ordered by dose in every draw.
+    _control, arms = predict_trial_draws(_stub_posterior_v03(0.0), [sc(10.0), sc(30.0), sc(50.0)])
+    assert np.all(arms[0] < arms[1]) and np.all(arms[1] < arms[2])
+    # Same regimen three times: correlated through the shared trial, not identical.
+    _control, arms = predict_trial_draws(posterior, [sc(30.0)] * 3)
+    assert 0.2 < np.corrcoef(arms[0], arms[1])[0, 1] < 0.999
+    # The phase 3 shift (kappa < 0) lowers the drug arm, not the control arm.
+    control_3, (phase_3,) = predict_trial_draws(posterior, [sc(50.0)])
+    control_2, (phase_2,) = predict_trial_draws(posterior, [sc(50.0, phase3=False)])
+    np.testing.assert_array_equal(control_3, control_2)
+    assert phase_3.mean() < phase_2.mean()
+    with pytest.raises(ValueError):
+        predict_trial_draws(posterior, [sc(50.0), sc(10.0, phase3=False)])
+    with pytest.raises(ValueError):
+        predict_trial_draws(posterior, [])
+
+
 def test_loop_tests_regimen_pairs_with_contrast_and_retention(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
