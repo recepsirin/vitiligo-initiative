@@ -1,0 +1,47 @@
+{
+ "source": "https://clinicaltrials.gov/study/NCT04530344?tab=results",
+ "n_stopped": 56,
+ "n_continued": 55,
+ "relapse_below_f_vasi75": {
+  "hr": 0.422,
+  "ci_low": 0.18,
+  "ci_high": 0.99,
+  "se_log_hr": 0.4348927052329597,
+  "events_schoenfeld": {
+   "total": 21.14928771249721,
+   "stopped": 14.872916816102117,
+   "continued": 6.2763708963950915,
+   "share_stopped": 0.2655878002875378,
+   "share_continued": 0.11411583447991075
+  },
+  "median_stopped": "not reached (lower 95% limit 238 days)"
+ },
+ "loss_of_f_vasi90": {
+  "hr": 0.316,
+  "ci_low": 0.165,
+  "ci_high": 0.606,
+  "se_log_hr": 0.33187714472529434,
+  "events_schoenfeld": {
+   "total": 36.316609922384416,
+   "stopped": 27.59620814770852,
+   "continued": 8.720401774675896,
+   "share_stopped": 0.4927894312090807,
+   "share_continued": 0.15855275953956174
+  },
+  "median_stopped_days": {
+   "median": 195.0,
+   "ci_low": 113.0,
+   "ci_high": 372.0
+  },
+  "one_year_retention_stopped_constant_hazard": {
+   "point": 0.2742062449236565,
+   "from_ci_low_median": 0.10722855572120742,
+   "from_ci_high_median": 0.5075090226618661
+  }
+ },
+ "approximations": [
+  "Schoenfeld: var(log HR) ~ 4 / events with 1:1 allocation",
+  "events split by the hazard ratio, assuming similar exposure in both arms",
+  "constant hazard after stopping for retention from a median"
+ ]
+}

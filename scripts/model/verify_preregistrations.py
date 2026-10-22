@@ -20,6 +20,7 @@ SEALS = {
     "docs/model-v0.5-preregistration.md": "forecasts/v0.5-preregistration.sha256",
     "docs/voi-preregistration.md": "forecasts/voi-preregistration.sha256",
     "docs/voi-ranking-preregistration.md": "forecasts/voi-ranking-preregistration.sha256",
+    "docs/durability-forecast-preregistration.md": "forecasts/durability-forecast-preregistration.sha256",
 }
 
 
