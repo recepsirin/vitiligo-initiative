@@ -55,7 +55,11 @@ From published abstracts. These numbers are not curated rows: the papers are not
 1. **Step down to a light maintenance regimen** instead of stopping: twice-weekly topical tacrolimus, or less frequent ruxolitinib cream. Tacrolimus maintenance has one small trial (above). No trial has tested maintenance after JAK-induced repigmentation.
 2. **Treat longer before stopping.** A 2026 post hoc analysis of TRuE-V studies "impact of treatment duration on response durability" (J Am Acad Dermatol, PMID 41985560). Its results are not public in open access.
 3. **Target the memory directly.** Lesional T cells in vitiligo have a resident-memory phenotype, and blocking IL-15 signalling (anti-CD122) reversed established vitiligo in mice and depleted those cells from lesions (Richmond et al., Sci Transl Med 2018, PMID 30021889).
-   - An anti-IL-15 antibody, IBI3013, is in a phase 1 trial that includes patients with active vitiligo ([NCT07554222](https://clinicaltrials.gov/study/NCT07554222); recruiting; primary completion estimated 2027-12).
+   - **In people, a short course has been tried, to induce repigmentation, not to prevent relapse.** In a phase 2a trial, the anti-IL-15 antibody AMG 714 was given as 6 doses over 10 weeks ([NCT04338581](https://clinicaltrials.gov/study/NCT04338581?tab=results), NIAID; 40 vs 19 patients).
+     - It missed its primary endpoint: F-VASI35 at week 24, 15% vs 5%, p = 0.41.
+     - At week 36 the difference was 37.5% vs 10.5% (p = 0.037, secondary), but phototherapy had been added for patients not improving.
+     - Whether IL-15 blockade prevents relapse in people is untested.
+   - **Next:** another anti-IL-15 antibody, IBI3013, is in a phase 1 trial that includes patients with active vitiligo ([NCT07554222](https://clinicaltrials.gov/study/NCT07554222); recruiting; primary completion estimated 2027-12).
    - This is the only strategy aimed at problem 3 itself rather than at suppressing the attack.
 
 ## What is coming: two randomized tests of an oral JAK inhibitor

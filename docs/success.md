@@ -18,7 +18,7 @@ Four outcomes, each measurable. The targets are proposals, to be set with clinic
 
 | Outcome | Measure | Best today | Target (proposed) |
 |---|---|---|---|
-| **1. Stop spread** | No new or growing lesions at 1 year | Rarely reported as an endpoint | Most patients stable at 1 year |
+| **1. Stop spread** | In patients with **active** disease: no new or growing lesions at 1 year | Rarely measured (24 of 320 registered trials; no posted proportion stable). Tranquillo, active and stable disease: about 80% stable on ritlecitinib vs 60% on placebo. No placebo-controlled results in active disease ([`spread/`](spread/README.md)) | Most patients with active disease stable at 1 year |
 | **2. Restore pigment** | Face: F-VASI75. Body: T-VASI50. Hands | **Face:** ruxolitinib cream about 30% at week 24 and 48–53% at week 52; oral JAK inhibitors 12.5–25% at week 48–52 in phase 3. **Body:** 9–21.5% (oral, week 48–52). **Hands:** poor | Most patients reach F-VASI75 and T-VASI50 within a year, with meaningful response on the hands |
 | **3. Last** | Response kept ≥1 year after stopping or tapering | **Cream, near-complete responders who stopped:** most kept F-VASI75 for a year (relapse hazard ratio 0.42 for continuing vs stopping); near-complete response was lost after a median of 195 days. **Oral:** no data yet; a forecast is sealed ([`durability/`](durability/README.md)) | Most patients keep it off continuous treatment |
 | **4. Safe and reachable** | Long-term safety; cost and access | Oral JAK inhibitors carry boxed warnings; creams are costly | Acceptable for years of use, and accessible |
