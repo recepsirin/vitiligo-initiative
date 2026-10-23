@@ -45,6 +45,17 @@ An outside review of the public repository (2026-10-23) asked whether these part
 | 0.2 | A published corpus snapshot (Zenodo), with the fingerprint the sealed forecasts cite, before either preprint | Now | A clean install reproduces a sealed forecast from the snapshot |
 | 0.3 | Extract baseline severity per arm from the registry (six trials post baseline F-VASI, T-VASI or body-surface area) and pre-register whether adding it to the model improves held-out prediction | Now | Adopted only if it beats v0.2 on trials it has not seen, by the rule that governs every model change |
 
+### The review's four priorities
+
+It also proposed a four-step programme. Where each stands:
+
+| | Proposal | Position |
+|---|---|---|
+| **P1** | A mechanism-centred knowledge graph of genes, proteins, pathways, cells, interventions and outcomes | **Partly, in a different shape.** [Mechanism records](mechanisms/README.md) separate association from causal claim and carry source-level provenance, which is what P1 is for. They are files, not a graph, because two hypotheses do not need one. A graph earns its place when enough records share entities that linking them answers something |
+| **P2** | Molecular-data analysis across transcriptomic, single-cell, genetic and spatial datasets | **The live gap, now scoped.** The corpus holds GEO metadata, never the data. The first dataset we need is blocked on undocumented labels (3.6 above); the next step is resolving them, not building a general pipeline |
+| **P3** | An intervention-prioritisation engine ranking hypotheses by causal support, benefit, uncertainty, feasibility and novelty | **Premature.** Causal support is already computed per record, and evidence maturity is already separate from it. Ranking two hypotheses is theatre. The same idea already runs where it has something to rank: the [value-of-information engine](../forecasts/voi/ranking/README.md) ranks pending trial results |
+| **P4** | Close the experimental feedback loop with lab and clinical collaborators | **Blocked on people, not code** (gates A and D). The loop that can run without them already does: sealed forecasts scored as results post |
+
 ## The constraint: people, not code
 
 Most items that would move an outcome now wait for a person:
@@ -85,6 +96,7 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 **3.6: measure the memory, not only the pigment.** The [success definition](success.md) names immune cells resident in the skin as what brings the disease back. No public data yet test this in people who stopped treatment: none of the vitiligo series in our GEO index samples skin after treatment is stopped.
 - **Recorded as a hypothesis**: [`trm-il15-relapse`](mechanisms/README.md) (`vitiligo mechanism show trm-il15-relapse`). Its supporting evidence reaches a perturbation in animals; the human trial of IL-15 blockade only bounds it, because it tested induction rather than relapse. It is not sealed yet: a test whose score can still be tuned is not a test.
+- **The data are not usable as deposited (checked 2026-10-23).** GSE203262's processed files merge each patient's lesional and non-lesional samples into one matrix, and nothing says which barcode suffix is which: not the series metadata, not the samples (they carry no files of their own), not the paper's methods ([PMC9310536](https://europepmc.org/article/PMC/PMC9310536)). Melanocyte markers should separate them, because lesional skin has lost its melanocytes, but the order is **inconsistent across patients**: four patients show more melanocyte signal in the first group, two in the second, and in two of them the difference is only about twofold. The labels have to be resolved first, by asking the authors or by reprocessing the raw data per sample. The file naming inside the deposit also varies between patients, so a reader has to tolerate three conventions.
 - **Derive now.** Build a resident-memory score from matched lesional and non-lesional single-cell data (GSE203262) and mouse vitiligo resident-memory data (GSE169238). Seal the score and the direction of its predicted association with relapse.
 - **Test later.** Two routes. One is a public series deposited after sealing that samples repigmented skin and follows patients. The other is the trial in 3.5: GSE311770 showed that 1 mm punch biopsies, which need no stitches, yield enough RNA for bulk RNA sequencing. A small biopsy at randomization would let the trial test whether the score predicts who relapses after stopping.
 - **Stop rule.** If the score does not predict relapse in its first test, it is dropped and the failure recorded, as with the simulator.
@@ -116,7 +128,7 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 
 | Series | What it holds | Samples | Use here |
 |---|---|---|---|
-| GSE203262 | Single-cell RNA sequencing, matched lesional and non-lesional skin | 12 | 3.6: derive the memory score |
+| GSE203262 | Single-cell RNA sequencing, matched lesional and non-lesional skin, stable disease | 12 | 3.6: derive the memory score — **labels unresolved**, see above |
 | GSE169238 | Mouse melanoma-associated vitiligo: single-cell and TCR sequencing of CD8 T cells from draining lymph node and affected skin | 16 | 3.6: resident-memory reference |
 | GSE311770 | Bulk RNA sequencing of 1 mm biopsies: lesional, perilesional, non-lesional, control (2026; PMID 42220516) | 105 | 3.5: shows 1 mm biopsies work; regional signatures |
 | GSE150954 | Hair-follicle melanocyte precursors from untreated and NB-UVB-treated vitiligo skin | 24 | 2.1: what drives regrowth |
@@ -124,7 +136,7 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 | GSE231794 | Single-cell RNA sequencing of blood immune cells in progressive non-segmental vitiligo | 8 | 1.2: a blood marker of activity, if the definition needs one |
 
 **Two gaps to fix (Now).**
-- **The GEO index is stale.** GEO was last ingested on 2026-05-25, so it misses GSE311770 (public 2026-06-03). Re-run `vitiligo ingest geo`.
+- ~~**The GEO index is stale.**~~ Refreshed 2026-10-23: GSE311770 and two other series are in, and the papers were refreshed with them (+321 PubMed, +177 PMC).
 - **The weekly watch does not cover GEO.** It covers Europe PMC, ClinicalTrials.gov and SEC filings. Adding new vitiligo GEO series is the minimum infrastructure the "test later" rule in 3.6 needs.
 
 ## Gates
@@ -140,7 +152,7 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 
 In order:
 1. **Send the review pack** to 2–3 clinicians or researchers and one patient organization (gate A). Reviewer.
-2. **Refresh GEO and add it to the watch** (gaps above); refresh the registries on a schedule. Now.
+2. **Add GEO to the watch** (the refresh itself is done); refresh the registries on a schedule. Now.
 3. **Seal a baseline beside the next model forecast** (0.1), now that the back-test comparison is done. Now.
 4. **Build and seal the resident-memory score** (3.6), with its pre-registration. Now.
 5. **Build the repigmentation evidence map** (2.1). Now.

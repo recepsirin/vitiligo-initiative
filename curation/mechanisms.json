@@ -72,12 +72,12 @@
    ],
    "test": {
     "question": "In skin that has repigmented, does a resident-memory score measured when treatment stops predict loss of response within 52 weeks?",
-    "data": "A score derived from GSE203262, using GSE169238 to define the resident-memory programs, sealed before any outcome data are seen. Applied either to a public series deposited after sealing that samples skin after treatment stops, or to 1 mm punch biopsies taken at randomization in the stop-or-step-down trial concept (docs/durability/maintenance-trial-concept.md).",
+    "data": "A score derived from GSE203262, using GSE169238 to define the resident-memory programs, sealed before any outcome data are seen. Applied either to a public series deposited after sealing that samples skin after treatment stops, or to 1 mm punch biopsies taken at randomization in the stop-or-step-down trial concept (docs/durability/maintenance-trial-concept.md). GSE203262 is not usable as deposited: its processed files merge each patient's lesional and non-lesional samples into one matrix, and which barcode suffix is which is documented nowhere, so the labels must be resolved first (docs/roadmap.md, item 3.6).",
     "if_correct": "A higher score when treatment stops goes with a shorter time to loss of response: hazard ratio per standard deviation above 1, with the direction fixed before the outcome data are seen.",
     "if_incorrect": "No association, or a hazard ratio per standard deviation at or below 1.",
     "decides": "A hazard ratio above 1 leaves the memory hypothesis standing and sends the recruitment explanation to its own test. No association, with melanocyte density in the same biopsy predicting relapse instead, favours the melanocyte explanation and the hypothesis is dropped."
    },
-   "uncertainty": "The score would be derived from untreated lesional skin and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people.",
+   "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people.",
    "last_reviewed": "2026-10-23",
    "note": "Roadmap item 3.6. Sealed once the score's definition is written, not before: a test whose instrument can still be tuned is not a test."
   },
