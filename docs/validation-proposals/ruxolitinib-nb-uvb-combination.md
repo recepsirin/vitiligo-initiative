@@ -1,7 +1,7 @@
 # Validation Proposal — Topical Ruxolitinib + NB-UVB Sequencing
 
 **Status:** Draft for lab / clinical research partner outreach (May 2026)  
-**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#1 global candidate, score 117)  
+**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#1 global candidate, evidence-maturity score 95)  
 **Disclaimer:** Research hypothesis only — not a treatment recommendation.
 
 ---

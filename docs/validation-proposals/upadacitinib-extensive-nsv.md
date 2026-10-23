@@ -1,7 +1,7 @@
 # Validation Proposal — Oral Upadacitinib in Extensive Non-Segmental Vitiligo
 
 **Status:** Draft for lab / clinical research partner outreach (May 2026)  
-**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#2 global candidate, score 101, PHASE_3)  
+**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#2 global candidate, evidence-maturity score 75, PHASE_3)  
 **Disclaimer:** Research hypothesis only — not a treatment recommendation.
 
 ---
@@ -14,7 +14,7 @@
 
 - Phase 2 RCT published (2024): dose-ranging upadacitinib vs placebo in extensive NSV.
 - **Phase 3 programs active** (EU CTR 2023-506195-27-00; NCT06118411).
-- Engine ranks upadacitinib **strong** across priors, graph, trials, and literature.
+- Engine rates upadacitinib's evidence maturity **strong** across priors, trials and literature.
 
 ## Evidence summary (engine snapshot)
 

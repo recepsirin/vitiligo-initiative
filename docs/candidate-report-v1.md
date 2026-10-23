@@ -1,19 +1,19 @@
 # Therapeutic Candidate Report v1
 
-**Generated:** 2026-10-14T14:03:03.928696+00:00  
+**Generated:** 2026-10-23T20:09:14.783439+00:00  
 **Engine:** v1.0.0  
 **Status:** Research hypothesis ranking — not medical advice, not an endorsement.
 
 ## Methodology
 
-Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-graph edges linking drugs to vitiligo, registered trials whose interventions match the drug stem, and semantic literature retrieval for each intent query. Scores are transparent and reproducible from the local corpus snapshot.
+Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-graph edges linking drugs to vitiligo, registered trials whose interventions match the drug stem, and semantic literature retrieval for each intent query. Scores are transparent and reproducible from the local corpus snapshot. The score ranks evidence maturity, not therapeutic potential.
 
 ### Score rubric
 
 | Component | Max points | Source |
 |-----------|------------|--------|
 | Prior clinical stage | 40 | Open Targets (`EFO_0004208`) |
-| Knowledge graph | 40 | `treats` / `investigates` / trial links |
+| Knowledge graph | 40 | Edges extracted from papers (seeded edges restate priors and trials) |
 | Registered trials | 35 | CT.gov, EU CTR, ICTRP |
 | Literature retrieval | 20 | Semantic search (top-K per intent) |
 
@@ -24,7 +24,7 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 ### #1 RUXOLITINIB
 
 **Evidence strength:** strong  
-**Score:** 117 (prior 40 + graph 22 + trials 35 + literature 20)  
+**Score:** 95 (prior 40 + graph 0 + trials 35 + literature 20)  
 **Clinical stage (prior):** APPROVAL  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase TYK2 inhibitor; Tyrosine-protein kinase JAK2 inhibitor  
 **Open Targets ID:** `CHEMBL1789941`  
@@ -41,15 +41,15 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Literature (intent retrieval):**
 - [pmc:PMC12804599] Laser-assisted drug delivery of topical ruxolitinib for treatment-refractory stable nonsegmental vitiligo: A case analyzed using noninvasive imaging modalities (2026) — Other, score=0.9013
-- [pubmed:41551626] Laser-assisted drug delivery of topical ruxolitinib for treatment-refractory stable nonsegmental vitiligo: A case analyzed using noninvasive imaging modalities. (2026) — Other, score=0.9008
 - [pubmed:35787401] Addition of Narrow-Band UVB Phototherapy to Ruxolitinib Cream in Patients With Vitiligo. (2022) — Other, score=0.9004
 - [pubmed:39011655] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream over 52 weeks. (2025) — Other, score=0.8985
-- [pmc:PMC11851260] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream over 52 weeks (2024) — Other, score=0.8973
+- [pubmed:41211759] Topical ruxolitinib ± oral baricitinib in the treatment of active non-segmental vitiligo: A retrospective analysis. (2025) — Other, score=0.8876
+- [pubmed:41840918] Predictors of Response to Topical Ruxolitinib in Non-segmental Vitiligo: A Narrative Review. (2026) — Review, score=0.8839
 
 ### #2 UPADACITINIB
 
 **Evidence strength:** strong  
-**Score:** 101 (prior 30 + graph 22 + trials 33 + literature 16)  
+**Score:** 75 (prior 30 + graph 0 + trials 33 + literature 12)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor; Tyrosine-protein kinase TYK2 inhibitor  
 **Open Targets ID:** `CHEMBL3622821`  
@@ -67,12 +67,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
 - [pmc:PMC11169949] Once-daily upadacitinib versus placebo in adults with extensive non-segmental vitiligo: a phase 2, multicentre, randomised, double-blind, placebo-controlled, dose-ranging study (2024) — Other, score=0.852
 - [pubmed:39704810] Repigmentation in non-segmental vitiligo using the Janus kinase inhibitor upadacitinib, a retrospective case series. (2024) — Case series, score=0.8502
-- [pubmed:38873632] Once-daily upadacitinib versus placebo in adults with extensive non-segmental vitiligo: a phase 2, multicentre, randomised, double-blind, placebo-controlled, dose-ranging study. (2024) — Other, score=0.8489
 
 ### #3 POVORCITINIB
 
-**Evidence strength:** strong  
-**Score:** 91 (prior 30 + graph 22 + trials 35 + literature 4)  
+**Evidence strength:** moderate  
+**Score:** 69 (prior 30 + graph 0 + trials 35 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Open Targets ID:** `CHEMBL5095079`  
 
@@ -91,8 +90,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 ### #4 RITLECITINIB
 
-**Evidence strength:** strong  
-**Score:** 90 (prior 30 + graph 22 + trials 30 + literature 8)  
+**Evidence strength:** moderate  
+**Score:** 68 (prior 30 + graph 0 + trials 30 + literature 8)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Tyrosine-protein kinase JAK3 inhibitor; TEC family kinase inhibitor  
 **Open Targets ID:** `CHEMBL4085457`  
@@ -113,8 +112,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 ### #5 AFAMELANOTIDE
 
-**Evidence strength:** strong  
-**Score:** 87 (prior 30 + graph 22 + trials 35 + literature 0)  
+**Evidence strength:** moderate  
+**Score:** 65 (prior 30 + graph 0 + trials 35 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Melanocortin receptor 1 agonist  
 **Open Targets ID:** `CHEMBL441738`  
@@ -133,8 +132,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 ### #6 TACROLIMUS ANHYDROUS
 
-**Evidence strength:** strong  
-**Score:** 81 (prior 30 + graph 22 + trials 25 + literature 4)  
+**Evidence strength:** moderate  
+**Score:** 59 (prior 30 + graph 0 + trials 25 + literature 4)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** FK506-binding protein 1A inhibitor  
 **Open Targets ID:** `CHEMBL269732`  
@@ -154,8 +153,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 ### #7 METHOTREXATE
 
-**Evidence strength:** strong  
-**Score:** 77 (prior 30 + graph 22 + trials 25 + literature 0)  
+**Evidence strength:** moderate  
+**Score:** 55 (prior 30 + graph 0 + trials 25 + literature 0)  
 **Clinical stage (prior):** PHASE_3  
 **Mechanisms:** Dihydrofolate reductase inhibitor  
 **Open Targets ID:** `CHEMBL34259`  
@@ -174,8 +173,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 ### #8 FLUOROURACIL
 
-**Evidence strength:** strong  
-**Score:** 77 (prior 25 + graph 20 + trials 24 + literature 8)  
+**Evidence strength:** moderate  
+**Score:** 53 (prior 25 + graph 0 + trials 24 + literature 4)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Thymidylate synthase inhibitor  
 **Open Targets ID:** `CHEMBL185`  
@@ -192,12 +191,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 **Literature (intent retrieval):**
 - [pmc:PMC11928802] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report (2025) — Other, score=0.8785
-- [pubmed:40123791] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ruxolitinib: A case report. (2025) — Case report, score=0.8767
 
 ### #9 BARICITINIB
 
-**Evidence strength:** strong  
-**Score:** 74 (prior 20 + graph 20 + trials 18 + literature 16)  
+**Evidence strength:** moderate  
+**Score:** 50 (prior 20 + graph 0 + trials 18 + literature 12)  
 **Clinical stage (prior):** PHASE_2  
 **Mechanisms:** Tyrosine-protein kinase JAK1 inhibitor; Tyrosine-protein kinase JAK2 inhibitor  
 **Open Targets ID:** `CHEMBL2105759`  
@@ -215,12 +213,11 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic Potential. (2025) — Review, score=0.8531
 - [pubmed:40682379] 308 nm Excimer Laser Combined With JAK Inhibitors for Adult Localized Non-Segmental Vitiligo: A Multicenter Randomized Controlled Trial. (2025) — RCT, score=0.8513
 - [pubmed:39723343] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study. (2024) — Other, score=0.8453
-- [pmc:PMC11668684] Combination Therapy with Baricitinib and Narrowband Ultraviolet B for Active Non-Segmental Vitiligo: A Retrospective Controlled Study (2024) — Other, score=0.8398
 
 ### #10 LATANOPROST
 
-**Evidence strength:** moderate  
-**Score:** 63 (prior 25 + graph 20 + trials 18 + literature 0)  
+**Evidence strength:** weak  
+**Score:** 43 (prior 25 + graph 0 + trials 18 + literature 0)  
 **Clinical stage (prior):** PHASE_2_3  
 **Mechanisms:** Prostanoid FP receptor agonist  
 **Open Targets ID:** `CHEMBL1051`  
@@ -243,16 +240,16 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 | # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 1 | RUXOLITINIB | 113 | 40 | 22 | 35 | 16 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
-| 2 | UPADACITINIB | 101 | 30 | 22 | 33 | 16 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
-| 3 | POVORCITINIB | 91 | 30 | 22 | 35 | 4 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
-| 4 | RITLECITINIB | 90 | 30 | 22 | 30 | 8 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
-| 5 | AFAMELANOTIDE | 87 | 30 | 22 | 35 | 0 | — |
-| 6 | METHOTREXATE | 77 | 30 | 22 | 25 | 0 | — |
-| 7 | TACROLIMUS ANHYDROUS | 77 | 30 | 22 | 25 | 0 | — |
-| 8 | BARICITINIB | 74 | 20 | 20 | 18 | 16 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
-| 9 | FLUOROURACIL | 69 | 25 | 20 | 24 | 0 | — |
-| 10 | LATANOPROST | 63 | 25 | 20 | 18 | 0 | — |
+| 1 | RUXOLITINIB | 87 | 40 | 0 | 35 | 12 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
+| 2 | UPADACITINIB | 75 | 30 | 0 | 33 | 12 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
+| 3 | POVORCITINIB | 69 | 30 | 0 | 35 | 4 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
+| 4 | RITLECITINIB | 68 | 30 | 0 | 30 | 8 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
+| 5 | AFAMELANOTIDE | 65 | 30 | 0 | 35 | 0 | — |
+| 6 | METHOTREXATE | 55 | 30 | 0 | 25 | 0 | — |
+| 7 | TACROLIMUS ANHYDROUS | 55 | 30 | 0 | 25 | 0 | — |
+| 8 | BARICITINIB | 50 | 20 | 0 | 18 | 12 | [pubmed:40996476] JAK Inhibitors for the Treatment of Vitiligo: Current Evidence and Emerging Therapeutic... (2025) |
+| 9 | FLUOROURACIL | 49 | 25 | 0 | 24 | 0 | — |
+| 10 | LATANOPROST | 43 | 25 | 0 | 18 | 0 | — |
 
 ## Intent: Drive repigmentation — non-segmental vitiligo
 
@@ -261,16 +258,16 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 | # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 1 | RUXOLITINIB | 117 | 40 | 22 | 35 | 20 | [pmc:PMC12804599] Laser-assisted drug delivery of topical ruxolitinib for treatment-refractory stable non... (2026) |
-| 2 | RITLECITINIB | 90 | 30 | 22 | 30 | 8 | [pmc:PMC12281511] Successful repigmentation with ritlecitinib and combined home-based phototherapy in an... (2025) |
-| 3 | AFAMELANOTIDE | 87 | 30 | 22 | 35 | 0 | — |
-| 4 | POVORCITINIB | 87 | 30 | 22 | 35 | 0 | — |
-| 5 | UPADACITINIB | 85 | 30 | 22 | 33 | 0 | — |
-| 6 | METHOTREXATE | 77 | 30 | 22 | 25 | 0 | — |
-| 7 | TACROLIMUS ANHYDROUS | 77 | 30 | 22 | 25 | 0 | — |
-| 8 | FLUOROURACIL | 77 | 25 | 20 | 24 | 8 | [pmc:PMC11928802] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ru... (2025) |
-| 9 | LATANOPROST | 63 | 25 | 20 | 18 | 0 | — |
-| 10 | MONOBENZONE | 62 | 40 | 22 | 0 | 0 | — |
+| 1 | RUXOLITINIB | 95 | 40 | 0 | 35 | 20 | [pmc:PMC12804599] Laser-assisted drug delivery of topical ruxolitinib for treatment-refractory stable non... (2026) |
+| 2 | AFAMELANOTIDE | 65 | 30 | 0 | 35 | 0 | — |
+| 3 | POVORCITINIB | 65 | 30 | 0 | 35 | 0 | — |
+| 4 | RITLECITINIB | 64 | 30 | 0 | 30 | 4 | [pmc:PMC12281511] Successful repigmentation with ritlecitinib and combined home-based phototherapy in an... (2025) |
+| 5 | UPADACITINIB | 63 | 30 | 0 | 33 | 0 | — |
+| 6 | METHOTREXATE | 55 | 30 | 0 | 25 | 0 | — |
+| 7 | TACROLIMUS ANHYDROUS | 55 | 30 | 0 | 25 | 0 | — |
+| 8 | FLUOROURACIL | 53 | 25 | 0 | 24 | 4 | [pmc:PMC11928802] Repigmentation of vitiligo with 5-fluorouracil tattooing in combination with topical ru... (2025) |
+| 9 | LATANOPROST | 43 | 25 | 0 | 18 | 0 | — |
+| 10 | BARICITINIB | 42 | 20 | 0 | 18 | 4 | [pubmed:41211759] Topical ruxolitinib ± oral baricitinib in the treatment of active non-segmental vitilig... (2025) |
 
 ## Intent: JAK inhibitor + NB-UVB combination
 
@@ -279,16 +276,16 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 | # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 1 | RUXOLITINIB | 117 | 40 | 22 | 35 | 20 | [pubmed:35787401] Addition of Narrow-Band UVB Phototherapy to Ruxolitinib Cream in Patients With Vitiligo. (2022) |
-| 2 | AFAMELANOTIDE | 87 | 30 | 22 | 35 | 0 | — |
-| 3 | POVORCITINIB | 87 | 30 | 22 | 35 | 0 | — |
-| 4 | UPADACITINIB | 85 | 30 | 22 | 33 | 0 | — |
-| 5 | RITLECITINIB | 82 | 30 | 22 | 30 | 0 | — |
-| 6 | METHOTREXATE | 77 | 30 | 22 | 25 | 0 | — |
-| 7 | TACROLIMUS ANHYDROUS | 77 | 30 | 22 | 25 | 0 | — |
-| 8 | FLUOROURACIL | 69 | 25 | 20 | 24 | 0 | — |
-| 9 | BARICITINIB | 66 | 20 | 20 | 18 | 8 | [pubmed:41211759] Topical ruxolitinib ± oral baricitinib in the treatment of active non-segmental vitilig... (2025) |
-| 10 | LATANOPROST | 63 | 25 | 20 | 18 | 0 | — |
+| 1 | RUXOLITINIB | 95 | 40 | 0 | 35 | 20 | [pubmed:35787401] Addition of Narrow-Band UVB Phototherapy to Ruxolitinib Cream in Patients With Vitiligo. (2022) |
+| 2 | AFAMELANOTIDE | 65 | 30 | 0 | 35 | 0 | — |
+| 3 | POVORCITINIB | 65 | 30 | 0 | 35 | 0 | — |
+| 4 | UPADACITINIB | 63 | 30 | 0 | 33 | 0 | — |
+| 5 | RITLECITINIB | 60 | 30 | 0 | 30 | 0 | — |
+| 6 | METHOTREXATE | 55 | 30 | 0 | 25 | 0 | — |
+| 7 | TACROLIMUS ANHYDROUS | 55 | 30 | 0 | 25 | 0 | — |
+| 8 | FLUOROURACIL | 49 | 25 | 0 | 24 | 0 | — |
+| 9 | BARICITINIB | 46 | 20 | 0 | 18 | 8 | [pubmed:41211759] Topical ruxolitinib ± oral baricitinib in the treatment of active non-segmental vitilig... (2025) |
+| 10 | LATANOPROST | 43 | 25 | 0 | 18 | 0 | — |
 
 ## Intent: Acral / recalcitrant site repigmentation
 
@@ -297,16 +294,16 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 | # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 1 | RUXOLITINIB | 97 | 40 | 22 | 35 | 0 | — |
-| 2 | AFAMELANOTIDE | 87 | 30 | 22 | 35 | 0 | — |
-| 3 | POVORCITINIB | 87 | 30 | 22 | 35 | 0 | — |
-| 4 | UPADACITINIB | 85 | 30 | 22 | 33 | 0 | — |
-| 5 | RITLECITINIB | 82 | 30 | 22 | 30 | 0 | — |
-| 6 | TACROLIMUS ANHYDROUS | 81 | 30 | 22 | 25 | 4 | [pubmed:12399684] Repigmentation of vitiligo with topical tacrolimus. (2002) |
-| 7 | METHOTREXATE | 77 | 30 | 22 | 25 | 0 | — |
-| 8 | FLUOROURACIL | 69 | 25 | 20 | 24 | 0 | — |
-| 9 | LATANOPROST | 63 | 25 | 20 | 18 | 0 | — |
-| 10 | MONOBENZONE | 62 | 40 | 22 | 0 | 0 | — |
+| 1 | RUXOLITINIB | 75 | 40 | 0 | 35 | 0 | — |
+| 2 | AFAMELANOTIDE | 65 | 30 | 0 | 35 | 0 | — |
+| 3 | POVORCITINIB | 65 | 30 | 0 | 35 | 0 | — |
+| 4 | UPADACITINIB | 63 | 30 | 0 | 33 | 0 | — |
+| 5 | RITLECITINIB | 60 | 30 | 0 | 30 | 0 | — |
+| 6 | TACROLIMUS ANHYDROUS | 59 | 30 | 0 | 25 | 4 | [pubmed:12399684] Repigmentation of vitiligo with topical tacrolimus. (2002) |
+| 7 | METHOTREXATE | 55 | 30 | 0 | 25 | 0 | — |
+| 8 | FLUOROURACIL | 49 | 25 | 0 | 24 | 0 | — |
+| 9 | LATANOPROST | 43 | 25 | 0 | 18 | 0 | — |
+| 10 | SIMVASTATIN | 41 | 20 | 0 | 21 | 0 | — |
 
 ## Intent: Facial vitiligo repigmentation
 
@@ -315,21 +312,24 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 
 | # | Candidate | Score | Prior | Graph | Trials | Literature | Top paper for this intent |
 |---:|---|---:|---:|---:|---:|---:|---|
-| 1 | RUXOLITINIB | 105 | 40 | 22 | 35 | 8 | [pmc:PMC11851260] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream... (2024) |
-| 2 | AFAMELANOTIDE | 87 | 30 | 22 | 35 | 0 | — |
-| 3 | POVORCITINIB | 87 | 30 | 22 | 35 | 0 | — |
-| 4 | UPADACITINIB | 85 | 30 | 22 | 33 | 0 | — |
-| 5 | RITLECITINIB | 82 | 30 | 22 | 30 | 0 | — |
-| 6 | METHOTREXATE | 77 | 30 | 22 | 25 | 0 | — |
-| 7 | TACROLIMUS ANHYDROUS | 77 | 30 | 22 | 25 | 0 | — |
-| 8 | FLUOROURACIL | 69 | 25 | 20 | 24 | 0 | — |
-| 9 | LATANOPROST | 63 | 25 | 20 | 18 | 0 | — |
-| 10 | MONOBENZONE | 62 | 40 | 22 | 0 | 0 | — |
+| 1 | RUXOLITINIB | 79 | 40 | 0 | 35 | 4 | [pmc:PMC11851260] Repigmentation by body region in patients with vitiligo treated with ruxolitinib cream... (2024) |
+| 2 | AFAMELANOTIDE | 65 | 30 | 0 | 35 | 0 | — |
+| 3 | POVORCITINIB | 65 | 30 | 0 | 35 | 0 | — |
+| 4 | UPADACITINIB | 63 | 30 | 0 | 33 | 0 | — |
+| 5 | RITLECITINIB | 60 | 30 | 0 | 30 | 0 | — |
+| 6 | METHOTREXATE | 55 | 30 | 0 | 25 | 0 | — |
+| 7 | TACROLIMUS ANHYDROUS | 55 | 30 | 0 | 25 | 0 | — |
+| 8 | FLUOROURACIL | 49 | 25 | 0 | 24 | 0 | — |
+| 9 | LATANOPROST | 43 | 25 | 0 | 18 | 0 | — |
+| 10 | SIMVASTATIN | 41 | 20 | 0 | 21 | 0 | — |
 
 ## Accountability notes
 
 - Deterministic ranking — not a clinical recommendation.
 - Score rubric: prior clinical stage (0-40) + graph edges (0-40) + trials (0-35) + literature (0-20).
+- The score measures evidence maturity: how far and how much a drug has been studied in vitiligo. It is not a ranking of therapeutic potential; a promising but little-studied target scores low.
+- Each source counts once: graph edges seeded from priors and trials are not scored again (only edges extracted from papers count), and a paper held in both PubMed and PMC counts once.
+- Prior stage and top trial phase both reflect clinical development, so they overlap.
 - Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.
 - Re-run after corpus updates: vitiligo report candidates
 

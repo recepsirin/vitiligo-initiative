@@ -29,6 +29,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning foll
 
 ### Fixed
 
+- **Candidate report counted evidence twice.** Every graph edge is seeded from the priors and trials the score already counts, so the graph component scored them again; a paper in both PubMed and PMC counted twice under literature. Only graph edges extracted from papers now count (none yet), and each paper counts once. Totals fell by 20–26 points. The global top 10 kept its order; three of the five per-intent tables reordered below the leaders. The report now states that it measures evidence maturity, not therapeutic potential; report and validation proposals regenerated.
 - **Model comparison counted targets sealed after the pre-registration.** Only the 7 pre-registered targets can now decide the default model; later targets are reported separately.
 - **Security: rate-limit bypass.** The POST limiter trusted the client-controlled `X-Forwarded-For`. Clients are now keyed by the TCP peer; behind proxies set `VITILIGO_TRUSTED_PROXY_HOPS` (Render: `1`). New global Ask/Hypothesize caps: `VITILIGO_LLM_REQUESTS_PER_MINUTE`, `VITILIGO_LLM_DAILY_TOKEN_BUDGET`.
 - **Hypothesize returned no trials** for natural-language intents (matched as one literal phrase). Intents are now tokenized and weighted by rarity and field.

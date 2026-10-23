@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import pytest
 
+from vitiligo.embed.search import SearchHit
+from vitiligo.graph.query import GraphEdgeView
 from vitiligo.reports.candidates import (
     IntentSpec,
     ScoreBreakdown,
     _best_stage,
     _evidence_strength,
+    _graph_points,
+    _literature_for_drug,
+    _literature_points,
     _stage_points,
     _trial_points,
     build_candidate_report,
@@ -17,7 +22,7 @@ from vitiligo.reports.candidates import (
     normalize_stage,
     trial_stage,
 )
-from vitiligo.storage import Trial, TrialSourceKind, init_db
+from vitiligo.storage import Document, SourceKind, Trial, TrialSourceKind, init_db
 
 
 def test_normalize_drug_token_stems_formulations() -> None:
@@ -197,3 +202,45 @@ def test_markdown_shows_full_cards_once_and_intent_tables() -> None:
     assert "| 1 | ALPHA | 97 | 30 | 22 | 35 | 10 | [pubmed:1] A / B trial (2024) |" in md
     assert "| 2 | BETA | 97 | 30 | 22 | 35 | 10 | — |" in md
     assert "- **#1 ALPHA:** Plausible." in md
+
+
+def _edge(edge_id: int, method: str, predicate: str = "treats") -> GraphEdgeView:
+    return GraphEdgeView(
+        id=edge_id,
+        subject_kind="drug",
+        subject_name="ruxolitinib",
+        subject_key="ruxolitinib",
+        predicate=predicate,
+        object_kind="disease",
+        object_name="Vitiligo",
+        object_key="vitiligo",
+        confidence=0.88,
+        extraction_method=method,
+        evidence_count=1,
+    )
+
+
+def test_graph_points_skip_edges_seeded_from_priors_and_trials() -> None:
+    """Seeded edges restate the prior and trial components; scoring them double-counts."""
+    assert _graph_points([_edge(1, "structured"), _edge(2, "structured", "investigates")]) == 0
+    assert _graph_points([_edge(3, "llm")]) == 22
+
+
+def test_graph_points_count_an_edge_once() -> None:
+    assert _graph_points([_edge(3, "llm"), _edge(3, "llm")]) == 22
+
+
+def test_literature_counts_a_pubmed_and_pmc_record_of_one_paper_once() -> None:
+    title = "Repigmentation by body region with ruxolitinib cream"
+    pmc = Document(
+        source=SourceKind.PMC,
+        source_id="PMC11851260",
+        title=title,
+        raw_metadata={"pmid": "39011655"},
+    )
+    pubmed = Document(source=SourceKind.PUBMED, source_id="39011655", title=title)
+    other = Document(source=SourceKind.PMC, source_id="PMC1", title=f"{title} II")
+    hits = [SearchHit(pmc, 0.90), SearchHit(pubmed, 0.89), SearchHit(other, 0.80)]
+    refs = _literature_for_drug("ruxolitinib", hits)
+    assert [(r.source_id, r.rank) for r in refs] == [("PMC11851260", 1), ("PMC1", 3)]
+    assert _literature_points(refs) == 8

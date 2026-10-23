@@ -25,7 +25,7 @@ from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
 from vitiligo.graph.query import GraphEdgeView, get_neighbors, search_entities
 from vitiligo.priors import clinical_stage_rank, list_drug_priors
-from vitiligo.storage import Prior, Trial
+from vitiligo.storage import Document, Prior, SourceKind, Trial
 from vitiligo.trials import TrialFilter, list_trials, retrieve_relevant_trials
 
 # Shipped as package data so non-editable installs (Docker, wheels) find it.
@@ -264,8 +264,17 @@ def _trial_matches_drug(trial: Trial, token: str) -> bool:
 
 
 def _graph_points(edges: list[GraphEdgeView]) -> int:
+    """Score graph edges that add evidence beyond the prior and trial components.
+
+    Structured edges are seeded from the same priors and trials those components
+    already score (``graph.seed``), so only edges extracted from papers count.
+    """
     points = 0
+    seen: set[int] = set()
     for edge in edges:
+        if edge.extraction_method == "structured" or edge.id in seen:
+            continue
+        seen.add(edge.id)
         pred = edge.predicate.lower()
         if pred == "treats":
             points += int(25 * edge.confidence)
@@ -424,13 +433,32 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
     return bundles
 
 
+def _paper_key(document: Document) -> str:
+    """One key per paper: a PMC full text resolves to its PubMed ID when it has one."""
+    source = SourceKind(document.source)
+    if source == SourceKind.PUBMED:
+        return document.source_id
+    pmid = (document.raw_metadata or {}).get("pmid") if source == SourceKind.PMC else None
+    if pmid is not None and str(pmid).isdigit():
+        return str(pmid)
+    return f"{source.value}:{document.source_id}"
+
+
 def _literature_for_drug(token: str, hits: list[SearchHit]) -> list[LiteratureRef]:
-    """Intent-retrieved papers (``hits``, in rank order) that mention ``token``."""
+    """Intent-retrieved papers (``hits``, in rank order) that mention ``token``.
+
+    A paper held as both a PubMed and a PMC record counts once, at its better rank.
+    """
     refs: list[LiteratureRef] = []
+    seen: set[str] = set()
     for rank, hit in enumerate(hits, start=1):
         text = f"{hit.document.title or ''} {hit.document.abstract or ''}".lower()
         if token not in text:
             continue
+        key = _paper_key(hit.document)
+        if key in seen:
+            continue
+        seen.add(key)
         from vitiligo.evidence import classify_document, evidence_level_label
 
         level = classify_document(hit.document)
@@ -561,6 +589,11 @@ def build_candidate_report(
     notes = [
         "Deterministic ranking — not a clinical recommendation.",
         "Score rubric: prior clinical stage (0-40) + graph edges (0-40) + trials (0-35) + literature (0-20).",
+        "The score measures evidence maturity: how far and how much a drug has been studied in vitiligo. "
+        "It is not a ranking of therapeutic potential; a promising but little-studied target scores low.",
+        "Each source counts once: graph edges seeded from priors and trials are not scored again "
+        "(only edges extracted from papers count), and a paper held in both PubMed and PMC counts once.",
+        "Prior stage and top trial phase both reflect clinical development, so they overlap.",
         "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.",
         "Re-run after corpus updates: vitiligo report candidates",
     ]
@@ -597,7 +630,8 @@ _METHODOLOGY = (
     "Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-graph "
     "edges linking drugs to vitiligo, registered trials whose interventions match the drug "
     "stem, and semantic literature retrieval for each intent query. Scores are transparent "
-    "and reproducible from the local corpus snapshot."
+    "and reproducible from the local corpus snapshot. The score ranks evidence maturity, "
+    "not therapeutic potential."
 )
 
 
@@ -642,7 +676,7 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
         "| Component | Max points | Source |",
         "|-----------|------------|--------|",
         "| Prior clinical stage | 40 | Open Targets (`EFO_0004208`) |",
-        "| Knowledge graph | 40 | `treats` / `investigates` / trial links |",
+        "| Knowledge graph | 40 | Edges extracted from papers (seeded edges restate priors and trials) |",
         "| Registered trials | 35 | CT.gov, EU CTR, ICTRP |",
         "| Literature retrieval | 20 | Semantic search (top-K per intent) |",
         "",

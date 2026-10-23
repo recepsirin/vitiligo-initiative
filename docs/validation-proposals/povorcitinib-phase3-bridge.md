@@ -1,7 +1,7 @@
 # Validation Proposal — Povorcitinib Phase 3 Bridge Studies
 
 **Status:** Draft for lab / clinical research partner outreach (May 2026)  
-**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#3 global candidate, score 91, PHASE_3)  
+**Evidence basis:** [`candidate-report-v1.md`](../candidate-report-v1.md) (#3 global candidate, evidence-maturity score 69, PHASE_3)  
 **Disclaimer:** Research hypothesis only — not a treatment recommendation.
 
 ---
@@ -14,7 +14,7 @@
 
 - Povorcitinib in **Phase 3** for vitiligo (Open Targets + EU/US trial registry entries).
 - Field consolidating around IFN-γ / JAK axis; povorcitinib competes with upadacitinib / ritlecitinib — **head-to-head and sequencing gaps remain**.
-- Engine links povorcitinib to vitiligo in graph with strong trial + prior signals.
+- Strong trial and prior signals in the engine (phase 3 registered).
 
 ## Evidence summary (engine snapshot)
 
