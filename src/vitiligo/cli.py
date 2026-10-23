@@ -119,7 +119,13 @@ papers_app = typer.Typer(
     help="Results tables from open-access papers (curated, cell-verified).", no_args_is_help=True
 )
 app.add_typer(papers_app, name="papers")
+mechanism_app = typer.Typer(
+    help="Mechanistic hypotheses: claim, evidence, competing explanation, and the test.",
+    no_args_is_help=True,
+)
+app.add_typer(mechanism_app, name="mechanism")
 PAPER_CURATION = Path("curation/paper-results.json")
+MECHANISM_CURATION = Path("curation/mechanisms.json")
 
 console = Console()
 logger = get_logger(__name__)
@@ -1328,6 +1334,186 @@ def papers_verify_cmd(
     )
     if problems:
         raise typer.Exit(code=1)
+
+
+def _load_mechanisms(path: str) -> list[Any]:
+    from vitiligo.mechanisms import load
+
+    try:
+        return load(Path(path))
+    except FileNotFoundError as exc:
+        console.print(f"[red]No curation file at {path}[/red]")
+        raise typer.Exit(code=2) from exc
+
+
+@mechanism_app.command("list")
+def mechanism_list_cmd(
+    path: str = typer.Option(str(MECHANISM_CURATION), "--file", help="Curation file."),
+) -> None:
+    """List mechanistic hypotheses with what their supporting evidence reaches."""
+    from vitiligo.mechanisms import CAUSAL_LABELS, OUTCOMES
+
+    mechanisms = _load_mechanisms(path)
+    table = Table(title="Mechanistic hypotheses")
+    table.add_column("ID", style="cyan", overflow="fold")
+    table.add_column("Outcome")
+    table.add_column("Status")
+    table.add_column("Supporting evidence reaches")
+    table.add_column("For / against", justify="right")
+    for m in mechanisms:
+        table.add_row(
+            m.id,
+            f"{m.outcome}. {OUTCOMES.get(m.outcome, '?')}",
+            m.status,
+            CAUSAL_LABELS.get(m.causal_support, m.causal_support),
+            f"{len(m.supporting())} / {len(m.against())}",
+        )
+    console.print(table)
+    console.print(
+        "[dim]Supporting evidence reaches: the strongest rung any supporting source "
+        "reaches on the causal ladder. It is computed, not curated.[/dim]"
+    )
+
+
+@mechanism_app.command("show")
+def mechanism_show_cmd(
+    mechanism_id: str = typer.Argument(..., help="e.g. trm-il15-relapse"),
+    path: str = typer.Option(str(MECHANISM_CURATION), "--file", help="Curation file."),
+    json_out: bool = typer.Option(False, "--json", help="Print the record as JSON."),
+) -> None:
+    """Print one hypothesis: the chain, its evidence, the rivals, and the test."""
+    from vitiligo.mechanisms import CAUSAL_LABELS, OUTCOMES, to_dict
+
+    mechanisms = _load_mechanisms(path)
+    found = next((m for m in mechanisms if m.id == mechanism_id), None)
+    if found is None:
+        console.print(f"[red]No hypothesis {mechanism_id!r}[/red] in {path}")
+        raise typer.Exit(code=1)
+    if json_out:
+        console.print_json(json.dumps(to_dict(found), default=str))
+        return
+
+    console.rule(f"[bold]{found.title}[/bold]")
+    console.print(
+        f"[dim]{found.id} · {found.status} · outcome {found.outcome}: "
+        f"{OUTCOMES.get(found.outcome, '?')} · reviewed {found.last_reviewed}[/dim]\n"
+    )
+    chain = Table(show_header=False, box=None, pad_edge=False)
+    chain.add_column("Level", style="cyan", no_wrap=True)
+    chain.add_column("Statement")
+    for label, value in (
+        ("Biological state", found.biological_state),
+        ("Mechanistic hypothesis", found.mechanistic_claim),
+        ("Intervention hypothesis", found.intervention),
+        ("Experimental outcome", found.experimental_outcome),
+        ("Clinical outcome", found.clinical_outcome),
+    ):
+        chain.add_row(label, value)
+    console.print(chain)
+    console.print(
+        f"\n[bold]Context[/bold]: {found.context.subtype} · {found.context.tissue} · "
+        f"{found.context.cell_type} · {found.context.disease_stage}"
+    )
+    console.print(
+        f"[bold]Supporting evidence reaches[/bold]: "
+        f"{CAUSAL_LABELS.get(found.causal_support, found.causal_support)}\n"
+    )
+
+    evidence = Table(title="Evidence")
+    evidence.add_column("Stance")
+    evidence.add_column("Causal level")
+    evidence.add_column("Source", style="cyan")
+    evidence.add_column("What it shows")
+    for e in found.evidence:
+        evidence.add_row(
+            e.stance, CAUSAL_LABELS.get(e.causal_level, e.causal_level), e.ref, e.shows
+        )
+    console.print(evidence)
+
+    console.print("\n[bold]Competing explanations[/bold]")
+    for c in found.competing:
+        console.print(f"- {c.explanation}")
+        console.print(f"  [dim]Told apart by: {c.distinguished_by}[/dim]")
+
+    console.print("\n[bold]Test[/bold]")
+    for label, value in (
+        ("Question", found.test.question),
+        ("Data", found.test.data),
+        ("If correct", found.test.if_correct),
+        ("If incorrect", found.test.if_incorrect),
+        ("Decides", found.test.decides),
+    ):
+        console.print(f"- [cyan]{label}[/cyan]: {value}")
+    console.print(f"\n[bold]Uncertainty[/bold]: {found.uncertainty}")
+    if found.seal:
+        console.print(
+            f"[dim]Sealed {found.seal.get('sealed_at')} · {found.seal.get('sha256')}[/dim]"
+        )
+
+
+@mechanism_app.command("verify")
+def mechanism_verify_cmd(
+    path: str = typer.Option(str(MECHANISM_CURATION), "--file", help="Curation file."),
+    structure_only: bool = typer.Option(
+        False, "--structure-only", help="Skip the corpus checks (no local corpus needed)."
+    ),
+) -> None:
+    """Check the chain, falsifiability, citations, causal levels and seals."""
+    from vitiligo.mechanisms import check_structure, verify
+
+    mechanisms = _load_mechanisms(path)
+    if structure_only:
+        problems = check_structure(mechanisms)
+    else:
+        init_db()
+        problems = verify(mechanisms)
+    for problem in problems:
+        console.print(f"[red]{problem}[/red]")
+    checked = "structure" if structure_only else "structure, citations and seals"
+    console.print(
+        f"{len(mechanisms) - len({p.split(':')[0] for p in problems})} of {len(mechanisms)} "
+        f"hypotheses pass ({checked})."
+    )
+    if problems:
+        raise typer.Exit(code=1)
+
+
+@mechanism_app.command("seal")
+def mechanism_seal_cmd(
+    mechanism_id: str = typer.Argument(..., help="Hypothesis to seal."),
+    path: str = typer.Option(str(MECHANISM_CURATION), "--file", help="Curation file."),
+) -> None:
+    """Freeze a hypothesis's claim, context and test with a SHA-256 (evidence stays open)."""
+    from datetime import UTC, datetime
+
+    from vitiligo.mechanisms import from_dict, seal_hash, verify
+
+    raw = json.loads(Path(path).read_text())
+    record = next((r for r in raw["mechanisms"] if r.get("id") == mechanism_id), None)
+    if record is None:
+        console.print(f"[red]No hypothesis {mechanism_id!r}[/red] in {path}")
+        raise typer.Exit(code=1)
+    if record.get("seal"):
+        console.print(f"[yellow]{mechanism_id} is already sealed[/yellow]; edit the seal by hand.")
+        raise typer.Exit(code=1)
+
+    init_db()
+    mechanism = from_dict(record)
+    problems = verify([mechanism])
+    if problems:
+        for problem in problems:
+            console.print(f"[red]{problem}[/red]")
+        console.print("[red]Not sealed: fix the problems above first.[/red]")
+        raise typer.Exit(code=1)
+
+    sealed_at = datetime.now(UTC).isoformat()
+    record["seal"] = {"sha256": seal_hash(mechanism), "sealed_at": sealed_at}
+    record["status"] = "sealed"
+    Path(path).write_text(json.dumps(raw, indent=1, ensure_ascii=False) + "\n")
+    console.print(f"[green]Sealed[/green] {mechanism_id}: {record['seal']['sha256']}")
+    console.print(
+        "[dim]The seal covers the claim, context and test; evidence may still grow.[/dim]"
+    )
 
 
 def _backtest_summary(path: Path) -> dict[str, Any]:

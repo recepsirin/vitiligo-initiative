@@ -59,6 +59,12 @@ vitiligo report jak-arms --csv exports/jak-arms.csv --json exports/jak-arms.json
 vitiligo papers tables PMC11169949           # print an article's tables while curating
 vitiligo papers verify                       # check every curated number against its printed cell
 
+# Mechanistic hypotheses (docs/mechanisms/README.md)
+vitiligo mechanism list                      # every hypothesis and what its support reaches
+vitiligo mechanism show trm-il15-relapse     # chain, evidence, competing explanations, test
+vitiligo mechanism verify                    # the gate: chain, falsifiability, citations, seals
+vitiligo mechanism seal <id>                 # freeze the claim, context and test (evidence may still grow)
+
 # Scenario model ([model] extra; docs/jak-scenario-model.md)
 vitiligo model backtest --instrument F-VASI --out exports/model/backtest-F-VASI.json
 vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --threshold 75

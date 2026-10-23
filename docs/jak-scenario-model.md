@@ -92,6 +92,8 @@ Metrics: coverage of the 80% and 95% predictive intervals (well calibrated ≈ 0
 | Weeks ≤ 24 → later | F-VASI | 26 | 0.69 | 0.73 | 10.6 pp | 1 divergence |
 | Weeks ≤ 24 → later | T-VASI | 29 | 0.86 | 0.97 | 9.1 pp | yes |
 
+**These back-tests helped choose the model.** v0.1's changes were made to fix v0's back-test failures (see Versions), so the back-tests are held out for each fit but not for the design. Only the sealed forecasts are clean tests. The back-tests have not yet been compared with a simpler baseline ([roadmap](roadmap.md)).
+
 Given a trial's control arm, the model predicts its drug arms well within the studied weeks. Beyond week 24 it over-predicts (TRuE-V week 52: by 20–23 pp on F-VASI, 10–14 pp on T-VASI) and is over-confident. Its phase 3 forecasts were also far too high ([findings](findings.md)).
 
 ## Versions

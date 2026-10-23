@@ -47,7 +47,7 @@ If neither has an answer, the work is infrastructure, and infrastructure should 
 
 ## Current focus: outcome 3, durability
 
-Relapse after stopping is the largest unmet need with the least randomized evidence, and new data on it are arriving. Work in progress: [`durability/`](durability/README.md). The first forecast, of stopping oral ritlecitinib, is sealed.
+Relapse after stopping is the largest unmet need with the least randomized evidence, and new data on it are arriving. Work in progress: [`durability/`](durability/README.md). The first forecast, of stopping oral ritlecitinib, is sealed. The order of work across all four outcomes: [`roadmap.md`](roadmap.md).
 
 **First goal:** a pre-registered answer to this question, confirmed by data that do not yet exist:
 

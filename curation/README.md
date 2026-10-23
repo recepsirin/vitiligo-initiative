@@ -1,4 +1,11 @@
-# Curated results from open-access papers
+# Curated files
+
+Two kinds of curation live here: **results** transcribed from papers, and **mechanistic hypotheses**.
+
+- `paper-results.json`, `topline-results.json`, `topline-pending.json` — numbers, each tied to its printed source. Below.
+- `mechanisms.json` — one falsifiable claim per record, with its evidence on a causal ladder, the strongest competing explanation and the test. Checked by `vitiligo mechanism verify`; described in [`docs/mechanisms/`](../docs/mechanisms/README.md).
+
+## Results from open-access papers
 
 `paper-results.json` holds results that papers report but trial registries do not. Each number cites its printed table cell: PMCID, table, section, row, column and the verbatim cell. Checks:
 

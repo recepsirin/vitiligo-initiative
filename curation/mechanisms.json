@@ -1,0 +1,158 @@
+{
+ "description": "Mechanistic hypotheses: one falsifiable claim each, with the evidence for and against it, the strongest competing explanation, and the test that separates them. Check with `vitiligo mechanism verify`.",
+ "curated": "2026-10-23, by hand from the evidence maps in docs/. Every citation resolves in the local corpus; causal levels describe the cited source, not the strength of the claim. Needs expert review.",
+ "mechanisms": [
+  {
+   "id": "trm-il15-relapse",
+   "title": "IL-15-dependent resident memory T cells bring vitiligo back after treatment stops",
+   "status": "draft",
+   "outcome": 3,
+   "biological_state": "Melanocyte-reactive CD8 T cells with a resident-memory phenotype stay in skin that has repigmented, kept alive by IL-15 signalling from surrounding cells.",
+   "mechanistic_claim": "Survival of those resident memory T cells is necessary for depigmentation to restart: without them, stopping treatment would not bring the disease back in that skin.",
+   "intervention": "Block IL-15 signalling (anti-CD122 or anti-IL-15) in repigmented skin, during or after the treatment that induced the repigmentation.",
+   "experimental_outcome": "Resident memory T cells fall in treated skin, measured as cell density in a biopsy or as a transcriptional score.",
+   "clinical_outcome": "Longer time to loss of response after treatment is stopped, and a larger share of patients still responding at 52 weeks.",
+   "context": {
+    "subtype": "non-segmental",
+    "tissue": "lesional skin that has repigmented",
+    "cell_type": "CD8 tissue-resident memory T cells",
+    "disease_stage": "after a response is achieved, at and after treatment withdrawal"
+   },
+   "upstream": [
+    "IFN-gamma / JAK-STAT signalling",
+    "CXCL9 and CXCL10 recruitment of melanocyte-reactive T cells",
+    "IL-15 presented by keratinocytes"
+   ],
+   "downstream": [
+    "Local re-killing of melanocytes in repigmented skin",
+    "Loss of F-VASI75 and T-VASI50 response",
+    "Return of visible depigmentation"
+   ],
+   "evidence": [
+    {
+     "ref": "pubmed:30021889",
+     "stance": "supports",
+     "causal_level": "perturbation_in_animal",
+     "shows": "In mice with established vitiligo, antibody blockade of IL-15 signalling (anti-CD122) depleted resident memory T cells from lesional skin and reversed disease, with the effect outlasting treatment."
+    },
+    {
+     "ref": "geo:GSE203262",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "Single-cell RNA sequencing of lesional and non-lesional skin from the same vitiligo patients: the source for deriving a resident-memory score, and the basis for saying these cells are present in lesional skin."
+    },
+    {
+     "ref": "geo:GSE169238",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "Single-cell and TCR sequencing of CD8 T cells from vitiligo-affected mouse skin and the draining lymph node: a reference for which transcriptional programs mark the resident-memory state."
+    },
+    {
+     "ref": "trial:NCT04338581",
+     "stance": "bounds",
+     "causal_level": "perturbation_in_human",
+     "shows": "AMG 714, an anti-IL-15 antibody, given as 6 doses over 10 weeks, missed its primary endpoint of F-VASI35 at week 24 (15.0% of 40 vs 5.3% of 19, p = 0.41). It tested whether blocking IL-15 induces repigmentation, not whether it prevents relapse, and phototherapy was added for patients not improving before the week-36 secondary endpoint."
+    },
+    {
+     "ref": "trial:NCT04530344",
+     "stance": "bounds",
+     "causal_level": "perturbation_in_human",
+     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17\u20130.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18\u20130.99). It establishes that response erodes after stopping, without identifying what drives the loss."
+    }
+   ],
+   "competing": [
+    {
+     "explanation": "The resident memory cells mark where inflammation has been, and relapse is actually driven by melanocyte-reactive T cells recruited afresh from the blood once treatment stops.",
+     "distinguished_by": "Whether the resident-memory score in skin at the moment of stopping predicts relapse after adjusting for circulating CXCL9 and CXCL10 and for how long the lesion was active; and whether an intervention that blocks recruitment while sparing resident cells changes relapse."
+    },
+    {
+     "explanation": "Relapse reflects a melanocyte population that never fully recovered, rather than immune memory: the new pigment cells are fewer or more fragile and are lost without any renewed attack.",
+     "distinguished_by": "Melanocyte density and stress markers measured in the same biopsy as the immune score. If melanocyte measures predict relapse and the immune score does not, the memory hypothesis is the wrong explanation."
+    }
+   ],
+   "test": {
+    "question": "In skin that has repigmented, does a resident-memory score measured when treatment stops predict loss of response within 52 weeks?",
+    "data": "A score derived from GSE203262, using GSE169238 to define the resident-memory programs, sealed before any outcome data are seen. Applied either to a public series deposited after sealing that samples skin after treatment stops, or to 1 mm punch biopsies taken at randomization in the stop-or-step-down trial concept (docs/durability/maintenance-trial-concept.md).",
+    "if_correct": "A higher score when treatment stops goes with a shorter time to loss of response: hazard ratio per standard deviation above 1, with the direction fixed before the outcome data are seen.",
+    "if_incorrect": "No association, or a hazard ratio per standard deviation at or below 1.",
+    "decides": "A hazard ratio above 1 leaves the memory hypothesis standing and sends the recruitment explanation to its own test. No association, with melanocyte density in the same biopsy predicting relapse instead, favours the melanocyte explanation and the hypothesis is dropped."
+   },
+   "uncertainty": "The score would be derived from untreated lesional skin and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people.",
+   "last_reviewed": "2026-10-23",
+   "note": "Roadmap item 3.6. Sealed once the score's definition is written, not before: a test whose instrument can still be tuned is not a test."
+  },
+  {
+   "id": "follicular-reservoir-limits-repigmentation",
+   "title": "Where the follicular reservoir is absent, stopping the attack is not enough to repigment",
+   "status": "draft",
+   "outcome": 2,
+   "biological_state": "Melanocyte precursors sit in the hair-follicle bulge and repopulate the epidermis from there; sites differ in how much of this reservoir they have.",
+   "mechanistic_claim": "In lesional skin whose follicular melanocyte-precursor reservoir is absent or unresponsive, suppressing the immune attack is not sufficient for repigmentation: the pigment cells have nowhere to come from.",
+   "intervention": "Add a signal that mobilizes the bulge precursors, or supply melanocytes directly by transplantation, on top of immune suppression, in sites chosen for a poor reservoir.",
+   "experimental_outcome": "Bulge melanocyte precursors proliferate, migrate and differentiate, and pigment appears in the treated area.",
+   "clinical_outcome": "Repigmentation in the sites that respond worst today, measured by T-VASI50 and by response on the hands.",
+   "context": {
+    "subtype": "non-segmental",
+    "tissue": "lesional skin, compared across hair-bearing and glabrous sites",
+    "cell_type": "hair-follicle bulge melanocyte precursors",
+    "disease_stage": "stable disease under treatment"
+   },
+   "upstream": [
+    "Hair-follicle density and cycle stage at the site",
+    "Signals that drive precursor proliferation and migration (WNT, KIT, RHO-GTPase)",
+    "Keratinocyte support in the surrounding epidermis"
+   ],
+   "downstream": [
+    "Perifollicular islands of pigment, or none",
+    "Response on the body and hands lagging behind the face",
+    "Non-responding lesions in patients who respond elsewhere"
+   ],
+   "evidence": [
+    {
+     "ref": "geo:GSE150954",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "Melanocyte and keratinocyte precursors laser-captured from the hair-follicle bulge of untreated and NB-UVB-treated vitiligo skin: the bulge programs controlling proliferation, migration and differentiation differ with treatment. The comparison is uncontrolled and the pathway itself was not perturbed."
+    },
+    {
+     "ref": "geo:GSE256271",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "Paired responding and non-responding lesions from the same NB-UVB-treated patients differ in cellular and molecular pathways, so what limits response varies between lesions within one person."
+    },
+    {
+     "ref": "pubmed:39011655",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "Repigmentation by body region over 52 weeks of ruxolitinib cream: response is reported region by region under one treatment. The corpus holds the title only, and the paper's values are in figures, which curation does not transcribe, so which regions fare worst is not verifiable from this record."
+    },
+    {
+     "ref": "trial:NCT04052425",
+     "stance": "bounds",
+     "causal_level": "perturbation_in_human",
+     "shows": "TRuE-V1: suppressing the immune attack with ruxolitinib cream repigmented the face in a minority of patients by week 24 and more by week 52, so immune suppression alone is enough for some skin. The claim is about the skin where it is not."
+    }
+   ],
+   "competing": [
+    {
+     "explanation": "Regional differences come from how much drug or ultraviolet light reaches the site, and from mechanical trauma, not from the reservoir.",
+     "distinguished_by": "Whether response tracks hair-follicle density after adjusting for treatment intensity and adherence. A hair-bearing and a glabrous lesion treated identically in the same patient separate the two."
+    },
+    {
+     "explanation": "Melanocytes surviving in the epidermis, not follicular precursors, do the repigmenting, and what limits response is their functional state rather than the reservoir.",
+     "distinguished_by": "Whether pigment returns perifollicularly or diffusely, and whether a bulge-precursor score or an epidermal melanocyte-function score predicts it."
+    }
+   ],
+   "test": {
+    "question": "Among lesions treated the same way in the same patient, does a follicular-reservoir score at baseline predict repigmentation?",
+    "data": "A score derived from GSE150954 bulge precursor profiles, with the direction fixed in advance, then tested on a prospective paired-lesion series or on 1 mm biopsies taken before treatment in a trial. GSE256271's responding and non-responding pairs are a first check only, not an independent test: its findings are already published and were read while writing this record.",
+    "if_correct": "In lesions matched for treatment within a patient, a higher reservoir score at baseline goes with more repigmentation, and the association survives adjusting for body site and follicle density.",
+    "if_incorrect": "The score does not predict repigmentation, or site and treatment intensity account for the difference without it.",
+    "decides": "Prediction that survives adjustment for follicle density leaves the reservoir hypothesis standing. Prediction that disappears once treatment intensity and site are accounted for favours the delivery explanation; an epidermal melanocyte score predicting instead favours the surviving-melanocyte explanation."
+   },
+   "uncertainty": "GSE150954 has 24 samples and GSE256271 only 8, both from NB-UVB-treated patients, so a score derived from them may not transfer to JAK-inhibitor treatment. Responding and non-responding lesions also differ in ways the reservoir does not explain, including prior trauma and site. Follicle density is a crude proxy for a working reservoir.",
+   "last_reviewed": "2026-10-23",
+   "note": "Roadmap item 2.1 will map outcome 2's evidence; this record is the mechanistic hypothesis that map should test. Both the score and the map are still to be built."
+  }
+ ]
+}

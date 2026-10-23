@@ -76,11 +76,7 @@ Phases are gated by dependency, not by calendar.
 
 ## Next moves
 
-1. **Outside review.** Send the atlas, scenario model and forecasts to 2–3 vitiligo clinicians or researchers and one patient organization (`./scripts/review/kol-share-pack.sh`).
-2. **Automatic refresh and scoring.** Refresh registries on a schedule and score sealed forecasts as trials report (`vitiligo discover resolve`).
-3. **More data.** Extract results tables from open-access papers and apply for patient-level trial data through a data-sharing platform.
-4. **Simulator: stopped.** A pre-registered trial run beat the scenario model on its search data but failed the locked exam (it under-predicted late response and was over-confident). A new attempt needs a new pre-registration and a prospective exam ([`lab/simulator/`](../lab/simulator/README.md)).
-5. **Methods preprint.** Complete Methods after advisor feedback.
+The order of work, what each step needs, and the gates: [`roadmap.md`](roadmap.md).
 
 ## What we promise
 

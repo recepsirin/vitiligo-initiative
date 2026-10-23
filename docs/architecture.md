@@ -51,6 +51,7 @@ Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `
 | `vitiligo.reasoning` | Ask (RAG with citations) and Hypothesize (four evidence streams) |
 | `vitiligo.reports` | Candidate report (deterministic); JAK atlas (`jak.py`); harmonized arm table (`jak_arms.py`); curated paper results (`paper_results.py`) |
 | `vitiligo.models` | Scenario model (`jak_mbma.py`); needs the `[model]` extra |
+| `vitiligo.mechanisms` | Mechanistic hypothesis records (`curation/mechanisms.json`): the chain, the causal ladder, and the gate (`verify.py`) |
 | `vitiligo.discovery` | e-values and e-LOND (`evidence.py`), ledger, policy, loop, forecasts of unreported trials |
 | `vitiligo.web` | FastAPI app, static UI, rate limiting, LLM budget, proxy headers |
 | `vitiligo.cli` | Typer CLI over all of the above |

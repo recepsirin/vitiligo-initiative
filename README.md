@@ -18,6 +18,7 @@ Research and education software, not medical advice.
 | **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes, plus one harmonized arm × endpoint × week table and results curated from papers ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
+| **Mechanisms** | Falsifiable hypotheses from biology to clinical outcome, each with its evidence on a causal ladder, the strongest rival explanation, and the test that separates them. | `vitiligo mechanism list` · [`docs/mechanisms/`](docs/mechanisms/README.md) |
 
 ## Quick start
 
@@ -48,12 +49,14 @@ vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --thre
 |---|---|
 | [`docs/success.md`](docs/success.md) | **What we are trying to solve:** the outcomes that define success, and the current focus (durability) |
 | [`docs/findings.md`](docs/findings.md) | **Start here:** what the JAK work found, and what we need experts to check |
+| [`docs/mechanisms/README.md`](docs/mechanisms/README.md) | Mechanistic hypotheses: the claim, its evidence, the rival explanation, and the test |
 | [`docs/engine.md`](docs/engine.md) | Setup, every CLI command, adding a source |
 | [`docs/architecture.md`](docs/architecture.md) | Modules, data flow, web API |
 | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) | Scenario model, back-tests, forecasting policy |
 | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) | Discovery loop: guarantees, claim families, phases |
 | [`docs/deploy.md`](docs/deploy.md) | Docker, Render, environment variables |
-| [`docs/strategic-plan.md`](docs/strategic-plan.md) | Mission, phases, what comes next |
+| [`docs/roadmap.md`](docs/roadmap.md) | **What comes next:** the order of work, what each step needs, and the gates |
+| [`docs/strategic-plan.md`](docs/strategic-plan.md) | Mission, phases, non-goals |
 | [`docs/scientific-brief.md`](docs/scientific-brief.md) | Disease biology, treatments, evidence gaps |
 | [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md) | Evidence-scored therapeutic candidates |
 

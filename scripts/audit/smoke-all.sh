@@ -38,6 +38,7 @@ run_cli graph stats
 run_cli search "JAK inhibitor vitiligo" --top-k 3
 run_cli trials search tacrolimus --limit 5
 run_cli graph search ruxolitinib --limit 3
+run_cli mechanism verify   # citations resolve, claims do not outrank their evidence
 
 echo "==> Confidence regression (pytest)"
 if "${ROOT}/.venv/bin/python" "${ROOT}/scripts/test/build_regression_db.py" --output /tmp/vitiligo-regression-audit.db \
