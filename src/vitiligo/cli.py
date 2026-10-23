@@ -11,6 +11,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+import httpx
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -119,6 +120,11 @@ papers_app = typer.Typer(
     help="Results tables from open-access papers (curated, cell-verified).", no_args_is_help=True
 )
 app.add_typer(papers_app, name="papers")
+geo_data_app = typer.Typer(
+    help="GEO supplementary data files: the matrices themselves, not the metadata.",
+    no_args_is_help=True,
+)
+app.add_typer(geo_data_app, name="geo-data")
 mechanism_app = typer.Typer(
     help="Mechanistic hypotheses: claim, evidence, competing explanation, and the test.",
     no_args_is_help=True,
@@ -1334,6 +1340,121 @@ def papers_verify_cmd(
     )
     if problems:
         raise typer.Exit(code=1)
+
+
+def _geo_accessions(accessions: list[str] | None) -> list[str]:
+    """Explicit accessions, or every GEO series in the corpus."""
+    if accessions:
+        return accessions
+    init_db()
+    with session_scope() as session:
+        rows = session.exec(
+            select(Document.source_id)
+            .where(Document.source == SourceKind.GEO)
+            .order_by(Document.source_id)
+        ).all()
+    return [str(r) for r in rows]
+
+
+@geo_data_app.command("list")
+def geo_data_list_cmd(
+    accessions: list[str] | None = typer.Argument(  # noqa: B008 (variadic arguments are lists)
+        None, help="GSE accessions (default: every GEO series in the corpus)."
+    ),
+) -> None:
+    """Show what each series offers for download, without fetching anything."""
+    from vitiligo.sources.geo_files import list_files
+
+    table = Table(title="GEO supplementary files")
+    table.add_column("Series", style="cyan")
+    table.add_column("Files", justify="right")
+    table.add_column("Listed size", justify="right")
+    table.add_column("Largest file")
+    total = 0
+    with httpx.Client(timeout=httpx.Timeout(60.0, connect=15.0), follow_redirects=True) as client:
+        for accession in _geo_accessions(accessions):
+            files = list_files(accession, client)
+            size = sum(f.listed_bytes for f in files)
+            total += size
+            largest = max(files, key=lambda f: f.listed_bytes).name if files else "—"
+            table.add_row(
+                accession,
+                str(len(files)) if files else "0 (on samples)",
+                f"{size / 1e6:.1f} MB",
+                largest[:46],
+            )
+    console.print(table)
+    console.print(f"[dim]Listed total: {total / 1e9:.2f} GB (the listing rounds sizes).[/dim]")
+
+
+@geo_data_app.command("fetch")
+def geo_data_fetch_cmd(
+    accessions: list[str] | None = typer.Argument(  # noqa: B008 (variadic arguments are lists)
+        None, help="GSE accessions (default: every GEO series in the corpus)."
+    ),
+    cache: str = typer.Option("data/geo", "--cache", help="Where files are stored."),
+    max_mb: float | None = typer.Option(
+        None, "--max-mb", help="Skip any single file larger than this."
+    ),
+) -> None:
+    """Download series supplementary files, recording URL, size and SHA-256 for each."""
+    from vitiligo.sources.geo_files import cache_summary, fetch_series
+
+    cache_dir = Path(cache)
+    downloaded = cached = skipped = 0
+    new_bytes = 0
+    with httpx.Client(timeout=httpx.Timeout(300.0, connect=15.0), follow_redirects=True) as client:
+        for remote, result, note in fetch_series(
+            _geo_accessions(accessions),
+            cache_dir,
+            client=client,
+            max_bytes=int(max_mb * 1e6) if max_mb else None,
+        ):
+            if note == "downloaded" and result is not None:
+                downloaded += 1
+                new_bytes += result.bytes
+                console.print(
+                    f"[green]↓[/green] {remote.accession}/{remote.name} ({result.megabytes:.1f} MB)"
+                )
+            elif note == "cached":
+                cached += 1
+            else:
+                skipped += 1
+                console.print(f"[yellow]-[/yellow] {remote.accession}/{remote.name}: {note}")
+
+    summary = cache_summary(cache_dir)
+    console.print(
+        f"\n[bold]{downloaded}[/bold] downloaded ({new_bytes / 1e9:.2f} GB), "
+        f"{cached} already cached, {skipped} skipped."
+    )
+    console.print(
+        f"Cache: {summary['files']} files from {summary['series']} series, "
+        f"{summary['bytes'] / 1e9:.2f} GB in {cache_dir}/"
+    )
+
+
+@geo_data_app.command("status")
+def geo_data_status_cmd(
+    cache: str = typer.Option("data/geo", "--cache", help="Where files are stored."),
+) -> None:
+    """What the local cache holds."""
+    from vitiligo.sources.geo_files import cache_summary
+
+    summary = cache_summary(Path(cache))
+    if not summary["files"]:
+        console.print(f"[yellow]Nothing cached in {cache}/[/yellow] — run: vitiligo geo-data fetch")
+        return
+    table = Table(title=f"GEO data cache ({cache}/)")
+    table.add_column("Series", style="cyan")
+    table.add_column("Files", justify="right")
+    table.add_column("Size", justify="right")
+    for accession, entry in summary["by_series"].items():
+        table.add_row(accession, str(entry["files"]), f"{entry['bytes'] / 1e6:.1f} MB")
+    console.print(table)
+    console.print(
+        f"[dim]{summary['files']} files, {summary['bytes'] / 1e9:.2f} GB. "
+        f"Provenance in {cache}/manifest.json[/dim]"
+    )
 
 
 def _load_mechanisms(path: str) -> list[Any]:
