@@ -31,7 +31,7 @@ An outside review of the public repository (2026-10-23) asked whether these part
 | The candidate score double-counts sources | **True, in two ways.** Every graph edge is seeded from the same priors and trials the score already counts, so the graph component (up to 40 points) counted them again. A paper held in both PubMed and PMC also counted twice under literature. The global top 10 kept its order; totals fell by 20–26 points, and three of the five per-intent tables reordered below the leaders | Fixed: only edges extracted from papers count (none yet, so the graph scores 0 for every drug), and each paper counts once. [Report](candidate-report-v1.md) regenerated |
 | The score reads as therapeutic potential | It measures **evidence maturity**: an approved drug ranks first because it is well studied. A promising, little-studied target scores low by construction | Stated in the report. Candidates aimed at the gaps ([`success.md`](success.md), contribution 2) will come from hypothesis records (3.6), not from this score |
 | Model choice leaked into the held-out tests | **True for the back-tests:** v0.1 was changed to fix v0's back-test failures. The sealed forecasts are clean | Disclosed in the [model doc](jak-scenario-model.md) |
-| No comparison with simpler models | **True.** Coverage and error are reported, but not against a baseline | 0.1 below |
+| No comparison with simpler models | **It was true.** Now done for the back-tests: the model clearly beats both baselines on the face, and is slightly worse than the crudest one on the body ([model doc](jak-scenario-model.md#compared-with-simple-baselines)) | Post hoc. The prospective half is 0.1 below |
 | The graph cannot tell mechanism from association | **True, and starker than suggested:** it holds no mechanistic claims at all, only structured links from priors and trials | Built instead: [mechanism records](mechanisms/README.md), where every claim carries its evidence on a causal ladder and what the support reaches is computed, not curated |
 | Clean reproduction from a recorded corpus | Each sealed forecast records a data fingerprint; the corpus itself has no published snapshot | 0.2 below |
 
@@ -41,8 +41,9 @@ An outside review of the public repository (2026-10-23) asked whether these part
 
 | # | Deliverable | Needs | How we will know |
 |---|---|---|---|
-| 0.1 | A simple baseline for the scenario model: this trial's control arm plus the pooled effect of the drug's route at that week. Compare leave-one-trial-out, labelled post hoc, and seal the baseline beside every future forecast | Now | If v0.2 does not beat it prospectively, the simpler model becomes the default |
+| 0.1 | Seal a baseline forecast beside every model forecast, and score both as results post. The back-test comparison is [done](jak-scenario-model.md#compared-with-simple-baselines) and post hoc; this is the clean test | Now | If v0.2 does not beat the baseline prospectively, the simpler model becomes the default. The body (T-VASI) is where it is most at risk |
 | 0.2 | A published corpus snapshot (Zenodo), with the fingerprint the sealed forecasts cite, before either preprint | Now | A clean install reproduces a sealed forecast from the snapshot |
+| 0.3 | Extract baseline severity per arm from the registry (six trials post baseline F-VASI, T-VASI or body-surface area) and pre-register whether adding it to the model improves held-out prediction | Now | Adopted only if it beats v0.2 on trials it has not seen, by the rule that governs every model change |
 
 ## The constraint: people, not code
 
@@ -140,7 +141,7 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 In order:
 1. **Send the review pack** to 2–3 clinicians or researchers and one patient organization (gate A). Reviewer.
 2. **Refresh GEO and add it to the watch** (gaps above); refresh the registries on a schedule. Now.
-3. **Compare the scenario model with a simple baseline** (0.1). Now.
+3. **Seal a baseline beside the next model forecast** (0.1), now that the back-test comparison is done. Now.
 4. **Build and seal the resident-memory score** (3.6), with its pre-registration. Now.
 5. **Build the repigmentation evidence map** (2.1). Now.
 6. **Look for Tranquillo's stabilization definition**, and seal 1.1 if it is public. Now.

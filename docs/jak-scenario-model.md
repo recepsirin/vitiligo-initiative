@@ -92,9 +92,33 @@ Metrics: coverage of the 80% and 95% predictive intervals (well calibrated ≈ 0
 | Weeks ≤ 24 → later | F-VASI | 26 | 0.69 | 0.73 | 10.6 pp | 1 divergence |
 | Weeks ≤ 24 → later | T-VASI | 29 | 0.86 | 0.97 | 9.1 pp | yes |
 
-**These back-tests helped choose the model.** v0.1's changes were made to fix v0's back-test failures (see Versions), so the back-tests are held out for each fit but not for the design. Only the sealed forecasts are clean tests. The back-tests have not yet been compared with a simpler baseline ([roadmap](roadmap.md)).
+**These back-tests helped choose the model.** v0.1's changes were made to fix v0's back-test failures (see Versions), so the back-tests are held out for each fit but not for the design. Only the sealed forecasts are clean tests.
+
+**Calibration runs in opposite directions on either side of week 24.** Within the studied weeks the intervals are wider than nominal (0.93 and 0.95 of points inside an 80% interval), so the model is conservative there. Extrapolating past week 24, F-VASI coverage falls to 0.69, below nominal, while T-VASI stays near it at 0.86.
 
 Given a trial's control arm, the model predicts its drug arms well within the studied weeks. Beyond week 24 it over-predicts (TRuE-V week 52: by 20–23 pp on F-VASI, 10–14 pp on T-VASI) and is over-confident. Its phase 3 forecasts were also far too high ([findings](findings.md)).
+
+## Compared with simple baselines
+
+A model-based meta-analysis is worth its complexity only if it beats the obvious thing. Two baselines are scored on exactly the points the leave-one-trial-out back-test scored, so only the method differs (`python scripts/model/baseline_compare.py`, [`models/baseline.py`](../src/vitiligo/models/baseline.py)):
+
+- **Pooled rate.** The rates other trials reported for the same route, threshold and week. It knows nothing about this trial.
+- **Placebo-anchored.** This trial's own control arm, plus the pooled log-odds difference between active and control arms in other trials.
+
+| Instrument | Points | Model | Pooled rate | Placebo-anchored |
+|---|---:|---:|---:|---:|
+| F-VASI | 77 of 107 | **4.3 pp** (0.99) | 15.6 pp (0.73) | 16.9 pp (0.39) |
+| T-VASI | 84 of 139 | 4.0 pp (0.93) | **3.6 pp** (0.94) | 4.8 pp (0.79) |
+
+Mean absolute error, with 80% interval coverage in brackets.
+
+- **On the face, the model earns its complexity.** It beats the placebo-anchored baseline by 12.7 pp (95% CI 2.9–14.4) and the pooled rate by 11.4 pp (−0.4 to 13.2).
+- **On the body, it does not.** Pooling other trials' T-VASI rates was slightly better, by 0.4 pp (0.2–2.7). T-VASI rates are low and alike across trials, so their average is hard to beat.
+- **Read those intervals as rough.** Points within a trial share its patients, so the bootstrap resamples trials; the common subsets hold only 5 and 4 trials. This is a direction, not a significance test.
+- **The baselines are not replacements.** They predict only where other trials report the same week, abstaining on 30 of 107 F-VASI and 55 of 139 T-VASI points, and they cannot forecast an unreported trial at a new dose or week, which is what the model is for.
+- **A time-course baseline was barely estimable.** A slope in log(week) needs control-anchored arms at more than one week. Outside the two oral trials, every control arm in this corpus reports week 24 only, so a slope existed for 16 F-VASI and 9 T-VASI points. The corpus carries almost no control-anchored information about how the effect grows with time — the same gap behind the failed week-24-to-later back-test above.
+
+**Post hoc.** These results were public before the comparison, they shaped the model's development, and the baselines were written after reading the model's back-test. The prospective version is to seal a baseline beside every model forecast and score both as results post ([roadmap](roadmap.md) 0.1).
 
 ## Versions
 
@@ -114,5 +138,5 @@ The v0.1 and v0.2 changes were made after seeing back-test results, so those bac
 - **Phase 2 to phase 3 gap.** Oral drugs responded far less in phase 3 than in phase 2 ([findings](findings.md)), and v0.2 treats a new trial as typical of the mostly phase 2 trials it was fitted on. v0.4 and v0.5 address this and are being tested.
 - **Time course by route only.** T50 is shared within a route and also drives the placebo drift. **Oral agents have no controlled data beyond week 24**, so oral week-52 predictions (e.g. Tranquillo) extrapolate the oral curve; the time-extrapolation back-test can only check this for topical ruxolitinib.
 - **Placebo beyond week 24.** Placebo/vehicle data end at week 24, so placebo response later is extrapolated through `π` and `h(w)`.
-- **Population differences.** Disease activity, prior therapy, body sites and inclusion criteria are not modelled; they enter only as trial and arm random effects.
+- **Population differences.** Disease activity, prior therapy, body sites and inclusion criteria are not modelled; they enter only as trial and arm random effects. The registry posts baseline severity per arm for six of the trials with results (baseline F-VASI, T-VASI or affected body-surface area; NCT03468855 also posts disease duration), so for those trials this is a gap in the model rather than in the data ([roadmap](roadmap.md) 0.3).
 - **Dose comparability.** Doses are comparable only within an agent; across agents, the class pooling is an assumption.
