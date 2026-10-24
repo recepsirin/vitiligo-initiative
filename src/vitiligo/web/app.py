@@ -1,11 +1,16 @@
-"""FastAPI application exposing search, ask, and hypothesize endpoints.
+"""FastAPI application serving the corpus as evidence, with no model in the loop.
 
 This is intentionally small: JSON endpoints + one static HTML page.
 The HTML page (`static/index.html`) is the Evidence Engine UI.
 
+Every endpoint here answers from stored records. Nothing is generated: the
+served page states what a trial reported and where to read it, so a reader
+can check any number against its registry entry. ``vitiligo ask`` and
+``vitiligo hypothesize`` keep the generative side on the command line, where
+the caller supplies the key and reads the output as research.
+
 For public deployment (Docker / Render / VPS), configure:
 - ``VITILIGO_DB_PATH`` pointing at a persistent volume with the corpus DB
-- ``ANTHROPIC_API_KEY`` for Ask / Hypothesize
 - ``VITILIGO_RATE_LIMIT_POST_PER_MINUTE`` (default 30) for basic abuse protection
 """
 
@@ -15,7 +20,6 @@ import asyncio
 import logging
 import threading
 from contextlib import asynccontextmanager
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -31,19 +35,12 @@ from vitiligo.corpus_stats import get_corpus_stats
 from vitiligo.embed import semantic_search
 from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import export_graph_snapshot, get_neighbors, search_entities, summarize_graph
-from vitiligo.reasoning import (
-    CorpusUnavailable,
-    LLMUnavailable,
-    ask_with_citations,
-    generate_hypotheses,
-)
-from vitiligo.reasoning.hypothesize import report_to_dict as hypothesize_report_to_dict
 from vitiligo.reports import build_candidate_report
 from vitiligo.reports import report_to_dict as candidate_report_to_dict
+from vitiligo.reports.clinical import build_evidence_rows, evidence_to_dict
 from vitiligo.storage import TrialSourceKind, init_db
 from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 from vitiligo.trials.query import count_trials
-from vitiligo.web.llm_budget import LLMBudget, LLMBudgetExceeded
 from vitiligo.web.proxy import ForwardedProtoMiddleware
 from vitiligo.web.ratelimit import RateLimitMiddleware
 
@@ -54,16 +51,6 @@ logger = logging.getLogger(__name__)
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, description="Free-text search query.")
     top_k: int = Field(10, ge=1, le=50)
-
-
-class AskRequest(BaseModel):
-    question: str = Field(..., min_length=1)
-    top_k: int = Field(8, ge=1, le=25)
-
-
-class HypothesizeRequest(BaseModel):
-    intent: str = Field(..., min_length=1, description="Research intent, e.g. 'stop spread'.")
-    top_k: int = Field(25, ge=5, le=50)
 
 
 class TrialsSearchRequest(BaseModel):
@@ -125,6 +112,26 @@ def _cached_candidate_report(top_n: int) -> dict[str, Any]:
         return cached
 
 
+_evidence_cache: dict[tuple[str, int], dict[str, Any]] = {}
+_evidence_lock = threading.Lock()
+
+
+def _cached_evidence() -> dict[str, Any]:
+    """Posted trial results for the clinician view, rebuilt when the corpus changes."""
+    from vitiligo.reports import build_jak_atlas
+    from vitiligo.reports.jak_arms import harmonize_arms
+
+    db_path = get_settings().resolved_db_path
+    key = (str(db_path), db_path.stat().st_mtime_ns if db_path.is_file() else 0)
+    with _evidence_lock:
+        cached = _evidence_cache.get(key)
+        if cached is None:
+            cached = evidence_to_dict(build_evidence_rows(harmonize_arms(build_jak_atlas())))
+            _evidence_cache.clear()
+            _evidence_cache[key] = cached
+        return cached
+
+
 def _prewarm_embeddings() -> None:
     from vitiligo.embed.cache import warm_embedding_index
     from vitiligo.embed.encoder import get_encoder
@@ -144,6 +151,35 @@ async def _lifespan(app: FastAPI):
         except Exception:
             logger.exception("Embedding prewarm failed; first search may be slow.")
     yield
+
+
+# DrugBank is ingested from the operator's own licensed export. Its academic
+# licence does not permit redistribution, so nothing derived from it may leave a
+# public endpoint, even as a provenance note on a graph edge.
+# Sources whose terms do not permit redistributing what we imported. The
+# operator may hold a licence for them; a visitor to this page does not.
+# NOTICE states the same rule for the repository.
+LICENSED_SOURCES = ("drugbank",)
+LICENSED_SOURCE_PREFIXES = tuple(f"{name}:" for name in LICENSED_SOURCES)
+
+
+def public_evidence(items: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Evidence entries that may be served publicly."""
+    return [
+        item
+        for item in (items or [])
+        if not str(item.get("source_id", "")).startswith(LICENSED_SOURCE_PREFIXES)
+    ]
+
+
+def public_external_ids(ids: dict[str, str] | None) -> dict[str, str]:
+    """Cross-references that may be served publicly.
+
+    A bare accession is arguably a pointer rather than content, but the licence
+    is not ours to interpret on an operator's behalf, and dropping one
+    cross-reference costs nothing.
+    """
+    return {k: v for k, v in (ids or {}).items() if k.lower() not in LICENSED_SOURCES}
 
 
 def create_app() -> FastAPI:
@@ -230,46 +266,14 @@ def create_app() -> FastAPI:
             )
         return {"query": req.query, "results": results}
 
-    llm_budget = LLMBudget(
-        settings.resolved_state_db_path,
-        requests_per_minute=settings.llm_requests_per_minute,
-        daily_token_budget=settings.llm_daily_token_budget,
-    )
+    # /api/ask and /api/hypothesize are deliberately not served. A page aimed at
+    # clinicians should show what the evidence says, not what a model infers from
+    # it; the CLI keeps both for research use, where the caller can judge them.
 
-    def _reserve_llm(endpoint: str) -> int | None:
-        try:
-            return llm_budget.reserve(endpoint)
-        except LLMBudgetExceeded as exc:
-            raise HTTPException(
-                status_code=429,
-                detail=str(exc),
-                headers={"Retry-After": str(exc.retry_after_s)},
-            ) from exc
-
-    @app.post("/api/ask")
-    def ask(req: AskRequest) -> dict[str, Any]:
-        call_id = _reserve_llm("ask")
-        try:
-            answer = ask_with_citations(question=req.question, top_k=req.top_k)
-        except (LLMUnavailable, CorpusUnavailable) as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
-        llm_budget.record(call_id, answer.input_tokens, answer.output_tokens)
-        return {
-            "question": answer.question,
-            "answer": answer.answer,
-            "model": answer.model,
-            "citations": [asdict(c) for c in answer.citations],
-        }
-
-    @app.post("/api/hypothesize")
-    def hypothesize(req: HypothesizeRequest) -> dict[str, Any]:
-        call_id = _reserve_llm("hypothesize")
-        try:
-            report = generate_hypotheses(intent=req.intent, top_k=req.top_k)
-        except (LLMUnavailable, CorpusUnavailable) as exc:
-            raise HTTPException(status_code=503, detail=str(exc)) from exc
-        llm_budget.record(call_id, report.input_tokens, report.output_tokens)
-        return hypothesize_report_to_dict(report)
+    @app.get("/api/evidence")
+    async def evidence() -> dict[str, Any]:
+        """What each drug and dose reported at the primary endpoint, with its control."""
+        return await asyncio.to_thread(_cached_evidence)
 
     @app.get("/api/report/candidates")
     async def report_candidates(top_n: int = 10) -> dict[str, Any]:
@@ -345,7 +349,7 @@ def create_app() -> FastAPI:
                     "key": e.key,
                     "name": e.name,
                     "aliases": e.aliases,
-                    "external_ids": e.external_ids,
+                    "external_ids": public_external_ids(e.external_ids),
                 }
                 for e in entities
             ],
@@ -382,9 +386,17 @@ def create_app() -> FastAPI:
     def graph_export(edge_limit: int | None = None) -> dict[str, Any]:
         if edge_limit is not None and edge_limit < 1:
             raise HTTPException(status_code=400, detail="edge_limit must be >= 1.")
-        return export_graph_snapshot(
+        snapshot = export_graph_snapshot(
             edge_limit=min(edge_limit, 10_000) if edge_limit is not None else None
         )
+        # The snapshot carries each edge's provenance and each entity's
+        # cross-references, either of which can name a licensed source the
+        # operator may hold but may not redistribute.
+        for edge in snapshot.get("edges", []):
+            edge["evidence"] = public_evidence(edge.get("evidence"))
+        for entity in snapshot.get("entities", []):
+            entity["external_ids"] = public_external_ids(entity.get("external_ids"))
+        return snapshot
 
     app.mount(
         "/static",

@@ -45,6 +45,44 @@ sourced from third-party public databases. Each source remains subject to its
 provider's terms of use. This repository does not ship the full built corpus in
 git; see `docs/engine.md` for how to build or obtain `vitiligo.db`.
 
+Sources read by the engine, with the terms they are served under. Where a
+licence requires attribution, serving data derived from that source carries the
+attribution with it:
+
+   Open Targets Platform      CC0 1.0 (data); Apache-2.0 (their code).
+                              https://platform-docs.opentargets.org/licence
+                              Upstream sources within the Platform keep their
+                              own licences; the Platform lists them per source.
+
+   ChEMBL                     Creative Commons Attribution-ShareAlike 3.0
+                              Unported. Attribution is required, and
+                              adaptations carry the same licence.
+                              https://chembl.gitbook.io/chembl-interface-documentation/about
+
+   PubMed / PMC               NLM terms; per-article copyright and licence vary,
+                              and PMC Open Access subsets carry their own.
+                              https://www.ncbi.nlm.nih.gov/home/about/policies/
+
+   GEO                        NCBI terms, as above.
+
+   ClinicalTrials.gov         https://clinicaltrials.gov/about-site/terms-conditions
+   EU CTR (CTIS)              https://euclinicaltrials.eu
+   WHO ICTRP                  https://www.who.int/clinical-trials-registry-platform
+   ISRCTN                     https://www.isrctn.com
+
+   GWAS Catalog               EMBL-EBI terms.
+                              https://www.ebi.ac.uk/gwas/docs/about
+   NIH RePORTER               https://reporter.nih.gov
+
+Licence names above were checked for Open Targets and ChEMBL; the remaining
+entries link to the provider's terms rather than restate them. An operator
+serving this engine publicly is responsible for complying with each.
+
+The web application filters cross-references and provenance naming a source
+whose terms do not permit redistribution (currently DrugBank) out of its
+responses, so what it serves does not depend on which optional sources the
+operator has imported.
+
 DrugBank support is import-only. This repository does not bundle DrugBank
 database content, API results, or derived DrugBank datasets. Parser tests use a
 synthetic DrugBank-shaped XML fixture. Users who enable DrugBank ingestion must
@@ -55,7 +93,8 @@ redistribution and citation terms.
 Optional cloud API (not bundled)
 ================================================================================
 
-The Ask and Hypothesize features may call the Anthropic Messages API when
-`ANTHROPIC_API_KEY` is configured on the server. That service is not part of
-this distribution; use is governed by Anthropic's terms at
-https://www.anthropic.com/legal.
+The `vitiligo ask` and `vitiligo hypothesize` commands call the Anthropic
+Messages API when `ANTHROPIC_API_KEY` is configured. They are command-line
+tools: the web application serves no generated content and makes no call to
+any model API. That service is not part of this distribution; use is governed
+by Anthropic's terms at https://www.anthropic.com/legal.

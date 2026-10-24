@@ -14,11 +14,43 @@ Research and education software, not medical advice.
 
 | | What it does | Start with |
 |---|---|---|
-| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (~14k documents, 344 trials). Semantic search with evidence levels; cited Q&A and hypothesis ranking when an Anthropic key is set. | `vitiligo search` · `vitiligo serve` |
+| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (~14k documents, 344 trials). Semantic search with evidence levels, and a trial-results table: what each JAK drug and dose reported at week 24, beside the comparator arm of its own trial. | `vitiligo serve` · `vitiligo search` |
 | **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes, plus one harmonized arm × endpoint × week table and results curated from papers ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
 | **Mechanisms** | Falsifiable hypotheses from biology to clinical outcome, each with its evidence on a causal ladder, the strongest rival explanation, and the test that separates them. | `vitiligo mechanism list` · [`docs/mechanisms/`](docs/mechanisms/README.md) |
+
+**Nothing on the served page is generated.** Every figure it shows is one a trial
+posted to a public registry, reproduced with its denominator and a link to its
+record, so any number on the page can be checked against its source. Cited Q&A
+and hypothesis ranking stay on the command line (`vitiligo ask`,
+`vitiligo hypothesize`), where the caller supplies the key and reads the output
+as research rather than as guidance.
+
+## What the trial-results view will and will not show
+
+The table reports **week 24**, the primary endpoint of every registered JAK trial
+in vitiligo and so the only week at which they can be set beside one another. Four
+rules decide what reaches it, each of which excludes a figure that would otherwise
+read far better than the evidence supports:
+
+- **The largest arm reporting a drug and dose wins** — not the latest week, and not
+  the highest rate. A seven-patient arm reporting 85.7% does not outrank a
+  222-patient trial reporting 30.9%.
+- **An arm must still be reporting the group that was randomised.** One trial reads
+  45.5% of 33 at week 24 and 100% of 9 at week 156: the rate climbs because the
+  denominator collapses.
+- **Where a trial reported both a blinded central reading and the site's own, the
+  central one is used.** It is consistently the lower of the two.
+- **Facial and whole-body scores never mix**, and a drug given with phototherapy is
+  a different intervention from the drug alone.
+
+Figures after week 24 appear in their own column, labelled: these trials put every
+patient on the drug once the controlled period ended, so they show one group
+improving over time with no comparator and a shrinking denominator.
+
+Adverse events are deliberately absent. They belong in the label and the registry
+record, not in a summary table that cannot carry their context.
 
 ## Quick start
 
@@ -27,7 +59,8 @@ Python 3.11+.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"            # add ,model for the scenario model and discovery loop
-cp .env.example .env               # set NCBI_EMAIL; optional NCBI_API_KEY, ANTHROPIC_API_KEY
+cp .env.example .env               # set NCBI_EMAIL; optional NCBI_API_KEY
+                                   # ANTHROPIC_API_KEY is only for `vitiligo ask` / `hypothesize`
 
 vitiligo db init
 vitiligo ingest pubmed && vitiligo ingest pmc && vitiligo ingest ctgov

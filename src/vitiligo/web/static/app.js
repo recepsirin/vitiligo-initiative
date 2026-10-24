@@ -2,15 +2,15 @@
 
 const tabs = document.querySelectorAll('.tab');
 const panels = {
+  evidence: document.getElementById('panel-evidence'),
   search: document.getElementById('panel-search'),
-  ask: document.getElementById('panel-ask'),
-  hypothesize: document.getElementById('panel-hypothesize'),
   candidates: document.getElementById('panel-candidates'),
   graph: document.getElementById('panel-graph'),
   trials: document.getElementById('panel-trials'),
 };
 
 let candidatesLoaded = false;
+let evidenceRows = null;
 
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
@@ -26,6 +26,9 @@ tabs.forEach(tab => {
     }
     if (tab.dataset.tab === 'candidates' && !candidatesLoaded) {
       loadCandidatesReport();
+    }
+    if (tab.dataset.tab === 'evidence' && evidenceRows === null) {
+      loadEvidence();
     }
   });
 });
@@ -146,191 +149,142 @@ function renderNotesBlock(notes, className) {
   return `<ul class="${className}">${cleaned.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul>`;
 }
 
-// ---- ask ------------------------------------------------------------
+// ---- trial results (posted registry figures, no model) ---------------
 
-document.getElementById('form-ask').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const question = document.getElementById('ask-question').value.trim();
-  const topK = parseInt(document.getElementById('ask-topk').value, 10);
-  const out = document.getElementById('ask-result');
-  if (!question) return;
+const EV_REGION = document.getElementById('ev-region');
+const EV_ENDPOINT = document.getElementById('ev-endpoint');
+const EV_UNCONTROLLED = document.getElementById('ev-uncontrolled');
 
-  showLoading(out, 'Reasoning over the corpus…');
-  try {
-    const data = await postJson('/api/ask', { question, top_k: topK });
-    const linkified = linkifyCitations(escapeHtml(data.answer));
-    out.innerHTML = `
-      <div class="answer">${linkified}</div>
-      <div class="citations">
-        <h3>Sources (${data.citations.length})</h3>
-        ${data.citations.map(renderCitation).join('')}
-      </div>
-    `;
-  } catch (err) {
-    showError(out, err.message);
-  }
+[EV_REGION, EV_ENDPOINT, EV_UNCONTROLLED].forEach(el => {
+  el.addEventListener('change', renderEvidence);
 });
 
-function linkifyCitations(html) {
-  // Turn [1], [2], [1, 3] into clickable cite spans pointing to the citation list anchors.
-  return html.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (m, group) => {
-    const indices = group.split(',').map(s => s.trim());
-    return indices.map(i => `<a class="cite" href="#cite-${i}">[${i}]</a>`).join('');
-  });
-}
-
-function renderCitation(c) {
-  const meta = metaBits(c);
-  const evidence = c.evidence_level_label
-    ? `<span class="tag tag-evidence">${escapeHtml(c.evidence_level_label)}</span> `
-    : '';
-  return `
-    <div class="citation" id="cite-${c.index}">
-      <span class="citation-index">[${c.index}]</span>
-      ${evidence}<span>${escapeHtml(c.title || '(no title)')}</span>
-      <div class="citation-meta">${meta}</div>
-    </div>
-  `;
-}
-
-// ---- hypothesize ----------------------------------------------------
-
-document.getElementById('form-hypothesize').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const intent = document.getElementById('hyp-intent').value.trim();
-  const topK = parseInt(document.getElementById('hyp-topk').value, 10);
-  const out = document.getElementById('hyp-result');
-  if (!intent) return;
-
-  showLoading(out, 'Generating ranked candidates over papers + trials + priors + graph… this may take 30–60s');
+async function loadEvidence() {
+  const out = document.getElementById('ev-results');
+  showLoading(out, 'Reading posted trial results…');
   try {
-    const data = await postJson('/api/hypothesize', { intent, top_k: topK });
-    const candidatesHtml = (data.candidates || []).map(renderCandidate).join('');
-    const citationsHtml = (data.citations || []).map(renderCitation).join('');
-    const trialCitationsHtml = (data.trial_citations || []).map(renderTrialCitation).join('');
-    const priorCitationsHtml = (data.prior_citations || []).map(renderPriorCitation).join('');
-    const graphCitationsHtml = (data.graph_citations || []).map(renderGraphCitation).join('');
-    const graphCount = data.graph_citations ? data.graph_citations.length : 0;
-    const evidenceSummary = `
-      <div class="evidence-summary">
-        Evidence base: <strong>${data.citations ? data.citations.length : 0}</strong> papers,
-        <strong>${data.trial_citations ? data.trial_citations.length : 0}</strong> trials,
-        <strong>${data.prior_citations ? data.prior_citations.length : 0}</strong> priors,
-        <strong>${graphCount}</strong> graph edges
-      </div>`;
-    out.innerHTML = `
-      ${evidenceSummary}
-      ${data.notes ? renderNotesBlock(data.notes, 'hyp-notes') : ''}
-      ${candidatesHtml || '<div class="empty">No candidates returned.</div>'}
-      ${graphCitationsHtml ? `
-        <div class="citations">
-          <h3>Knowledge graph (${graphCount})</h3>
-          ${graphCitationsHtml}
-        </div>` : ''}
-      ${priorCitationsHtml ? `
-        <div class="citations">
-          <h3>Drug &amp; target priors (${data.prior_citations.length})</h3>
-          ${priorCitationsHtml}
-        </div>` : ''}
-      ${trialCitationsHtml ? `
-        <div class="citations">
-          <h3>Retrieved trials (${data.trial_citations.length})</h3>
-          ${trialCitationsHtml}
-        </div>` : ''}
-      <div class="citations">
-        <h3>Retrieved papers (${data.citations ? data.citations.length : 0})</h3>
-        ${citationsHtml}
-      </div>
-    `;
+    const res = await fetch('/api/evidence');
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const data = await res.json();
+        if (data.detail) detail = formatApiError(data.detail);
+      } catch { /* ignore */ }
+      throw new Error(detail);
+    }
+    const data = await res.json();
+    evidenceRows = data.rows || [];
+    renderEvidence();
   } catch (err) {
+    evidenceRows = null;
     showError(out, err.message);
   }
-});
-
-function renderGraphCitation(g) {
-  const predicate = String(g.predicate || '').replace(/_/g, ' ');
-  const conf = g.confidence != null ? Number(g.confidence).toFixed(2) : '—';
-  const method = g.extraction_method || 'unknown';
-  const sources = g.evidence_count != null ? `${g.evidence_count} source(s)` : '';
-  return `
-    <div class="graph-citation" id="graph-cite-${g.index}">
-      <span class="citation-index">[G${g.index}]</span>
-      <span class="graph-edge">
-        <span class="graph-entity">${escapeHtml(g.subject_name)}</span>
-        <span class="graph-entity-kind">${escapeHtml(g.subject_kind || '')}</span>
-        <span class="graph-predicate">→ ${escapeHtml(predicate)} →</span>
-        <span class="graph-entity">${escapeHtml(g.object_name)}</span>
-        <span class="graph-entity-kind">${escapeHtml(g.object_kind || '')}</span>
-      </span>
-      <div class="citation-meta">
-        confidence ${escapeHtml(conf)} · ${escapeHtml(method)}${sources ? ` · ${escapeHtml(sources)}` : ''}
-      </div>
-    </div>
-  `;
 }
 
-function renderTrialCitation(t) {
-  const externalUrl = trialExternalUrl({ source: t.source, source_id: t.source_id });
-  const phase = (t.phases && t.phases.length) ? t.phases.join(', ') : '—';
-  const sponsors = (t.sponsors || []).slice(0, 2).join(' · ');
-  const countries = (t.countries || []).slice(0, 6).join(', ');
-  const idLink = externalUrl
-    ? `<a href="${externalUrl}" target="_blank">${escapeHtml(t.source_id)}</a>`
-    : escapeHtml(t.source_id);
-  return `
-    <div class="trial-citation" id="trial-cite-${t.index}">
-      <span class="citation-index">[T${t.index}]</span>
-      <span class="trial-source-tag source-${escapeHtml(t.source)}">${escapeHtml(sourceLabel(t.source))}</span>
-      <span class="trial-id-inline">${idLink}</span>
-      <span class="trial-status status-${escapeHtml((t.status || 'UNKNOWN').toLowerCase())}">${escapeHtml(t.status || 'UNKNOWN')}</span>
-      <span class="trial-phase">${escapeHtml(phase)}</span>
-      ${t.has_results ? '<span class="trial-results-badge">has results</span>' : ''}
-      ${t.evidence_level_label ? `<span class="tag tag-evidence">${escapeHtml(t.evidence_level_label)}</span>` : ''}
-      <div class="trial-citation-title">${escapeHtml(t.title || '(no title)')}</div>
-      ${sponsors ? `<div class="citation-meta">Sponsors: ${escapeHtml(sponsors)}</div>` : ''}
-      ${countries ? `<div class="citation-meta">Countries: ${escapeHtml(countries)}</div>` : ''}
-    </div>
-  `;
-}
-
-function renderPriorCitation(p) {
-  const kindLabel = p.kind === 'target' ? 'Target' : 'Drug';
-  const stage = p.clinical_stage ? `<span class="prior-stage">${escapeHtml(p.clinical_stage)}</span>` : '';
-  const score = (p.kind === 'target' && p.score != null)
-    ? `<span class="prior-score">score ${Number(p.score).toFixed(3)}</span>`
+function howGiven(row) {
+  const bits = [];
+  if (row.dose) bits.push(row.dose);
+  if (row.loading_dose) bits.push(`after ${row.loading_dose}mg for 4 weeks`);
+  const route = row.route
+    ? row.route
+    : '<span class="ev-unknown" title="The registry record does not state the route">route not recorded</span>';
+  const photo = row.phototherapy
+    ? ' <span class="ev-flag">with NB-UVB phototherapy</span>'
     : '';
-  const mechs = (p.mechanisms || []).slice(0, 2).join(' · ');
-  return `
-    <div class="prior-citation" id="prior-cite-${p.index}">
-      <span class="citation-index">[P${p.index}]</span>
-      <span class="prior-kind-tag">${escapeHtml(kindLabel)}</span>
-      <span class="prior-name">${escapeHtml(p.name || p.source_id)}</span>
-      ${stage}${score}
-      <div class="citation-meta">${escapeHtml(p.source)}:${escapeHtml(p.source_id)}</div>
-      ${mechs ? `<div class="citation-meta">Mechanisms: ${escapeHtml(mechs)}</div>` : ''}
+  return `${escapeHtml(bits.join(', '))} · ${route}${photo}`;
+}
+
+function renderEvidence() {
+  const out = document.getElementById('ev-results');
+  const summary = document.getElementById('ev-summary');
+  if (evidenceRows === null) return;
+
+  const region = EV_REGION.value;
+  const threshold = EV_ENDPOINT.value;
+  const withUncontrolled = EV_UNCONTROLLED.checked;
+  const instrument = region === 'Face' ? 'F-VASI' : 'T-VASI';
+  const endpoint = `${instrument}${threshold}`;
+
+  const rows = evidenceRows.filter(r =>
+    r.endpoint === endpoint && (withUncontrolled || r.controlled));
+
+  const hidden = evidenceRows.filter(r => r.endpoint === endpoint && !r.controlled).length;
+  summary.innerHTML = `
+    <span class="trial-stat trial-stat-total"><strong>${rows.length}</strong>
+      arm${rows.length === 1 ? '' : 's'} reporting ${escapeHtml(endpoint)} at week 24</span>
+    <span class="trial-stat">${region === 'Face' ? 'Facial' : 'Whole-body'} score</span>
+    ${hidden && !withUncontrolled
+      ? `<span class="trial-stat ev-stat-muted">${hidden} arm${hidden === 1 ? '' : 's'} hidden: no comparator</span>`
+      : ''}
+  `;
+
+  if (!rows.length) {
+    out.innerHTML = `<div class="empty">No trial posted ${escapeHtml(endpoint)} at week 24.
+      Not every trial reports every threshold on both scales.</div>`;
+    return;
+  }
+
+  out.innerHTML = `
+    <div class="ev-table-wrap">
+      <table class="ev-table">
+        <thead>
+          <tr>
+            <th>Drug</th>
+            <th>How it was given</th>
+            <th>Reached ${escapeHtml(threshold)}%</th>
+            <th>Comparator arm</th>
+            <th>Difference</th>
+            <th>At one year</th>
+            <th>Trial</th>
+          </tr>
+        </thead>
+        <tbody>${rows.map(evidenceRow).join('')}</tbody>
+      </table>
     </div>
   `;
 }
 
-function renderCandidate(c) {
-  const evidenceClass = ['strong', 'moderate', 'weak', 'speculative'].includes(c.evidence_strength) ? c.evidence_strength : 'speculative';
-  const cites = (c.citation_indices || []).map(i => `<a class="cite" href="#cite-${i}">[${i}]</a>`).join(' ');
-  const trialCites = (c.trial_citation_indices || []).map(i => `<a class="cite cite-trial" href="#trial-cite-${i}">[T${i}]</a>`).join(' ');
-  const priorCites = (c.prior_citation_indices || []).map(i => `<a class="cite cite-prior" href="#prior-cite-${i}">[P${i}]</a>`).join(' ');
-  const graphCites = (c.graph_citation_indices || []).map(i => `<a class="cite cite-graph" href="#graph-cite-${i}">[G${i}]</a>`).join(' ');
-  const allCites = [cites, trialCites, priorCites, graphCites].filter(Boolean).join(' · ');
+function pct(value) {
+  return value == null ? '—' : `${Number(value).toFixed(1)}%`;
+}
+
+function evidenceRow(r) {
+  const control = r.controlled
+    ? `${pct(r.control_percent)} <span class="ev-denom">of ${r.control_analysed}</span>`
+    : '<span class="ev-unknown" title="This trial had no comparator arm at this endpoint">none</span>';
+  const diffClass = r.difference > 0 ? 'ev-diff' : (r.difference < 0 ? 'ev-diff-neg' : 'ev-diff-flat');
+  const diff = r.difference != null
+    ? `<span class="${diffClass}">${r.difference > 0 ? '+' : ''}${Number(r.difference).toFixed(1)} pts</span>`
+    : '<span class="ev-unknown">—</span>';
+  const later = r.later
+    ? `<span class="ev-later">${pct(r.later.percent)} <span class="ev-denom">of ${r.later.analysed}</span></span>
+       <span class="ev-later-note">week ${r.later.week}, no comparator;
+       ${Math.round(r.later.retention * 100)}% of the ${r.later.started} still counted</span>`
+    : '<span class="ev-unknown">not reported</span>';
+  const also = (r.also_reported || []).length
+    ? `<span class="ev-also">also ${r.also_reported.map(o =>
+        `${escapeHtml(o.trial)}: ${pct(o.percent)} of ${o.analysed}` +
+        (o.control_percent != null ? ` vs ${pct(o.control_percent)}` : '')
+      ).join(' · ')}</span>`
+    : '';
+  const url = `https://clinicaltrials.gov/study/${encodeURIComponent(r.trial)}`;
+  const primary = r.primary_endpoint
+    ? ' <span class="ev-badge" title="This was the trial\'s primary endpoint">primary</span>'
+    : '';
+  const central = r.assessor === 'central'
+    ? ' <span class="ev-badge ev-badge-quiet" title="Blinded central reading, not the site\'s own">central read</span>'
+    : '';
   return `
-    <article class="candidate">
-      <div class="candidate-header">
-        <span class="candidate-name">${escapeHtml(c.name || '(unnamed)')}</span>
-        <span class="candidate-kind">${escapeHtml(c.kind || '')}</span>
-        <span class="evidence ${evidenceClass}">${escapeHtml(c.evidence_strength || 'speculative')}</span>
-      </div>
-      ${c.mechanism ? `<div class="candidate-section"><div class="candidate-label">Mechanism</div><div class="candidate-text">${escapeHtml(c.mechanism)}</div></div>` : ''}
-      ${c.rationale ? `<div class="candidate-section"><div class="candidate-label">Rationale</div><div class="candidate-text">${escapeHtml(c.rationale)}</div></div>` : ''}
-      ${c.risks_or_caveats ? `<div class="candidate-section"><div class="candidate-label">Risks &amp; caveats</div><div class="candidate-text">${escapeHtml(c.risks_or_caveats)}</div></div>` : ''}
-      ${allCites ? `<div class="candidate-citations">${allCites}</div>` : ''}
-    </article>
+    <tr>
+      <td class="ev-agent">${escapeHtml(r.agent)}</td>
+      <td class="ev-given">${howGiven(r)}</td>
+      <td class="ev-active"><strong>${pct(r.percent)}</strong>
+        <span class="ev-denom">of ${r.analysed}</span>${primary}${central}${also}</td>
+      <td>${control}</td>
+      <td>${diff}</td>
+      <td>${later}</td>
+      <td><a href="${url}" target="_blank" rel="noopener">${escapeHtml(r.trial)}</a></td>
+    </tr>
   `;
 }
 
@@ -655,3 +609,8 @@ function renderTrial(t) {
     </article>
   `;
 }
+
+// ---- init -----------------------------------------------------------
+
+// Trial results is the default panel, so it loads without a tab click.
+loadEvidence();

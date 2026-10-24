@@ -91,47 +91,47 @@ class TestApiRetrievalNegativeConfidence:
             )
 
 
-class TestApiAskCitationConfidence:
-    """POST /api/ask must retrieve the right papers and pass them to the LLM faithfully."""
+class TestAskCitationConfidence:
+    """``ask_with_citations`` must retrieve the right papers and pass them on faithfully.
+
+    Checked against the library rather than an HTTP route: the served app no
+    longer offers Ask, and ``vitiligo ask`` is the caller that remains.
+    """
 
     @pytest.mark.parametrize("case", _EXPECTATIONS["ask"], ids=lambda c: c["id"])
-    def test_ask_api_cites_expected_papers(
+    def test_ask_cites_expected_papers(
         self,
         case: dict,
-        regression_api_client: TestClient,
+        require_regression_corpus: None,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        from vitiligo.reasoning.rag import ask_with_citations
+
         llm = install_capturing_llm(monkeypatch)
         top_k = int(case["top_k"])
 
-        resp = regression_api_client.post(
-            "/api/ask",
-            json={"question": case["question"], "top_k": top_k},
-        )
-        assert resp.status_code == 200, resp.text
-        body = resp.json()
-        assert body["question"] == case["question"]
-        assert body["answer"]
-        assert body["model"] == "fake-confidence"
-        assert_answer_cites_only_retrieved(body["answer"], top_k)
+        answer = ask_with_citations(question=case["question"], top_k=top_k)
+        assert answer.question == case["question"]
+        assert answer.answer
+        assert answer.model == "fake-confidence"
+        assert_answer_cites_only_retrieved(answer.answer, top_k)
 
-        citations = body["citations"]
+        citations = answer.citations
         assert len(citations) == top_k, (
             f"{case['id']}: expected {top_k} citations, got {len(citations)}"
         )
 
-        citation_ids = {c["source_id"] for c in citations}
+        citation_ids = {c.source_id for c in citations}
         missing = set(case["must_include_citation_source_ids"]) - citation_ids
         assert not missing, (
             f"{case['id']} ({case['scenario']}): Ask citations missing {sorted(missing)}. "
-            f"Returned: {[(c['index'], c['source_id'], (c.get('title') or '')[:50]) for c in citations[:5]]}"
+            f"Returned: {[(c.index, c.source_id, (c.title or '')[:50]) for c in citations[:5]]}"
         )
 
         for idx, citation in enumerate(citations, start=1):
-            assert citation["index"] == idx
-            title = citation.get("title") or ""
-            assert title in llm.captured_user, (
-                f"{case['id']}: citation [{idx}] title {title!r} missing from LLM prompt"
+            assert citation.index == idx
+            assert (citation.title or "") in llm.captured_user, (
+                f"{case['id']}: citation [{idx}] title {citation.title!r} missing from prompt"
             )
 
         assert "RETRIEVED PAPERS" in llm.captured_user

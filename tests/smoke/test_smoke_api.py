@@ -41,17 +41,6 @@ def test_smoke_candidate_report(smoke_client: TestClient) -> None:
     assert isinstance(data["notes"], list)
 
 
-@pytest.mark.parametrize(
-    ("path", "body"),
-    [
-        ("/api/ask", {"question": "What is vitiligo?", "top_k": 3}),
-        ("/api/hypothesize", {"intent": "stop spread vitiligo", "top_k": 10}),
-    ],
-)
-def test_smoke_llm_routes_do_not_500_without_key(
-    smoke_client: TestClient,
-    path: str,
-    body: dict,
-) -> None:
-    r = smoke_client.post(path, json=body)
-    assert r.status_code in (200, 503)
+@pytest.mark.parametrize("path", ["/api/ask", "/api/hypothesize"])
+def test_smoke_llm_routes_are_not_served(smoke_client: TestClient, path: str) -> None:
+    assert smoke_client.post(path, json={"question": "x", "intent": "x"}).status_code == 404

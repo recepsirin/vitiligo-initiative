@@ -17,9 +17,8 @@
         </div>
       </div>
       <nav class="tabs" id="tabs">
-        <button class="tab active" data-tab="search">Search</button>
-        <button class="tab" data-tab="ask">Ask</button>
-        <button class="tab" data-tab="hypothesize">Hypothesize</button>
+        <button class="tab active" data-tab="evidence">Trial results</button>
+        <button class="tab" data-tab="search">Search</button>
         <button class="tab" data-tab="candidates">Candidates</button>
         <button class="tab" data-tab="graph">Graph</button>
         <button class="tab" data-tab="trials">Trials</button>
@@ -29,13 +28,75 @@
 
   <main class="container">
     <div class="disclaimer-banner" role="note">
-      <strong>Research tool only — not medical advice.</strong>
-      AI answers may be incomplete or wrong; verify cited sources. Discuss treatment with a clinician.
+      <strong>Reference tool, not medical advice.</strong>
+      Every number here is a figure a trial posted to a public registry, reproduced with its
+      denominator and a link to its record. Nothing on this page is generated or inferred.
+      Check any figure against its registry entry before relying on it.
       <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a>
     </div>
 
+    <!-- EVIDENCE -->
+    <section class="panel" id="panel-evidence">
+      <h2>What the trials reported</h2>
+      <p class="hint">
+        Registered JAK inhibitor trials in vitiligo that have posted results, at
+        <strong>week 24</strong> — the primary endpoint of all of them, and so the only week at
+        which they can be compared. Each drug is shown beside the comparator arm of its own trial.
+      </p>
+
+      <div class="row ev-controls">
+        <label class="ev-label">Area measured
+          <select id="ev-region">
+            <option value="Face" selected>Face (F-VASI)</option>
+            <option value="Whole body">Whole body (T-VASI)</option>
+          </select>
+        </label>
+        <label class="ev-label">Improvement reached
+          <select id="ev-endpoint">
+            <option value="75" selected>75% or more</option>
+            <option value="90">90% or more</option>
+            <option value="100">100% (complete)</option>
+            <option value="50">50% or more</option>
+            <option value="25">25% or more</option>
+          </select>
+        </label>
+        <label class="ev-check">
+          <input type="checkbox" id="ev-uncontrolled" />
+          include arms with no comparator
+        </label>
+      </div>
+
+      <div id="ev-summary" class="trial-stats"></div>
+      <div id="ev-results" class="results"></div>
+
+      <details class="ev-notes">
+        <summary>How to read this, and what is left out</summary>
+        <ul>
+          <li><strong>Facial and whole-body scores are different scales.</strong> F-VASI measures
+            the face, T-VASI the whole body, and the same drug reaches a far higher figure on the
+            face. They are never comparable with each other.</li>
+          <li><strong>A rate without its comparator is not an effect.</strong> Vehicle arms in these
+            trials reached 7–32% depending on the threshold, so the column that matters is the
+            difference. Arms whose trial had no comparator are hidden by default.</li>
+          <li><strong>Patients who left the trial are counted as not responding.</strong> Figures
+            counted only among those still attending run higher and are excluded.</li>
+          <li><strong>Where a trial reported both a blinded central reading and the site's own,
+            the central one is shown.</strong> It is consistently the lower of the two.</li>
+          <li><strong>"Also" lines are other trials of the same drug and dose.</strong> Two
+            independent trials reaching the same figure is far stronger than one reaching it.
+            The headline row is the largest arm; the others are listed beside it.</li>
+          <li><strong>The one-year column has no comparator.</strong> After week 24 these trials put
+            every patient on the drug, so it shows one group improving over time, with the number
+            still being counted. It is not a controlled result.</li>
+          <li><strong>What is missing:</strong> adverse events, which belong in the label and the
+            registry record, not a summary table; durability after stopping; and any trial that has
+            not posted results. Dose comparisons within one trial were not powered as such.</li>
+        </ul>
+      </details>
+    </section>
+
     <!-- SEARCH -->
-    <section class="panel" id="panel-search">
+    <section class="panel hidden" id="panel-search">
       <h2>Semantic search over the corpus</h2>
       <p class="hint">Search by meaning, not keywords. Returns the most relevant papers from PubMed and PMC Open Access.</p>
       <form id="form-search" class="row">
@@ -49,38 +110,6 @@
         <button type="submit">Search</button>
       </form>
       <div id="search-results" class="results"></div>
-    </section>
-
-    <!-- ASK -->
-    <section class="panel hidden" id="panel-ask">
-      <h2>Ask the corpus</h2>
-      <p class="hint">Ask a research question. Answers cite the retrieved papers inline. Requires an Anthropic API key configured server-side. Not for clinical decision-making.</p>
-      <form id="form-ask" class="row">
-        <input type="text" id="ask-question" placeholder="e.g. What is the evidence for combining ruxolitinib with NB-UVB?" required />
-        <select id="ask-topk">
-          <option value="5">5 sources</option>
-          <option value="8" selected>8 sources</option>
-          <option value="15">15 sources</option>
-        </select>
-        <button type="submit">Ask</button>
-      </form>
-      <div id="ask-result" class="results"></div>
-    </section>
-
-    <!-- HYPOTHESIZE -->
-    <section class="panel hidden" id="panel-hypothesize">
-      <h2>Generate ranked candidates</h2>
-      <p class="hint">From a research intent, the engine retrieves papers, trials, priors, and knowledge-graph relations, then asks the LLM for ranked therapeutic candidates with mechanistic rationale, evidence strength, and citations. Hypotheses require expert validation — not treatment recommendations.</p>
-      <form id="form-hypothesize" class="row">
-        <input type="text" id="hyp-intent" placeholder="e.g. stop spread of active non-segmental vitiligo" required />
-        <select id="hyp-topk">
-          <option value="15">15 papers</option>
-          <option value="25" selected>25 papers</option>
-          <option value="40">40 papers</option>
-        </select>
-        <button type="submit">Hypothesize</button>
-      </form>
-      <div id="hyp-result" class="results"></div>
     </section>
 
     <!-- CANDIDATES -->
@@ -175,6 +204,21 @@
       <span>Open by default • Apache-2.0 • <a href="https://github.com/recepsirin/vitiligo-initiative" target="_blank">GitHub</a></span>
       <span><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/recepsirin/vitiligo-initiative/issues" target="_blank" rel="noopener">Contact (GitHub)</a></span>
     </div>
+      <div class="footer-sources">
+        Data: <a href="https://clinicaltrials.gov/" target="_blank" rel="noopener">ClinicalTrials.gov</a>,
+        <a href="https://euclinicaltrials.eu" target="_blank" rel="noopener">EU CTR</a>,
+        <a href="https://www.who.int/clinical-trials-registry-platform" target="_blank" rel="noopener">WHO ICTRP</a>,
+        <a href="https://www.isrctn.com" target="_blank" rel="noopener">ISRCTN</a> ·
+        <a href="https://pubmed.ncbi.nlm.nih.gov/" target="_blank" rel="noopener">PubMed</a>,
+        <a href="https://www.ncbi.nlm.nih.gov/pmc/" target="_blank" rel="noopener">PMC</a>,
+        <a href="https://www.ncbi.nlm.nih.gov/geo/" target="_blank" rel="noopener">GEO</a> ·
+        <a href="https://platform.opentargets.org/" target="_blank" rel="noopener">Open Targets</a> (CC0 1.0) ·
+        <a href="https://www.ebi.ac.uk/chembl/" target="_blank" rel="noopener">ChEMBL</a>
+        (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>) ·
+        <a href="https://www.ebi.ac.uk/gwas/" target="_blank" rel="noopener">GWAS Catalog</a> ·
+        <a href="https://reporter.nih.gov/" target="_blank" rel="noopener">NIH RePORTER</a>.
+        Each source keeps its own terms — see <a href="https://github.com/recepsirin/vitiligo-initiative/blob/master/NOTICE" target="_blank" rel="noopener">NOTICE</a>.
+      </div>
   </footer>
 
   <script src="/static/app.js"></script>

@@ -15,10 +15,6 @@ from fastapi.testclient import TestClient
         ("/api/search", {}),
         ("/api/search", {"query": ""}),
         ("/api/search", {"query": "vitiligo", "top_k": 0}),
-        ("/api/ask", {}),
-        ("/api/ask", {"question": ""}),
-        ("/api/hypothesize", {}),
-        ("/api/hypothesize", {"intent": "stop spread", "top_k": 3}),
         ("/api/trials/search", {"limit": 0}),
         ("/api/trials/search", {"offset": -1}),
     ],
@@ -70,56 +66,14 @@ def test_graph_endpoints_reject_invalid_params(
     assert resp.status_code == 400
 
 
-def test_ask_returns_503_when_llm_not_configured(
-    api_client_errors: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from vitiligo.reasoning import LLMUnavailable
+@pytest.mark.parametrize("path", ["/api/ask", "/api/hypothesize"])
+def test_llm_routes_are_not_served(api_client_errors: TestClient, path: str) -> None:
+    """The served page shows what the evidence says, not what a model infers.
 
-    def _raise_llm_unavailable(**_: object) -> None:
-        raise LLMUnavailable("ANTHROPIC_API_KEY is not set.")
-
-    monkeypatch.setattr("vitiligo.web.app.ask_with_citations", _raise_llm_unavailable)
-
-    resp = api_client_errors.post("/api/ask", json={"question": "What is vitiligo?", "top_k": 3})
-    assert resp.status_code == 503
-    assert "ANTHROPIC" in resp.json()["detail"].upper()
-
-
-def test_hypothesize_returns_503_when_llm_not_configured(
-    api_client_errors: TestClient,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from vitiligo.reasoning import LLMUnavailable
-
-    def _raise_llm_unavailable(**_: object) -> None:
-        raise LLMUnavailable("ANTHROPIC_API_KEY is not set.")
-
-    monkeypatch.setattr("vitiligo.web.app.generate_hypotheses", _raise_llm_unavailable)
-
-    resp = api_client_errors.post(
-        "/api/hypothesize",
-        json={"intent": "stop spread vitiligo", "top_k": 10},
-    )
-    assert resp.status_code == 503
-
-
-def test_ask_returns_503_when_corpus_not_indexed(api_client_errors: TestClient) -> None:
-    resp = api_client_errors.post(
-        "/api/ask",
-        json={"question": "What is vitiligo?", "top_k": 3},
-    )
-    assert resp.status_code == 503
-    assert "embed" in resp.json()["detail"].lower()
-
-
-def test_hypothesize_returns_503_when_corpus_not_indexed(api_client_errors: TestClient) -> None:
-    resp = api_client_errors.post(
-        "/api/hypothesize",
-        json={"intent": "stop spread vitiligo", "top_k": 10},
-    )
-    assert resp.status_code == 503
-    assert "embed" in resp.json()["detail"].lower()
+    Both remain available as ``vitiligo ask`` and ``vitiligo hypothesize``, where
+    the caller supplies the key and reads the output as research, not guidance.
+    """
+    assert api_client_errors.post(path, json={"question": "x", "intent": "x"}).status_code == 404
 
 
 def test_health_reports_degraded_on_empty_db(api_client: TestClient) -> None:
@@ -132,9 +86,83 @@ def test_health_reports_degraded_on_empty_db(api_client: TestClient) -> None:
 
 
 def test_search_returns_empty_results_when_corpus_not_indexed(api_client: TestClient) -> None:
-    """Semantic search degrades gracefully (empty list) unlike Ask/Hypothesize."""
+    """Semantic search degrades gracefully: an empty list, not an error."""
     resp = api_client.post("/api/search", json={"query": "vitiligo JAK", "top_k": 5})
     assert resp.status_code == 200
     data = resp.json()
     assert data["query"] == "vitiligo JAK"
     assert data["results"] == []
+
+
+def test_evidence_endpoint_serves_week_24_results(api_client_seeded: TestClient) -> None:
+    """The clinician view reports the primary endpoint, with the rules it applied."""
+    resp = api_client_seeded.get("/api/evidence")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["week"] == 24
+    assert body["count"] == len(body["rows"])
+    assert "non-responders" in body["note"]
+    for row in body["rows"]:
+        assert row["week"] == 24
+        assert row["analysed"] >= 20, f"{row['agent']}: arm too small to state a rate"
+        assert row["endpoint"].startswith(("F-VASI", "T-VASI"))
+        if row["later"] is not None:
+            assert row["later"]["week"] > 24
+            assert row["later"]["started"] >= row["later"]["analysed"]
+
+
+def test_served_responses_name_no_licensed_source(api_client_seeded: TestClient) -> None:
+    """DrugBank's terms do not permit redistributing what an operator imported.
+
+    NOTICE states the same rule for the repository, and a real corpus carries
+    four such priors. The entity is seeded here so the assertion has something
+    to find: a new graph endpoint that forgets the filter fails here rather than
+    in someone's licence review.
+    """
+    from vitiligo.graph.store import upsert_edge, upsert_entity
+    from vitiligo.storage import session_scope
+    from vitiligo.storage.models import ClaimKind, EntityKind, RelationKind
+
+    with session_scope() as session:
+        drug = upsert_entity(
+            session,
+            kind=EntityKind.DRUG,
+            name="Ruxolitinib",
+            external_ids={"drugbank": "DB08877", "chembl": "CHEMBL1789941"},
+        )
+        disease = upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+        upsert_edge(
+            session,
+            subject=drug,
+            predicate=RelationKind.TREATS,
+            obj=disease,
+            confidence=0.9,
+            extraction_method="structured",
+            evidence={"source_type": "prior", "source_id": "drugbank:DB08877"},
+            claim=ClaimKind.ASSERTED,
+        )
+        session.commit()
+
+    for path in (
+        "/api/graph/export",
+        "/api/graph/search?q=ruxolitinib",
+        "/api/graph/neighbors?name=vitiligo",
+    ):
+        resp = api_client_seeded.get(path)
+        assert resp.status_code == 200, path
+        assert "drugbank" not in resp.text.lower(), f"{path} redistributes a licensed source"
+
+    # The filter drops one cross-reference, not every cross-reference.
+    assert "CHEMBL1789941" in api_client_seeded.get("/api/graph/search?q=ruxolitinib").text
+
+
+def test_licensed_filters_keep_redistributable_sources() -> None:
+    """Open Targets is CC0 and ChEMBL CC-BY-SA: filtering those would lose real data."""
+    from vitiligo.web.app import public_evidence, public_external_ids
+
+    assert public_external_ids(
+        {"drugbank": "DB08877", "chembl": "CHEMBL1789941", "ensembl": "ENSG00000162434"}
+    ) == {"chembl": "CHEMBL1789941", "ensembl": "ENSG00000162434"}
+    assert public_evidence(
+        [{"source_id": "drugbank:DB08877"}, {"source_id": "opentargets:EFO_0004208"}]
+    ) == [{"source_id": "opentargets:EFO_0004208"}]

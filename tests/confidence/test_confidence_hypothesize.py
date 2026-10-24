@@ -1,11 +1,15 @@
-"""HTTP-level Hypothesize confidence tests on the regression corpus."""
+"""Hypothesize confidence tests on the regression corpus.
+
+Against the library, not an HTTP route: the served app no longer offers
+Hypothesize, and ``vitiligo hypothesize`` is the caller that remains.
+"""
 
 from __future__ import annotations
 
 import json
+from dataclasses import asdict
 
 import pytest
-from fastapi.testclient import TestClient
 from tests.helpers.fake_llm import install_capturing_hypothesize_llm
 from tests.helpers.paths import FIXTURES_DIR
 from tests.helpers.rag_expectations import assert_hypothesize_candidate_citations
@@ -16,36 +20,33 @@ _EXPECTATIONS = json.loads(MANIFEST.read_text())
 pytestmark = pytest.mark.confidence
 
 
-class TestApiHypothesizeConfidence:
-    """POST /api/hypothesize must ground candidates in retrieved evidence."""
+class TestHypothesizeConfidence:
+    """``generate_hypotheses`` must ground candidates in retrieved evidence."""
 
     @pytest.mark.parametrize("case", _EXPECTATIONS["hypothesize"], ids=lambda c: c["id"])
-    def test_hypothesize_api_grounds_candidates_in_retrieval(
+    def test_hypothesize_grounds_candidates_in_retrieval(
         self,
         case: dict,
-        regression_api_client: TestClient,
+        require_regression_corpus: None,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        from vitiligo.reasoning.hypothesize import generate_hypotheses
+
         llm = install_capturing_hypothesize_llm(
             monkeypatch,
             candidate_names=list(case["must_include_candidate_names"]),
         )
         top_k = int(case["top_k"])
 
-        resp = regression_api_client.post(
-            "/api/hypothesize",
-            json={"intent": case["intent"], "top_k": top_k},
-        )
-        assert resp.status_code == 200, resp.text
-        body = resp.json()
-        assert body["intent"] == case["intent"]
-        assert body["model"] == "fake-confidence"
+        report = generate_hypotheses(intent=case["intent"], top_k=top_k)
+        assert report.intent == case["intent"]
+        assert report.model == "fake-confidence"
 
-        citations = body["citations"]
-        trial_citations = body["trial_citations"]
-        prior_citations = body["prior_citations"]
-        graph_citations = body["graph_citations"]
-        candidates = body["candidates"]
+        citations = [asdict(c) for c in report.citations]
+        trial_citations = [asdict(c) for c in report.trial_citations]
+        prior_citations = [asdict(c) for c in report.prior_citations]
+        graph_citations = [asdict(c) for c in report.graph_citations]
+        candidates = [asdict(c) for c in report.candidates]
 
         assert len(citations) == top_k, f"{case['id']}: expected {top_k} paper citations"
         assert candidates, f"{case['id']}: empty candidate list"
