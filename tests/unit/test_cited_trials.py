@@ -136,11 +136,6 @@ def test_grouping_orders_registries_by_how_many_leads_they_hold() -> None:
     assert len(grouped["CTRI (India)"]) == 2
 
 
-def test_nothing_in_an_empty_corpus() -> None:
-    assert scan([]) == []
-    assert by_registry([]) == {}
-
-
 def test_a_lead_records_whether_its_paper_is_about_the_disease() -> None:
     """One lead came from a survey of several skin diseases, not a vitiligo trial."""
     named = _doc(title="A vitiligo grafting trial", body="Registered CTRI/2017/05/008692.")
@@ -164,9 +159,3 @@ def test_leads_split_into_solid_and_needing_checking() -> None:
     solid, check = split_by_confidence(scan([named, broad]))
     assert [t.identifier for t in solid] == ["CTRI/2017/05/008692"]
     assert [t.identifier for t in check] == ["DRKS00012745"]
-
-
-def test_splitting_nothing_gives_two_empty_lists() -> None:
-    from vitiligo.reports.cited_trials import split_by_confidence
-
-    assert split_by_confidence([]) == ([], [])

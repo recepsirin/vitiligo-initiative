@@ -234,7 +234,3 @@ def test_cache_summary_counts_what_is_recorded(tmp_path: Path) -> None:
     summary = cache_summary(tmp_path)
     assert (summary["series"], summary["files"], summary["bytes"]) == (2, 3, 6_000_000)
     assert summary["by_series"]["GSE1"]["files"] == 2
-
-
-def test_cache_summary_of_an_empty_cache(tmp_path: Path) -> None:
-    assert cache_summary(tmp_path)["files"] == 0

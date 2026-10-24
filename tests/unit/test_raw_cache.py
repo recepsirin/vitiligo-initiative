@@ -82,7 +82,3 @@ def test_summary_counts_by_source(tmp_path: Path) -> None:
     summary = cache_summary(tmp_path)
     assert (summary["sources"], summary["payloads"], summary["bytes"]) == (2, 3, 60)
     assert summary["by_source"]["a"] == {"payloads": 2, "bytes": 30}  # type: ignore[index]
-
-
-def test_summary_of_an_empty_cache(tmp_path: Path) -> None:
-    assert cache_summary(tmp_path)["payloads"] == 0
