@@ -544,6 +544,63 @@ def db_stats() -> None:
             )
         console.print(runs_table)
 
+    _print_other_stores()
+
+
+def _print_other_stores() -> None:
+    """The stores that are not documents: other tables, and files on disk."""
+    from vitiligo.sources.geo_files import cache_summary as geo_cache_summary
+    from vitiligo.sources.raw_cache import cache_summary as raw_cache_summary
+    from vitiligo.storage import (
+        DocumentChunk,
+        Embedding,
+        GeneticAssociation,
+        Prior,
+        ResearchProject,
+    )
+
+    with session_scope() as session:
+        counts = [
+            (label, int(session.exec(select(func.count()).select_from(model)).one() or 0))
+            for label, model in (
+                ("trials", Trial),
+                ("drug and target priors", Prior),
+                ("genetic associations", GeneticAssociation),
+                ("funded research projects", ResearchProject),
+                ("embeddings (title+abstract)", Embedding),
+                ("passages (full text)", DocumentChunk),
+            )
+        ]
+    other = Table(title="Other stores", show_header=True, header_style="bold")
+    other.add_column("What")
+    other.add_column("Rows", justify="right")
+    for label, count in counts:
+        other.add_row(label, f"{count:,}")
+    console.print(other)
+
+    db_path = get_settings().resolved_db_path
+    geo, raw = geo_cache_summary(), raw_cache_summary()
+    files = Table(title="Files on disk", show_header=True, header_style="bold")
+    files.add_column("Store")
+    files.add_column("Contents")
+    files.add_column("Size", justify="right")
+    files.add_row(
+        "corpus database",
+        str(db_path),
+        f"{(db_path.stat().st_size / 1e6 if db_path.is_file() else 0):,.0f} MB",
+    )
+    files.add_row(
+        "GEO data cache",
+        f"{geo['files']:,} files from {geo['series']} series",
+        f"{int(geo['bytes']) / 1e9:,.2f} GB",
+    )
+    files.add_row(
+        "raw source payloads",
+        f"{raw['payloads']:,} from {raw['sources']} sources",
+        f"{int(raw['bytes']) / 1e6:,.1f} MB",
+    )
+    console.print(files)
+
 
 @db_app.command("sample")
 def db_sample(

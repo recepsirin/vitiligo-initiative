@@ -6,10 +6,12 @@ store, and records an `IngestionRun` for auditability and resumability.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from sqlmodel import and_, select
 
@@ -28,7 +30,14 @@ from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
 from vitiligo.sources.geo import DEFAULT_VITILIGO_QUERY as GEO_DEFAULT_QUERY
 from vitiligo.sources.geo import GEOClient
-from vitiligo.sources.gwas import ASSOCIATIONS_FILE, fetch_associations, iter_records
+from vitiligo.sources.gwas import (
+    ASSOCIATIONS_FILE,
+    associations_url,
+    fetch_associations,
+    filtered_payload,
+    records_from_rows,
+    rows_from_payload,
+)
 from vitiligo.sources.gwas import DEFAULT_TRAIT_QUERY as GWAS_DEFAULT_QUERY
 from vitiligo.sources.ictrp import (
     count_ictrp_records,
@@ -47,7 +56,9 @@ from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pmc import PMCClient
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.sources.pubmed import PubMedClient
+from vitiligo.sources.raw_cache import load_payload, save_payload
 from vitiligo.sources.reporter import DEFAULT_VITILIGO_QUERY as REPORTER_DEFAULT_QUERY
+from vitiligo.sources.reporter import SEARCH_URL as REPORTER_SEARCH_URL
 from vitiligo.sources.reporter import ReporterClient, to_project
 from vitiligo.storage import (
     Document,
@@ -454,12 +465,28 @@ def run_gwas_ingestion(
     fetched = inserted = updated = 0
     total_found: int | None = None
     try:
-        # The release file covers every trait, so it is large; the filter runs here.
-        with httpx.Client(
-            timeout=httpx.Timeout(600.0, connect=30.0), follow_redirects=True
-        ) as client:
-            raw = fetch_associations(client, file_name)
-        records, _info = iter_records(raw, trait_query)
+        # The release covers every trait and is tens of megabytes, so the filter
+        # runs here and only the matching rows are kept.
+        cache_name = f"{trait_query}-associations.json"
+        try:
+            with httpx.Client(
+                timeout=httpx.Timeout(600.0, connect=30.0), follow_redirects=True
+            ) as client:
+                raw = fetch_associations(client, file_name)
+            payload = filtered_payload(raw, trait_query, file_name, associations_url(file_name))
+            save_payload(
+                "gwas_catalog",
+                cache_name,
+                json.dumps(payload).encode("utf-8"),
+                url=associations_url(file_name),
+            )
+        except httpx.HTTPError as exc:
+            cached = load_payload("gwas_catalog", cache_name)
+            if cached is None:
+                raise
+            logger.warning("GWAS Catalog unreachable (%s); using the cached rows", exc)
+            payload = json.loads(cached)
+        records = records_from_rows(rows_from_payload(payload))
         total_found = len(records)
         logger.info("GWAS Catalog: %d association(s) for %r", total_found, trait_query)
 
@@ -525,8 +552,10 @@ def run_reporter_ingestion(
     fetched = inserted = updated = 0
     total_found: int | None = None
     try:
+        collected: list[dict[str, Any]] = []
         with ReporterClient() as client, session_scope() as session:
             for record in client.iter_projects(query):
+                collected.append(record)
                 project = to_project(record)
                 if project is None:
                     continue
@@ -564,6 +593,12 @@ def run_reporter_ingestion(
                     )
             session.commit()
         total_found = fetched
+        save_payload(
+            source,
+            f"{query}-projects.json",
+            json.dumps(collected).encode("utf-8"),
+            url=REPORTER_SEARCH_URL,
+        )
         _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
     except Exception as exc:
         logger.exception("Ingestion failed for source=%s", source)

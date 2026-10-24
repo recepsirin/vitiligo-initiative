@@ -21,6 +21,7 @@ Release files: https://ftp.ebi.ac.uk/pub/databases/gwas/releases/latest/
 
 from __future__ import annotations
 
+import hashlib
 import io
 import zipfile
 from collections.abc import Iterator
@@ -136,18 +137,49 @@ def fetch_associations(
     return bytes(response.content)
 
 
-def iter_records(
-    raw: bytes, trait_query: str = DEFAULT_TRAIT_QUERY
-) -> tuple[list[GeneticAssociation], dict[str, Any]]:
-    """Parse a release file into records, de-duplicated by (study, variant)."""
+def filtered_payload(
+    raw: bytes, trait_query: str, file_name: str, release_url: str
+) -> dict[str, Any]:
+    """The matching rows plus a fingerprint of the release they came from.
+
+    Caching the whole release would mean keeping every trait's associations —
+    tens of megabytes — to preserve the handful that become data. The rows we
+    used are kept instead, with the release's own hash, so the ingest can be
+    re-run offline and any row traced to the file it came from.
+    """
+    rows = list(parse_associations(raw, trait_query))
+    return {
+        "release_file": file_name,
+        "release_url": release_url,
+        "release_sha256": hashlib.sha256(raw).hexdigest(),
+        "release_bytes": len(raw),
+        "trait_query": trait_query,
+        "retrieved_at": datetime.now(UTC).isoformat(),
+        "rows": rows,
+    }
+
+
+def rows_from_payload(payload: dict[str, Any]) -> list[dict[str, str]]:
+    """Rows out of a cached payload, as ``filtered_payload`` wrote them."""
+    return [r for r in payload.get("rows", []) if isinstance(r, dict)]
+
+
+def records_from_rows(rows: list[dict[str, str]]) -> list[GeneticAssociation]:
+    """Rows to stored records, de-duplicated by (study, variant)."""
     seen: set[str] = set()
     records: list[GeneticAssociation] = []
-    scanned = 0
-    for row in parse_associations(raw, trait_query):
-        scanned += 1
+    for row in rows:
         record = to_association(row)
         if record is None or record.source_id in seen:
             continue
         seen.add(record.source_id)
         records.append(record)
-    return records, {"rows_matched": scanned}
+    return records
+
+
+def iter_records(
+    raw: bytes, trait_query: str = DEFAULT_TRAIT_QUERY
+) -> tuple[list[GeneticAssociation], dict[str, Any]]:
+    """Parse a release file into records, de-duplicated by (study, variant)."""
+    rows = list(parse_associations(raw, trait_query))
+    return records_from_rows(rows), {"rows_matched": len(rows)}

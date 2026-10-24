@@ -17,7 +17,7 @@ Every ingest command accepts `--limit N` for smoke tests. `./scripts/ingest/sync
 
 ```bash
 # Storage
-vitiligo db stats
+vitiligo db stats   # documents, other stores, and what is cached on disk
 vitiligo db sample -n 5
 vitiligo db repair [--apply]                  # fix truncated titles and GEO non-series rows; then: embed run
 
