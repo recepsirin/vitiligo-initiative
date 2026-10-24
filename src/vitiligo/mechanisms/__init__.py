@@ -1,5 +1,11 @@
 """Mechanistic hypotheses: claim, evidence, competing explanation, and the test."""
 
+from vitiligo.mechanisms.feasibility import (
+    Feasibility,
+    assess,
+    corpus_identifiers,
+    named_datasets,
+)
 from vitiligo.mechanisms.schema import (
     CAUSAL_LABELS,
     CAUSAL_LADDER,
@@ -37,14 +43,18 @@ __all__ = [
     "Competing",
     "Context",
     "Evidence",
+    "Feasibility",
     "Mechanism",
     "SealResult",
     "Test",
+    "assess",
     "causal_rank",
     "check_structure",
     "corpus_evidence_level",
+    "corpus_identifiers",
     "from_dict",
     "load",
+    "named_datasets",
     "resolve_ref",
     "seal_core",
     "seal_hash",

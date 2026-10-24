@@ -61,6 +61,22 @@ Each source also takes a stance:
 
 It exits non-zero when anything fails, so it can gate a commit.
 
+## Can we test it?
+
+`vitiligo mechanism list` ends with a column saying whether the hypothesis could be tested today, and `show` gives the reason. Two halves, kept apart because only one can be computed:
+
+- **Which datasets the test names, and whether we hold them** — read off the record and checked against the corpus.
+- **Whether the test needs samples nobody has collected** — declared in the record, because no corpus knows that. The gate refuses a declaration without a reason.
+
+The second matters more than it sounds. Both records hold every dataset they name, so both read *testable now* until the requirement was declared; both actually wait on data that does not exist — skin sampled after treatment stops, and lesions matched for treatment with repigmentation measured afterwards. A test that looks ready and is not costs months.
+
+| Status | Means |
+|---|---|
+| `testable_now` | every dataset it names is held, and no new samples are needed |
+| `blocked_on_new_data` | it waits on samples nobody has collected; the record says which |
+| `missing_dataset` | it names a dataset the corpus does not hold, which a fetch would fix |
+| `no_data_named` | the test names no dataset to check |
+
 ## Sealing
 
 A seal is a SHA-256 over the **falsifiable core**: the claim, the context and the test. Evidence and notes stay editable, because sources accumulate and a record should be allowed to grow; what must not move is what the record predicts and how it will be judged. This follows the [pre-registrations](../model-v0.4-preregistration.md), where amendments are appended rather than rewritten.

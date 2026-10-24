@@ -339,3 +339,12 @@ def test_an_unknown_citation_kind_is_still_rejected() -> None:
         resolve=__import__("vitiligo.mechanisms.verify", fromlist=["resolve_ref"]).resolve_ref,
     )
     assert any("malformed citation" in p for p in problems)
+
+
+def test_a_declared_need_for_new_data_must_say_what_is_missing() -> None:
+    """A flag with no reason cannot be acted on, and hides the real blocker."""
+    test = dict(_record()["test"], needs_new_data=True, new_data="")
+    assert any("test.new_data must say" in p for p in _structure(test=test))
+
+    stated = dict(_record()["test"], needs_new_data=True, new_data="Skin after withdrawal.")
+    assert _structure(test=stated) == []

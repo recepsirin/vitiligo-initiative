@@ -1801,22 +1801,32 @@ def mechanism_list_cmd(
     path: str = typer.Option(str(MECHANISM_CURATION), "--file", help="Curation file."),
 ) -> None:
     """List mechanistic hypotheses with what their supporting evidence reaches."""
-    from vitiligo.mechanisms import CAUSAL_LABELS, OUTCOMES
+    from vitiligo.mechanisms import CAUSAL_LABELS, OUTCOMES, assess, corpus_identifiers
 
     mechanisms = _load_mechanisms(path)
+    held = corpus_identifiers()
+    readable = {
+        "testable_now": "[green]testable now[/green]",
+        "blocked_on_new_data": "[yellow]needs new data[/yellow]",
+        "missing_dataset": "[yellow]dataset not held[/yellow]",
+        "no_data_named": "[dim]no dataset named[/dim]",
+    }
     table = Table(title="Mechanistic hypotheses")
     table.add_column("ID", style="cyan", overflow="fold")
     table.add_column("Outcome")
     table.add_column("Status")
     table.add_column("Supporting evidence reaches")
     table.add_column("For / against", justify="right")
+    table.add_column("Can we test it?")
     for m in mechanisms:
+        feasibility = assess(m, held)
         table.add_row(
             m.id,
             f"{m.outcome}. {OUTCOMES.get(m.outcome, '?')}",
             m.status,
             CAUSAL_LABELS.get(m.causal_support, m.causal_support),
             f"{len(m.supporting())} / {len(m.against())}",
+            readable.get(feasibility.status, feasibility.status),
         )
     console.print(table)
     console.print(
@@ -1895,6 +1905,17 @@ def mechanism_show_cmd(
     ):
         console.print(f"- [cyan]{label}[/cyan]: {value}")
     console.print(f"\n[bold]Uncertainty[/bold]: {found.uncertainty}")
+
+    from vitiligo.mechanisms import assess, corpus_identifiers
+
+    feasibility = assess(found, corpus_identifiers())
+    console.print(f"\n[bold]Can we test it?[/bold] {feasibility.status.replace('_', ' ')}")
+    if feasibility.held:
+        console.print(f"  datasets held: {', '.join(feasibility.held)}")
+    if feasibility.missing:
+        console.print(f"  [yellow]not in the corpus:[/yellow] {', '.join(feasibility.missing)}")
+    if feasibility.note:
+        console.print(f"  [dim]{feasibility.note}[/dim]")
     if found.seal:
         console.print(
             f"[dim]Sealed {found.seal.get('sealed_at')} · {found.seal.get('sha256')}[/dim]"

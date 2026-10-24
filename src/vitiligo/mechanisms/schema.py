@@ -110,6 +110,10 @@ class Test:
     if_correct: str = ""  # what we expect to see if the claim holds
     if_incorrect: str = ""  # what we expect if it does not
     decides: str = ""  # which hypothesis survives which result
+    # Whether the test waits on samples nobody has collected. No corpus can
+    # work this out, so the curator declares it and ``verify`` demands a reason.
+    needs_new_data: bool = False
+    new_data: str = ""  # what has to be collected, and why it does not exist
 
 
 @dataclass(frozen=True)

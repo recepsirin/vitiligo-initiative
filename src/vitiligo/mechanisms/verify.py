@@ -155,6 +155,13 @@ def _check_test(m: Mechanism, where: str) -> list[str]:
         problems.append(
             f"{where}: test.if_correct and test.if_incorrect are the same — it cannot fail"
         )
+    # A test blocked on samples nobody has collected is a different thing from
+    # one waiting on a download, and only the record can say which it is.
+    if m.test.needs_new_data and _blank(m.test.new_data):
+        problems.append(
+            f"{where}: test.needs_new_data is set, so test.new_data must say what has to be"
+            " collected and why it does not exist"
+        )
     return problems
 
 
