@@ -132,6 +132,55 @@ class GeneticAssociation(SQLModel, table=True):
     retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
 
 
+class ResearchSourceKind(StrEnum):
+    """Sources of research-funding records."""
+
+    NIH_REPORTER = "nih_reporter"
+
+
+class ResearchProject(SQLModel, table=True):
+    """A funded research project: work being attempted, not work finished.
+
+    Kept out of ``documents`` on purpose. A grant abstract is a plan, and
+    counting it as literature would inflate every evidence count that reads
+    that table.
+    """
+
+    __tablename__ = "research_projects"
+    __table_args__ = (UniqueConstraint("source", "source_id", name="uq_project_source_source_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    source: ResearchSourceKind = Field(index=True)
+    source_id: str = Field(index=True, description="Award number, unique per year.")
+    core_project_num: str | None = Field(
+        default=None, index=True, description="Stable across a grant's renewals."
+    )
+
+    title: str | None = Field(default=None)
+    abstract: str | None = Field(default=None)
+
+    contact_pi: str | None = Field(default=None, index=True)
+    contact_pi_profile_id: str | None = Field(default=None, index=True)
+    investigators: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    organization: str | None = Field(default=None, index=True)
+    org_city: str | None = Field(default=None)
+    org_state: str | None = Field(default=None, index=True)
+    org_country: str | None = Field(default=None)
+
+    fiscal_year: int | None = Field(default=None, index=True)
+    award_amount: int | None = Field(default=None)
+    agency: str | None = Field(default=None, index=True)
+    activity_code: str | None = Field(default=None, description="R01, P50, K23 and so on.")
+    is_active: bool = Field(default=False, index=True)
+    project_start: str | None = Field(default=None)
+    project_end: str | None = Field(default=None)
+
+    terms: str | None = Field(default=None)
+    project_url: str | None = Field(default=None)
+    raw_metadata: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
+
+
 class DocumentChunk(SQLModel, table=True):
     """One embedded passage of a document's full text.
 

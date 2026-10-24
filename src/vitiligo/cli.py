@@ -41,6 +41,7 @@ from vitiligo.ingest import (
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
+    run_reporter_ingestion,
 )
 from vitiligo.ingest.repair import repair_corpus
 from vitiligo.logging import configure_logging, get_logger
@@ -344,6 +345,22 @@ def ingest_gwas(
     console.rule("[bold]Ingest[/bold] — GWAS Catalog")
     console.print("[dim]Downloading the release file (tens of MB) and filtering it…[/dim]")
     stats = run_gwas_ingestion(trait_query=trait)
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("reporter")
+def ingest_reporter(
+    query: str = typer.Option("vitiligo", "--query", "-q", help="NIH RePORTER text search."),
+) -> None:
+    """Import NIH-funded projects: what is being attempted now, and by whom.
+
+    Grants are plans, not findings. They say nothing about whether a treatment
+    works, and are never counted as evidence; they are here to show the
+    pipeline years before publication, and to name people working on a
+    question today.
+    """
+    console.rule("[bold]Ingest[/bold] — NIH RePORTER")
+    stats = run_reporter_ingestion(query=query)
     _print_ingest_stats(stats)
 
 
@@ -1231,6 +1248,80 @@ def report_candidates_cmd(
             "\n[dim]Tip: pass --json exports/candidate-report.json "
             "--markdown docs/candidate-report-v1.md[/dim]"
         )
+
+
+@report_app.command("funding")
+def report_funding_cmd(
+    since: int = typer.Option(2024, "--since", help="Earliest fiscal year to count."),
+    term: str = typer.Option("vitiligo", "--term", help="Topic the project must be about."),
+    top_n: int = typer.Option(12, "--top-n", "-n", help="Investigators to show."),
+    json_out: str | None = typer.Option(None, "--json", help="Write the summary as JSON."),
+) -> None:
+    """Who holds NIH funding on the topic now (needs: vitiligo ingest reporter).
+
+    A grant is a plan, not a result. This answers "who is working on this
+    today", which is what the roadmap's reviewer and clinical-lead gates need.
+    """
+    from dataclasses import asdict
+
+    from sqlmodel import select
+
+    from vitiligo.reports.funding import active_investigators, topic_counts
+    from vitiligo.storage import ResearchProject
+
+    init_db()
+    with session_scope() as session:
+        projects = list(session.exec(select(ResearchProject)).all())
+    if not projects:
+        console.print("[yellow]No funded projects stored.[/yellow] Run: vitiligo ingest reporter")
+        raise typer.Exit(code=1)
+
+    people = active_investigators(projects, since_fiscal_year=since, term=term, limit=top_n)
+    console.rule(f"[bold]NIH funding[/bold] — {term}, FY{since} onward")
+    table = Table()
+    table.add_column("Investigator", style="cyan")
+    table.add_column("Organization")
+    table.add_column("ST")
+    table.add_column("Awards", justify="right")
+    table.add_column("Total", justify="right")
+    table.add_column("Active")
+    for person in people:
+        table.add_row(
+            person.name,
+            (person.organization or "")[:34],
+            person.state or "",
+            str(person.awards),
+            f"${person.total_award:,}",
+            "yes" if person.has_active_award else "",
+        )
+    console.print(table)
+
+    counts = topic_counts(
+        projects,
+        ["resident memory", "IL-15", "JAK", "melanocyte stem", "hair follicle", "relapse"],
+        since_fiscal_year=since,
+    )
+    console.print(
+        "[dim]Projects mentioning: " + ", ".join(f"{k} {v}" for k, v in counts.items()) + "[/dim]"
+    )
+    console.print("[dim]A grant is work being attempted, never evidence that it works.[/dim]")
+
+    if json_out:
+        path = Path(json_out)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "since": since,
+                    "term": term,
+                    "investigators": [asdict(p) for p in people],
+                    "topic_counts": counts,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+        console.print(f"[green]Wrote[/green] {path}")
 
 
 @report_app.command("jak")

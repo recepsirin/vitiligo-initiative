@@ -69,6 +69,8 @@ Most items that would move an outcome now wait for a person:
 
 **So outside review comes first.** The review pack exists (`./scripts/review/kol-share-pack.sh`); it has not been sent.
 
+**Who to send it to is now answerable.** `vitiligo report funding` lists who holds NIH funding on vitiligo today. Since FY2024, 25 vitiligo-centred projects run across 10 investigators. Two work on exactly the questions the [mechanism records](mechanisms/README.md) ask: John E Harris (UMass/MGH, $5.2M active), whose lab produced the IL-15 evidence behind 3.6, and Jessica Shiu (UC Irvine), funded on how local factors govern repigmentation in stable vitiligo, which is 2.1. A grant is a plan, not evidence, so none of this counts toward any outcome — it answers who to approach, not what is true.
+
 ## Dates that set the pace
 
 Estimated dates are the sponsors' registry estimates; results usually post months later.

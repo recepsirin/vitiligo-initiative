@@ -29,6 +29,7 @@ vitiligo ingest ctgov                         # ~320 ClinicalTrials.gov trials
 vitiligo ingest euctr                         # ~22 EU CTR (CTIS) trials
 vitiligo ingest opentargets                   # drug and target priors (EFO_0004208)
 vitiligo ingest gwas                          # vitiligo variants from the GWAS Catalog (157 associations)
+vitiligo ingest reporter                      # NIH-funded vitiligo projects (who is working on what)
 vitiligo ingest ictrp export.xml              # WHO ICTRP XML export
 vitiligo ingest drugbank db.xml               # your own licensed DrugBank export (.xml or .zip)
 
@@ -55,6 +56,7 @@ vitiligo graph export -o exports/graph-review.json
 
 # Reports (deterministic)
 vitiligo report candidates --json exports/candidate-report.json --markdown exports/candidate-report.md
+vitiligo report funding --since 2024          # who holds NIH funding on vitiligo now
 vitiligo report jak --json exports/jak-atlas.json --markdown exports/jak-atlas.md --csv-dir exports/jak-atlas
 vitiligo report jak-arms --csv exports/jak-arms.csv --json exports/jak-arms.json [--with-papers]
 

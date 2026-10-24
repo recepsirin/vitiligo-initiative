@@ -47,6 +47,8 @@ from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pmc import PMCClient
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.sources.pubmed import PubMedClient
+from vitiligo.sources.reporter import DEFAULT_VITILIGO_QUERY as REPORTER_DEFAULT_QUERY
+from vitiligo.sources.reporter import ReporterClient, to_project
 from vitiligo.storage import (
     Document,
     Embedding,
@@ -489,6 +491,79 @@ def run_gwas_ingestion(
                     session.commit()
             session.commit()
 
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=%s", source)
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=source,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        run_id=run_id,
+    )
+
+
+def run_reporter_ingestion(
+    query: str = REPORTER_DEFAULT_QUERY,
+    commit_every: int = 50,
+) -> IngestionStats:
+    """Import NIH-funded projects matching the query from NIH RePORTER."""
+    from vitiligo.storage import ResearchProject
+
+    init_db()
+    source = "nih_reporter"
+    run = IngestionRun(source=source, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = 0
+    total_found: int | None = None
+    try:
+        with ReporterClient() as client, session_scope() as session:
+            for record in client.iter_projects(query):
+                project = to_project(record)
+                if project is None:
+                    continue
+                fetched += 1
+                existing = session.exec(
+                    select(ResearchProject).where(
+                        and_(
+                            ResearchProject.source == project.source,
+                            ResearchProject.source_id == project.source_id,
+                        )
+                    )
+                ).first()
+                if existing is None:
+                    session.add(project)
+                    inserted += 1
+                else:
+                    for field in (
+                        "core_project_num", "title", "abstract", "contact_pi",
+                        "contact_pi_profile_id", "investigators", "organization", "org_city",
+                        "org_state", "org_country", "fiscal_year", "award_amount", "agency",
+                        "activity_code", "is_active", "project_start", "project_end", "terms",
+                        "project_url", "raw_metadata", "retrieved_at",
+                    ):  # fmt: skip
+                        setattr(existing, field, getattr(project, field))
+                    session.add(existing)
+                    updated += 1
+                if fetched % commit_every == 0:
+                    session.commit()
+                    logger.info(
+                        "Progress [%s]: fetched=%d inserted=%d updated=%d",
+                        source,
+                        fetched,
+                        inserted,
+                        updated,
+                    )
+            session.commit()
+        total_found = fetched
         _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
     except Exception as exc:
         logger.exception("Ingestion failed for source=%s", source)
