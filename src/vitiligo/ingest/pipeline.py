@@ -44,6 +44,8 @@ from vitiligo.sources.ictrp import (
     iter_ictrp_trials,
     should_skip_ictrp_record,
 )
+from vitiligo.sources.isrctn import DEFAULT_VITILIGO_QUERY as ISRCTN_DEFAULT_QUERY
+from vitiligo.sources.isrctn import ISRCTNClient
 from vitiligo.sources.opentargets import (
     DEFAULT_DISEASE_QUERY as OPENTARGETS_DEFAULT_QUERY,
 )
@@ -518,6 +520,48 @@ def run_gwas_ingestion(
                     session.commit()
             session.commit()
 
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=%s", source)
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=source,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        run_id=run_id,
+    )
+
+
+def run_isrctn_ingestion(
+    query: str = ISRCTN_DEFAULT_QUERY,
+    commit_every: int = 25,
+) -> IngestionStats:
+    """Import vitiligo trials from ISRCTN, the registry outside ClinicalTrials.gov."""
+    init_db()
+    source = TrialSourceKind.ISRCTN.value
+    run = IngestionRun(source=source, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = 0
+    total_found: int | None = None
+    try:
+        with ISRCTNClient() as client, session_scope() as session:
+            for trial in client.iter_trials(query):
+                fetched += 1
+                ins, upd = _upsert_trial(session, trial)
+                inserted += ins
+                updated += upd
+                if fetched % commit_every == 0:
+                    session.commit()
+            session.commit()
+        total_found = fetched
         _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
     except Exception as exc:
         logger.exception("Ingestion failed for source=%s", source)

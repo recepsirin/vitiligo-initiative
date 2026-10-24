@@ -215,6 +215,7 @@ class TrialSourceKind(StrEnum):
     CTGOV = "ctgov"
     EUCTR = "euctr"
     ICTRP = "ictrp"
+    ISRCTN = "isrctn"
 
 
 class Trial(SQLModel, table=True):

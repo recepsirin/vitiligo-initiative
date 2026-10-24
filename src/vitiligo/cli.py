@@ -38,6 +38,7 @@ from vitiligo.ingest import (
     run_geo_ingestion,
     run_gwas_ingestion,
     run_ictrp_ingestion,
+    run_isrctn_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
@@ -361,6 +362,22 @@ def ingest_reporter(
     """
     console.rule("[bold]Ingest[/bold] — NIH RePORTER")
     stats = run_reporter_ingestion(query=query)
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("isrctn")
+def ingest_isrctn(
+    query: str = typer.Option("vitiligo", "--query", "-q", help="ISRCTN search term."),
+) -> None:
+    """Import trials from ISRCTN, which registers studies ClinicalTrials.gov does not.
+
+    ISRCTN matches the word anywhere, so most results only mention vitiligo in
+    their exclusion criteria; only trials whose condition or title is the
+    disease are kept. Investigators' names and contact details are removed
+    before anything is stored.
+    """
+    console.rule("[bold]Ingest[/bold] — ISRCTN")
+    stats = run_isrctn_ingestion(query=query)
     _print_ingest_stats(stats)
 
 
