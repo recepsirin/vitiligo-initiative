@@ -895,6 +895,28 @@ def graph_seed_cmd() -> None:
     console.print(table)
 
 
+@graph_app.command("seed-evidence")
+def graph_seed_evidence_cmd() -> None:
+    """Add graph edges that rest on measurements, not on database listings.
+
+    The structured seed records what Open Targets and the registries state.
+    This adds what was measured: GWAS associations with a p-value and cohort,
+    posted trial responder rates, and the mechanistic hypotheses with the rung
+    of the causal ladder their evidence actually reaches.
+    """
+    from vitiligo.graph import seed_graph_from_evidence
+
+    console.rule("[bold]Graph[/bold] — seed from evidence")
+    stats = seed_graph_from_evidence()
+    table = Table(show_header=False, box=None)
+    table.add_row("Genetic associations", f"{stats.genetic_edges:,} edges")
+    table.add_row("Trial outcomes", f"{stats.outcome_edges:,} edges")
+    table.add_row("Mechanistic hypotheses", f"{stats.mechanism_edges:,} edges")
+    table.add_row("[bold]Total new edges[/bold]", f"[bold]{stats.total_edges:,}[/bold]")
+    console.print(table)
+    console.print("[dim]Every edge here is marked observed and carries its causal level.[/dim]")
+
+
 @graph_app.command("extract")
 def graph_extract_cmd(
     limit: int = typer.Option(50, "--limit", "-l", help="Max documents to extract."),
@@ -973,6 +995,30 @@ def graph_stats_cmd() -> None:
         for row in summary["by_predicate"]:
             pred_table.add_row(row.label, str(row.count))
         console.print(pred_table)
+
+    # What kind of statement each edge is. An asserted edge is a source's
+    # listing; an observed one has a measurement and a rung behind it.
+    if summary.get("by_claim"):
+        claim_table = Table(title="Edges by claim", show_header=True, header_style="bold")
+        claim_table.add_column("Claim")
+        claim_table.add_column("Count", justify="right")
+        claim_table.add_column("Meaning")
+        meanings = {
+            "asserted": "a database or registry states it",
+            "observed": "a measurement was made and reported",
+        }
+        for row in summary["by_claim"]:
+            claim_table.add_row(row.label, str(row.count), meanings.get(row.label, ""))
+        console.print(claim_table)
+    if summary.get("by_causal_level"):
+        causal_table = Table(
+            title="Observed edges by causal level", show_header=True, header_style="bold"
+        )
+        causal_table.add_column("Level")
+        causal_table.add_column("Count", justify="right")
+        for row in summary["by_causal_level"]:
+            causal_table.add_row(row.label, str(row.count))
+        console.print(causal_table)
 
 
 @graph_app.command("search")

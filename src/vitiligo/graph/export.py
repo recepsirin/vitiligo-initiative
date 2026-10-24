@@ -69,6 +69,10 @@ def _edge_view_to_dict(view: GraphEdgeView, edge: GraphEdge) -> dict[str, Any]:
         "object_key": view.object_key,
         "confidence": view.confidence,
         "extraction_method": view.extraction_method,
+        # A reviewer cannot weigh an edge without knowing whether it was
+        # measured or merely listed, so both travel with the snapshot.
+        "claim": view.claim,
+        "causal_level": view.causal_level,
         "evidence_count": view.evidence_count,
         "evidence": list(edge.evidence or [])[:5],
     }

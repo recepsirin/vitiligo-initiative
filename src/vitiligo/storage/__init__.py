@@ -2,6 +2,7 @@
 
 from vitiligo.storage.db import get_engine, init_db, session_scope
 from vitiligo.storage.models import (
+    ClaimKind,
     Document,
     DocumentChunk,
     Embedding,
@@ -19,6 +20,7 @@ from vitiligo.storage.models import (
 )
 
 __all__ = [
+    "ClaimKind",
     "Document",
     "DocumentChunk",
     "Embedding",

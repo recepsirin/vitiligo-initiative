@@ -49,6 +49,7 @@ vitiligo priors sample --kind target -l 10
 
 # Knowledge graph
 vitiligo graph seed                           # deterministic, from priors + trials
+vitiligo graph seed-evidence                 # edges from GWAS, trial results and mechanism records
 vitiligo graph extract --limit 50             # LLM extraction from abstracts
 vitiligo graph stats
 vitiligo graph search ruxolitinib

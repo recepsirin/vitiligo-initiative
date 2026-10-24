@@ -32,6 +32,10 @@ class GraphEdgeView:
     confidence: float
     extraction_method: str
     evidence_count: int
+    # Whether the relation was measured or is a source's assertion, and for a
+    # measured one, how directly it speaks to cause.
+    claim: str = "asserted"
+    causal_level: str | None = None
 
 
 def summarize_graph() -> dict[str, list[GraphStatsRow]]:
@@ -51,6 +55,17 @@ def summarize_graph() -> dict[str, list[GraphStatsRow]]:
         method_rows = session.exec(
             select(GraphEdge.extraction_method, func.count())
             .group_by(GraphEdge.extraction_method)
+            .order_by(desc(func.count()))
+        ).all()
+        claim_rows = session.exec(
+            select(GraphEdge.claim, func.count())
+            .group_by(GraphEdge.claim)
+            .order_by(desc(func.count()))
+        ).all()
+        causal_rows = session.exec(
+            select(GraphEdge.causal_level, func.count())
+            .where(GraphEdge.causal_level.is_not(None))  # type: ignore[union-attr]
+            .group_by(GraphEdge.causal_level)
             .order_by(desc(func.count()))
         ).all()
 
@@ -75,6 +90,15 @@ def summarize_graph() -> dict[str, list[GraphStatsRow]]:
         "by_method": [
             GraphStatsRow(label=str(method or "unknown"), count=int(count))
             for method, count in method_rows
+        ],
+        "by_claim": [
+            GraphStatsRow(
+                label=str(claim.value if hasattr(claim, "value") else claim), count=int(count)
+            )
+            for claim, count in claim_rows
+        ],
+        "by_causal_level": [
+            GraphStatsRow(label=str(level), count=int(count)) for level, count in causal_rows
         ],
     }
 
@@ -211,6 +235,8 @@ def _edge_to_view(session: Session, edge: GraphEdge) -> GraphEdgeView | None:
         confidence=edge.confidence,
         extraction_method=edge.extraction_method,
         evidence_count=len(edge.evidence or []),
+        claim=edge.claim.value if hasattr(edge.claim, "value") else str(edge.claim),
+        causal_level=edge.causal_level,
     )
 
 

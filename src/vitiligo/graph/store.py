@@ -8,7 +8,7 @@ from typing import Any
 from sqlmodel import Session, select
 
 from vitiligo.graph.normalize import normalize_entity_key
-from vitiligo.storage.models import EntityKind, GraphEdge, GraphEntity, RelationKind
+from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
 
 
 def upsert_entity(
@@ -59,8 +59,16 @@ def upsert_edge(
     confidence: float,
     extraction_method: str,
     evidence: dict[str, Any],
+    claim: ClaimKind = ClaimKind.ASSERTED,
+    causal_level: str | None = None,
 ) -> tuple[GraphEdge, bool]:
-    """Insert or merge an edge. Returns (edge, inserted)."""
+    """Insert or merge an edge. Returns (edge, inserted).
+
+    ``claim`` says whether the relation was measured or is asserted by a
+    source, and ``causal_level`` places an observed one on the causal ladder.
+    The default is ``asserted``, because a relation read out of a database is
+    that database's statement until evidence is attached to it.
+    """
     stmt = select(GraphEdge).where(
         GraphEdge.subject_id == subject.id,
         GraphEdge.predicate == predicate,
@@ -75,12 +83,21 @@ def upsert_edge(
             confidence=confidence,
             extraction_method=extraction_method,
             evidence=[evidence],
+            claim=claim,
+            causal_level=causal_level,
         )
         session.add(edge)
         session.flush()
         return edge, True
 
     existing.confidence = max(existing.confidence, confidence)
+    # An edge that was only asserted becomes observed once a measurement
+    # arrives; evidence never downgrades it back.
+    if claim == ClaimKind.OBSERVED and existing.claim != ClaimKind.OBSERVED:
+        existing.claim = ClaimKind.OBSERVED
+        existing.causal_level = causal_level
+    elif claim == ClaimKind.OBSERVED and causal_level is not None:
+        existing.causal_level = _stronger_level(existing.causal_level, causal_level)
     merged = list(existing.evidence or [])
     if not _evidence_seen(merged, evidence):
         merged.append(evidence)
@@ -89,6 +106,15 @@ def upsert_edge(
     session.add(existing)
     session.flush()
     return existing, False
+
+
+def _stronger_level(current: str | None, incoming: str) -> str:
+    """The higher rung of the two, so better evidence raises an edge."""
+    from vitiligo.mechanisms.schema import causal_rank
+
+    if current is None:
+        return incoming
+    return incoming if causal_rank(incoming) > causal_rank(current) else current
 
 
 def get_entity_by_kind_key(

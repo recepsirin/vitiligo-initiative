@@ -82,6 +82,6 @@ Both sit at the honest state of the field: the first rests on a mouse perturbati
 
 ## What this is not
 
-It is not a mechanism-wide knowledge graph. A graph of genes, cells and pathways would be infrastructure built before anything has been tested, and [`success.md`](../success.md) asks for the minimum an answer needs. These records are files: readable, reviewable, and verifiable without a database. Structure gets added when several hypotheses need connecting, not before.
+It is not a replacement for the knowledge graph, and it is not written into one by hand. A record is a file: readable, reviewable, and verifiable without a database. `vitiligo graph seed-evidence` then projects each record into the graph — the hypothesis as a node, joined to the disease at the rung its own supporting evidence reaches, with its cell type, tissue state and upstream pathways as the node types the structured seed could not express. Those context edges are marked `asserted`, because where a claim is said to apply is the curator's framing, not a measurement.
 
-The [knowledge graph](../architecture.md) stays what it is: deterministic links seeded from priors and trials, which is why those edges no longer score in the candidate report ([roadmap](../roadmap.md#checks-on-what-exists)).
+The rest of the graph is honest about itself now too. Edges seeded from Open Targets and the registries are marked `asserted`: `methotrexate treats vitiligo` came from a registry listing a trial, not from evidence that it works, which is also why those edges no longer score in the candidate report ([roadmap](../roadmap.md#checks-on-what-exists)). Edges that rest on a measurement — a GWAS association, a posted responder rate — are marked `observed` and carry their rung.

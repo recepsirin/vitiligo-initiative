@@ -46,7 +46,7 @@ Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `
 | `vitiligo.storage` | SQLModel schema: documents, embeddings, trials, priors, graph |
 | `vitiligo.embed` | fastembed ONNX embeddings (`BAAI/bge-small-en-v1.5`), brute-force cosine search. Two indexes: one vector per document over title and abstract, and one per passage of a paper's body (`chunking.py`, `full_text.py`), where a document scores as its best passage |
 | `vitiligo.evidence` | Evidence levels for papers and trials; search down-ranks mouse (−0.08) and in-vitro (−0.05) studies |
-| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph extract` from abstracts (optional LLM) |
+| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph seed-evidence` from GWAS associations, trial results and mechanism records; `graph extract` from abstracts (optional LLM). Every edge records whether it is **asserted** (a source states it) or **observed** (measured), and an observed one carries its rung on the causal ladder |
 | `vitiligo.trials`, `vitiligo.priors` | Query helpers over the store |
 | `vitiligo.reasoning` | Ask (RAG with citations) and Hypothesize (four evidence streams) |
 | `vitiligo.reports` | Candidate report (deterministic); JAK atlas (`jak.py`); harmonized arm table (`jak_arms.py`); curated paper results (`paper_results.py`) |

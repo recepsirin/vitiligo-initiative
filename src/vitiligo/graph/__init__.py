@@ -1,6 +1,7 @@
 """Knowledge graph — entities, relations, seeding, and LLM extraction."""
 
 from vitiligo.graph.build import GraphBuildStats, run_graph_build
+from vitiligo.graph.evidence_seed import EvidenceSeedStats, seed_graph_from_evidence
 from vitiligo.graph.export import export_graph_snapshot
 from vitiligo.graph.query import (
     GraphEdgeView,
@@ -12,6 +13,7 @@ from vitiligo.graph.query import (
 )
 
 __all__ = [
+    "EvidenceSeedStats",
     "GraphBuildStats",
     "GraphEdgeView",
     "GraphStatsRow",
@@ -20,5 +22,6 @@ __all__ = [
     "retrieve_graph_for_hypothesize",
     "run_graph_build",
     "search_entities",
+    "seed_graph_from_evidence",
     "summarize_graph",
 ]

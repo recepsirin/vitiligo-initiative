@@ -341,13 +341,16 @@ class EntityKind(StrEnum):
     """Node types in the vitiligo knowledge graph."""
 
     DRUG = "drug"
-    TARGET = "target"
+    TARGET = "target"  # a gene or its protein product
     DISEASE = "disease"
     PATHWAY = "pathway"
     MECHANISM = "mechanism"
     BIOMARKER = "biomarker"
     INTERVENTION = "intervention"
     TRIAL = "trial"
+    CELL_TYPE = "cell_type"  # melanocytes, keratinocytes, CD8 resident memory T cells
+    PHENOTYPE = "phenotype"  # non-segmental disease, lesional skin, active spread
+    OUTCOME = "outcome"  # F-VASI75, T-VASI50: what a trial measured
 
 
 class RelationKind(StrEnum):
@@ -360,6 +363,23 @@ class RelationKind(StrEnum):
     ASSOCIATED_WITH = "associated_with"
     TESTED_IN = "tested_in"
     INVESTIGATES = "investigates"
+    CHANGES = "changes"  # an intervention moved a measured outcome
+    EXPRESSED_IN = "expressed_in"  # a gene or pathway acts in a cell type
+    OCCURS_IN = "occurs_in"  # a cell type or process sits in a phenotype
+
+
+class ClaimKind(StrEnum):
+    """Whether an edge records something measured, or something a source asserts.
+
+    The predicate alone cannot say this. ``methotrexate treats vitiligo`` was
+    seeded because a registry lists a trial of it, which is an assertion by
+    that registry; ``TYR associated_with vitiligo`` from a GWAS carries a
+    p-value from a named cohort, which is an observation. Ranking, review and
+    every later claim depend on telling them apart.
+    """
+
+    ASSERTED = "asserted"  # a database or registry states the relation
+    OBSERVED = "observed"  # a measurement was made and reported
 
 
 class GraphEntity(SQLModel, table=True):
@@ -395,6 +415,20 @@ class GraphEdge(SQLModel, table=True):
         default="structured",
         index=True,
         description="structured | llm | mesh",
+    )
+    claim: ClaimKind = Field(
+        default=ClaimKind.ASSERTED,
+        index=True,
+        description="Whether the relation was measured, or asserted by a source.",
+    )
+    causal_level: str | None = Field(
+        default=None,
+        index=True,
+        description=(
+            "For an observed edge, where it sits on the causal ladder of "
+            "vitiligo.mechanisms: association, human_genetics, perturbation_in_vitro, "
+            "perturbation_in_animal, perturbation_in_human. None when asserted."
+        ),
     )
     evidence: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=_utcnow)
