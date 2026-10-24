@@ -63,7 +63,7 @@
      "ref": "gwas:GCST004785",
      "stance": "bounds",
      "causal_level": "human_genetics",
-     "shows": "The largest European vitiligo GWAS (2,853 cases, 37,405 controls). Across every vitiligo association in the GWAS Catalog, the genome-wide significant genes sit in immune tolerance (PTPN22, CTLA4, CD80, IL2RA, BACH2, HLA-DRB1) and pigment biology (TYR, MC1R, IRF4). No IL-15 axis gene reaches significance, and neither does any JAK or interferon gene, although JAK inhibitors are the most effective treatment there is. Inherited risk shapes who develops vitiligo; it is not expected to reveal what maintains it, so this bounds the claim rather than opposing it."
+     "shows": "The largest European vitiligo GWAS (2,853 cases, 37,405 controls). Across every vitiligo association in the GWAS Catalog, the genome-wide significant genes sit in immune tolerance (PTPN22, CTLA4, CD80, IL2RA, BACH2, HLA-DRB1) and pigment biology (TYR, MC1R, IRF4). No IL-15 axis gene is among them, and neither is any JAK or interferon gene, although JAK inhibitors are the most effective treatment there is. Of the 129 significant associations, 23 carry no gene mapping (position-only variants from the 2024 Han Chinese GWAS); checked against Ensembl coordinates, none falls within 500 kb of JAK1, JAK2, JAK3, TYK2, IL15, IL15RA, IL2RB or IFNG, the nearest being chr22:37581485 at 405 kb from IL2RB. Inherited risk shapes who develops vitiligo; it is not expected to reveal what maintains it, so this bounds the claim rather than opposing it."
     }
    ],
    "competing": [
@@ -83,7 +83,7 @@
     "if_incorrect": "No association, or a hazard ratio per standard deviation at or below 1.",
     "decides": "A hazard ratio above 1 leaves the memory hypothesis standing and sends the recruitment explanation to its own test. No association, with melanocyte density in the same biopsy predicting relapse instead, favours the melanocyte explanation and the hypothesis is dropped."
    },
-   "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people. Human genetics gives the claim no support: no IL-15 axis gene is associated with vitiligo, though the same is true of the JAK genes that today's effective drugs target, so this is weak evidence either way.",
+   "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people. Human genetics gives the claim no support: no IL-15 axis gene is associated with vitiligo, though the same is true of the JAK genes that today's effective drugs target, so this is weak evidence either way. Absence here is also limited by what the Catalog annotates: a fifth of the significant variants carry no gene mapping at all.",
    "last_reviewed": "2026-10-23",
    "note": "Roadmap item 3.6. Sealed once the score's definition is written, not before: a test whose instrument can still be tuned is not a test."
   },

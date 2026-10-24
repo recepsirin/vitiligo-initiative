@@ -139,3 +139,34 @@ def test_grouping_orders_registries_by_how_many_leads_they_hold() -> None:
 def test_nothing_in_an_empty_corpus() -> None:
     assert scan([]) == []
     assert by_registry([]) == {}
+
+
+def test_a_lead_records_whether_its_paper_is_about_the_disease() -> None:
+    """One lead came from a survey of several skin diseases, not a vitiligo trial."""
+    named = _doc(title="A vitiligo grafting trial", body="Registered CTRI/2017/05/008692.")
+    broad = _doc(
+        title="Body dysmorphia in common skin diseases",
+        body="Patients with psoriasis, acne and vitiligo were enrolled. Registered DRKS00012745.",
+    )
+    leads = {lead.identifier: lead for lead in scan([named, broad])}
+    assert leads["CTRI/2017/05/008692"].paper_title_names_disease is True
+    assert leads["DRKS00012745"].paper_title_names_disease is False
+
+
+def test_leads_split_into_solid_and_needing_checking() -> None:
+    from vitiligo.reports.cited_trials import split_by_confidence
+
+    named = _doc(title="A vitiligo trial", body="Registered CTRI/2017/05/008692.")
+    broad = _doc(
+        title="Several skin diseases",
+        body="Vitiligo patients among others. Registered DRKS00012745.",
+    )
+    solid, check = split_by_confidence(scan([named, broad]))
+    assert [t.identifier for t in solid] == ["CTRI/2017/05/008692"]
+    assert [t.identifier for t in check] == ["DRKS00012745"]
+
+
+def test_splitting_nothing_gives_two_empty_lists() -> None:
+    from vitiligo.reports.cited_trials import split_by_confidence
+
+    assert split_by_confidence([]) == ([], [])

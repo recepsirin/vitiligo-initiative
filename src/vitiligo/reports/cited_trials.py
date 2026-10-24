@@ -61,6 +61,10 @@ class CitedTrial:
     cited_by: str
     paper_title: str
     context: str
+    # True when the citing paper's own title names the disease. Those leads
+    # are almost certainly vitiligo trials; the rest may be a study of several
+    # skin diseases that happens to include it, so the two are not mixed.
+    paper_title_names_disease: bool = False
 
 
 def document_text(document: Document) -> str:
@@ -122,8 +126,26 @@ def scan(
                 cited_by=_reference(document),
                 paper_title=(document.title or "").strip(),
                 context=context,
+                paper_title_names_disease=title_match,
             )
     return sorted(seen.values(), key=lambda t: (t.registry, t.identifier))
+
+
+def split_by_confidence(
+    trials: Iterable[CitedTrial],
+) -> tuple[list[CitedTrial], list[CitedTrial]]:
+    """``(solid, needs_checking)``.
+
+    A lead is solid when the citing paper's title is about the disease. The
+    rest were kept because the word sits near the number, which also catches a
+    study of several skin diseases that enrolled vitiligo patients among
+    others — a real registration, but not a vitiligo trial.
+    """
+    items = list(trials)
+    return (
+        [t for t in items if t.paper_title_names_disease],
+        [t for t in items if not t.paper_title_names_disease],
+    )
 
 
 def by_registry(trials: Iterable[CitedTrial]) -> dict[str, list[CitedTrial]]:

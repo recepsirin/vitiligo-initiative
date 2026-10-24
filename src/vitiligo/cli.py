@@ -1339,7 +1339,7 @@ def report_cited_trials_cmd(
     """
     from dataclasses import asdict
 
-    from vitiligo.reports.cited_trials import by_registry, scan
+    from vitiligo.reports.cited_trials import by_registry, scan, split_by_confidence
 
     init_db()
     with session_scope() as session:
@@ -1356,7 +1356,17 @@ def report_cited_trials_cmd(
     for registry, items in grouped.items():
         table.add_row(registry, str(len(items)), items[0].identifier)
     console.print(table)
-    console.print(f"[dim]{len(leads)} leads from {len(documents):,} documents.[/dim]\n")
+    solid, check = split_by_confidence(leads)
+    console.print(
+        f"[dim]{len(leads)} leads from {len(documents):,} documents. "
+        f"{len(solid)} are cited by a paper whose title names the disease; "
+        f"{len(check)} {'needs' if len(check) == 1 else 'need'} checking before use.[/dim]\n"
+    )
+    if check:
+        console.print("[yellow]Needs checking[/yellow] — the paper covers more than vitiligo:")
+        for lead in check:
+            console.print(f"  [cyan]{lead.identifier}[/cyan]  {lead.paper_title[:68]}")
+        console.print()
 
     for registry, items in grouped.items():
         console.print(f"[bold]{registry}[/bold]")
