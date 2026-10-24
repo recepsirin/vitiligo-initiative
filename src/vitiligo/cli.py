@@ -1324,6 +1324,60 @@ def report_candidates_cmd(
         )
 
 
+@report_app.command("cited-trials")
+def report_cited_trials_cmd(
+    json_out: str | None = typer.Option(None, "--json", help="Write the leads as JSON."),
+    show: int = typer.Option(8, "--show", "-n", help="Example leads to print per registry."),
+) -> None:
+    """Trials the literature names that no registry we read will give us.
+
+    CTRI, ChiCTR and IRCT publish no API, and WHO's ICTRP search refuses
+    programmatic access, so trials from India, China and Iran never reach the
+    corpus. Papers that report them print their registration number, which
+    this recovers along with the paper and the sentence around it. These are
+    leads, not trial records: no arms, outcomes or results come with them.
+    """
+    from dataclasses import asdict
+
+    from vitiligo.reports.cited_trials import by_registry, scan
+
+    init_db()
+    with session_scope() as session:
+        documents = list(session.exec(select(Document)).all())
+        known = [t.source_id for t in session.exec(select(Trial)).all()]
+    leads = scan(documents, known)
+    grouped = by_registry(leads)
+
+    console.rule("[bold]Trials named in papers, missing from our registries[/bold]")
+    table = Table()
+    table.add_column("Registry", style="cyan")
+    table.add_column("Leads", justify="right")
+    table.add_column("Example")
+    for registry, items in grouped.items():
+        table.add_row(registry, str(len(items)), items[0].identifier)
+    console.print(table)
+    console.print(f"[dim]{len(leads)} leads from {len(documents):,} documents.[/dim]\n")
+
+    for registry, items in grouped.items():
+        console.print(f"[bold]{registry}[/bold]")
+        for lead in items[:show]:
+            console.print(f"  [cyan]{lead.identifier}[/cyan]  {lead.paper_title[:68]}")
+            console.print(f"    [dim]{lead.cited_by}[/dim]")
+        if len(items) > show:
+            console.print(f"  [dim]… and {len(items) - show} more[/dim]")
+        console.print()
+    console.print(
+        "[dim]A lead is a trial we know exists, not evidence. Read the registry entry "
+        "before counting it.[/dim]"
+    )
+
+    if json_out:
+        path = Path(json_out)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps([asdict(lead) for lead in leads], indent=2) + "\n")
+        console.print(f"[green]Wrote[/green] {path}")
+
+
 @report_app.command("funding")
 def report_funding_cmd(
     since: int = typer.Option(2024, "--since", help="Earliest fiscal year to count."),

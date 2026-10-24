@@ -57,6 +57,7 @@ vitiligo graph export -o exports/graph-review.json
 
 # Reports (deterministic)
 vitiligo report candidates --json exports/candidate-report.json --markdown exports/candidate-report.md
+vitiligo report cited-trials                 # trials named in papers that no registry we read holds
 vitiligo report funding --since 2024          # who holds NIH funding on vitiligo now
 vitiligo report jak --json exports/jak-atlas.json --markdown exports/jak-atlas.md --csv-dir exports/jak-atlas
 vitiligo report jak-arms --csv exports/jak-arms.csv --json exports/jak-arms.json [--with-papers]

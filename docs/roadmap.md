@@ -56,6 +56,8 @@ It also proposed a four-step programme. Where each stands:
 | **P3** | An intervention-prioritisation engine ranking hypotheses by causal support, benefit, uncertainty, feasibility and novelty | **Premature.** Causal support is already computed per record, and evidence maturity is already separate from it. Ranking two hypotheses is theatre. The same idea already runs where it has something to rank: the [value-of-information engine](../forecasts/voi/ranking/README.md) ranks pending trial results |
 | **P4** | Close the experimental feedback loop with lab and clinical collaborators | **Blocked on people, not code** (gates A and D). The loop that can run without them already does: sealed forecasts scored as results post |
 
+**The trials we cannot reach are now named.** CTRI, ChiCTR and IRCT publish no API, and WHO's ICTRP search refuses programmatic access, so trials from India, China and Iran never reach the corpus. `vitiligo report cited-trials` recovers them from the papers that report them: **34 leads**, 12 Indian, 9 Chinese, 8 Iranian, each with the paper describing it. They are leads, not records — no arms, outcomes or results — but the gap is now a list of 34 specific trials rather than an unknown. An ICTRP bulk export, which needs WHO's data-use agreement accepted by a person, would close it properly.
+
 ## The constraint: people, not code
 
 Most items that would move an outcome now wait for a person:
