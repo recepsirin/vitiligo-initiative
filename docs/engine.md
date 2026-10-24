@@ -28,6 +28,7 @@ vitiligo ingest geo                           # ~50 GEO series (GSE metadata)
 vitiligo ingest ctgov                         # ~320 ClinicalTrials.gov trials
 vitiligo ingest euctr                         # ~22 EU CTR (CTIS) trials
 vitiligo ingest opentargets                   # drug and target priors (EFO_0004208)
+vitiligo ingest gwas                          # vitiligo variants from the GWAS Catalog (157 associations)
 vitiligo ingest ictrp export.xml              # WHO ICTRP XML export
 vitiligo ingest drugbank db.xml               # your own licensed DrugBank export (.xml or .zip)
 

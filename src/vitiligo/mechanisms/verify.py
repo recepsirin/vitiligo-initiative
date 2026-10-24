@@ -33,10 +33,10 @@ from vitiligo.mechanisms.schema import (
     Mechanism,
     seal_hash,
 )
-from vitiligo.storage import Document, SourceKind, Trial, session_scope
+from vitiligo.storage import Document, GeneticAssociation, SourceKind, Trial, session_scope
 
 _ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
-_REF_RE = re.compile(r"^(pubmed|pmc|geo|trial):(.+)$")
+_REF_RE = re.compile(r"^(pubmed|pmc|geo|trial|gwas):(.+)$")
 
 _DOCUMENT_SOURCES = {
     "pubmed": SourceKind.PUBMED,
@@ -56,11 +56,15 @@ def resolve_ref(ref: str) -> str | None:
     """``None`` if the citation resolves in the corpus, else why it does not."""
     match = _REF_RE.match(ref)
     if match is None:
-        return f"malformed citation {ref!r} (expected pubmed:, pmc:, geo: or trial:)"
+        return f"malformed citation {ref!r} (expected pubmed:, pmc:, geo:, trial: or gwas:)"
     kind, source_id = match.group(1), match.group(2)
-    found: Trial | Document | None
+    found: Trial | Document | GeneticAssociation | None
     with session_scope() as session:
-        if kind == "trial":
+        if kind == "gwas":
+            found = session.exec(
+                select(GeneticAssociation).where(GeneticAssociation.study_accession == source_id)
+            ).first()
+        elif kind == "trial":
             found = session.exec(select(Trial).where(Trial.source_id == source_id)).first()
         else:
             found = session.exec(
@@ -75,7 +79,7 @@ def resolve_ref(ref: str) -> str | None:
 def corpus_evidence_level(ref: str) -> EvidenceLevel | None:
     """What the corpus says a cited document is. ``None`` for trials and misses."""
     match = _REF_RE.match(ref)
-    if match is None or match.group(1) == "trial":
+    if match is None or match.group(1) in {"trial", "gwas"}:
         return None
     with session_scope() as session:
         document = session.exec(

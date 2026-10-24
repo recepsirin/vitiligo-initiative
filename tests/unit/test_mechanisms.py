@@ -282,7 +282,7 @@ def test_curated_mechanisms_pass_the_structure_gate() -> None:
 
 def test_curated_mechanisms_cite_only_known_reference_kinds() -> None:
     kinds = {e.ref.split(":")[0] for m in load(CURATION) for e in m.evidence}
-    assert kinds <= {"pubmed", "pmc", "geo", "trial"}
+    assert kinds <= {"pubmed", "pmc", "geo", "trial", "gwas"}
 
 
 def test_curation_file_is_valid_json_with_provenance() -> None:
@@ -310,3 +310,32 @@ def test_non_text_fields_are_reported_not_crashed() -> None:
     assert any("id must be kebab-case" in p for p in problems)
     assert any("title is empty" in p for p in problems)
     assert any("is not an ISO date" in p for p in problems)
+
+
+def test_a_gwas_study_is_a_citable_source() -> None:
+    """Human genetics is a rung of the ladder, so records must be able to cite it."""
+    record = _record(
+        evidence=[
+            {
+                "ref": "gwas:GCST004785",
+                "stance": "supports",
+                "causal_level": "human_genetics",
+                "shows": "A variant near the gene associates with the disease.",
+            }
+        ]
+    )
+    problems = verify([from_dict(record)], resolve=lambda ref: None, level_of=lambda ref: None)
+    assert problems == []
+
+
+def test_an_unknown_citation_kind_is_still_rejected() -> None:
+    record = _record(
+        evidence=[
+            {"ref": "doi:10.1/x", "stance": "supports", "causal_level": "association", "shows": "y"}
+        ]
+    )
+    problems = verify(
+        [from_dict(record)],
+        resolve=__import__("vitiligo.mechanisms.verify", fromlist=["resolve_ref"]).resolve_ref,
+    )
+    assert any("malformed citation" in p for p in problems)

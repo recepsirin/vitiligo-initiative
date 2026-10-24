@@ -87,6 +87,51 @@ class Embedding(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
 
+class GeneticSourceKind(StrEnum):
+    """Sources of human genetic association data."""
+
+    GWAS_CATALOG = "gwas_catalog"
+
+
+class GeneticAssociation(SQLModel, table=True):
+    """One inherited variant associated with a trait, as a catalogue reports it.
+
+    Kept apart from ``priors`` because the unit is different: a prior is a drug
+    or target scored against the disease, while this is a single variant from a
+    single study, with the statistics that study reported.
+    """
+
+    __tablename__ = "genetic_associations"
+    __table_args__ = (UniqueConstraint("source", "source_id", name="uq_genetic_source_source_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    source: GeneticSourceKind = Field(index=True)
+    source_id: str = Field(index=True, description="Study accession and variant.")
+
+    trait: str = Field(index=True, description="Trait as the study reported it.")
+    mapped_trait: str | None = Field(default=None, description="Ontology-mapped trait.")
+    variant: str = Field(index=True, description="rsID, or chromosome:position.")
+    mapped_gene: str | None = Field(
+        default=None,
+        index=True,
+        description="Gene(s) the variant sits in or between — an annotation of what is nearby, not a causal claim.",
+    )
+    reported_genes: str | None = Field(default=None)
+    risk_allele: str | None = Field(default=None)
+
+    p_value: float | None = Field(default=None, index=True)
+    p_value_text: str | None = Field(default=None, description="As printed, e.g. '4E-294'.")
+    odds_ratio_or_beta: float | None = Field(default=None)
+    confidence_interval: str | None = Field(default=None)
+
+    study_accession: str = Field(index=True)
+    pubmed_id: str | None = Field(default=None, index=True)
+    initial_sample: str | None = Field(default=None, description="Discovery cohort, as described.")
+
+    raw_metadata: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    retrieved_at: datetime = Field(default_factory=_utcnow, index=True)
+
+
 class DocumentChunk(SQLModel, table=True):
     """One embedded passage of a document's full text.
 

@@ -31,7 +31,7 @@ Each record states all five levels. A record that stops at the mechanism is an o
 | Rung | Means |
 |---|---|
 | `association` | Observed together: expression, abundance, correlation |
-| `human_genetics` | An inherited variant associates with the disease |
+| `human_genetics` | An inherited variant associates with the disease. Cite a GWAS Catalog study as `gwas:<accession>`; genotype is fixed at conception, so the association cannot run the other way |
 | `perturbation_in_vitro` | The pathway was altered in cells |
 | `perturbation_in_animal` | Altered in an animal model, with an effect |
 | `perturbation_in_human` | Altered in people, with a measured effect |

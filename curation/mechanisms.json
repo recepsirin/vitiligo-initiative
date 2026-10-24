@@ -57,7 +57,13 @@
      "ref": "trial:NCT04530344",
      "stance": "bounds",
      "causal_level": "perturbation_in_human",
-     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17\u20130.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18\u20130.99). It establishes that response erodes after stopping, without identifying what drives the loss."
+     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17–0.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18–0.99). It establishes that response erodes after stopping, without identifying what drives the loss."
+    },
+    {
+     "ref": "gwas:GCST004785",
+     "stance": "bounds",
+     "causal_level": "human_genetics",
+     "shows": "The largest European vitiligo GWAS (2,853 cases, 37,405 controls). Across every vitiligo association in the GWAS Catalog, the genome-wide significant genes sit in immune tolerance (PTPN22, CTLA4, CD80, IL2RA, BACH2, HLA-DRB1) and pigment biology (TYR, MC1R, IRF4). No IL-15 axis gene reaches significance, and neither does any JAK or interferon gene, although JAK inhibitors are the most effective treatment there is. Inherited risk shapes who develops vitiligo; it is not expected to reveal what maintains it, so this bounds the claim rather than opposing it."
     }
    ],
    "competing": [
@@ -77,7 +83,7 @@
     "if_incorrect": "No association, or a hazard ratio per standard deviation at or below 1.",
     "decides": "A hazard ratio above 1 leaves the memory hypothesis standing and sends the recruitment explanation to its own test. No association, with melanocyte density in the same biopsy predicting relapse instead, favours the melanocyte explanation and the hypothesis is dropped."
    },
-   "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people.",
+   "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people. Human genetics gives the claim no support: no IL-15 axis gene is associated with vitiligo, though the same is true of the JAK genes that today's effective drugs target, so this is weak evidence either way.",
    "last_reviewed": "2026-10-23",
    "note": "Roadmap item 3.6. Sealed once the score's definition is written, not before: a test whose instrument can still be tuned is not a test."
   },

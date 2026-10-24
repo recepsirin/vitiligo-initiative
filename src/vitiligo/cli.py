@@ -36,6 +36,7 @@ from vitiligo.ingest import (
     run_drugbank_ingestion,
     run_euctr_ingestion,
     run_geo_ingestion,
+    run_gwas_ingestion,
     run_ictrp_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
@@ -324,6 +325,25 @@ def ingest_euctr(
 
     console.print()
     console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("gwas")
+def ingest_gwas(
+    trait: str = typer.Option(
+        "vitiligo", "--trait", "-t", help="Keep associations whose trait mentions this."
+    ),
+) -> None:
+    """Import inherited variants associated with the trait from the GWAS Catalog.
+
+    Genotype is fixed at conception, so an association cannot run the other
+    way: this is the one observational evidence that reverse causation cannot
+    explain. It is still an association with a variant near a gene, not proof
+    that the gene's function matters.
+    """
+    console.rule("[bold]Ingest[/bold] — GWAS Catalog")
+    console.print("[dim]Downloading the release file (tens of MB) and filtering it…[/dim]")
+    stats = run_gwas_ingestion(trait_query=trait)
     _print_ingest_stats(stats)
 
 

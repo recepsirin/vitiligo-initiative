@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlmodel import select
+from sqlmodel import and_, select
 
 from vitiligo.logging import get_logger
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
@@ -28,6 +28,8 @@ from vitiligo.sources.euctr import DEFAULT_VITILIGO_QUERY as EUCTR_DEFAULT_QUERY
 from vitiligo.sources.euctr import EUCTRClient
 from vitiligo.sources.geo import DEFAULT_VITILIGO_QUERY as GEO_DEFAULT_QUERY
 from vitiligo.sources.geo import GEOClient
+from vitiligo.sources.gwas import ASSOCIATIONS_FILE, fetch_associations, iter_records
+from vitiligo.sources.gwas import DEFAULT_TRAIT_QUERY as GWAS_DEFAULT_QUERY
 from vitiligo.sources.ictrp import (
     count_ictrp_records,
     iter_ictrp_trials,
@@ -421,6 +423,80 @@ def run_opentargets_ingestion(
 
     return IngestionStats(
         source=PriorSourceKind.OPENTARGETS.value,
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        run_id=run_id,
+    )
+
+
+def run_gwas_ingestion(
+    trait_query: str = GWAS_DEFAULT_QUERY,
+    file_name: str = ASSOCIATIONS_FILE,
+    commit_every: int = 100,
+) -> IngestionStats:
+    """Import inherited variants associated with the trait from the GWAS Catalog."""
+    import httpx
+
+    from vitiligo.storage import GeneticAssociation
+
+    init_db()
+    source = "gwas_catalog"
+    run = IngestionRun(source=source, query=f"{trait_query}|{file_name}")
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = 0
+    total_found: int | None = None
+    try:
+        # The release file covers every trait, so it is large; the filter runs here.
+        with httpx.Client(
+            timeout=httpx.Timeout(600.0, connect=30.0), follow_redirects=True
+        ) as client:
+            raw = fetch_associations(client, file_name)
+        records, _info = iter_records(raw, trait_query)
+        total_found = len(records)
+        logger.info("GWAS Catalog: %d association(s) for %r", total_found, trait_query)
+
+        with session_scope() as session:
+            for record in records:
+                fetched += 1
+                existing = session.exec(
+                    select(GeneticAssociation).where(
+                        and_(
+                            GeneticAssociation.source == record.source,
+                            GeneticAssociation.source_id == record.source_id,
+                        )
+                    )
+                ).first()
+                if existing is None:
+                    session.add(record)
+                    inserted += 1
+                else:
+                    for field in (
+                        "trait", "mapped_trait", "variant", "mapped_gene", "reported_genes",
+                        "risk_allele", "p_value", "p_value_text", "odds_ratio_or_beta",
+                        "confidence_interval", "study_accession", "pubmed_id", "initial_sample",
+                        "raw_metadata", "retrieved_at",
+                    ):  # fmt: skip
+                        setattr(existing, field, getattr(record, field))
+                    session.add(existing)
+                    updated += 1
+                if fetched % commit_every == 0:
+                    session.commit()
+            session.commit()
+
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Ingestion failed for source=%s", source)
+        _finalize_run(run_id, "failed", fetched, inserted, updated, total_found, str(exc))
+        raise
+
+    return IngestionStats(
+        source=source,
         total_found=total_found,
         fetched=fetched,
         inserted=inserted,
