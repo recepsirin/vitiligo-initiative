@@ -33,6 +33,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from sqlmodel import Session, select
 
@@ -40,9 +41,11 @@ from vitiligo.graph.store import upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.mechanisms.schema import CURATION_PATH, Mechanism
 from vitiligo.mechanisms.schema import load as load_mechanisms
-from vitiligo.reports.jak_arms import ArmEndpointRow
 from vitiligo.storage import GeneticAssociation, init_db, session_scope
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
+
+if TYPE_CHECKING:  # reports imports graph, so this one stays a type-only import
+    from vitiligo.reports.jak_arms import ArmEndpointRow
 
 logger = get_logger(__name__)
 
