@@ -33,6 +33,8 @@ vitiligo ingest drugbank db.xml               # your own licensed DrugBank expor
 
 # Search and reasoning
 vitiligo embed run                            # ~10–20 min on CPU
+vitiligo embed full-text                     # chunk and embed paper bodies (PMC full text)
+vitiligo search "..." --full-text             # search those passages, with the quote that matched
 vitiligo embed stats
 vitiligo search "IFN-gamma CXCL10 axis" --top-k 10 --show-abstract
 vitiligo ask "Evidence for ruxolitinib + NB-UVB?" -k 8          # needs ANTHROPIC_API_KEY

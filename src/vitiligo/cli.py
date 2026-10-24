@@ -588,6 +588,27 @@ def embed_run(
     console.print(table)
 
 
+@embed_app.command("full-text")
+def embed_full_text_cmd(
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap documents (smoke tests)."),
+    batch_size: int = typer.Option(64, "--batch-size", "-b", help="Passages per encode call."),
+) -> None:
+    """Chunk and embed the body of full-text papers, so search can see past the abstract."""
+    from vitiligo.embed.full_text import embed_full_text
+
+    console.rule("[bold]Full-text passages[/bold]")
+    stats = embed_full_text(batch_size=batch_size, limit=limit)
+    table = Table(show_header=False, box=None)
+    table.add_row("Model", stats.model)
+    table.add_row("Documents embedded", f"{stats.documents_embedded:,}")
+    table.add_row("Passages written", f"{stats.chunks_written:,}")
+    table.add_row("Unchanged (skipped)", f"{stats.documents_unchanged:,}")
+    table.add_row("No body text", f"{stats.documents_without_text:,}")
+    console.print(table)
+    if stats.chunks_written:
+        console.print("[dim]Search them with: vitiligo search --full-text[/dim]")
+
+
 @embed_app.command("stats")
 def embed_stats() -> None:
     """Show embedding coverage by model and scope."""
@@ -621,6 +642,11 @@ def search_cmd(
     top_k: int = typer.Option(10, "--top-k", "-k", help="How many hits to return."),
     model: str = typer.Option(DEFAULT_MODEL, "--model", "-m", help="Embedding model identifier."),
     scope: str = typer.Option("title_abstract", "--scope", "-s", help="Embedding scope to search."),
+    full_text: bool = typer.Option(
+        False,
+        "--full-text",
+        help="Search the body of full-text papers instead of titles and abstracts.",
+    ),
     show_abstract: bool = typer.Option(
         False,
         "--show-abstract/--no-abstract",
@@ -629,7 +655,12 @@ def search_cmd(
 ) -> None:
     """Semantic search over the embedded corpus."""
     console.rule(f"[bold]Search[/bold] — [yellow]{query}[/yellow]")
-    hits = semantic_search(query=query, top_k=top_k, model_name=model, scope=scope)
+    if full_text:
+        from vitiligo.embed.search import search_full_text
+
+        hits = search_full_text(query=query, top_k=top_k, model_name=model)
+    else:
+        hits = semantic_search(query=query, top_k=top_k, model_name=model, scope=scope)
     if not hits:
         console.print("[yellow]No results.[/yellow]")
         return
@@ -650,7 +681,10 @@ def search_cmd(
         meta_bits.append(f"[magenta]{evidence_level_label(level)}[/magenta]")
         if meta_bits:
             console.print("  ".join(meta_bits))
-        if show_abstract and doc.abstract:
+        if hit.snippet:
+            where = f"[dim]{hit.section}[/dim] " if hit.section else ""
+            console.print(f"{where}{hit.snippet}", highlight=False)
+        elif show_abstract and doc.abstract:
             preview = doc.abstract[:400] + ("..." if len(doc.abstract) > 400 else "")
             console.print(preview)
         console.print()

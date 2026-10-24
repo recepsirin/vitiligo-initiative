@@ -44,7 +44,7 @@ Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `
 | `vitiligo.sources` | Fetch and parse each public source into a source-agnostic schema; raw responses kept in `raw_metadata` |
 | `vitiligo.ingest` | Idempotent upserts by `(source, source_id)`; `ingestion_runs` audit trail; `db repair` |
 | `vitiligo.storage` | SQLModel schema: documents, embeddings, trials, priors, graph |
-| `vitiligo.embed` | fastembed ONNX embeddings (`BAAI/bge-small-en-v1.5`), brute-force cosine search |
+| `vitiligo.embed` | fastembed ONNX embeddings (`BAAI/bge-small-en-v1.5`), brute-force cosine search. Two indexes: one vector per document over title and abstract, and one per passage of a paper's body (`chunking.py`, `full_text.py`), where a document scores as its best passage |
 | `vitiligo.evidence` | Evidence levels for papers and trials; search down-ranks mouse (−0.08) and in-vitro (−0.05) studies |
 | `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph extract` from abstracts (optional LLM) |
 | `vitiligo.trials`, `vitiligo.priors` | Query helpers over the store |

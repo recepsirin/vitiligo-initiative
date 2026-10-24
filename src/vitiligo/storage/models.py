@@ -87,6 +87,34 @@ class Embedding(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utcnow)
 
 
+class DocumentChunk(SQLModel, table=True):
+    """One embedded passage of a document's full text.
+
+    Separate from ``embeddings`` because that table holds exactly one vector
+    per (document, model, scope); a paper has many passages. The passage text
+    is not stored — ``char_start``/``char_end`` locate it in the source, and
+    ``source_sha256`` records which text those offsets refer to, so a
+    re-ingested paper's stale passages can be found and replaced.
+    """
+
+    __tablename__ = "document_chunks"
+    __table_args__ = (
+        UniqueConstraint("document_id", "model", "chunk_index", name="uq_chunk_doc_model_index"),
+    )
+
+    id: int | None = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="documents.id", index=True)
+    model: str = Field(index=True, description="Embedding model identifier.")
+    chunk_index: int = Field(description="Position of this passage within the document.")
+    section: str | None = Field(default=None, description="Section heading it came from.")
+    char_start: int
+    char_end: int
+    source_sha256: str = Field(index=True, description="SHA-256 of the text that was chunked.")
+    dim: int
+    vector: bytes = Field(sa_column=Column(LargeBinary, nullable=False))
+    created_at: datetime = Field(default_factory=_utcnow)
+
+
 class TrialSourceKind(StrEnum):
     """Known clinical-trial registries. Extend as new ingestion modules land."""
 
