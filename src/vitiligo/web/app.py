@@ -308,7 +308,7 @@ def create_app() -> FastAPI:
             except ValueError as exc:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unknown source '{req.source}'. Allowed: ctgov, euctr, ictrp.",
+                    detail=f"Unknown source '{req.source}'. Allowed: ctgov, euctr, ictrp, isrctn.",
                 ) from exc
         else:
             sources = tuple(TrialSourceKind)  # type: ignore[assignment]

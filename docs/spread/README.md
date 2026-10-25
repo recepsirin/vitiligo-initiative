@@ -4,7 +4,7 @@ Outcome 1 of [what success means](../success.md): no new or growing lesions in p
 
 ## Trials rarely measure it
 
-**Registered outcomes.** Of 320 vitiligo trials in the ClinicalTrials.gov corpus, **15 interventional trials measure spread or disease activity directly**. That counts stabilization, arrest, new lesions, progression, VIDA, VSAS and VETF spreading; extent-only scores and observational studies are left out.
+**Registered outcomes.** Of 347 vitiligo trials in the ClinicalTrials.gov corpus, 275 interventional, **27 measure spread or disease activity directly**. That counts an outcome measure naming stabilization, arrest, halted progression, no new lesions, no increase in extent, or one of the activity instruments (VIDA, VSAS, VETF); extent-only scores, biomarker correlations and observational studies are left out. (An earlier count of 15, over a 320-trial corpus, used a narrower reading of VETF that is not recoverable; the rule above is stated so the number can be recomputed.)
 - **Posted results: 2, both score changes.** Both are ruxolitinib cream trials reporting VETF spreading or progression scores: the Incyte phase 2 (NCT03099304) and a Tufts pilot of 11 patients (NCT02809976).
 - **None posted the share of patients whose disease stopped spreading.**
 

@@ -14,7 +14,7 @@ Research and education software, not medical advice.
 
 | | What it does | Start with |
 |---|---|---|
-| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (14,489 documents, 382 trials). Semantic search with evidence levels, and a trial-results table: what each JAK drug and dose reported at week 24, beside the comparator arm of its own trial. | `vitiligo serve` · `vitiligo search` |
+| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and four trial registries (14,489 documents, 411 trials, including 31 from CTRI, ChiCTR, IRCT, PACTR and TCTR that publish no API of their own). Semantic search with evidence levels, and a trial-results table: what each JAK drug and dose reported at week 24, beside the comparator arm of its own trial. | `vitiligo serve` · `vitiligo search` |
 | **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes, plus one harmonized arm × endpoint × week table and results curated from papers ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |

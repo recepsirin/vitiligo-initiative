@@ -1,6 +1,6 @@
 # Therapeutic Candidate Report v1
 
-**Generated:** 2026-10-25T11:00:10.443700+00:00  
+**Generated:** 2026-10-25T15:50:32.678614+00:00  
 **Engine:** v1.0.0  
 **Status:** Research hypothesis ranking — not medical advice, not an endorsement.
 
@@ -17,7 +17,7 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 | Registered trials | 35 | CT.gov, EU CTR, ICTRP |
 | Literature retrieval | 20 | Semantic search (top-K per intent) |
 
-**Corpus snapshot:** 14,489 documents, 382 trials, 1206 graph entities.
+**Corpus snapshot:** 14,489 documents, 411 trials, 1203 graph entities.
 
 ## Global top candidates (aggregated across intents)
 
@@ -143,8 +143,8 @@ Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-gr
 - [ctgov:NCT01082393] Vitiligo and the Koebner Phenomenon (Model of Vitiligo Induction and Therapy: a Clinical and Immunological Analysis) — COMPLETED, PHASE4, no results yet
 - [ctgov:NCT07368673] Comparative Effectiveness of Ruxolitinib Monotherapy Versus Its Combination With Tacrolimus and Corticosteroids in the Management of Vitiligo: A Randomized Controlled Trial — COMPLETED, PHASE4, no results yet
 - [ctgov:NCT06719024] Topical Ruxolitinib for Face and Neck Vitiligo of Adult Chinese Patients Refractory to Topical Tacrolimus — RECRUITING, PHASE2, PHASE3, no results yet
-- [ictrp:ISRCTN99887766] NB-UVB plus topical tacrolimus for vitiligo — NOT_YET_RECRUITING, PHASE2, no results yet
 - [ctgov:NCT00807690] Vitiligo Treated With TL01 Combined With Tacrolimus Ointment Versus Placebo — COMPLETED, PHASE3, no results yet
+- [ctgov:NCT07519031] Study of Umbilical Cord Mesenchymal Stem Cell-Derived Exosomes in Vitiligo — NOT_YET_RECRUITING, PHASE1, PHASE2, no results yet
 
 **Graph:**
 - TACROLIMUS ANHYDROUS —[treats]→ Vitiligo (conf=0.88, structured)

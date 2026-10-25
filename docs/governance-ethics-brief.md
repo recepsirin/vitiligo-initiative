@@ -53,7 +53,7 @@ Every user-facing surface must state:
 | Data type | Source | PHI? | Notes |
 |-----------|--------|------|-------|
 | PubMed / PMC / GEO metadata | NCBI | No | Public scientific metadata |
-| Trial registries | CT.gov, EU CTR, ICTRP | No | Public registry fields |
+| Trial registries | CT.gov, EU CTR, ISRCTN, ICTRP | No | Public registry fields. ISRCTN and ICTRP records carry investigator names, addresses, telephone numbers and emails; these are stripped before storage, so none is cached or served |
 | Open Targets / DrugBank priors | Public / licensed XML | No | DrugBank requires academic license for full XML |
 | Search queries | User input | Potentially | Queries are not logged; nothing is sent to a third party, since no model API is called |
 

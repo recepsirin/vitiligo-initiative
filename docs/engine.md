@@ -25,13 +25,14 @@ vitiligo db repair [--apply]                  # fix truncated titles and GEO non
 vitiligo ingest pubmed                        # ~11,000 abstracts; --query to customize
 vitiligo ingest pmc                           # ~2,600 open-access full texts
 vitiligo ingest geo                           # ~50 GEO series (GSE metadata)
-vitiligo ingest ctgov                         # ~320 ClinicalTrials.gov trials
-vitiligo ingest euctr                         # ~22 EU CTR (CTIS) trials
+vitiligo ingest ctgov                         # ~347 ClinicalTrials.gov trials
+vitiligo ingest euctr                         # ~25 EU CTR (CTIS) trials
 vitiligo ingest isrctn                        # ISRCTN (UK and international); keeps only vitiligo trials
 vitiligo ingest opentargets                   # drug and target priors (EFO_0004208)
 vitiligo ingest gwas                          # vitiligo variants from the GWAS Catalog (157 associations)
 vitiligo ingest reporter                      # NIH-funded vitiligo projects (who is working on what)
-vitiligo ingest ictrp export.xml              # WHO ICTRP XML export
+vitiligo ingest ictrp-ids --cited             # WHO ICTRP by id: CTRI, ChiCTR, IRCT, PACTR, TCTR
+vitiligo ingest ictrp export.xml              # WHO ICTRP bulk XML export
 vitiligo ingest drugbank db.xml               # your own licensed DrugBank export (.xml or .zip)
 
 # Search and reasoning
