@@ -13,6 +13,7 @@ import pytest
 from vitiligo.sources.ictrp import _normalize_phase, _normalize_status
 from vitiligo.sources.ictrp_web import (
     REDACTED_EMAIL,
+    ictrp_trial_id,
     is_about_vitiligo,
     parse_record_page,
     record_to_xml,
@@ -198,3 +199,28 @@ def test_only_records_registered_for_the_disease_are_kept(
         conditions=conditions,
     )
     assert is_about_vitiligo(candidate) is expected
+
+
+@pytest.mark.parametrize(
+    ("cited", "asked"),
+    [
+        ("UMIN000000473", "JPRN-UMIN000000473"),
+        ("JRCT2053190081", "JPRN-jRCT2053190081"),
+        ("JRCTS052190079", "JPRN-jRCTs052190079"),
+        ("JPRN-UMIN000000473", "JPRN-UMIN000000473"),
+        ("CTRI/2017/05/008692", "CTRI/2017/05/008692"),
+        ("ChiCTR2000036712", "ChiCTR2000036712"),
+        ("ACTRN12620000227998", "ACTRN12620000227998"),
+    ],
+)
+def test_japanese_ids_are_asked_for_in_the_form_ictrp_keys_them_by(cited: str, asked: str) -> None:
+    """ICTRP prefixes UMIN and jRCT with ``JPRN-``, and spells jRCT lower-case.
+
+    A paper cites neither, and ``cited_trials.normalize_id`` upper-cases what
+    it finds. Asking for the cited form got "no record" for all 21 Japanese
+    leads — indistinguishable from a trial ICTRP does not hold. With the
+    prefix, 26 of 27 resolved; 25 proved to be burns, cardiomyopathy and
+    limbal stem-cell trials from one cell-sheet review, which is why they are
+    worth resolving rather than guessing about.
+    """
+    assert ictrp_trial_id(cited) == asked

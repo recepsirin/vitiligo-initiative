@@ -148,6 +148,27 @@ _TIMEPOINT = re.compile(r"\s*Timepoints?\s*:\s*", re.I)
 _SOURCE_RECORD_LINK = re.compile(r'href="(https?://(?!\S*(?:who\.int|w3\.org))[^"]+)"', re.I)
 
 
+# ICTRP keys the two Japanese registries under a ``JPRN-`` prefix and spells
+# jRCT with a lower-case j, neither of which survives a paper's citation or
+# the upper-casing that normalises one. Without this the portal answers "no
+# record" for every Japanese trial, which reads exactly like a trial it does
+# not hold.
+_JPRN = re.compile(r"^(?:JPRN-)?(UMIN\d{6,10}|JRCT[A-Z]?\d{8,12})$", re.I)
+
+
+def ictrp_trial_id(trial_id: str) -> str:
+    """One registry id in the form ICTRP keys its own records by."""
+    match = _JPRN.match(trial_id.strip())
+    if match is None:
+        return trial_id.strip()
+    native = match.group(1)
+    if native.upper().startswith("UMIN"):
+        return f"JPRN-UMIN{native[4:]}"
+    # jRCT ids carry an optional single letter before the digits: jRCTs052190079.
+    body = native[4:]
+    return f"JPRN-jRCT{body[0].lower() + body[1:] if body[:1].isalpha() else body}"
+
+
 def strip_personal(page: str) -> str:
     """Drop the contacts and ethics grids, and redact contact details.
 
@@ -339,6 +360,7 @@ def fetch_record(
     Served pages are cached, so re-running an ingest or checking a figure
     months later does not depend on the portal being up.
     """
+    trial_id = ictrp_trial_id(trial_id)
     name = f"{re.sub(r'[^A-Za-z0-9]+', '-', trial_id).strip('-')}.html"
     if cache is not None and not refresh:
         cached = load_payload(CACHE_SOURCE, name, cache)
