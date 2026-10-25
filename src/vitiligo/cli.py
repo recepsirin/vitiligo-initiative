@@ -36,6 +36,7 @@ from vitiligo.ingest import (
     run_gwas_ingestion,
     run_ictrp_ingestion,
     run_ictrp_resolution,
+    run_ictrp_search_ingestion,
     run_isrctn_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
@@ -473,6 +474,46 @@ def _cited_lead_ids() -> list[str]:
         documents = list(session.exec(select(Document)).all())
         known = [t.source_id for t in session.exec(select(Trial)).all()]
     return [lead.identifier for lead in scan(documents, known)]
+
+
+@ingest_app.command("ictrp-search")
+def ingest_ictrp_search(
+    term: str = typer.Option("vitiligo", "--term", "-t", help="What to search ICTRP for."),
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap records (smoke testing)."),
+    keep_duplicates: bool = typer.Option(
+        False,
+        "--keep-duplicates/--skip-duplicates",
+        help="Keep trials that duplicate ctgov/euctr records (default: skip).",
+    ),
+    require_vitiligo: bool = typer.Option(
+        False,
+        "--require-vitiligo",
+        help="Drop records whose condition or title does not name the disease.",
+    ),
+) -> None:
+    """Search WHO ICTRP and import every trial it returns.
+
+    Reaches CTRI, ChiCTR, IRCT, ITMCTR, JPRN, PACTR, TCTR, ANZCTR and the
+    rest of the network — registries that publish no API of their own. The
+    export is cached with its contact columns removed, so no investigator's
+    name, address, telephone number or email is stored.
+    """
+    settings = get_settings()
+    console.rule("[bold]WHO ICTRP (search) ingestion[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Search:   [yellow]{term}[/yellow]")
+    console.print()
+
+    stats = run_ictrp_search_ingestion(
+        term=term,
+        skip_duplicates=not keep_duplicates,
+        limit=limit,
+        require_vitiligo=require_vitiligo,
+    )
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
 
 
 @ingest_app.command("ictrp-ids")

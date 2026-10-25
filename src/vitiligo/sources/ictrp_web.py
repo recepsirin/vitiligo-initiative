@@ -52,7 +52,7 @@ import httpx
 from lxml import etree
 
 from vitiligo.logging import get_logger
-from vitiligo.sources.ictrp import parse_ictrp_record
+from vitiligo.sources.ictrp import parse_ictrp_record, strip_label_prefix
 from vitiligo.sources.raw_cache import DEFAULT_RAW_CACHE, load_payload, save_payload
 from vitiligo.storage.models import Trial
 
@@ -134,11 +134,6 @@ _CRITERIA_FIELDS: dict[str, str] = {
 
 _RESULTS_FIELDS: dict[str, str] = {"lblResultsYesNo": "results_yes_no"}
 
-# The web view prints a field's own label into its value; the export does not.
-_LABEL_PREFIX = re.compile(
-    r"^(?:Inclusion criteria|Exclusion criteria|Health Condition\s*\d*|Intervention\s*\d*)\s*:\s*",
-    re.I,
-)
 
 # The web view folds an outcome's timepoint into its name, and leaves the
 # timepoint field empty. The export keeps them apart, so split them back.
@@ -193,7 +188,7 @@ def _cell_text(body: str) -> str:
     text = html.unescape(text)
     text = re.sub(r"[ \t\xa0]+", " ", text)
     text = re.sub(r"\s*\n\s*", "\n", text)
-    return _LABEL_PREFIX.sub("", text.strip()).strip()
+    return strip_label_prefix(text)
 
 
 def _field_name(suffix: str) -> str:

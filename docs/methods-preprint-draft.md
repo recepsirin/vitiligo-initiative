@@ -10,7 +10,7 @@
 
 **Background.** Vitiligo affects approximately 0.5–2% of the population and is associated with significant quality-of-life burden. Non-segmental vitiligo (NSV) is commonly progressive and autoimmune in nature; segmental vitiligo (SV) follows a different clinical course. Treatment goals combine **arrest of active spread** and **repigmentation**, particularly on visible and functionally important sites. The evidence base spans thousands of PubMed-indexed publications, open-access full-text articles, omics repositories, and multiple clinical trial registries, alongside genetic association data from platforms such as Open Targets. Researchers and clinicians lack an open, vitiligo-specific system that unifies these sources for semantic retrieval, cited synthesis, and mechanistically grounded hypothesis ranking.
 
-**Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, WHO ICTRP (by record id, and by optional XML export), ISRCTN, and optional XML imports from DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
+**Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, WHO ICTRP (by search export, by record id, and by optional XML export), ISRCTN, and optional XML imports from DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
 
 **Results.** The May 2026 local corpus contains 14,489 documents (11,677 PubMed, 2,755 PMC, 57 GEO series), 13,988 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,206 entities and 1,882 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
 
@@ -66,7 +66,8 @@ The remainder of this manuscript details system architecture and ingestion metho
 | ClinicalTrials.gov v2 | `ctgov` | 347 |
 | EU CTR (CTIS) | `euctr` | 25 |
 | WHO ICTRP (XML export) | `ictrp` | — |
-| WHO ICTRP (record page, by id) | `ictrp_web` | 31 |
+| WHO ICTRP (search export) | `ictrp_csv` | 684 |
+| WHO ICTRP (record page, by id) | `ictrp_web` | — |
 | ISRCTN | `isrctn` | 8 |
 
 - Canonical status / phase normalization  
@@ -147,7 +148,7 @@ The remainder of this manuscript details system architecture and ingestion metho
 - Abstract-heavy retrieval (PMC full-text chunk embeddings pending)  
 - No hybrid BM25 yet  
 - English-centric corpus  
-- DrugBank requires a manual XML export; ICTRP serves one record per id, but its search cannot be driven programmatically, so which ids to ask for comes from scanning the literature  
+- DrugBank requires a manual XML export; ICTRP's search is an ASP.NET form rather than a URL, and is driven by posting the form the way its own page does  
 - Graph seed reflects structured priors/trials, not full literature extraction  
 
 ---

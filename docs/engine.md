@@ -31,7 +31,8 @@ vitiligo ingest isrctn                        # ISRCTN (UK and international); k
 vitiligo ingest opentargets                   # drug and target priors (EFO_0004208)
 vitiligo ingest gwas                          # vitiligo variants from the GWAS Catalog (157 associations)
 vitiligo ingest reporter                      # NIH-funded vitiligo projects (who is working on what)
-vitiligo ingest ictrp-ids --cited             # WHO ICTRP by id: CTRI, ChiCTR, IRCT, PACTR, TCTR
+vitiligo ingest ictrp-search                  # WHO ICTRP search: ~1,020 vitiligo trials
+vitiligo ingest ictrp-ids --cited             # WHO ICTRP by id, for a trial a paper cites
 vitiligo ingest ictrp export.xml              # WHO ICTRP bulk XML export
 vitiligo ingest drugbank db.xml               # your own licensed DrugBank export (.xml or .zip)
 

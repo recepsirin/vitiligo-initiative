@@ -7,6 +7,8 @@ store, and records an `IngestionRun` for auditability and resumability.
 from __future__ import annotations
 
 import json
+import re
+import tempfile
 from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -44,6 +46,8 @@ from vitiligo.sources.ictrp import (
     iter_ictrp_trials,
     should_skip_ictrp_record,
 )
+from vitiligo.sources.ictrp_csv import SEARCH_URL as ICTRP_SEARCH_URL
+from vitiligo.sources.ictrp_csv import count_csv_rows, iter_csv_trials, redacted_csv, search
 from vitiligo.sources.ictrp_web import is_about_vitiligo, resolve_trials
 from vitiligo.sources.isrctn import DEFAULT_VITILIGO_QUERY as ISRCTN_DEFAULT_QUERY
 from vitiligo.sources.isrctn import ISRCTNClient
@@ -59,7 +63,12 @@ from vitiligo.sources.pmc import DEFAULT_VITILIGO_QUERY as PMC_DEFAULT_QUERY
 from vitiligo.sources.pmc import PMCClient
 from vitiligo.sources.pubmed import DEFAULT_VITILIGO_QUERY as PUBMED_DEFAULT_QUERY
 from vitiligo.sources.pubmed import PubMedClient
-from vitiligo.sources.raw_cache import load_payload, save_payload
+from vitiligo.sources.raw_cache import (
+    DEFAULT_RAW_CACHE,
+    load_payload,
+    payload_path,
+    save_payload,
+)
 from vitiligo.sources.reporter import DEFAULT_VITILIGO_QUERY as REPORTER_DEFAULT_QUERY
 from vitiligo.sources.reporter import SEARCH_URL as REPORTER_SEARCH_URL
 from vitiligo.sources.reporter import ReporterClient, to_project
@@ -270,6 +279,52 @@ def run_ictrp_resolution(
         lambda: resolve_trials(trial_ids, refresh=refresh),
         query=f"ids:{','.join(sorted(trial_ids))[:400]}",
         total_found=len(trial_ids),
+        skip_duplicates=skip_duplicates,
+        commit_every=commit_every,
+        keep=is_about_vitiligo if require_vitiligo else None,
+    )
+
+
+def run_ictrp_search_ingestion(
+    term: str = "vitiligo",
+    skip_duplicates: bool = True,
+    limit: int | None = None,
+    commit_every: int = 50,
+    require_vitiligo: bool = False,
+    cache: Path | None = DEFAULT_RAW_CACHE,
+) -> IngestionStats:
+    """Search WHO ICTRP and import every trial it returns.
+
+    The portal's search is an ASP.NET form, not a URL, which is why this went
+    unreached for so long -- but the form posts back, and its own Export to
+    CSV button returns the whole result set. For vitiligo that is every trial
+    the ICTRP network holds, not only the ones a paper happened to cite.
+
+    The export is cached with its contact columns removed, so what lands on
+    disk carries no investigator's name, address, telephone number or email.
+    """
+    payload = redacted_csv(search(term))
+    if cache is not None:
+        saved = save_payload(
+            "ictrp-search",
+            f"{re.sub(r'[^A-Za-z0-9]+', '-', term).strip('-') or 'search'}.csv",
+            payload,
+            url=ICTRP_SEARCH_URL,
+            cache=cache,
+        )
+        path = payload_path(saved.source, saved.name, cache)
+    else:
+        path = Path(tempfile.mkstemp(suffix=".csv")[1])
+        path.write_bytes(payload)
+
+    total_found = count_csv_rows(path)
+    if limit is not None:
+        total_found = min(total_found, limit)
+
+    return _ingest_ictrp_trials(
+        lambda: iter_csv_trials(path, limit=limit),
+        query=f"search:{term}",
+        total_found=total_found,
         skip_duplicates=skip_duplicates,
         commit_every=commit_every,
         keep=is_about_vitiligo if require_vitiligo else None,

@@ -80,6 +80,21 @@ _STATUS_MAP: dict[str, str] = {
 }
 
 
+# A field's own label, printed into its value. ICTRP prepends one even when
+# the registry already wrote it, so "Inclusion criteria: Inclusion Criteria: 1."
+# is a real value and stripping once is not enough.
+_LABEL_PREFIX = re.compile(
+    r"^(?:(?:Inclusion criteria|Exclusion criteria|Health Condition\s*\d*"
+    r"|Condition\s*\d*|Intervention\s*\d*)\s*:\s*)+",
+    re.I,
+)
+
+
+def strip_label_prefix(text: str) -> str:
+    """Drop the field label ICTRP prints into a value, however many times."""
+    return _LABEL_PREFIX.sub("", text.strip()).strip()
+
+
 def iter_ictrp_trials(path: Path, limit: int | None = None) -> Iterator[Trial]:
     """Yield parsed trials from an ICTRP XML export file."""
     emitted = 0
