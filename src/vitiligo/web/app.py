@@ -4,10 +4,9 @@ This is intentionally small: JSON endpoints + one static HTML page.
 The HTML page (`static/index.html`) is the Evidence Engine UI.
 
 Every endpoint here answers from stored records. Nothing is generated: the
-served page states what a trial reported and where to read it, so a reader
-can check any number against its registry entry. ``vitiligo ask`` and
-``vitiligo hypothesize`` keep the generative side on the command line, where
-the caller supplies the key and reads the output as research.
+served page states what a trial reported and where to read it, so a reader can
+check any number against its registry entry. There is no model API client in
+the engine at all, which is why that holds without a caveat.
 
 For public deployment (Docker / Render / VPS), configure:
 - ``VITILIGO_DB_PATH`` pointing at a persistent volume with the corpus DB
@@ -132,6 +131,12 @@ def _cached_evidence() -> dict[str, Any]:
         return cached
 
 
+def _prewarm_evidence() -> None:
+    logger.info("Prewarming posted trial results...")
+    payload = _cached_evidence()
+    logger.info("Trial results ready (%d rows).", payload.get("count", 0))
+
+
 def _prewarm_embeddings() -> None:
     from vitiligo.embed.cache import warm_embedding_index
     from vitiligo.embed.encoder import get_encoder
@@ -150,6 +155,16 @@ async def _lifespan(app: FastAPI):
             await asyncio.to_thread(_prewarm_embeddings)
         except Exception:
             logger.exception("Embedding prewarm failed; first search may be slow.")
+    # The landing page reads /api/evidence, and building it from the atlas takes
+    # about ten seconds, against under two milliseconds once cached. Doing it
+    # here rather than on first request means a restart costs a slower deploy
+    # instead of one visitor waiting: a health check gates traffic on this
+    # having finished. Unconditional because there is no deployment in which
+    # the page a clinician lands on should be the slow one.
+    try:
+        await asyncio.to_thread(_prewarm_evidence)
+    except Exception:
+        logger.exception("Evidence prewarm failed; the first page load will be slow.")
     yield
 
 
@@ -189,7 +204,10 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Vitiligo Initiative — Evidence Engine",
         version=__version__,
-        description="Open, AI-native research engine for stopping vitiligo spread and driving repigmentation.",
+        description=(
+            "Open, verifiable evidence for stopping vitiligo spread and driving "
+            "repigmentation. Answers from stored records; calls no model API."
+        ),
         lifespan=_lifespan,
     )
 
@@ -222,7 +240,6 @@ def create_app() -> FastAPI:
             "status": "ok" if ready else "degraded",
             "version": __version__,
             "ready": ready,
-            "llm_configured": settings.anthropic_api_key is not None,
             "corpus": stats,
         }
 
@@ -266,9 +283,10 @@ def create_app() -> FastAPI:
             )
         return {"query": req.query, "results": results}
 
-    # /api/ask and /api/hypothesize are deliberately not served. A page aimed at
-    # clinicians should show what the evidence says, not what a model infers from
-    # it; the CLI keeps both for research use, where the caller can judge them.
+    # There is no generative endpoint here, and no module behind one: a page
+    # aimed at clinicians should show what the evidence says, not what a model
+    # infers from it. The 404s are covered by a test, so re-adding one is a
+    # deliberate act rather than an accident.
 
     @app.get("/api/evidence")
     async def evidence() -> dict[str, Any]:
@@ -277,7 +295,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/report/candidates")
     async def report_candidates(top_n: int = 10) -> dict[str, Any]:
-        """Deterministic evidence-scored candidate rankings (no LLM)."""
+        """Evidence-scored candidate rankings, computed from stored records."""
         if top_n < 1 or top_n > 20:
             raise HTTPException(status_code=400, detail="top_n must be between 1 and 20.")
         return await asyncio.to_thread(_cached_candidate_report, top_n)

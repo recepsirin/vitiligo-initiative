@@ -12,9 +12,15 @@ __pycache__
 htmlcov
 .coverage
 
-# Local data (mount a volume in production)
-data/
+# Local data. The corpus is baked into the image so the app works on a host with
+# no persistent volume — Render's free tier has none, and a container there starts
+# with an empty /data, which the app serves as a page of zero rows rather than an
+# error. Everything else under data/ stays out: data/geo is 2.9 GB of GEO files
+# and the .bak- copies are another gigabyte, none of which the app reads.
+# Order matters: the exception has to come last.
+data/*
 *.db
+!data/vitiligo.db
 
 # Dev / IDE
 .env

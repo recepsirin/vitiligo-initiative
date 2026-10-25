@@ -23,6 +23,14 @@ ENV VITILIGO_WEB_HOST=0.0.0.0 \
 RUN mkdir -p /data/cache \
     && python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-small-en-v1.5')"
 
+# And the corpus, for hosts with no persistent volume. A mounted volume at /data
+# still wins, because it is mounted over this layer, so baking it in costs
+# nothing where a volume exists. SQLite needs to write a WAL beside the file and
+# the migration in init_db() adds columns; both happen in the container's own
+# writable layer and are discarded on restart, which is harmless because they
+# are reproduced identically on the next start.
+COPY data/vitiligo.db /data/vitiligo.db
+
 EXPOSE 8765
 
 ENTRYPOINT ["/entrypoint.sh"]
