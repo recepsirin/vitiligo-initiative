@@ -86,46 +86,6 @@ def _normalize_prior_name(name: str) -> str:
     return name.upper().strip()
 
 
-def _merge_drug_priors(
-    primary: list[Prior],
-    secondary: list[Prior],
-    *,
-    limit: int,
-) -> list[Prior]:
-    filtered_primary = [
-        d for d in primary if clinical_stage_rank(d.clinical_stage) >= _HIGH_SIGNAL_MIN_RANK
-    ] or primary
-    seen = {_normalize_prior_name(d.name) for d in filtered_primary}
-    merged = list(filtered_primary[:limit])
-    for drug in secondary:
-        key = _normalize_prior_name(drug.name)
-        if key in seen:
-            continue
-        seen.add(key)
-        merged.append(drug)
-        if len(merged) >= limit:
-            break
-    return merged[:limit]
-
-
-def _merge_target_priors(
-    primary: list[Prior],
-    secondary: list[Prior],
-    *,
-    limit: int,
-) -> list[Prior]:
-    seen = {t.source_id for t in primary}
-    merged = list(primary[:limit])
-    for target in sorted(secondary, key=lambda t: t.score or 0.0, reverse=True):
-        if target.source_id in seen:
-            continue
-        seen.add(target.source_id)
-        merged.append(target)
-        if len(merged) >= limit:
-            break
-    return merged[:limit]
-
-
 def summarize_priors(
     disease_id: str = DEFAULT_VITILIGO_EFO_ID,
     sources: Iterable[PriorSourceKind] | None = None,

@@ -346,15 +346,6 @@ button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Ask */
 
-.citations h3 {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-dim);
-  margin: 16px 0 8px;
-  font-weight: 600;
-}
-
 .citation-meta {
   color: var(--text-dim);
   font-size: 12px;

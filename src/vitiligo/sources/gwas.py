@@ -25,7 +25,6 @@ import hashlib
 import io
 import zipfile
 from collections.abc import Iterator
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -49,16 +48,6 @@ REQUIRED_COLUMNS = (
     "PUBMEDID",
     "STUDY ACCESSION",
 )
-
-
-@dataclass(frozen=True)
-class GWASStats:
-    """What an ingest run saw."""
-
-    trait_query: str
-    rows_scanned: int
-    rows_matched: int
-    release_file: str
 
 
 def associations_url(file_name: str = ASSOCIATIONS_FILE) -> str:

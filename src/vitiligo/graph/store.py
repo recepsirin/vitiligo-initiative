@@ -117,16 +117,6 @@ def _stronger_level(current: str | None, incoming: str) -> str:
     return incoming if causal_rank(incoming) > causal_rank(current) else current
 
 
-def get_entity_by_kind_key(
-    session: Session,
-    kind: EntityKind,
-    key: str,
-) -> GraphEntity | None:
-    return session.exec(
-        select(GraphEntity).where(GraphEntity.kind == kind, GraphEntity.key == key)
-    ).first()
-
-
 def _evidence_seen(existing: list[dict[str, Any]], item: dict[str, Any]) -> bool:
     sig = (item.get("source_type"), item.get("source_id"), item.get("snippet"))
     for row in existing:
