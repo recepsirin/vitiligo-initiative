@@ -14,7 +14,7 @@ Research and education software, not medical advice.
 
 | | What it does | Start with |
 |---|---|---|
-| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (~14k documents, 344 trials). Semantic search with evidence levels, and a trial-results table: what each JAK drug and dose reported at week 24, beside the comparator arm of its own trial. | `vitiligo serve` · `vitiligo search` |
+| **Evidence Engine** | One searchable corpus of PubMed, PMC, GEO and three trial registries (14,489 documents, 382 trials). Semantic search with evidence levels, and a trial-results table: what each JAK drug and dose reported at week 24, beside the comparator arm of its own trial. | `vitiligo serve` · `vitiligo search` |
 | **JAK-inhibitor atlas** | Every registered vitiligo trial of a JAK-family drug, linked across registries, with posted outcomes, plus one harmonized arm × endpoint × week table and results curated from papers ([`curation/`](curation/)). | `vitiligo report jak` · `vitiligo report jak-arms` |
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
@@ -23,9 +23,8 @@ Research and education software, not medical advice.
 **Nothing on the served page is generated.** Every figure it shows is one a trial
 posted to a public registry, reproduced with its denominator and a link to its
 record, so any number on the page can be checked against its source. Cited Q&A
-and hypothesis ranking stay on the command line (`vitiligo ask`,
-`vitiligo hypothesize`), where the caller supplies the key and reads the output
-as research rather than as guidance.
+No model is involved anywhere, which is why that holds without a caveat: there
+is no model API client in this repository and no key to configure.
 
 ## What the trial-results view will and will not show
 
@@ -60,7 +59,6 @@ Python 3.11+.
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"            # add ,model for the scenario model and discovery loop
 cp .env.example .env               # set NCBI_EMAIL; optional NCBI_API_KEY
-                                   # ANTHROPIC_API_KEY is only for `vitiligo ask` / `hypothesize`
 
 vitiligo db init
 vitiligo ingest pubmed && vitiligo ingest pmc && vitiligo ingest ctgov
@@ -98,19 +96,6 @@ vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --thre
 ## Status
 
 v1.0.0 is tagged and runs local-first; a public URL is not live yet. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/images/search.png" alt="Semantic search over the vitiligo corpus, ranked by meaning with evidence-level tags and citations" width="820">
-</p>
-
-<table>
-  <tr>
-    <td width="50%"><b>Candidates</b>: evidence-scored rankings<br><img src="docs/images/candidates.png" alt="Evidence-scored candidate rankings"></td>
-    <td width="50%"><b>Trials</b>: cross-registry search<br><img src="docs/images/trials.png" alt="Clinical trials search with filters"></td>
-  </tr>
-</table>
 
 ## Community and citation
 

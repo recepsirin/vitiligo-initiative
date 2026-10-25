@@ -48,6 +48,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning foll
 - **Findings page** (`docs/findings.md`); the review pack now includes the JAK materials.
 - **`vitiligo db repair [--apply]`**: fixes v1.0.0 corpora in place (truncated PubMed titles, GEO sample records).
 
+### Changed
+
+- **Candidate report trial score** uses the best trial evidence instead of a sum (still 0–35); the report and validation proposals were regenerated.
+- **`GET /api/report/candidates`** is cached until the corpus changes.
+- **Docs** rewritten for brevity: one home per fact (findings page, forecasts scoreboard, model doc), one architecture diagram, one CLI reference, and the methods-preprint outline merged into the draft.
+
+### Removed
+
+- **The reasoning layer, entirely** (`vitiligo ask`, `vitiligo hypothesize`, `graph extract`, `reports --llm`): it produced nothing the project uses. `GraphExtraction` held **0 rows** — the LLM extraction had never been run — and all 1,882 graph edges are `structured`, `gwas`, `trial_result` or `mechanism_record`. The discovery loop's 192 hypotheses are enumerated mechanically from the arm table, the mechanism records were curated by hand, and the candidate ranking was always deterministic. So 873 lines of source, 782 of tests and a hard `anthropic` dependency on every install were serving a feature with no output in the corpus, the graph, the forecasts or the ledger. Removing it makes the project's central claim unconditional rather than carved out: there is no model API client here, checkable by `grep`, so nothing has to be taken on trust about what did or did not touch the numbers. It also removed four pre-existing type errors and `GraphExtraction`'s table from the schema; the orphaned `graph_extractions` table stays in existing databases, unused. Two statements that had become false went with it: the privacy policy said queries were sent to a language-model provider, and the terms described AI-generated output. Neither was true of the served app even before this change, and both are now simply wrong rather than imprecise. `vitiligo search` still answers over the corpus without a model; what is lost is the paragraph, not the retrieval.
+
 ### Fixed
 
 - **Search loaded the whole corpus on every query.** Ranking applies a penalty to animal and in-vitro papers, and every document was fetched from SQLite to find out which deserved one: 736 ms of the 1,087 ms a query took. Since the penalty only lowers a score, and never by more than 0.08, anything below the k-th raw score minus that cannot overtake it; ranking that shortlist is identical to ranking everything. Queries now take 19 ms, with results verified byte-identical across six queries, and the equivalence is tested on random scores and penalties.
@@ -55,18 +65,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/). Versioning foll
 - **Scenario model doc:** the back-tests helped choose the model (v0.1 fixed v0's back-test failures), so only sealed forecasts are clean tests. Now disclosed.
 - **Model comparison counted targets sealed after the pre-registration.** Only the 7 pre-registered targets can now decide the default model; later targets are reported separately.
 - **Security: rate-limit bypass.** The POST limiter trusted the client-controlled `X-Forwarded-For`. Clients are now keyed by the TCP peer; behind proxies set `VITILIGO_TRUSTED_PROXY_HOPS` (Render: `1`). New global Ask/Hypothesize caps: `VITILIGO_LLM_REQUESTS_PER_MINUTE`, `VITILIGO_LLM_DAILY_TOKEN_BUDGET`.
-- **Hypothesize returned no trials** for natural-language intents (matched as one literal phrase). Intents are now tokenized and weighted by rarity and field.
-- **Approved drugs dropped from Hypothesize priors** (stages sorted as text). Stages now sort by rank.
+- **Intent trial retrieval returned nothing** for natural-language intents (matched as one literal phrase). Intents are now tokenized and weighted by rarity and field; the candidate report's trial evidence depends on it.
+- **Approved drugs dropped from the prior shortlist** (clinical stages sorted as text, so PHASE_1 beat APPROVED). Stages now sort by rank, which the candidate report and the JAK atlas both rely on.
 - **Candidate report**: trial phases never matched the rubric; salt forms could downgrade a drug's stage; literature retrieval ran once per drug (~92 s → ~4 s).
 - **`/api/report/candidates` failed in Docker and wheels**: the intents file now ships as package data.
 - **Corpus parsing**: PubMed titles truncated at inline markup (199 records), GEO sample records ingested as series (257 of 311), duplicated text in PMC abstracts, and stale embeddings after re-ingest. Run `vitiligo db repair --apply`, `vitiligo ingest pmc`, then `vitiligo embed run`.
 - **Docs**: `vitiligo ingest ictrp|drugbank` take the file as an argument, not `--file`.
-
-### Changed
-
-- **Candidate report trial score** uses the best trial evidence instead of a sum (still 0–35); the report and validation proposals were regenerated.
-- **`GET /api/report/candidates`** is cached until the corpus changes.
-- **Docs** rewritten for brevity: one home per fact (findings page, forecasts scoreboard, model doc), one architecture diagram, one CLI reference, and the methods-preprint outline merged into the draft.
 
 ## [1.0.0] — 2026-05-26
 

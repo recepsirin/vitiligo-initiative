@@ -1,6 +1,6 @@
 # Forecasts
 
-Sealed forecasts of unreported JAK-inhibitor trials. Each `.json` carries a SHA-256 of its content; predictive draws (`.npz`) are hash-sealed inside it. `vitiligo discover check-forecasts forecasts` re-verifies every seal and scores the forecasts against ClinicalTrials.gov results. A weekly workflow runs it, together with `vitiligo discover watch`, which ranks pending results by how much they would tell us and lists new papers, trials and SEC filings.
+Sealed forecasts of unreported JAK-inhibitor trials. [`ledger-export.json`](ledger-export.json) mirrors the discovery ledger, which is otherwise gitignored and on one disk: the hypotheses, the tests with the error budget each one spent, the policy events and the disclosures. Losing it would not cost work that can be redone — it would end the false-discovery guarantee, since controlling the rate across an open-ended stream needs the record of what has already been spent. Refresh with `python scripts/discovery/export_ledger.py`. Each `.json` carries a SHA-256 of its content; predictive draws (`.npz`) are hash-sealed inside it. `vitiligo discover check-forecasts forecasts` re-verifies every seal and scores the forecasts against ClinicalTrials.gov results. A weekly workflow runs it, together with `vitiligo discover watch`, which ranks pending results by how much they would tell us and lists new papers, trials and SEC filings.
 
 | Folder | Contents |
 |---|---|

@@ -24,7 +24,6 @@ fi
 
 vitiligo_info "Starting container on http://127.0.0.1:$PORT"
 exec docker run --rm -p "${PORT}:8765" \
-  ${ANTHROPIC_API_KEY:+-e "ANTHROPIC_API_KEY=$ANTHROPIC_API_KEY"} \
   -v "$(vitiligo_repo_root)/$(dirname "$DB_PATH"):/data" \
   -e "VITILIGO_DB_PATH=/data/$(basename "$DB_PATH")" \
   "$IMAGE"
