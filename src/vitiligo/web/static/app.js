@@ -234,7 +234,7 @@ function renderEvidence() {
             <th>Reached ${escapeHtml(threshold)}%</th>
             <th>Comparator arm</th>
             <th>Difference</th>
-            <th>At one year</th>
+            <th>At one year<span class="ev-th-note">range, see below</span></th>
             <th>Trial</th>
           </tr>
         </thead>
@@ -256,11 +256,23 @@ function evidenceRow(r) {
   const diff = r.difference != null
     ? `<span class="${diffClass}">${r.difference > 0 ? '+' : ''}${Number(r.difference).toFixed(1)} pts</span>`
     : '<span class="ev-unknown">—</span>';
+  const bounds = r.later && r.later.bounds;
   const later = r.later
-    ? `<span class="ev-later">${pct(r.later.percent)} <span class="ev-denom">of ${r.later.analysed}</span></span>
-       <span class="ev-later-note">week ${r.later.week}, no comparator;
-       ${Math.round(r.later.retention * 100)}% of the ${r.later.started} still counted</span>`
+    ? `${bounds
+          ? `<span class="ev-later">${pct(bounds.floor)}&ndash;${pct(bounds.ceiling)}</span>
+             <span class="ev-later-note">week ${r.later.week}, no comparator. Reported as
+             ${pct(r.later.percent)} of the ${r.later.analysed} assessed; over the
+             ${bounds.group} the arm started with, the ${bounds.missing} not assessed leave it
+             anywhere in this range.</span>`
+          : `<span class="ev-later">${pct(r.later.percent)} <span class="ev-denom">of ${r.later.analysed}</span></span>
+             <span class="ev-later-note">week ${r.later.week}, no comparator;
+             ${Math.round(r.later.retention * 100)}% of the ${r.later.started} still counted${
+               r.later.population_note ? `; ${escapeHtml(r.later.population_note)}` : ''}</span>`
+       }`
     : '<span class="ev-unknown">not reported</span>';
+  const counted = r.population_note
+    ? `<span class="ev-counted">${escapeHtml(r.population_note)}</span>`
+    : '<span class="ev-counted ev-unknown">the trial did not state which patients it counted</span>';
   const also = (r.also_reported || []).length
     ? `<span class="ev-also">also ${r.also_reported.map(o =>
         `${escapeHtml(o.trial)}: ${pct(o.percent)} of ${o.analysed}` +
@@ -279,7 +291,7 @@ function evidenceRow(r) {
       <td class="ev-agent">${escapeHtml(r.agent)}</td>
       <td class="ev-given">${howGiven(r)}</td>
       <td class="ev-active"><strong>${pct(r.percent)}</strong>
-        <span class="ev-denom">of ${r.analysed}</span>${primary}${central}${also}</td>
+        <span class="ev-denom">of ${r.analysed}</span>${primary}${central}${counted}${also}</td>
       <td>${control}</td>
       <td>${diff}</td>
       <td>${later}</td>

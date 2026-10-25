@@ -8,6 +8,7 @@ import pytest
 
 from vitiligo.reports.jak import JakAtlas, JakTrial, Measurement, OutcomeResult
 from vitiligo.reports.jak_arms import (
+    analysis_population,
     harmonize_arms,
     parse_arm,
     parse_endpoint,
@@ -241,3 +242,114 @@ def test_harmonize_arms_end_to_end() -> None:
     summary = summarize_arms(rows)
     assert summary["model_ready_rows"] == 4
     assert summary["by_endpoint"] == {"F-VASI75": 3, "T-VASI50": 1}
+
+
+# The exact population descriptions ClinicalTrials.gov carries for these trials.
+_TRUE_V_WEEK_24 = (
+    "Intent-to-Treat Population: all randomized participants. Treatment groups for this "
+    "population were defined according to the treatment assignment at the time of "
+    "randomization. Data from participants at a single site were excluded from this analysis "
+    "owing to serious noncompliance with the protocol. Missing F-VASI scores were imputed by "
+    "Multiple Imputation with Fully Conditional Specification."
+)
+_TRUE_V_WEEK_52 = (
+    "ITT Population. Data from participants at a single site were excluded from this analysis "
+    "owing to serious noncompliance with the protocol. Only participants with available data "
+    "were analyzed."
+)
+
+
+def test_true_v_primary_endpoint_is_not_mistaken_for_a_subgroup() -> None:
+    """Its imputation text also says a site "were excluded from this analysis".
+
+    A subgroup pattern loose enough to match that discards the primary endpoint
+    of both pivotal trials, which is the most important figure in the corpus.
+    """
+    assert analysis_population(_TRUE_V_WEEK_24) == "multiple_imputation"
+
+
+@pytest.mark.parametrize(
+    ("description", "expected"),
+    [
+        (_TRUE_V_WEEK_52, "as_observed"),
+        ("ITT Population. Only participants with available data were analyzed.", "as_observed"),
+        # The registry really does contain this typo, after the matched phrase.
+        ("Full Analysis Set. Only participants with available data wee analyzed.", "as_observed"),
+        (
+            "The analysis population included all participants who received at least 1 dose of "
+            "randomized study medication and had a baseline and at least 1 post-baseline "
+            "measurement. Number of participants analyzed signifies number of participants who "
+            "were evaluable for this outcome measure.",
+            "as_observed",
+        ),
+        (
+            "ITT Population. Missing post-Baseline values were considered as not having achieved "
+            "F-PhGVA response for visits up to Week 24.",
+            "nri",
+        ),
+        (
+            "ITT\\_1: all randomized participants in Period 1; NRI-MI (non-responder imputation "
+            "incorporating multiple imputation to handle missing data)",
+            "nri",
+        ),
+        (
+            "ITT Population. Missing T-VASI scores were imputed by Multiple Imputation with "
+            "Fully Conditional Specification.",
+            "multiple_imputation",
+        ),
+        (
+            "The number of participants analyzed for this outcome is a subset of the overall "
+            "population: female sex subgroup",
+            "subgroup",
+        ),
+        ("Patients with a pre-existing diagnosis of anxiety disorder were excluded", "subgroup"),
+        # Stating a population is not the same as stating how missing data were handled.
+        ("Full Analysis Set", None),
+        ("Safety Population: all participants who received at least 1 dose of study drug.", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_analysis_population_reads_the_registry_phrasings(
+    description: str | None, expected: str | None
+) -> None:
+    assert analysis_population(description) == expected
+
+
+def test_both_phrases_present_reads_as_as_observed() -> None:
+    """NCT03099304 week 52 claims non-responder imputation and then restricts the set.
+
+    "Only participants with available data" fixes the denominator, and the
+    denominator is what makes one rate incomparable with another.
+    """
+    mixed = (
+        "ITT Population. Missing post-Baseline values were considered as not having achieved "
+        "responses for visits up to Week 52. Only participants with available data were analyzed."
+    )
+    assert analysis_population(mixed) == "as_observed"
+
+
+def test_rows_carry_the_population_their_measure_was_computed_on() -> None:
+    week_24 = _outcome(
+        "Percentage of Participants Achieving F-VASI75 at Week 24",
+        [_m("Ruxolitinib Cream 1.5% BID", "30.9", "222")],
+        population_description=_TRUE_V_WEEK_24,
+    )
+    week_52 = _outcome(
+        "Percentage of Participants Achieving F-VASI75 at Week 52",
+        [_m("Ruxolitinib Cream 1.5% BID", "48.0", "177")],
+        time_frame="Baseline; Week 52",
+        population_description=_TRUE_V_WEEK_52,
+    )
+    atlas = JakAtlas(
+        generated_at="t",
+        engine_version="v",
+        corpus={},
+        methodology="",
+        caveats=[],
+        agents=[],
+        trials=[_trial(["ruxolitinib"], outcomes=[week_24, week_52])],
+    )
+    by_week = {r.week: r for r in harmonize_arms(atlas) if r.arm_role == "active"}
+    assert "population:multiple_imputation" in by_week[24].flags
+    assert "population:as_observed" in by_week[52].flags

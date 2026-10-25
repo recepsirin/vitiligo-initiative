@@ -233,7 +233,7 @@ def test_payload_states_the_week_and_carries_retention() -> None:
     payload = evidence_to_dict(rows)
     assert payload["week"] == 24
     assert payload["count"] == 1
-    assert "non-responders" in str(payload["note"])
+    assert "which patients its figure counted" in str(payload["note"])
     assert payload["rows"][0]["difference"] is None
 
 
@@ -262,3 +262,126 @@ def test_a_second_trial_of_the_same_dose_is_reported_beside_it() -> None:
     assert [(o.trial, o.percent, o.analysed, o.control_percent) for o in rows[0].also_reported] == [
         ("NCT04052425", 29.8, 221, 7.4)
     ]
+
+
+def test_as_observed_rows_are_labelled_rather_than_dropped() -> None:
+    """Dropping them took the clinician table from 66 rows to 17.
+
+    Ritlecitinib and povorcitinib report only the patients assessed at a visit,
+    so excluding that population deletes both drugs from the page entirely. The
+    page shows each figure with what it counted; the model, which has to combine
+    them arithmetically, is the part that excludes.
+    """
+    rows = build_evidence_rows(
+        [
+            _row(
+                source_id="NCT03715829",
+                arm_agent="ritlecitinib",
+                dose_value=50.0,
+                dose_unit="mg",
+                frequency="QD",
+                route="oral",
+                assessor="central",
+                n_analyzed=58,
+                responders=7,
+                percent=12.1,
+                flags=["population:as_observed"],
+            )
+        ]
+    )
+    assert len(rows) == 1
+    assert rows[0].population == "as_observed"
+    assert rows[0].population_note == "counts only patients assessed at that visit"
+
+
+def test_a_subgroup_never_reaches_the_page() -> None:
+    """A sex or age subgroup is not the arm that was randomised."""
+    assert build_evidence_rows([_row(flags=["population:subgroup"])]) == []
+
+
+def test_a_continuation_states_its_own_population() -> None:
+    """TRuE-V's week 24 and week 52 figures were not measured the same way."""
+    rows = build_evidence_rows(
+        [
+            _row(
+                source_id="NCT04057573",
+                arm_label="Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+                n_analyzed=222,
+                responders=69,
+                percent=30.9,
+                flags=["population:multiple_imputation"],
+            ),
+            _row(
+                source_id="NCT04057573",
+                arm_label="Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+                week=52,
+                n_analyzed=177,
+                responders=85,
+                percent=48.0,
+                outcome_type="SECONDARY",
+                flags=["extension_period", "population:as_observed"],
+            ),
+        ]
+    )
+    assert len(rows) == 1
+    assert rows[0].population == "multiple_imputation"
+    assert rows[0].later is not None
+    assert rows[0].later.population == "as_observed"
+
+
+def test_a_continuation_is_bracketed_by_the_group_it_started_with() -> None:
+    """48.0% of 177 is the most favourable reading; over 222 it is 38.3-58.6%."""
+    rows = build_evidence_rows(
+        [
+            _row(
+                source_id="NCT04057573",
+                arm_label="Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+                n_analyzed=222,
+                responders=69,
+                percent=30.9,
+                flags=["population:multiple_imputation"],
+            ),
+            _row(
+                source_id="NCT04057573",
+                arm_label="Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+                week=52,
+                n_analyzed=177,
+                responders=85,
+                percent=48.0,
+                outcome_type="SECONDARY",
+                flags=["extension_period", "population:as_observed"],
+            ),
+        ]
+    )
+    assert len(rows) == 1
+    later = rows[0].later
+    assert later is not None
+    bounds = later.bounds
+    assert bounds is not None
+    assert (bounds.floor, bounds.ceiling, bounds.group, bounds.missing) == (38.3, 58.6, 222, 45)
+
+
+def test_the_payload_serves_the_bracket() -> None:
+    rows = build_evidence_rows(
+        [
+            _row(n_analyzed=222, responders=69, percent=30.9),
+            _row(
+                arm_label="Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+                week=52,
+                n_analyzed=177,
+                responders=85,
+                percent=48.0,
+                outcome_type="SECONDARY",
+                flags=["extension_period"],
+            ),
+        ]
+    )
+    payload = evidence_to_dict(rows)
+    served = payload["rows"][0]["later"]["bounds"]
+    assert served == {
+        "floor": 38.3,
+        "ceiling": 58.6,
+        "group": 222,
+        "missing": 45,
+        "width": 20.3,
+    }

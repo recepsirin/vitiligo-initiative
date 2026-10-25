@@ -51,7 +51,7 @@ from typing import Any
 
 import numpy as np
 
-from vitiligo.reports.jak_arms import ArmEndpointRow
+from vitiligo.reports.jak_arms import SUBGROUP, ArmEndpointRow
 
 REFERENCE_WEEK = 24
 
@@ -68,6 +68,91 @@ DESIGN_ANNOTATIONS: dict[str, dict[str, Any]] = {
     },
 }
 _EXCLUDING_FLAGS = frozenset({"treatment_changes_within_arm", "extension_study"})
+
+
+def row_population(row: ArmEndpointRow) -> str | None:
+    """The analysis population a row was measured on, or None if none was stated."""
+    for flag in row.flags:
+        if flag.startswith("population:"):
+            return flag.split(":", 1)[1]
+    return None
+
+
+def anchor_populations(rows: Sequence[ArmEndpointRow], instrument: str) -> dict[str, str]:
+    """The analysis population each trial measured its reference week on.
+
+    A sequence of responder rates is only a time course if its points share an
+    analysis population. TRuE-V reports week 24 by imputing missing values over
+    all 222 randomised participants, and week 52 among the 177 who still had
+    data at that visit, so 30.9% rising to 48.0% is in part the denominator
+    moving rather than patients repigmenting. The reference week decides which
+    population a trial contributes, because that is the week h(w) anchors to;
+    within a week a primary endpoint decides.
+    """
+    best: dict[str, tuple[tuple[int, int, int], str]] = {}
+    for row in rows:
+        if row.instrument != instrument or row.week is None:
+            continue
+        population = row_population(row)
+        if population is None or population == SUBGROUP:
+            continue
+        rank = (
+            abs(row.week - REFERENCE_WEEK),
+            0 if row.outcome_type == "PRIMARY" else 1,
+            row.week,
+        )
+        held = best.get(row.source_id)
+        if held is None or rank < held[0]:
+            best[row.source_id] = (rank, population)
+    return {trial: population for trial, (_, population) in best.items()}
+
+
+# An arm stops describing the group it enrolled once enough of that group has
+# left. NCT05247489's ruxolitinib arm reports 16 patients at week 4 and 6 at
+# week 48, climbing to 100%: fitting a time course to that estimates how fast
+# the people who stayed were improving, which is not the quantity the model
+# predicts. Held at the same floor the clinician table uses.
+MIN_RETENTION = 0.8
+
+
+def arm_peaks(rows: Sequence[ArmEndpointRow]) -> dict[tuple[str, str, str, str | None], int]:
+    """The largest group each arm reported at an endpoint, per assessor.
+
+    Central and local reads are separate measurement sets rather than attrition
+    from one another: pooling them makes ritlecitinib's central read of 52 look
+    like a loss from the local read of 67.
+    """
+    peaks: dict[tuple[str, str, str, str | None], int] = {}
+    for row in rows:
+        if not row.n_analyzed:
+            continue
+        key = (row.source_id, row.arm_label, row.endpoint, row.assessor)
+        peaks[key] = max(peaks.get(key, 0), int(row.n_analyzed))
+    return peaks
+
+
+def retention_is_adequate(
+    row: ArmEndpointRow, peaks: dict[tuple[str, str, str, str | None], int]
+) -> bool:
+    """Whether the arm still reports enough of the group it enrolled."""
+    started = peaks.get((row.source_id, row.arm_label, row.endpoint, row.assessor), 0)
+    return not started or int(row.n_analyzed or 0) >= started * MIN_RETENTION
+
+
+def population_is_comparable(row: ArmEndpointRow, anchors: dict[str, str]) -> bool:
+    """Whether a row may sit beside its trial's reference week.
+
+    A subgroup never may. Otherwise a row must share its trial's anchor
+    population; where either is unstated there is nothing identified to
+    conflict with, and the row is kept rather than guessed about.
+    """
+    population = row_population(row)
+    if population == SUBGROUP:
+        return False
+    anchor = anchors.get(row.source_id)
+    return anchor is None or population is None or population == anchor
+
+
 _FREQUENCY_MULTIPLIER = {"QD": 1.0, "BID": 2.0, None: 1.0}
 
 # Weakly informative priors on the probit scale (documented in the output).
@@ -181,6 +266,8 @@ def build_dataset(
     central_trials = {
         r.source_id for r in rows if r.instrument == instrument and r.assessor == "central"
     }
+    anchors = anchor_populations(rows, instrument)
+    peaks = arm_peaks(rows)
 
     selected: list[ArmEndpointRow] = []
     for r in rows:
@@ -192,8 +279,14 @@ def build_dataset(
         if r.arm_role not in ("active", "placebo"):
             skip("arm role")
             continue
-        if "population:as_observed" in r.flags:
-            skip("as-observed population (not comparable with non-responder imputation)")
+        if not population_is_comparable(r, anchors):
+            skip(
+                "analysis population differs from the trial's reference week "
+                f"({row_population(r)} vs {anchors.get(r.source_id)})"
+            )
+            continue
+        if not retention_is_adequate(r, peaks):
+            skip("arm no longer reports the group it enrolled")
             continue
         if r.week is None or not r.n_analyzed or r.responders is None:
             skip("week, n or responders missing")
@@ -868,7 +961,142 @@ def _extrapolation_notes(posterior: Posterior, scenario: Scenario) -> list[str]:
             f"placebo/vehicle data end at week {control_weeks[-1]}: control response at "
             f"week {scenario.week} is extrapolated"
         )
+    # A route's time course past the reference week can rest entirely on arms
+    # that also received phototherapy, which shifts the level through phi but
+    # shares T50. Once TRuE-V's week-52 rows are excluded for mixing analysis
+    # populations, every F-VASI observation past week 24 is one such arm, so
+    # "relies on its route's time course" would otherwise imply data that the
+    # corpus does not contain.
+    if scenario.week > REFERENCE_WEEK and not scenario.phototherapy:
+        route = data.agent_route.get(scenario.agent, scenario.route)
+        late = [
+            o
+            for o in data.observations
+            if o.week > REFERENCE_WEEK
+            and data.arms[o.arm].active
+            and data.agent_route.get(data.arms[o.arm].agent or "") == route
+        ]
+        if late and all(data.arms[o.arm].phototherapy for o in late):
+            notes.append(
+                f"every {route} arm with data past week {REFERENCE_WEEK} also received "
+                "phototherapy, so this week's time course is borrowed from arms given both"
+            )
     return notes
+
+
+# -------------------------------------------------------- checks against bounds
+
+
+@dataclass
+class BoundsCheck:
+    """A prediction against a rate the model does not fit, bracketed by its own trial."""
+
+    source_id: str
+    arm_label: str
+    week: int
+    threshold: int
+    reported: float
+    reported_n: int
+    group: int
+    floor: float
+    ceiling: float
+    predicted: Interval
+    inside: bool
+    overlaps: bool
+
+
+def check_against_bounds(
+    posterior: Posterior,
+    rows: Sequence[ArmEndpointRow],
+    instrument: str,
+) -> list[BoundsCheck]:
+    """Score the model on the rates it refuses to fit, using what bounds them.
+
+    Excluding TRuE-V's week-52 rows for mixing analysis populations also removed
+    the only F-VASI evidence the week-24-to-later back-test had, leaving nothing
+    to check facial time extrapolation against. Those rows are still *evidence*,
+    though — they just are not a figure. 48.0% of the 177 assessed, out of the
+    222 the arm had at week 24, means the rate over that group is between 38.3%
+    and 58.6% whatever the 45 uncounted patients did, and a prediction outside
+    that range is wrong no matter which end the truth sits at.
+
+    So the rows are scored where they cannot be fitted. ``inside`` asks whether
+    the posterior mean lands in the bracket; ``overlaps`` asks the weaker
+    question of whether the 95% interval reaches it at all.
+    """
+    from vitiligo.reports.bounds import bound_rate
+
+    data = posterior.data
+    anchors = anchor_populations(rows, instrument)
+    reference: dict[tuple[Any, ...], int] = {}
+    for r in rows:
+        if r.instrument != instrument or r.arm_role != "active" or r.week != REFERENCE_WEEK:
+            continue
+        if not population_is_comparable(r, anchors) or not r.n_analyzed:
+            continue
+        key = (
+            r.source_id,
+            r.arm_agent,
+            daily_dose(r.dose_value, r.frequency),
+            r.loading_dose_value is not None,
+            bool(r.phototherapy),
+            r.threshold,
+        )
+        reference[key] = max(reference.get(key, 0), int(r.n_analyzed))
+
+    out: list[BoundsCheck] = []
+    for r in rows:
+        if r.instrument != instrument or r.arm_role != "active" or r.arm_agent is None:
+            continue
+        if r.week is None or r.week <= REFERENCE_WEEK or r.threshold is None:
+            continue
+        if _EXCLUDING_FLAGS.intersection(r.flags):
+            continue  # a switched arm is not this arm continued
+        if population_is_comparable(r, anchors):
+            continue  # fitted, so already scored by the back-tests
+        if r.source_id not in data.trials or r.dose_value is None:
+            continue
+        key = (
+            r.source_id,
+            r.arm_agent,
+            daily_dose(r.dose_value, r.frequency),
+            r.loading_dose_value is not None,
+            bool(r.phototherapy),
+            r.threshold,
+        )
+        bounds = bound_rate(r.responders, r.n_analyzed, reference.get(key))
+        if bounds is None or bounds.identified:
+            continue
+        scenario = Scenario(
+            agent=r.arm_agent,
+            dose=r.dose_value,
+            dose_unit=r.dose_unit or "",
+            frequency=r.frequency,
+            week=r.week,
+            threshold=r.threshold,
+            loading_dose=r.loading_dose_value is not None,
+            phototherapy=bool(r.phototherapy),
+            route=r.route,
+        )
+        active, _ = predict_draws(posterior, scenario, trial=r.source_id)
+        interval = Interval.of(active * 100.0)
+        out.append(
+            BoundsCheck(
+                source_id=r.source_id,
+                arm_label=r.arm_label,
+                week=r.week,
+                threshold=r.threshold,
+                reported=bounds.reported,
+                reported_n=bounds.analysed,
+                group=bounds.group,
+                floor=bounds.floor,
+                ceiling=bounds.ceiling,
+                predicted=interval,
+                inside=bounds.covers(interval.mean),
+                overlaps=interval.hi95 >= bounds.floor and interval.lo95 <= bounds.ceiling,
+            )
+        )
+    return out
 
 
 # ------------------------------------------------------------------ back-tests
@@ -892,6 +1120,8 @@ def _held_out_points(
 ) -> list[tuple[ArmEndpointRow, Scenario]]:
     """Active-arm rows selected by ``keep``, with the same filters as ``build_dataset``."""
     central = {r.source_id for r in rows if r.instrument == instrument and r.assessor == "central"}
+    anchors = anchor_populations(rows, instrument)
+    peaks = arm_peaks(rows)
     points: list[tuple[ArmEndpointRow, Scenario]] = []
     seen: set[tuple[Any, ...]] = set()
     for r in rows:
@@ -899,7 +1129,7 @@ def _held_out_points(
             continue
         if _EXCLUDING_FLAGS.intersection(r.flags) or r.week is None or r.threshold is None:
             continue
-        if "population:as_observed" in r.flags:
+        if not population_is_comparable(r, anchors) or not retention_is_adequate(r, peaks):
             continue  # not fitted (see build_dataset), so not scored either
         if not r.n_analyzed or r.percent is None or r.arm_agent is None or r.dose_value is None:
             continue

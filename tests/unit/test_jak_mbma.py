@@ -201,7 +201,7 @@ def test_fit_recovers_simulated_parameters() -> None:
 
 
 def test_v03_data_rules_for_paper_rows() -> None:
-    """As-observed rows are excluded; paper rows pass the registry-only week cap."""
+    """A population the trial does not anchor on is excluded; paper rows pass the week cap."""
     trial = next(iter(DESIGN_ANNOTATIONS))
     cap = DESIGN_ANNOTATIONS[trial]["max_week"]
     rows = [
@@ -218,8 +218,11 @@ def test_v03_data_rules_for_paper_rows() -> None:
     assert weeks == [cap, cap + 28]  # only the paper row survives past the cap
     later = next(o for o in data.observations if o.week == cap + 28)
     assert later.thresholds == (90,)
+    # The trial anchors on the non-responder-imputed row nearer week 24, so the
+    # as-observed one at week 104 cannot sit beside it.
     assert (
-        data.excluded["as-observed population (not comparable with non-responder imputation)"] == 1
+        sum(n for reason, n in data.excluded.items() if "analysis population differs" in reason)
+        == 1
     )
     assert data.trial_phase3 == {trial: True}
 
@@ -296,3 +299,220 @@ def test_v05_new_trial_baseline_follows_its_route() -> None:
         ),
         -1.5,
     )
+
+
+def test_a_trial_contributes_one_analysis_population() -> None:
+    """TRuE-V imputes missing results at week 24 and does not at week 52.
+
+    30.9% of 222 rising to 48.0% of 177 is partly the denominator moving, so
+    fitting both as one arm's time course mis-estimates how fast response builds.
+    """
+    rows = [
+        _row(
+            source_id="NCT04057573",
+            arm_label="Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+            arm_agent="ruxolitinib",
+            dose_value=1.5,
+            dose_unit="%",
+            frequency="BID",
+            route="topical",
+            week=24,
+            outcome_type="PRIMARY",
+            n_analyzed=222,
+            percent=30.9,
+            responders=69,
+            flags=["population:multiple_imputation"],
+        ),
+        _row(
+            source_id="NCT04057573",
+            arm_label="Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+            arm_agent="ruxolitinib",
+            dose_value=1.5,
+            dose_unit="%",
+            frequency="BID",
+            route="topical",
+            week=52,
+            n_analyzed=177,
+            percent=48.0,
+            responders=85,
+            flags=["population:as_observed"],
+        ),
+    ]
+    data = build_dataset(rows, "F-VASI")
+    assert [o.week for o in data.observations] == [24]
+    assert any("analysis population differs" in reason for reason in data.excluded)
+
+
+def test_a_consistent_population_keeps_its_whole_time_course() -> None:
+    """Ritlecitinib reports every visit the same way, so none of it is dropped."""
+    rows = [
+        _row(week=week, n_analyzed=60, percent=10.0, responders=6, flags=["population:as_observed"])
+        for week in (4, 8, 16, 24)
+    ]
+    data = build_dataset(rows, "F-VASI")
+    assert sorted(o.week for o in data.observations) == [4, 8, 16, 24]
+
+
+def test_an_arm_that_lost_its_group_is_not_fitted() -> None:
+    """NCT05247489 reports 16 patients at week 4 and 6 at week 48, reaching 100%.
+
+    Fitting that estimates how fast the patients who stayed were improving.
+    """
+    counts = {4: 16, 8: 14, 12: 11, 24: 7, 48: 6}
+    rows = [
+        _row(
+            source_id="NCT05247489",
+            arm_label="Ruxolitinib 1.5% Cream BID",
+            arm_agent="ruxolitinib",
+            dose_value=1.5,
+            dose_unit="%",
+            frequency="BID",
+            route="topical",
+            week=week,
+            n_analyzed=n,
+            percent=100.0 * (week / 48),
+            responders=max(1, round(n * week / 48)),
+            flags=["population:as_observed"],
+        )
+        for week, n in counts.items()
+    ]
+    data = build_dataset(rows, "F-VASI")
+    # 14 of 16 is 87.5% and stays; 11 of 16 is 69% and does not.
+    assert sorted(o.week for o in data.observations) == [4, 8]
+    assert any("no longer reports the group it enrolled" in r for r in data.excluded)
+
+
+def test_a_subgroup_is_never_fitted() -> None:
+    rows = [_row(flags=["population:subgroup"])]
+    assert build_dataset(rows, "F-VASI").observations == []
+
+
+def _notes_for(rows: list[ArmEndpointRow], scenario: Scenario) -> list[str]:
+    from vitiligo.models.jak_mbma import Posterior, _extrapolation_notes
+
+    posterior = Posterior.__new__(Posterior)
+    posterior.data = build_dataset(rows, "F-VASI")
+    return _extrapolation_notes(posterior, scenario)
+
+
+def test_a_time_course_borrowed_from_phototherapy_arms_says_so() -> None:
+    """Excluding TRuE-V week 52 leaves every late F-VASI arm on NB-UVB as well.
+
+    "Relies on its route's time course" would imply the corpus holds long-week
+    data for the drug alone, which after the correction it does not.
+    """
+    plain = _row(
+        arm_label="Ruxolitinib 1.5% Cream BID",
+        arm_agent="ruxolitinib",
+        dose_value=1.5,
+        dose_unit="%",
+        frequency="BID",
+        route="topical",
+        week=24,
+        flags=["population:as_observed"],
+    )
+    with_uvb = _row(
+        source_id="NCT05247489",
+        arm_label="Ruxolitinib 1.5% Cream BID + NB-UVB",
+        arm_agent="ruxolitinib",
+        dose_value=1.5,
+        dose_unit="%",
+        frequency="BID",
+        route="topical",
+        phototherapy=True,
+        week=40,
+        flags=["population:as_observed"],
+    )
+    scenario = Scenario("ruxolitinib", 1.5, "%", "BID", 52, 75)
+    notes = _notes_for([plain, with_uvb], scenario)
+    assert any("also received phototherapy" in note for note in notes)
+
+    # A single late arm without phototherapy is enough for the note to go away.
+    clean_late = _row(
+        source_id="NCT05750823",
+        arm_label="Ruxolitinib 1.5% Cream BID",
+        arm_agent="ruxolitinib",
+        dose_value=1.5,
+        dose_unit="%",
+        frequency="BID",
+        route="topical",
+        week=48,
+        flags=["population:as_observed"],
+    )
+    notes = _notes_for([plain, with_uvb, clean_late], scenario)
+    assert not any("also received phototherapy" in note for note in notes)
+
+
+def test_bounds_check_scores_the_rows_it_refuses_to_fit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """TRuE-V2 week 52 cannot have exceeded 58.6%, so a higher prediction fails.
+
+    The fit itself is stubbed: what is under test is which rows get checked,
+    which group brackets them, and how a prediction is judged against it.
+    """
+    from vitiligo.models import jak_mbma as model
+
+    anchor = _row(
+        source_id="NCT04057573",
+        arm_label="Double-Blind Period: Ruxolitinib Cream 1.5% BID",
+        arm_agent="ruxolitinib",
+        dose_value=1.5,
+        dose_unit="%",
+        frequency="BID",
+        route="topical",
+        week=24,
+        outcome_type="PRIMARY",
+        n_analyzed=222,
+        responders=69,
+        percent=30.9,
+        flags=["population:multiple_imputation"],
+    )
+    later = _row(
+        source_id="NCT04057573",
+        arm_label="Treatment-Extension Period: Ruxolitinib Cream 1.5% BID",
+        arm_agent="ruxolitinib",
+        dose_value=1.5,
+        dose_unit="%",
+        frequency="BID",
+        route="topical",
+        week=52,
+        n_analyzed=177,
+        responders=85,
+        percent=48.0,
+        flags=["extension_period", "population:as_observed"],
+    )
+    rows = [anchor, later]
+    data = build_dataset(rows, "F-VASI")
+    assert [o.week for o in data.observations] == [24]  # the week-52 row is not fitted
+
+    posterior = model.Posterior.__new__(model.Posterior)
+    posterior.data = data
+    monkeypatch.setattr(
+        model, "predict_draws", lambda *a, **k: (np.full(200, 0.753), np.full(200, 0.1))
+    )
+
+    checks = model.check_against_bounds(posterior, rows, "F-VASI")
+    assert len(checks) == 1
+    check = checks[0]
+    assert (check.week, check.threshold, check.group) == (52, 75, 222)
+    assert (check.floor, check.ceiling, check.reported) == (38.3, 58.6, 48.0)
+    assert check.predicted.mean == pytest.approx(75.3, abs=0.1)
+    assert not check.inside  # 75.3% is above anything the group could have produced
+
+    monkeypatch.setattr(
+        model, "predict_draws", lambda *a, **k: (np.full(200, 0.45), np.full(200, 0.1))
+    )
+    assert model.check_against_bounds(posterior, rows, "F-VASI")[0].inside
+
+
+def test_bounds_check_skips_rows_the_model_does_fit() -> None:
+    """A trial reporting one population throughout is scored by the back-tests."""
+    from vitiligo.models import jak_mbma as model
+
+    rows = [
+        _row(week=week, n_analyzed=60, responders=6, percent=10.0, flags=["population:as_observed"])
+        for week in (24, 52)
+    ]
+    data = build_dataset(rows, "F-VASI")
+    posterior = model.Posterior.__new__(model.Posterior)
+    posterior.data = data
+    assert model.check_against_bounds(posterior, rows, "F-VASI") == []

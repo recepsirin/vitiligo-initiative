@@ -16,7 +16,7 @@ In TRuE-V both arms receive ruxolitinib after week 24, so the week-52 numbers
 describe one group on drug with nobody to compare against, and 177 of the 222
 who started. Shown as such, with its denominator, under the week-24 row.
 
-Four rules, because each one was violated by a number this file used to print:
+Five rules, because each one was violated by a number this file used to print:
 
 - **The largest arm wins, not the latest week or the highest rate.** Ranking by
   rate let NCT05247489's seven patients (85.7% F-VASI75) outrank TRuE-V2's 222
@@ -31,6 +31,20 @@ Four rules, because each one was violated by a number this file used to print:
 - **Face and body stay apart**, and phototherapy is a different intervention.
   F-VASI is facial, T-VASI whole-body, and ruxolitinib with NB-UVB (76.5%) is
   not ruxolitinib (51.2%).
+- **A figure that counts only those assessed is bracketed, not taken at face
+  value.** TRuE-V2's 48.0% of 177 is the most favourable reading of that arm;
+  over the 222 it had at week 24 the answer is somewhere in 38.3% to 58.6%,
+  and nothing in the record narrows it. The continuation column reports the
+  bracket, because the gap is the price of the missing data and a clinician
+  should see it rather than a single number chosen from one end.
+- **Every row says which patients it counted.** The trials differ: most report
+  those assessed at the visit, two impute missing results as failures, and
+  TRuE-V imputes at week 24 and does not at week 52. A rate means a different
+  thing under each, so the page states which rather than dropping the rows it
+  cannot harmonise — the model excludes what it cannot combine arithmetically,
+  but a reader who can see both denominators can judge, and hiding ritlecitinib
+  entirely would say less than labelling it. Only a subgroup is dropped here,
+  because a subgroup is not the arm that was randomised.
 """
 
 from __future__ import annotations
@@ -39,7 +53,8 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import Any
 
-from vitiligo.reports.jak_arms import ArmEndpointRow
+from vitiligo.reports.bounds import Bounds, bound_rate
+from vitiligo.reports.jak_arms import SUBGROUP, ArmEndpointRow
 
 # A drug, as it was given, at one endpoint: agent, route, maintenance dose,
 # loading dose, phototherapy, endpoint. Two rows share a cell when a clinician
@@ -61,6 +76,14 @@ MIN_ANALYSED = 20
 # An arm reporting materially fewer patients than it randomised is reporting
 # the ones who stayed, who are the ones still responding.
 MIN_RETENTION = 0.8
+
+# How each analysis population is worth describing to a clinician. The registry
+# states it statistically; this says what was counted.
+POPULATION_NOTES = {
+    "as_observed": "counts only patients assessed at that visit",
+    "nri": "patients who left the trial counted as not responding",
+    "multiple_imputation": "missing results estimated from the rest of the data",
+}
 
 # Rows the model also refuses: arms re-assigned partway through, and separate
 # extension studies. ``extension_period`` is the same trial's open-label
@@ -85,13 +108,27 @@ class Continuation:
 
     week: int
     percent: float
+    responders: int
     analysed: int
     started: int
+    population: str | None
+    population_note: str | None
 
     @property
     def retention(self) -> float | None:
-        """Share of the randomised group still being counted."""
+        """Share of the group that started still being counted."""
         return None if not self.started else round(self.analysed / self.started, 3)
+
+    @property
+    def bounds(self) -> Bounds | None:
+        """What the rate could be over the group the arm started with.
+
+        A continuation figure counting only the patients assessed is the most
+        favourable reading of that arm, not a neutral one. Where the trial also
+        states how many it had at the controlled endpoint, the two together
+        bracket the answer without assuming anything about who left.
+        """
+        return bound_rate(self.responders, self.analysed, self.started)
 
 
 @dataclass(frozen=True)
@@ -115,6 +152,8 @@ class EvidenceRow:
     primary_endpoint: bool
     trial: str
     trial_title: str | None
+    population: str | None
+    population_note: str | None
     later: Continuation | None
     also_reported: list[Replication]
 
@@ -129,6 +168,14 @@ class EvidenceRow:
     def controlled(self) -> bool:
         """Whether a comparator arm from the same trial and week was reported."""
         return self.control_percent is not None
+
+
+def _population(row: ArmEndpointRow) -> str | None:
+    """Which patients the row's figure counted, as the registry stated it."""
+    for flag in row.flags:
+        if flag.startswith("population:"):
+            return flag.split(":", 1)[1]
+    return None
 
 
 def _control_percent(control: ArmEndpointRow | None) -> float | None:
@@ -171,10 +218,9 @@ def _usable(
     assert row.week is not None
     if (_EXCLUDED_FLAGS - allow).intersection(row.flags):
         return False
-    if "population:as_observed" in row.flags:
+    # A subgroup is not the randomised arm, whatever rate it reports.
+    if _population(row) == SUBGROUP:
         return False
-    # Counting patients who left as non-responders is what makes arms within a
-    # trial comparable; an as-observed count cannot sit in the same column.
     if (row.source_id, row.instrument) in central and row.assessor != "central":
         return False
     cap = caps.get(row.source_id)
@@ -322,6 +368,8 @@ def build_evidence_rows(rows: Sequence[ArmEndpointRow]) -> list[EvidenceRow]:
                 primary_endpoint=row.outcome_type == "PRIMARY",
                 trial=row.source_id,
                 trial_title=row.study_id if row.study_id != row.source_id else None,
+                population=_population(row),
+                population_note=POPULATION_NOTES.get(_population(row) or ""),
                 also_reported=[
                     Replication(
                         trial=other.source_id,
@@ -338,8 +386,11 @@ def build_evidence_rows(rows: Sequence[ArmEndpointRow]) -> list[EvidenceRow]:
                 else Continuation(
                     week=int(tail.week or 0),
                     percent=round(float(tail.percent or 0), 1),
+                    responders=int(tail.responders or 0),
                     analysed=int(tail.n_analyzed or 0),
                     started=int(row.n_analyzed or 0),
+                    population=_population(tail),
+                    population_note=POPULATION_NOTES.get(_population(tail) or ""),
                 ),
             )
         )
@@ -366,6 +417,18 @@ def evidence_to_dict(rows: Sequence[EvidenceRow]) -> dict[str, Any]:
         item["controlled"] = r.controlled
         if r.later is not None:
             item["later"]["retention"] = r.later.retention
+            bounds = r.later.bounds
+            item["later"]["bounds"] = (
+                None
+                if bounds is None or bounds.identified
+                else {
+                    "floor": bounds.floor,
+                    "ceiling": bounds.ceiling,
+                    "group": bounds.group,
+                    "missing": bounds.missing,
+                    "width": bounds.width,
+                }
+            )
         serialised.append(item)
     return {
         "rows": serialised,
@@ -373,12 +436,16 @@ def evidence_to_dict(rows: Sequence[EvidenceRow]) -> dict[str, Any]:
         "week": PRIMARY_WEEK,
         "note": (
             f"Registry-posted results at week {PRIMARY_WEEK}, the primary endpoint of these "
-            "trials, counting patients who left as non-responders. Each control is the "
-            "comparator arm of the same trial and endpoint; where none is shown, the trial "
-            "had no comparator. Where a trial reported both a blinded central read and a "
-            "local one, the central read is used. Facial and whole-body measures are "
-            "separate scales and are not comparable with each other. A continuation figure "
-            "is the same arm after the controlled period ended, when every patient was "
-            "receiving the drug and some had left the trial."
+            "trials. Each row states which patients its figure counted, because the trials "
+            "differ: most report those assessed at the visit, two impute missing results as "
+            "failures, and TRuE-V imputes at week 24 but not at week 52. Rates measured on "
+            "different populations should not be read against each other. Each control is "
+            "the comparator arm of the same trial and endpoint; where none is shown, the "
+            "trial had no comparator. Where a trial reported both a blinded central read "
+            "and a local one, the central read is used. Facial and whole-body measures are "
+            "separate scales. A continuation figure is the same arm after the controlled "
+            "period ended, when every patient was receiving the drug and some had left; "
+            "where it counts only the patients assessed, it is bracketed by what the "
+            "patients it does not cover could have done, which assumes nothing about them."
         ),
     }

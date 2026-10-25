@@ -101,7 +101,7 @@ def test_evidence_endpoint_serves_week_24_results(api_client_seeded: TestClient)
     body = resp.json()
     assert body["week"] == 24
     assert body["count"] == len(body["rows"])
-    assert "non-responders" in body["note"]
+    assert "which patients its figure counted" in body["note"]
     for row in body["rows"]:
         assert row["week"] == 24
         assert row["analysed"] >= 20, f"{row['agent']}: arm too small to state a rate"

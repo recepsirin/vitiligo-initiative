@@ -43,7 +43,14 @@ from typing import Any
 
 import numpy as np
 
-from vitiligo.models.jak_mbma import _EXCLUDING_FLAGS, DESIGN_ANNOTATIONS
+from vitiligo.models.jak_mbma import (
+    _EXCLUDING_FLAGS,
+    DESIGN_ANNOTATIONS,
+    anchor_populations,
+    arm_peaks,
+    population_is_comparable,
+    retention_is_adequate,
+)
 from vitiligo.reports.jak_arms import ArmEndpointRow
 
 DRAWS = 20_000
@@ -135,16 +142,42 @@ def _interval(
     )
 
 
-def usable(row: ArmEndpointRow, instrument: str) -> bool:
+@dataclass(frozen=True)
+class ModelFilters:
+    """What the model's row rules need to know about the table as a whole.
+
+    Built once per table: both rules are properties of a row *relative to its
+    trial and arm*, so neither can be decided from the row alone. Passing this
+    is required rather than optional, because a filter that quietly does
+    nothing when an argument is omitted is how the original bug survived — the
+    model had a rule against mixing analysis populations and no registry row
+    ever carried the flag it tested.
+    """
+
+    anchors: dict[str, str]
+    peaks: dict[tuple[str, str, str, str | None], int]
+
+    @classmethod
+    def of(cls, rows: Sequence[ArmEndpointRow], instrument: str) -> ModelFilters:
+        return cls(anchor_populations(rows, instrument), arm_peaks(rows))
+
+
+def usable(row: ArmEndpointRow, instrument: str, filters: ModelFilters) -> bool:
     """Rows the scenario model fits, by the same rules, so the comparison is fair.
 
     Mirrors ``build_dataset`` and ``_held_out_points``: no switched-treatment or
-    extension arms, no as-observed rows, nothing past a trial's annotated
-    maximum week, and counts present.
+    extension arms, nothing measured on a population other than the one its
+    trial anchors its time course to, no arm that has stopped reporting the
+    group it enrolled, nothing past a trial's annotated maximum week, and
+    counts present.
     """
     if row.instrument != instrument or row.week is None or row.threshold is None:
         return False
-    if _EXCLUDING_FLAGS.intersection(row.flags) or "population:as_observed" in row.flags:
+    if _EXCLUDING_FLAGS.intersection(row.flags):
+        return False
+    if not population_is_comparable(row, filters.anchors):
+        return False
+    if not retention_is_adequate(row, filters.peaks):
         return False
     if row.responders is None or not row.n_analyzed:
         return False
@@ -162,9 +195,10 @@ def control_rates(
     A trial with several control rows for one cell (different assessors) keeps
     the largest, which is the fullest analysis population.
     """
+    filters = ModelFilters.of(rows, instrument)
     out: dict[tuple[str, int, int], Observed] = {}
     for row in rows:
-        if row.arm_role != "placebo" or not usable(row, instrument):
+        if row.arm_role != "placebo" or not usable(row, instrument, filters):
             continue
         assert row.threshold is not None and row.week is not None and row.responders is not None
         assert row.n_analyzed is not None
@@ -194,11 +228,12 @@ def effect_samples(
     One sample per active arm that has a control arm in its own trial at the
     same week and threshold.
     """
+    filters = ModelFilters.of(rows, instrument)
     samples: list[EffectSample] = []
     for row in rows:
         if row.arm_role != "active" or row.source_id == exclude_trial:
             continue
-        if not usable(row, instrument) or row.threshold != threshold:
+        if not usable(row, instrument, filters) or row.threshold != threshold:
             continue
         if route is not None and _route_of(row, agent_routes) != route:
             continue
@@ -228,11 +263,12 @@ def active_rates(
     agent_routes: dict[str, str],
 ) -> list[float]:
     """Log-odds of the rates other trials reported for this route, threshold and week."""
+    filters = ModelFilters.of(rows, instrument)
     out = []
     for row in rows:
         if row.arm_role != "active" or row.source_id == exclude_trial:
             continue
-        if not usable(row, instrument) or row.threshold != threshold or row.week != week:
+        if not usable(row, instrument, filters) or row.threshold != threshold or row.week != week:
             continue
         if route is not None and _route_of(row, agent_routes) != route:
             continue

@@ -13,6 +13,7 @@ import pytest
 
 from vitiligo.models.baseline import (
     EffectSample,
+    ModelFilters,
     Observed,
     active_rates,
     control_rates,
@@ -99,20 +100,40 @@ def test_expit_does_not_overflow_on_large_log_odds() -> None:
 
 
 def test_usable_applies_the_models_own_filters() -> None:
-    assert usable(_row(), "F-VASI")
-    assert not usable(_row(instrument="T-VASI"), "F-VASI")
-    assert not usable(_row(flags=["extension_study"]), "F-VASI")
-    assert not usable(_row(flags=["population:as_observed"]), "F-VASI")
-    assert not usable(_row(responders=None), "F-VASI")
-    assert not usable(_row(n_analyzed=0), "F-VASI")
-    assert not usable(_row(week=None), "F-VASI")
+    table = [_row()]
+    filters = ModelFilters.of(table, "F-VASI")
+    assert usable(_row(), "F-VASI", filters)
+    assert not usable(_row(instrument="T-VASI"), "F-VASI", filters)
+    assert not usable(_row(flags=["extension_study"]), "F-VASI", filters)
+    assert not usable(_row(responders=None), "F-VASI", filters)
+    assert not usable(_row(n_analyzed=0), "F-VASI", filters)
+    assert not usable(_row(week=None), "F-VASI", filters)
+
+
+def test_usable_refuses_a_population_the_trial_does_not_anchor_on() -> None:
+    """The benchmark has to see the same rows the model fits, or it is not a benchmark."""
+    anchor = _row(week=24, flags=["population:multiple_imputation"])
+    later = _row(week=52, flags=["population:as_observed"])
+    filters = ModelFilters.of([anchor, later], "F-VASI")
+    assert usable(anchor, "F-VASI", filters)
+    assert not usable(later, "F-VASI", filters)
+
+
+def test_usable_refuses_an_arm_that_lost_its_group() -> None:
+    full = _row(week=4, n_analyzed=40)
+    thinned = _row(week=48, n_analyzed=24)
+    filters = ModelFilters.of([full, thinned], "F-VASI")
+    assert usable(full, "F-VASI", filters)
+    assert not usable(thinned, "F-VASI", filters)
 
 
 def test_usable_respects_a_trials_annotated_maximum_week() -> None:
     """NCT03099304's arms were re-assigned after week 24, so later weeks are excluded."""
     late = _row(source_id="NCT03099304", week=52)
-    assert not usable(late, "F-VASI")
-    assert usable(_row(source_id="NCT03099304", week=24), "F-VASI")
+    early = _row(source_id="NCT03099304", week=24)
+    filters = ModelFilters.of([late, early], "F-VASI")
+    assert not usable(late, "F-VASI", filters)
+    assert usable(early, "F-VASI", filters)
 
 
 def test_control_rates_keeps_the_largest_population_per_cell() -> None:

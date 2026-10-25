@@ -183,6 +183,9 @@ class OutcomeResult:
     domains: list[str]
     measurements: list[Measurement]
     analyses: list[dict[str, Any]]
+    # How the registry says missing data were handled, verbatim. A responder
+    # rate means a different thing under each, so the text travels with the row.
+    population_description: str | None = None
 
 
 @dataclass
@@ -367,6 +370,7 @@ def parse_ctgov_outcomes(study: dict[str, Any]) -> list[OutcomeResult]:
                 domains=outcome_domains(title, description),
                 measurements=measurements,
                 analyses=analyses,
+                population_description=_str_or_none(om.get("populationDescription")),
             )
         )
     return parsed

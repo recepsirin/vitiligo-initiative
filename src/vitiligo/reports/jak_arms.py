@@ -292,6 +292,62 @@ def _to_int(value: str | None) -> int | None:
     return int(number) if number is not None and number.is_integer() else None
 
 
+# Analysis populations, read off the registry's own population description. A
+# responder rate means a different thing under each: 48.0% of the 177 TRuE-V2
+# participants who had data at week 52 is not comparable with 30.9% of the 222
+# randomised, whose missing values were imputed. The phrasings below are the
+# ones the corpus actually contains, including a registry typo ("wee analyzed")
+# that falls after the matched text.
+AS_OBSERVED = "as_observed"
+NRI = "nri"
+MULTIPLE_IMPUTATION = "multiple_imputation"
+SUBGROUP = "subgroup"
+
+_AS_OBSERVED_RE = re.compile(
+    r"only participants with available data"
+    r"|evaluable for this outcome measure"
+    r"|only those participants with values at each",
+    re.I,
+)
+_NRI_RE = re.compile(
+    r"considered as not having achieved|non-responder imputation",
+    re.I,
+)
+_MULTIPLE_IMPUTATION_RE = re.compile(r"imputed by multiple imputation", re.I)
+# Narrow on purpose: TRuE-V's imputation text also says "were excluded from this
+# analysis" (of one non-compliant site), and matching that would discard the
+# primary endpoint of both pivotal trials.
+_SUBGROUP_RE = re.compile(
+    r"subset of the overall population"
+    r"|subset of participants"
+    r"|pre-existing diagnosis of[^.]{0,80}excluded",
+    re.I,
+)
+
+
+def analysis_population(description: str | None) -> str | None:
+    """Which analysis population a posted measure was computed on, or None.
+
+    None means the registry stated nothing identifiable, which is not the same
+    as a known population and must not be read as one.
+
+    A description naming both non-responder imputation and "only participants
+    with available data" is read as as-observed: that phrase fixes the
+    denominator, and the denominator is what makes a rate incomparable.
+    """
+    if not description or not description.strip():
+        return None
+    if _SUBGROUP_RE.search(description):
+        return SUBGROUP
+    if _AS_OBSERVED_RE.search(description):
+        return AS_OBSERVED
+    if _NRI_RE.search(description):
+        return NRI
+    if _MULTIPLE_IMPUTATION_RE.search(description):
+        return MULTIPLE_IMPUTATION
+    return None
+
+
 def _rows_for_outcome(trial: JakTrial, outcome: OutcomeResult) -> list[ArmEndpointRow]:
     if (outcome.param_type or "").upper() not in _RESPONDER_PARAMS:
         return []
@@ -326,6 +382,9 @@ def _build_row(
     week, week_source = parse_week(m.class_title, outcome.title, outcome.time_frame)
     if week is None:
         flags.append("week_ambiguous")
+    population = analysis_population(outcome.population_description)
+    if population is not None:
+        flags.append(f"population:{population}")
     if n is None:
         flags.append("n_missing")
 
@@ -351,8 +410,11 @@ def _build_row(
         flags.append("extension_study")
     elif _EXTENSION_RE.search(arm.period or ""):
         # An extension period inside the parent trial (e.g. TRuE-V weeks 24-52):
-        # completers continuing their arm; usable as time-course data when the
-        # regimen does not change.
+        # completers continuing their arm. The regimen does not change, but the
+        # analysis population does — TRuE-V switches from imputing missing
+        # values over all randomised participants to counting only those with
+        # data at the visit — so whether these rows can carry a time course is
+        # decided by ``population:`` above, not by the regimen.
         flags.append("extension_period")
     if arm.role == "placebo" and week is not None and week > 24:
         # e.g. vehicle "withdrawal" arms of extension studies: participants were
