@@ -7,7 +7,7 @@ store, and records an `IngestionRun` for auditability and resumability.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -44,6 +44,7 @@ from vitiligo.sources.ictrp import (
     iter_ictrp_trials,
     should_skip_ictrp_record,
 )
+from vitiligo.sources.ictrp_web import is_about_vitiligo, resolve_trials
 from vitiligo.sources.isrctn import DEFAULT_VITILIGO_QUERY as ISRCTN_DEFAULT_QUERY
 from vitiligo.sources.isrctn import ISRCTNClient
 from vitiligo.sources.opentargets import (
@@ -228,12 +229,54 @@ def run_ictrp_ingestion(
     if not file.is_file():
         raise FileNotFoundError(f"ICTRP export not found: {file}")
 
-    init_db()
-    query = f"file:{file}"
     total_found = count_ictrp_records(file)
     if limit is not None:
         total_found = min(total_found, limit)
 
+    return _ingest_ictrp_trials(
+        lambda: iter_ictrp_trials(file, limit=limit),
+        query=f"file:{file}",
+        total_found=total_found,
+        skip_duplicates=skip_duplicates,
+        commit_every=commit_every,
+    )
+
+
+def run_ictrp_resolution(
+    trial_ids: Sequence[str],
+    skip_duplicates: bool = True,
+    commit_every: int = 10,
+    refresh: bool = False,
+    require_vitiligo: bool = True,
+) -> IngestionStats:
+    """Resolve registry ids one at a time against the WHO ICTRP record pages.
+
+    This is the route to the registries that publish no API of their own —
+    CTRI, ChiCTR, IRCT, PACTR — so a trial a paper cites by id can be read
+    rather than left as a string. Ids ICTRP does not hold simply do not
+    arrive; records registered under another condition are skipped.
+    """
+    return _ingest_ictrp_trials(
+        lambda: resolve_trials(trial_ids, refresh=refresh),
+        query=f"ids:{','.join(sorted(trial_ids))[:400]}",
+        total_found=len(trial_ids),
+        skip_duplicates=skip_duplicates,
+        commit_every=commit_every,
+        keep=is_about_vitiligo if require_vitiligo else None,
+    )
+
+
+def _ingest_ictrp_trials(
+    trials: Callable[[], Iterator[Trial]],
+    *,
+    query: str,
+    total_found: int | None,
+    skip_duplicates: bool,
+    commit_every: int,
+    keep: Callable[[Trial], bool] | None = None,
+) -> IngestionStats:
+    """Upsert ICTRP trials from either route under one audited run."""
+    init_db()
     run = IngestionRun(source=TrialSourceKind.ICTRP.value, query=query)
     with session_scope() as bookkeeping:
         bookkeeping.add(run)
@@ -253,8 +296,16 @@ def run_ictrp_ingestion(
 
             existing_keys = _load_trial_dedup_keys(session) if skip_duplicates else set()
 
-            for trial in iter_ictrp_trials(file, limit=limit):
+            for trial in trials():
                 fetched += 1
+                if keep is not None and not keep(trial):
+                    logger.info(
+                        "Skipping %s: registered under %s, not vitiligo",
+                        trial.source_id,
+                        trial.conditions or "no condition",
+                    )
+                    skipped += 1
+                    continue
                 if should_skip_ictrp_record(
                     trial,
                     skip_duplicates=skip_duplicates,

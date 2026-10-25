@@ -2,13 +2,14 @@
 
 Most vitiligo trials run in India, China and Iran, and their registries —
 CTRI, ChiCTR, IRCT — publish no API we may use. WHO's ICTRP aggregates them
-but its search refuses programmatic access, so those trials are invisible to
-every ingest we have.
+but its *search* refuses programmatic access, so no ingest can go looking for
+those trials.
 
-They are not invisible to the corpus. A paper reporting a trial prints its
-registration number, and we hold 2,587 full texts. Scanning them recovers
-the identifier, the paper that describes the trial, and the sentence around
-it — enough to read the evidence and to ask the registry by hand.
+A paper reporting a trial prints its registration number, though, and we hold
+thousands of full texts. Scanning them recovers the identifier, the paper that
+describes the trial, and the sentence around it. ICTRP will then serve that
+one record by id, so ``ingest ictrp-ids --cited`` turns what this finds into
+trial rows — see ``sources.ictrp_web``.
 
 The filter that matters is proximity. A review of cell-sheet therapies cited
 sixteen Japanese trial numbers while mentioning vitiligo twice, in passing;
@@ -16,9 +17,9 @@ none of them was a vitiligo trial. So an identifier counts only when the
 paper's title is about vitiligo, or the word appears within
 ``CONTEXT_WINDOW`` characters of the number itself.
 
-What comes out is a lead, not a trial record: the registry's own fields —
-arms, outcomes, dates, results — are not here, and nothing in this report
-should be counted as evidence until the registry entry is read.
+What comes out here is a lead, not a trial record: the registry's own
+fields are not in this module, and nothing in this report should be counted
+as evidence until the registry entry has been read.
 """
 
 from __future__ import annotations

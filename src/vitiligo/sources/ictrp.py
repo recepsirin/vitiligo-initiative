@@ -1,7 +1,10 @@
 """WHO ICTRP source — bulk XML file import.
 
 WHO ICTRP has no free public REST API comparable to ClinicalTrials.gov or
-CTIS. The supported workflow is to export search results from
+CTIS, and its search cannot be driven by URL. This module covers the bulk
+route; ``sources.ictrp_web`` resolves one record at a time by id, which is
+how a trial a paper cites gets read. The supported bulk workflow is to
+export search results from
 https://trialsearch.who.int/ as XML (Export results to XML → Export all
 trials to XML) and ingest locally:
 
@@ -67,6 +70,7 @@ _STATUS_MAP: dict[str, str] = {
     "active, not recruiting": "ACTIVE_NOT_RECRUITING",
     "enrolling by invitation": "ENROLLING_BY_INVITATION",
     "completed": "COMPLETED",
+    "complete": "COMPLETED",
     "terminated": "TERMINATED",
     "suspended": "SUSPENDED",
     "withdrawn": "WITHDRAWN",
@@ -363,6 +367,10 @@ def _normalize_phase(raw: str | None) -> list[str]:
     for pattern, label in _PHASE_PATTERNS:
         if re.search(pattern, text):
             return label.split("/") if "/" in label else [label]
+    # IRCT and others state a bare numeral where the field means a phase.
+    bare = re.fullmatch(r"([1-4])(?:\s*[/&-]\s*([1-4]))?", text)
+    if bare:
+        return [f"PHASE{n}" for n in bare.groups() if n]
     return [raw.strip().upper().replace(" ", "_")]
 
 

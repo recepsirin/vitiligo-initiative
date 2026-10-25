@@ -35,6 +35,7 @@ from vitiligo.ingest import (
     run_geo_ingestion,
     run_gwas_ingestion,
     run_ictrp_ingestion,
+    run_ictrp_resolution,
     run_isrctn_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
@@ -444,6 +445,99 @@ def ingest_ictrp(
     console.print()
     console.rule("[bold green]Done[/bold green]")
     _print_ingest_stats(stats)
+
+
+def _cited_lead_ids() -> list[str]:
+    """Registry ids the corpus cites that no registry we read has given us.
+
+    ``reports.cited_trials`` already finds these. It also separates the leads
+    whose citing paper is about vitiligo from the ones where the word merely
+    sits near the number — a review of cell-sheet therapies cites sixteen
+    Japanese trial numbers in passing. Both groups are resolved here, because
+    the record itself settles what the uncertain ones are: it states the
+    condition the trial was registered under, which a citation cannot.
+    """
+    from vitiligo.reports.cited_trials import scan
+
+    init_db()
+    with session_scope() as session:
+        documents = list(session.exec(select(Document)).all())
+        known = [t.source_id for t in session.exec(select(Trial)).all()]
+    return [lead.identifier for lead in scan(documents, known)]
+
+
+@ingest_app.command("ictrp-ids")
+def ingest_ictrp_ids(
+    trial_ids: list[str] | None = typer.Argument(  # noqa: B008 (variadic arguments are lists)
+        None,
+        help="Registry ids, e.g. CTRI/2017/05/008692 ChiCTR2000036712.",
+    ),
+    from_file: str | None = typer.Option(
+        None,
+        "--from-file",
+        "-f",
+        help="Read ids from a file, one per line (# comments allowed).",
+    ),
+    cited: bool = typer.Option(
+        False,
+        "--cited",
+        help="Use the registry ids cited by papers already in the corpus.",
+    ),
+    keep_duplicates: bool = typer.Option(
+        False,
+        "--keep-duplicates/--skip-duplicates",
+        help="Keep trials that duplicate ctgov/euctr records (default: skip).",
+    ),
+    any_condition: bool = typer.Option(
+        False,
+        "--any-condition",
+        help="Keep records not registered under vitiligo (default: skip them).",
+    ),
+    refresh: bool = typer.Option(
+        False,
+        "--refresh",
+        help="Re-fetch pages already in the raw cache.",
+    ),
+) -> None:
+    """Resolve registry ids against the WHO ICTRP record pages.
+
+    The route to registries with no API of their own — CTRI, ChiCTR, IRCT,
+    PACTR — so a trial a paper cites by id becomes a record. Contact names,
+    addresses and phone numbers are removed before anything is stored.
+    """
+    settings = get_settings()
+    ids = list(trial_ids or [])
+    if from_file:
+        for line in Path(from_file).read_text().splitlines():
+            line = line.split("#", 1)[0].strip()
+            if line:
+                ids.append(line)
+    if cited:
+        ids.extend(_cited_lead_ids())
+
+    ids = list(dict.fromkeys(ids))
+    if not ids:
+        console.print("[red]No trial ids given. Pass ids, --from-file or --cited.[/red]")
+        raise typer.Exit(code=1)
+
+    console.rule("[bold]WHO ICTRP (record pages) resolution[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Ids:      [magenta]{len(ids)}[/magenta]")
+    console.print()
+
+    stats = run_ictrp_resolution(
+        ids,
+        skip_duplicates=not keep_duplicates,
+        refresh=refresh,
+        require_vitiligo=not any_condition,
+    )
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+    missing = len(ids) - stats.fetched
+    if missing > 0:
+        console.print(f"[yellow]{missing} id(s) ICTRP does not hold.[/yellow]")
 
 
 @ingest_app.command("drugbank")
@@ -1097,7 +1191,7 @@ def trials_search(
     source: str | None = typer.Option(
         None,
         "--source",
-        help="Restrict to a single registry: ctgov | euctr | ictrp.",
+        help="Restrict to a single registry: ctgov | euctr | ictrp | isrctn.",
     ),
     has_results: bool | None = typer.Option(
         None, "--has-results/--no-has-results", help="Only trials with reported results."
@@ -1110,7 +1204,9 @@ def trials_search(
         try:
             sources = (TrialSourceKind(source.lower()),)
         except ValueError as exc:
-            console.print(f"[red]Unknown source '{source}'. Allowed: ctgov, euctr, ictrp.[/red]")
+            console.print(
+                f"[red]Unknown source '{source}'. Allowed: ctgov, euctr, ictrp, isrctn.[/red]"
+            )
             raise typer.Exit(code=2) from exc
     else:
         sources = tuple(TrialSourceKind)  # type: ignore[assignment]
@@ -1231,10 +1327,10 @@ def report_cited_trials_cmd(
     """Trials the literature names that no registry we read will give us.
 
     CTRI, ChiCTR and IRCT publish no API, and WHO's ICTRP search refuses
-    programmatic access, so trials from India, China and Iran never reach the
-    corpus. Papers that report them print their registration number, which
-    this recovers along with the paper and the sentence around it. These are
-    leads, not trial records: no arms, outcomes or results come with them.
+    programmatic access, so no ingest can go looking for trials from India,
+    China and Iran. Papers that report them print their registration number,
+    which this recovers along with the paper and the sentence around it.
+    These are leads; `ingest ictrp-ids --cited` resolves them into records.
     """
     from dataclasses import asdict
 
