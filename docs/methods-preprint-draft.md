@@ -12,7 +12,7 @@
 
 **Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, and optional XML imports from WHO ICTRP and DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
 
-**Results.** The May 2026 local corpus contains 14,489 documents (11,356 PubMed, 2,578 PMC, 54 GEO series), 13,988 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,206 entities and 1,882 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
+**Results.** The May 2026 local corpus contains 14,489 documents (11,677 PubMed, 2,755 PMC, 57 GEO series), 13,988 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,206 entities and 1,882 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
 
 **Conclusions.** We release reproducible infrastructure for vitiligo evidence synthesis. The engine is intended for research and education, not clinical decision-making, and every reported figure requires expert validation against its registry record. Future work includes hybrid retrieval, omics re-analysis, and obtaining week-52 responder counts on a stated analysis population, which the public record does not currently provide.
 
@@ -109,7 +109,7 @@ The remainder of this manuscript details system architecture and ingestion metho
 - FastAPI + static UI (Trial results / Search / Candidates / Graph / Trials)  
 - Rate limiting; health endpoint with corpus stats  
 - Privacy / Terms / disclaimer (beta)  
-- Docker image; persistent volume for SQLite on host (DigitalOcean / Render planned)  
+- Docker image; a host with at least 1 GB and either a volume for the corpus or a prebuilt image  
 - `scripts/deploy/verify-public.sh` with `BASE_URL`  
 
 ### 2.10 Evaluation plan (to execute before submission)

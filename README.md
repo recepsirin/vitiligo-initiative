@@ -85,7 +85,7 @@ vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --thre
 | [`docs/architecture.md`](docs/architecture.md) | Modules, data flow, web API |
 | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) | Scenario model, back-tests, forecasting policy |
 | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) | Discovery loop: guarantees, claim families, phases |
-| [`docs/deploy.md`](docs/deploy.md) | Docker, Render, environment variables |
+| [`docs/deploy.md`](docs/deploy.md) | Docker, what a host needs, environment variables |
 | [`docs/roadmap.md`](docs/roadmap.md) | **What comes next:** the order of work, what each step needs, and the gates |
 | [`docs/strategic-plan.md`](docs/strategic-plan.md) | Mission, phases, non-goals |
 | [`docs/scientific-brief.md`](docs/scientific-brief.md) | Disease biology, treatments, evidence gaps |

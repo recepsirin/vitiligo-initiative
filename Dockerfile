@@ -29,7 +29,11 @@ RUN mkdir -p /data/cache \
 # the migration in init_db() adds columns; both happen in the container's own
 # writable layer and are discarded on restart, which is harmless because they
 # are reproduced identically on the next start.
-COPY data/vitiligo.db /data/vitiligo.db
+# The glob may match nothing — on a host that builds from a git clone the corpus
+# is not there, because data/ is gitignored and the file is far over GitHub's
+# 100 MB limit. Pairing it with a file that always exists keeps the build working
+# either way: baked where the corpus is present, supplied by a volume where it is not.
+COPY .dockerignore data/vitiligo.db* /data/
 
 EXPOSE 8765
 

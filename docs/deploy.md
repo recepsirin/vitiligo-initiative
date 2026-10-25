@@ -12,16 +12,37 @@ vitiligo serve                       # http://127.0.0.1:8765
 
 ## Public hosting
 
-Any host works if it can run the Docker image with a persistent volume for `vitiligo.db`. `render.yaml` is a ready blueprint. DigitalOcean (about $12–24 a month) is the planned long-term host and has no scripts yet.
+Not yet done, and the two things that decide it are measured, not estimated.
 
-**No domain is needed.** Render serves the blueprint at `<name>.onrender.com` with TLS, from the service's `name`. A custom domain is a presentation choice, not a requirement. The `starter` plan is, though: Render's free tier has no persistent disks, and the corpus needs one.
+**It needs more than 512 MB.** Against the built image, a 512 MB container is
+OOM-killed during startup — exit 137, before it logs a line — with or without
+the embedding prewarm. Steady use is only 269 MiB; the peak is startup, where
+`build_jak_atlas()` reaches about 140 MB over the interpreter and warming the
+index another 47 MB. A 1 GB container starts in about ten seconds and serves in
+about 3 ms. So the smallest viable instance is 1 GB, which rules out the free
+and 512 MB tiers of the usual hosts rather than merely making them slow.
 
-**Render:**
-1. New Blueprint → select `render.yaml`.
-2. No API key to set: the served app makes no model call.
-3. Upload `vitiligo.db` to `/var/data/vitiligo.db` and restart the service.
+**The corpus is not in the repository.** `data/` is gitignored and
+`vitiligo.db` is far over GitHub's 100 MB per-file limit, so any host that
+builds from a git clone produces an image with no database, and the app comes up
+degraded with zero rows while still answering 200. Either attach a volume and
+upload the corpus to it, or build the image where the corpus is and push it to a
+registry for the host to pull. The `COPY` in the Dockerfile is written to
+succeed either way, so one image serves both.
 
-**Before upload:** `./scripts/deploy/prepare-db.sh [--gzip]` validates the corpus. **After deploy:** `BASE_URL=https://… ./scripts/deploy/verify-public.sh`. If `/api/health` shows no graph entities, run `vitiligo graph seed` on the server.
+There is no host-specific blueprint here. One lived in the repository for Render
+and was never deployable: it asked for 512 MB, which cannot run this, and its
+build copied a corpus that a clone does not contain. Config nobody has exercised
+is worse than none, because it reads as tested.
+
+**Before upload:** `./scripts/deploy/prepare-db.sh [--gzip]` validates the
+corpus. **After deploy:** `BASE_URL=https://… ./scripts/deploy/verify-public.sh`.
+If `/api/health` shows no graph entities, run `vitiligo graph seed` on the server.
+
+**Worth weighing first.** The clinician page reads 8.4 MB of the 493 MB corpus
+and serves 35 KB of JSON. Publishing that as static files costs no instance, no
+memory limit and no registry, and leaves the engine local for search and the
+model work.
 
 **Docker locally:**
 
