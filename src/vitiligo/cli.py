@@ -422,10 +422,18 @@ def ingest_ictrp(
         "--keep-duplicates/--skip-duplicates",
         help="Keep trials that duplicate ctgov/euctr records (default: skip).",
     ),
+    require_vitiligo: bool = typer.Option(
+        False,
+        "--require-vitiligo",
+        help="Drop records whose condition or title does not name vitiligo.",
+    ),
 ) -> None:
     """Import vitiligo trials from a WHO ICTRP XML export file.
 
     Export from https://trialsearch.who.int/ → Export results to XML.
+
+    Every record is kept: the export is already the result of ICTRP's own
+    disease search. Pass --require-vitiligo for a broader export.
     """
     settings = get_settings()
     xml_path = Path(file)
@@ -440,6 +448,7 @@ def ingest_ictrp(
         file=xml_path,
         skip_duplicates=not keep_duplicates,
         limit=limit,
+        require_vitiligo=require_vitiligo,
     )
 
     console.print()

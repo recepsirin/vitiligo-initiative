@@ -220,11 +220,20 @@ def run_ictrp_ingestion(
     skip_duplicates: bool = True,
     limit: int | None = None,
     commit_every: int = 50,
+    require_vitiligo: bool = False,
 ) -> IngestionStats:
     """Import trials from a WHO ICTRP XML export file.
 
     Export from https://trialsearch.who.int/ (Export results to XML).
     Records already present via ctgov/euctr ingestion are skipped by default.
+
+    Unlike the by-id route, this one keeps every record by default. The export
+    is the result of ICTRP's own disease-scoped search, which is a far better
+    filter than a word match -- and registries misspell the disease, so
+    "vtiligo" and "Vilitigo" are both real conditions in the store already.
+    Dropping those silently out of a thousand records would lose real trials.
+    ``require_vitiligo`` turns the check on when an export is broader than one
+    disease.
     """
     if not file.is_file():
         raise FileNotFoundError(f"ICTRP export not found: {file}")
@@ -239,6 +248,7 @@ def run_ictrp_ingestion(
         total_found=total_found,
         skip_duplicates=skip_duplicates,
         commit_every=commit_every,
+        keep=is_about_vitiligo if require_vitiligo else None,
     )
 
 
