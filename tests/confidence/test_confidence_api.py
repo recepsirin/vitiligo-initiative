@@ -6,9 +6,7 @@ import json
 
 import pytest
 from fastapi.testclient import TestClient
-from tests.helpers.fake_llm import install_capturing_llm
 from tests.helpers.paths import FIXTURES_DIR
-from tests.helpers.rag_expectations import assert_answer_cites_only_retrieved
 from tests.helpers.retrieval_expectations import (
     assert_retrieval_exclusions,
     assert_retrieval_expectations,
@@ -89,54 +87,6 @@ class TestApiRetrievalNegativeConfidence:
             assert levels[0] != "mouse", (
                 f"{case['id']}: top hit is animal model: {results[0].get('title')!r}"
             )
-
-
-class TestAskCitationConfidence:
-    """``ask_with_citations`` must retrieve the right papers and pass them on faithfully.
-
-    Checked against the library rather than an HTTP route: the served app no
-    longer offers Ask, and ``vitiligo ask`` is the caller that remains.
-    """
-
-    @pytest.mark.parametrize("case", _EXPECTATIONS["ask"], ids=lambda c: c["id"])
-    def test_ask_cites_expected_papers(
-        self,
-        case: dict,
-        require_regression_corpus: None,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        from vitiligo.reasoning.rag import ask_with_citations
-
-        llm = install_capturing_llm(monkeypatch)
-        top_k = int(case["top_k"])
-
-        answer = ask_with_citations(question=case["question"], top_k=top_k)
-        assert answer.question == case["question"]
-        assert answer.answer
-        assert answer.model == "fake-confidence"
-        assert_answer_cites_only_retrieved(answer.answer, top_k)
-
-        citations = answer.citations
-        assert len(citations) == top_k, (
-            f"{case['id']}: expected {top_k} citations, got {len(citations)}"
-        )
-
-        citation_ids = {c.source_id for c in citations}
-        missing = set(case["must_include_citation_source_ids"]) - citation_ids
-        assert not missing, (
-            f"{case['id']} ({case['scenario']}): Ask citations missing {sorted(missing)}. "
-            f"Returned: {[(c.index, c.source_id, (c.title or '')[:50]) for c in citations[:5]]}"
-        )
-
-        for idx, citation in enumerate(citations, start=1):
-            assert citation.index == idx
-            assert (citation.title or "") in llm.captured_user, (
-                f"{case['id']}: citation [{idx}] title {citation.title!r} missing from prompt"
-            )
-
-        assert "RETRIEVED PAPERS" in llm.captured_user
-        assert f"QUESTION: {case['question']}" in llm.captured_user
-        assert "Cite with bracketed numbers like [1]" in llm.captured_user
 
 
 class TestApiTrialsConfidence:

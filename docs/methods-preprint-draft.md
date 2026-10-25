@@ -10,11 +10,11 @@
 
 **Background.** Vitiligo affects approximately 0.5–2% of the population and is associated with significant quality-of-life burden. Non-segmental vitiligo (NSV) is commonly progressive and autoimmune in nature; segmental vitiligo (SV) follows a different clinical course. Treatment goals combine **arrest of active spread** and **repigmentation**, particularly on visible and functionally important sites. The evidence base spans thousands of PubMed-indexed publications, open-access full-text articles, omics repositories, and multiple clinical trial registries, alongside genetic association data from platforms such as Open Targets. Researchers and clinicians lack an open, vitiligo-specific system that unifies these sources for semantic retrieval, cited synthesis, and mechanistically grounded hypothesis ranking.
 
-**Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, and optional XML imports from WHO ICTRP and DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) retrieval-augmented question answering and four-stream therapeutic hypothesis generation using Anthropic Claude, with separate citation channels for papers, trials, priors, and graph relations; and (7) a FastAPI web interface with deployment tooling for EU-region hosting.
+**Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, and optional XML imports from WHO ICTRP and DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
 
-**Results.** The May 2026 local corpus contains 13,988 documents (11,356 PubMed, 2,578 PMC, 54 GEO series), 13,988 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,044 entities and 1,643 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
+**Results.** The May 2026 local corpus contains 14,489 documents (11,356 PubMed, 2,578 PMC, 54 GEO series), 13,988 title–abstract embeddings, 344 harmonized trial records, 237 Open Targets priors for vitiligo (EFO_0004208), and a knowledge graph of 1,206 entities and 1,882 edges. Automated invariant checks and a 20-query retrieval evaluation set support expert review. The system is deployable via Docker (and optional Render / VPS hosting) with privacy disclaimers and rate limiting.
 
-**Conclusions.** We release reproducible infrastructure for vitiligo evidence synthesis and hypothesis exploration. The engine is intended for research and education, not clinical decision-making; LLM-generated outputs require expert validation. Future work includes hybrid retrieval, full-text chunk embeddings, omics re-analysis, and prospective evaluation of hypothesis usefulness with vitiligo specialists.
+**Conclusions.** We release reproducible infrastructure for vitiligo evidence synthesis. The engine is intended for research and education, not clinical decision-making, and every reported figure requires expert validation against its registry record. Future work includes hybrid retrieval, omics re-analysis, and obtaining week-52 responder counts on a stated analysis population, which the public record does not currently provide.
 
 **Availability.** Source code: https://github.com/recepsirin/vitiligo-initiative. Public deployment: [URL pending — DigitalOcean or Render].
 
@@ -88,31 +88,25 @@ The remainder of this manuscript details system architecture and ingestion metho
 
 - Rule-based classifier on PubMed publication types, MeSH, title cues  
 - Trial study_type → clinical_trial vs observational  
-- Surfaced in search, API, UI, and LLM prompts  
+- Surfaced in search, API and UI  
 
 ### 2.7 Knowledge graph v1
 
 - Entity kinds: disease, drug, target, intervention, trial  
 - Predicates: `treats`, `investigates`, `associated_with`, `tested_in`, `inhibits`, …  
 - **Seed path (production):** deterministic edges from priors + trial interventions → vitiligo  
-- **Optional enrichment:** LLM extraction from abstracts (`vitiligo graph extract`) — not used for v1 production stats  
 - Export: JSON snapshot for expert review (`vitiligo graph export`)  
 - Automated invariant checks: `scripts/review/graph-spotcheck.sh`  
 
-### 2.8 Reasoning layer
+### 2.8 Analysis populations and partial identification
 
-**Ask (RAG):**
-- Retrieve top-K papers → prompt Claude with excerpts only  
-- Bracketed numeric citations; refuse when evidence thin  
-
-**Hypothesize:**
-- Parallel retrieval: papers, trials, priors, graph neighbors  
-- Structured JSON output: candidates with mechanism, evidence strength, risks, four citation streams `[n]`, `[Tn]`, `[Pn]`, `[Gn]`  
-- Model: `claude-sonnet-4-5` (configurable)  
+- Each posted responder rate carries the population its trial computed it on, parsed from the registry's own population description: patients assessed at the visit, missing results imputed as failures, or imputed from the rest of the data  
+- Rates measured on different populations are never combined; a trial contributes only the population covering its reference week  
+- A rate counting only the patients assessed is bracketed over the group the arm began with, which assumes nothing about the uncounted  
 
 ### 2.9 Web application and deployment
 
-- FastAPI + static UI (Search / Ask / Hypothesize / Graph / Trials)  
+- FastAPI + static UI (Trial results / Search / Candidates / Graph / Trials)  
 - Rate limiting; health endpoint with corpus stats  
 - Privacy / Terms / disclaimer (beta)  
 - Docker image; persistent volume for SQLite on host (DigitalOcean / Render planned)  
@@ -124,8 +118,8 @@ The remainder of this manuscript details system architecture and ingestion metho
 |------------|-------------|--------|
 | **Corpus completeness** | Compare trial count vs manual CT.gov search | Planned |
 | **Retrieval precision@K** | 20 expert-written queries; manual relevance labels | Planned |
-| **Ask faithfulness** | Citation support score on 30 Q&A pairs (advisor-labeled) | Planned |
-| **Hypothesize usefulness** | Advisor rates top-5 candidates for 5 intents (1–5 Likert) | Planned |
+| **Extraction fidelity** | Every reported figure checked against its registry record, including the analysis population | In progress |
+| **Candidate ranking usefulness** | Advisor rates top-5 candidates for 5 intents (1–5 Likert) | Planned |
 | **Graph precision** | Advisor flags incorrect edges in export sample | In progress (spot-check script) |
 | **Reproducibility** | Fresh ingest + embed from public APIs on clean machine | Planned |
 
@@ -139,8 +133,8 @@ The remainder of this manuscript details system architecture and ingestion metho
 
 ### 3.2 Example queries (illustrative, not cherry-picked without advisor sign-off)
 1. Search: *JAK inhibitors repigmentation non-segmental vitiligo*  
-2. Ask: *Evidence for ruxolitinib + NB-UVB combination?*  
-3. Hypothesize: *Stop spread of active non-segmental vitiligo*  
+2. Trial results: topical ruxolitinib at F-VASI75, week 24, against its own vehicle arm  
+3. Candidates: *Stop spread of active non-segmental vitiligo*  
 4. Graph: ruxolitinib → vitiligo neighborhood  
 
 ### 3.3 Graph seed quality
@@ -150,7 +144,7 @@ The remainder of this manuscript details system architecture and ingestion metho
 ### 3.4 Limitations
 - Abstract-heavy retrieval (PMC full-text chunk embeddings pending)  
 - No hybrid BM25 yet  
-- LLM synthesis risk; English-centric corpus  
+- English-centric corpus  
 - DrugBank / ICTRP require manual XML exports  
 - Graph seed reflects structured priors/trials, not full literature extraction  
 
@@ -177,12 +171,12 @@ The remainder of this manuscript details system architecture and ingestion metho
 
 ## Writing plan
 
-**Figures:** (1) architecture; (2) Hypothesize evidence streams; (3) graph schema with the ruxolitinib / JAK1 / vitiligo neighbourhood; (4) UI montage.
+**Figures:** (1) architecture; (2) analysis populations across the corpus, and the bracket they imply at week 52; (3) graph schema with the ruxolitinib / JAK1 / vitiligo neighbourhood; (4) UI montage.
 **Tables:** (1) sources and record counts; (2) graph entity kinds and predicates; (3) evidence-level taxonomy; (4) evaluation metrics.
 **Related work to cite:** general literature-AI tools (Semantic Scholar, Elicit), Open Targets, registry API consumers, vitiligo reviews and trial landscapes, repurposing knowledge graphs.
 
 - [ ] Write Methods §2.2–2.9 from the notes above
-- [ ] Run the evaluation set (retrieval precision, Ask faithfulness on 30 pairs) after advisor labels
+- [ ] Run the evaluation set (retrieval precision; extraction fidelity against registry records) after advisor labels
 - [ ] Add a corpus ingestion runtime table
 - [ ] Finalize authors, contributions, funding and conflicts of interest (per [`governance-ethics-brief.md`](governance-ethics-brief.md))
 - [ ] Legal review of Privacy/Terms before citing a public URL

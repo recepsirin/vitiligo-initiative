@@ -1,4 +1,4 @@
-"""Reproducible research reports (evidence-first, optionally LLM-enriched)."""
+"""Reproducible research reports, computed from stored records."""
 
 from vitiligo.reports.candidates import (
     CandidateReport,

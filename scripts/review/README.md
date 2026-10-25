@@ -24,7 +24,6 @@ pytest -m confidence
 
 # Evidence-first candidate report (deterministic scoring)
 ./scripts/review/generate-candidate-report.sh
-# Optional LLM narrative layer: WITH_LLM=1 ./scripts/review/generate-candidate-report.sh
 
 # Full advisor email attachment (~120 KB)
 ./scripts/review/kol-share-pack.sh

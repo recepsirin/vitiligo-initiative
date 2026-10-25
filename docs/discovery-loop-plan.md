@@ -58,7 +58,7 @@ In v1 every unit abstained. A discovery at test 5 needs e ≥ 82, and the phase 
 |---|---|---|
 | v0 | Loop, ledger, e-values, e-LOND, bandit; superiority claims | Done |
 | v1 | Three claim families; automatic sealed forecasts and their scoring | Done |
-| v1 (rest) | LLM proposer (needs an API budget) | Open |
+| v1 (rest) | Wider claim families from the arm table | Open |
 | v2 | Value model trained on the ledger, to predict which claims survive | Needs hundreds of resolved tests |
 | v3 | Evolution of the scenario model's own structure against held-out scores, with a locked exam | First trial run stopped: it failed its locked exam ([`lab/simulator/`](../lab/simulator/README.md)) |
 | v4 | Mechanistic simulator plus treatment-schedule optimization | Depends on v3 |

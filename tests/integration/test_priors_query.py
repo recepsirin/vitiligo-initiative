@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from sqlmodel import Session
 
-from vitiligo.priors import clinical_stage_rank, list_drug_priors, retrieve_priors_for_hypothesize
+from vitiligo.priors import clinical_stage_rank, list_drug_priors
 from vitiligo.storage import Prior, PriorKind, PriorSourceKind, get_engine
 
 pytestmark = pytest.mark.integration
@@ -46,15 +46,6 @@ def test_list_drug_priors_orders_by_stage_rank(seeded_prior_db) -> None:
     names = [p.name for p in list_drug_priors(limit=100)]
     assert names[0] == "APPROVED_DRUG"
     assert names.index("PHASE1_DRUG") < names.index("EARLY_DRUG") < names.index("UNKNOWN_DRUG")
-
-
-def test_hypothesize_priors_keep_approved_drugs(seeded_prior_db) -> None:
-    """Approved drugs must survive the drug_limit cut (they sorted last as text)."""
-    drugs = [p for p in retrieve_priors_for_hypothesize(drug_limit=15) if p.kind == PriorKind.DRUG]
-    names = [p.name for p in drugs]
-    assert len(drugs) == 15
-    assert names[0] == "APPROVED_DRUG"
-    assert "PHASE1_DRUG" not in names
 
 
 def test_candidate_bundle_keeps_most_advanced_salt_form(test_db_path: Path) -> None:

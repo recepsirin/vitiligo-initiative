@@ -17,14 +17,11 @@
 Property-based checks live in `unit/test_properties_normalize.py` and
 `integration/test_properties_trials.py` (Hypothesis).
 
-HTTP + Ask confidence: `confidence/test_confidence_api.py` (`POST /api/search`, `POST /api/ask`, `POST /api/trials/search`).
+HTTP confidence: `confidence/test_confidence_api.py` (`POST /api/search`, `POST /api/trials/search`).
 
 Graph API confidence: `confidence/test_confidence_graph_api.py` (`GET /api/graph/*` on regression corpus).
 
-Hypothesize confidence: `confidence/test_confidence_hypothesize.py` (`POST /api/hypothesize`, fake LLM JSON).
-
 Direct and API retrieval share assertions via `tests/helpers/retrieval_expectations.py`.
-Ask and Hypothesize bracket-citation checks live in `tests/helpers/rag_expectations.py`.
 
 Semantic search applies a small evidence-level penalty (mouse/in-vitro) after cosine similarity.
 

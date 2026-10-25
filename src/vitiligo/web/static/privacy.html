@@ -31,7 +31,7 @@
 
     <h2>What we collect</h2>
     <ul>
-      <li><strong>Queries you submit</strong> — search text, questions, and hypothesis intents sent to Ask and Hypothesize endpoints.</li>
+      <li><strong>Queries you submit</strong> — search text sent to the search endpoint.</li>
       <li><strong>Technical logs</strong> — IP address, user agent, timestamps, and error diagnostics for security and abuse prevention.</li>
       <li><strong>No account required</strong> — we do not ask for name, email, or health records to use the public tool.</li>
     </ul>
@@ -45,9 +45,10 @@
 
     <h2>Third-party processing</h2>
     <p>
-      Ask and Hypothesize send your query text and retrieved public excerpts to a large language model
-      provider (Anthropic) to generate cited answers. Do not submit information you would not want
-      processed by a third-party AI vendor. Hosting uses cloud infrastructure in regions chosen by the operator (EU-first when deployed in Europe).
+      <strong>Your queries are not sent anywhere.</strong> The Service answers from its own stored
+      corpus and calls no external API, and no language model provider is involved at any point.
+      Hosting uses cloud infrastructure in regions chosen by the operator (EU-first when deployed in
+      Europe), which is the only third party that sees your request.
     </p>
 
     <h2>Retention</h2>

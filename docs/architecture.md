@@ -17,7 +17,7 @@ flowchart TB
   subgraph engine [Evidence Engine]
     SEARCH[Semantic search + evidence levels]
     GRAPH[Knowledge graph]
-    REASON[Ask · Hypothesize<br/>Anthropic API]
+    EVID[Trial results<br/>population + bounds]
     CAND[Candidate report]
   end
 
@@ -30,12 +30,12 @@ flowchart TB
 
   sources -->|vitiligo ingest| DB
   DB -->|embed run · graph seed| SEARCH & GRAPH
-  SEARCH & GRAPH --> REASON & CAND
+  SEARCH & GRAPH --> EVID & CAND
   DB --> ATLAS --> MODEL --> LOOP --> LEDGER
-  SEARCH & REASON & CAND --> UI[FastAPI web UI · CLI]
+  SEARCH & EVID & CAND --> UI[FastAPI web UI · CLI]
 ```
 
-Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `serve`. Ingest does not embed or build the graph; those are separate steps. The LLM is optional and powers only Ask, Hypothesize and graph extraction. Everything else is deterministic.
+Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `serve`. Ingest does not embed or build the graph; those are separate steps. Every step is deterministic: the engine calls no model API, so the same corpus reproduces the same output.
 
 ## Modules
 
@@ -46,40 +46,30 @@ Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `
 | `vitiligo.storage` | SQLModel schema: documents, embeddings, trials, priors, graph |
 | `vitiligo.embed` | fastembed ONNX embeddings (`BAAI/bge-small-en-v1.5`), brute-force cosine search. Two indexes: one vector per document over title and abstract, and one per passage of a paper's body (`chunking.py`, `full_text.py`), where a document scores as its best passage |
 | `vitiligo.evidence` | Evidence levels for papers and trials; search down-ranks mouse (−0.08) and in-vitro (−0.05) studies |
-| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph seed-evidence` from GWAS associations, trial results and mechanism records; `graph extract` from abstracts (optional LLM). Every edge records whether it is **asserted** (a source states it) or **observed** (measured), and an observed one carries its rung on the causal ladder |
+| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph seed-evidence` from GWAS associations, trial results and mechanism records. Every edge records whether it is **asserted** (a source states it) or **observed** (measured), and an observed one carries its rung on the causal ladder |
 | `vitiligo.trials`, `vitiligo.priors` | Query helpers over the store |
-| `vitiligo.reasoning` | Ask (RAG with citations) and Hypothesize (four evidence streams) |
-| `vitiligo.reports` | Candidate report (deterministic); JAK atlas (`jak.py`); harmonized arm table (`jak_arms.py`); curated paper results (`paper_results.py`) |
+| `vitiligo.reports` | Candidate report (deterministic); JAK atlas (`jak.py`); harmonized arm table (`jak_arms.py`); curated paper results (`paper_results.py`); the clinician trial-results table (`clinical.py`) and partial-identification bounds (`bounds.py`) |
 | `vitiligo.models` | Scenario model (`jak_mbma.py`); needs the `[model]` extra |
 | `vitiligo.mechanisms` | Mechanistic hypothesis records (`curation/mechanisms.json`): the chain, the causal ladder, and the gate (`verify.py`) |
 | `vitiligo.discovery` | e-values and e-LOND (`evidence.py`), ledger, policy, loop, forecasts of unreported trials |
-| `vitiligo.web` | FastAPI app, static UI, rate limiting, LLM budget, proxy headers |
+| `vitiligo.web` | FastAPI app, static UI, rate limiting, proxy headers. Serves stored records only; it calls no model API |
 | `vitiligo.cli` | Typer CLI over all of the above |
-
-## Hypothesize
-
-Four retrieval streams feed one Claude call that returns structured JSON. Citations are kept separate: paper `[n]`, trial `[Tn]`, prior `[Pn]`, graph `[Gn]`. Without embeddings, Hypothesize fails with `CorpusUnavailable`, and candidate reports lose their literature scores.
-
-```mermaid
-flowchart LR
-  Intent --> Papers[semantic_search]
-  Intent --> Trials[retrieve_relevant_trials]
-  Intent --> Graph[graph edges, re-ranked by intent]
-  EFO[EFO_0004208] --> Priors[drug + target priors]
-  Papers & Trials & Graph & Priors --> LLM[Claude] --> Out[Ranked candidates]
-```
 
 ## Web API
 
-| Method | Path | LLM |
-|---|---|---|
-| GET | `/`, `/privacy`, `/terms` | — |
-| GET | `/api/health`, `/api/stats` | — |
-| POST | `/api/search` | — |
-| POST | `/api/ask`, `/api/hypothesize` | Yes |
-| GET | `/api/report/candidates` (cached until the corpus changes) | — |
-| POST | `/api/trials/search` | — |
-| GET | `/api/trials/stats` | — |
-| GET | `/api/graph/stats`, `/api/graph/search`, `/api/graph/neighbors`, `/api/graph/export` | — |
+Every route answers from the stored corpus. There is no model API client in the
+engine, so there is nothing to key, meter or budget.
 
-POST routes are rate-limited per client. Ask and Hypothesize also draw on a global LLM budget ([`deploy.md`](deploy.md)).
+| Method | Path |
+|---|---|
+| GET | `/`, `/privacy`, `/terms` |
+| GET | `/api/health`, `/api/stats` |
+| GET | `/api/evidence` (week-24 trial results with populations and bounds; built at startup, cached until the corpus changes) |
+| POST | `/api/search` |
+| GET | `/api/report/candidates` (cached until the corpus changes) |
+| POST | `/api/trials/search` |
+| GET | `/api/trials/stats` |
+| GET | `/api/graph/stats`, `/api/graph/search`, `/api/graph/neighbors`, `/api/graph/export` |
+
+POST routes are rate-limited per client. Provenance naming a source whose terms
+forbid redistribution is filtered out of responses.

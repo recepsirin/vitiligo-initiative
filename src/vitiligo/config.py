@@ -40,10 +40,6 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    # LLM (reasoning layer)
-    anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
-    anthropic_model: str = Field(default="claude-sonnet-4-5", alias="ANTHROPIC_MODEL")
-
     # Web UI / deployment
     web_host: str = Field(default="127.0.0.1", alias="VITILIGO_WEB_HOST")
     web_port: int = Field(default=8765, alias="VITILIGO_WEB_PORT")
@@ -59,21 +55,6 @@ class Settings(BaseSettings):
             "Reverse proxies in front of the app. 0 keys rate limits by the TCP peer; "
             "N reads the N-th X-Forwarded-For entry from the right."
         ),
-    )
-    llm_requests_per_minute: int = Field(
-        default=0,
-        alias="VITILIGO_LLM_REQUESTS_PER_MINUTE",
-        description="Ask/Hypothesize calls per minute across ALL clients (0 disables).",
-    )
-    llm_daily_token_budget: int = Field(
-        default=0,
-        alias="VITILIGO_LLM_DAILY_TOKEN_BUDGET",
-        description="Ask/Hypothesize input+output tokens per rolling 24 h, all clients (0 disables).",
-    )
-    state_db_path: Path | None = Field(
-        default=None,
-        alias="VITILIGO_STATE_DB_PATH",
-        description="SQLite file for runtime state (LLM budget); default: next to the corpus DB.",
     )
     ledger_path: Path | None = Field(
         default=None,
@@ -122,14 +103,6 @@ class Settings(BaseSettings):
             path = PROJECT_ROOT / path
         path.parent.mkdir(parents=True, exist_ok=True)
         return path
-
-    @property
-    def resolved_state_db_path(self) -> Path:
-        """Runtime-state SQLite file; kept separate so writes never touch the corpus DB."""
-        if self.state_db_path is None:
-            return self.resolved_db_path.parent / "vitiligo-state.db"
-        path = self.state_db_path
-        return path if path.is_absolute() else PROJECT_ROOT / path
 
     @property
     def resolved_ledger_path(self) -> Path:

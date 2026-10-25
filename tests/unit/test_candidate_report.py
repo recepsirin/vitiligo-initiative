@@ -188,7 +188,7 @@ def test_markdown_shows_full_cards_once_and_intent_tables() -> None:
             rank=rank, name=name, canonical_token=name.lower(), clinical_stage="PHASE_3",
             evidence_strength="strong", score=ScoreBreakdown(30, 22, 35, 10), mechanisms=[],
             prior_source_id=None, graph_refs=[], trial_refs=[], literature_refs=refs,
-            caveats=[], llm_rationale="Plausible." if rank == 1 else None,
+            caveats=[],
         )  # fmt: skip
 
     intent = IntentSpec(id="x", title="Spread", query="q", goal="g")
@@ -201,7 +201,8 @@ def test_markdown_shows_full_cards_once_and_intent_tables() -> None:
     assert md.count("### #1 ALPHA") == 1  # the full card appears once, in the global top
     assert "| 1 | ALPHA | 97 | 30 | 22 | 35 | 10 | [pubmed:1] A / B trial (2024) |" in md
     assert "| 2 | BETA | 97 | 30 | 22 | 35 | 10 | — |" in md
-    assert "- **#1 ALPHA:** Plausible." in md
+    # Nothing in the report is narrated: every column above is computed.
+    assert "rationale" not in md.lower()
 
 
 def _edge(edge_id: int, method: str, predicate: str = "treats") -> GraphEdgeView:

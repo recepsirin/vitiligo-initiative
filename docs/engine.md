@@ -7,7 +7,7 @@ Setup, every CLI command, and how to add a data source. Module layout and the we
 ```bash
 python3 -m venv .venv && source .venv/bin/activate      # Python 3.11+
 pip install -e ".[dev]"                                  # ".[dev,model]" for the scenario model
-cp .env.example .env                                     # NCBI_EMAIL; optional NCBI_API_KEY, ANTHROPIC_API_KEY
+cp .env.example .env                                     # NCBI_EMAIL; optional NCBI_API_KEY
 vitiligo db init
 ```
 
@@ -40,8 +40,6 @@ vitiligo embed full-text                     # chunk and embed paper bodies (PMC
 vitiligo search "..." --full-text             # search those passages, with the quote that matched
 vitiligo embed stats
 vitiligo search "IFN-gamma CXCL10 axis" --top-k 10 --show-abstract
-vitiligo ask "Evidence for ruxolitinib + NB-UVB?" -k 8          # needs ANTHROPIC_API_KEY
-vitiligo hypothesize "stop spread of active NSV" -k 25          # needs ANTHROPIC_API_KEY
 vitiligo trials stats
 vitiligo trials search --status RECRUITING --phase PHASE2
 vitiligo priors stats
@@ -50,7 +48,6 @@ vitiligo priors sample --kind target -l 10
 # Knowledge graph
 vitiligo graph seed                           # deterministic, from priors + trials
 vitiligo graph seed-evidence                 # edges from GWAS, trial results and mechanism records
-vitiligo graph extract --limit 50             # LLM extraction from abstracts
 vitiligo graph stats
 vitiligo graph search ruxolitinib
 vitiligo graph neighbors vitiligo
@@ -92,8 +89,6 @@ vitiligo discover watch forecasts --days 8    # rank pending results by what the
 # Web UI
 vitiligo serve [--host 0.0.0.0 --port 8080]   # http://127.0.0.1:8765
 ```
-
-Ask and Hypothesize use `ANTHROPIC_MODEL` (default `claude-sonnet-4-5`). Without `ANTHROPIC_API_KEY` they raise `LLMUnavailable`; there is no silent fallback. Search works without a key.
 
 ## Adding a source
 

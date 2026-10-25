@@ -55,7 +55,7 @@ Full local release gate (optional): `./scripts/audit/smoke-all.sh`. Tests that n
 
 - New ingest sources: follow patterns in `src/vitiligo/sources/` and [`docs/engine.md`](docs/engine.md).
 - Web API changes: add or update tests under `tests/api/` and, if retrieval quality is affected, confidence fixtures.
-- LLM prompts (`ask`, `hypothesize`): prefer deterministic tests with fakes in `tests/helpers/fake_llm.py`; avoid live API keys in CI.
+- The engine calls no model API; keep it that way. A feature that needs one belongs behind a flag with its own provenance design, not in a served endpoint; avoid live API keys in CI.
 
 ## Licensing
 

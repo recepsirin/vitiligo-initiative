@@ -82,45 +82,6 @@ def list_target_priors(
         return list(session.exec(stmt))
 
 
-def retrieve_priors_for_hypothesize(
-    disease_id: str = DEFAULT_VITILIGO_EFO_ID,
-    drug_limit: int = 15,
-    target_limit: int = 12,
-) -> list[Prior]:
-    """Return drug + target priors to inject into the Hypothesize prompt.
-
-    Drugs are filtered to those with at least Phase 2 clinical activity
-    (or approved drugs). Targets are the top-scoring associations.
-    Open Targets supplies clinical stage; DrugBank adds mechanism depth.
-    """
-    ot_drugs = list_drug_priors(
-        disease_id=disease_id,
-        sources=(PriorSourceKind.OPENTARGETS,),
-        limit=drug_limit * 3,
-    )
-    db_drugs = list_drug_priors(
-        disease_id=disease_id,
-        sources=(PriorSourceKind.DRUGBANK,),
-        limit=drug_limit * 2,
-    )
-    merged_drugs = _merge_drug_priors(ot_drugs, db_drugs, limit=drug_limit)
-
-    ot_targets = list_target_priors(
-        disease_id=disease_id,
-        sources=(PriorSourceKind.OPENTARGETS,),
-        limit=target_limit,
-        min_score=0.25,
-    )
-    db_targets = list_target_priors(
-        disease_id=disease_id,
-        sources=(PriorSourceKind.DRUGBANK,),
-        limit=target_limit,
-        min_score=0.0,
-    )
-    merged_targets = _merge_target_priors(ot_targets, db_targets, limit=target_limit)
-    return merged_drugs + merged_targets
-
-
 def _normalize_prior_name(name: str) -> str:
     return name.upper().strip()
 

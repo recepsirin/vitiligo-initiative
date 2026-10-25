@@ -24,12 +24,9 @@ from vitiligo.evidence import classify_document, evidence_level_label
 from vitiligo.graph import (
     export_graph_snapshot,
     get_neighbors,
-    run_graph_build,
     search_entities,
     summarize_graph,
 )
-from vitiligo.graph.build import GraphBuildStats
-from vitiligo.graph.extract import extract_graph_from_documents
 from vitiligo.graph.seed import seed_graph_from_structured_sources
 from vitiligo.ingest import (
     run_ctgov_ingestion,
@@ -47,12 +44,6 @@ from vitiligo.ingest import (
 from vitiligo.ingest.repair import repair_corpus
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
-from vitiligo.reasoning import (
-    CorpusUnavailable,
-    LLMUnavailable,
-    ask_with_citations,
-    generate_hypotheses,
-)
 from vitiligo.reports import (
     atlas_to_dict,
     build_candidate_report,
@@ -90,7 +81,7 @@ from vitiligo.trials import TrialFilter, list_trials, summarize_trials
 
 app = typer.Typer(
     add_completion=False,
-    help="Vitiligo Initiative engine — ingestion, search, and reasoning.",
+    help="Vitiligo Initiative engine — ingestion, search, and evidence reports.",
     no_args_is_help=True,
 )
 ingest_app = typer.Typer(
@@ -801,84 +792,6 @@ def search_cmd(
         console.print()
 
 
-# --------------------------------------------------------------------- reasoning
-
-
-@app.command("ask")
-def ask_cmd(
-    question: str = typer.Argument(..., help="Research question."),
-    top_k: int = typer.Option(8, "--top-k", "-k", help="Sources to retrieve."),
-) -> None:
-    """Ask the corpus a question and print a cited answer (requires Anthropic API key)."""
-    console.rule(f"[bold]Ask[/bold] — [yellow]{question}[/yellow]")
-    try:
-        result = ask_with_citations(question=question, top_k=top_k)
-    except (LLMUnavailable, CorpusUnavailable) as exc:
-        console.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=2) from exc
-
-    console.print(result.answer)
-    console.print()
-    console.rule("[bold]Sources[/bold]")
-    for c in result.citations:
-        bits = [c.title or "(no title)"]
-        meta = " ".join(
-            filter(None, [c.journal or "", str(c.year or ""), f"doi:{c.doi}" if c.doi else ""])
-        ).strip()
-        if meta:
-            bits.append(meta)
-        console.print(f"[cyan][{c.index}][/cyan] " + " — ".join(bits))
-
-
-@app.command("hypothesize")
-def hypothesize_cmd(
-    intent: str = typer.Argument(..., help="Research intent (e.g. 'stop spread')."),
-    top_k: int = typer.Option(25, "--top-k", "-k", help="Papers to retrieve."),
-    top_trials: int = typer.Option(12, "--top-trials", help="Trials to retrieve."),
-) -> None:
-    """Generate ranked therapeutic candidates from the corpus (requires Anthropic API key)."""
-    console.rule(f"[bold]Hypothesize[/bold] — [yellow]{intent}[/yellow]")
-    try:
-        report = generate_hypotheses(intent=intent, top_k=top_k, top_trials=top_trials)
-    except (LLMUnavailable, CorpusUnavailable) as exc:
-        console.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=2) from exc
-
-    if report.notes:
-        console.print(f"[dim]{report.notes}[/dim]")
-        console.print()
-
-    console.print(
-        f"[dim]Evidence base: {len(report.citations)} papers, "
-        f"{len(report.trial_citations)} trials, "
-        f"{len(report.prior_citations)} priors, "
-        f"{len(report.graph_citations)} graph edges[/dim]"
-    )
-    console.print()
-
-    for idx, cand in enumerate(report.candidates, start=1):
-        console.rule(
-            f"[bold]#{idx}  {cand.name}[/bold]  [dim]{cand.kind}[/dim]  "
-            f"[magenta]{cand.evidence_strength}[/magenta]",
-            align="left",
-        )
-        if cand.mechanism:
-            console.print(f"[bold]Mechanism:[/bold] {cand.mechanism}")
-        if cand.rationale:
-            console.print(f"[bold]Rationale:[/bold] {cand.rationale}")
-        if cand.risks_or_caveats:
-            console.print(f"[bold]Risks/caveats:[/bold] {cand.risks_or_caveats}")
-        if cand.citation_indices:
-            console.print(f"[bold]Papers:[/bold] {cand.citation_indices}")
-        if cand.trial_citation_indices:
-            console.print(f"[bold]Trials:[/bold] {[f'T{i}' for i in cand.trial_citation_indices]}")
-        if cand.prior_citation_indices:
-            console.print(f"[bold]Priors:[/bold] {[f'P{i}' for i in cand.prior_citation_indices]}")
-        if cand.graph_citation_indices:
-            console.print(f"[bold]Graph:[/bold] {[f'G{i}' for i in cand.graph_citation_indices]}")
-        console.print()
-
-
 # --------------------------------------------------------------------- graph
 
 
@@ -915,60 +828,6 @@ def graph_seed_evidence_cmd() -> None:
     table.add_row("[bold]Total new edges[/bold]", f"[bold]{stats.total_edges:,}[/bold]")
     console.print(table)
     console.print("[dim]Every edge here is marked observed and carries its causal level.[/dim]")
-
-
-@graph_app.command("extract")
-def graph_extract_cmd(
-    limit: int = typer.Option(50, "--limit", "-l", help="Max documents to extract."),
-) -> None:
-    """Run LLM extraction over document abstracts (requires Anthropic API key)."""
-    init_db()
-    console.rule(f"[bold]Knowledge graph — extract[/bold] (limit={limit})")
-    try:
-        stats = extract_graph_from_documents(limit=limit)
-    except LLMUnavailable as exc:
-        console.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=2) from exc
-
-    table = Table(show_header=False, box=None)
-    table.add_row("Processed", str(stats.documents_processed))
-    table.add_row("Failed", str(stats.documents_failed))
-    table.add_row("Skipped", str(stats.documents_skipped))
-    table.add_row("Entities added", str(stats.entities_added))
-    table.add_row("Edges inserted", str(stats.edges_inserted))
-    table.add_row("Edges merged", str(stats.edges_merged))
-    console.print(table)
-
-
-@graph_app.command("build")
-def graph_build_cmd(
-    no_seed: bool = typer.Option(False, "--no-seed", help="Skip structured seeding."),
-    extract: bool = typer.Option(False, "--extract", help="Run LLM extraction after seed."),
-    extract_limit: int = typer.Option(50, "--extract-limit", help="Documents for LLM extract."),
-) -> None:
-    """Seed structured sources and optionally run LLM extraction."""
-    console.rule("[bold]Knowledge graph — build[/bold]")
-    try:
-        stats: GraphBuildStats = run_graph_build(
-            seed=not no_seed,
-            extract=extract,
-            extract_limit=extract_limit,
-        )
-    except LLMUnavailable as exc:
-        console.print(f"[red]{exc}[/red]")
-        raise typer.Exit(code=2) from exc
-
-    if stats.seed:
-        console.print(
-            f"[green]Seed:[/green] {stats.seed.entities} entities, "
-            f"{stats.seed.edges_inserted} edges inserted, "
-            f"{stats.seed.edges_merged} merged"
-        )
-    if stats.extract:
-        console.print(
-            f"[green]Extract:[/green] {stats.extract.documents_processed} docs, "
-            f"{stats.extract.edges_inserted + stats.extract.edges_merged} edges"
-        )
 
 
 @graph_app.command("stats")
@@ -1313,11 +1172,6 @@ def report_candidates_cmd(
         help="Path to an intents JSON file (default: the packaged candidate-intents.json).",
     ),
     top_n: int = typer.Option(10, "--top-n", "-n", help="Candidates per intent / global list."),
-    llm: bool = typer.Option(
-        False,
-        "--llm",
-        help="Attach LLM rationale when ANTHROPIC_API_KEY is set (advisory only).",
-    ),
 ) -> None:
     """Build an evidence-first ranked candidate report (deterministic, reproducible)."""
     init_db()
@@ -1325,7 +1179,6 @@ def report_candidates_cmd(
     report = build_candidate_report(
         intents_path=Path(intents) if intents else None,
         top_n=top_n,
-        include_llm=llm,
     )
 
     console.print(
@@ -2610,10 +2463,7 @@ def serve_cmd(
 
     console.rule("[bold]Vitiligo Initiative — Evidence Engine[/bold]")
     console.print(f"Serving on [cyan]http://{bind_host}:{bind_port}[/cyan]")
-    if not settings.anthropic_api_key:
-        console.print(
-            "[yellow]Note: ANTHROPIC_API_KEY is not set — Search works, but Ask and Hypothesize will return 503.[/yellow]"
-        )
+    console.print("[dim]Serves stored records only; no model is called.[/dim]")
 
     uvicorn.run(
         "vitiligo.web.app:app",

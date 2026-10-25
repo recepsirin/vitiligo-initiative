@@ -42,5 +42,5 @@ def test_smoke_candidate_report(smoke_client: TestClient) -> None:
 
 
 @pytest.mark.parametrize("path", ["/api/ask", "/api/hypothesize"])
-def test_smoke_llm_routes_are_not_served(smoke_client: TestClient, path: str) -> None:
+def test_smoke_no_generative_route_is_served(smoke_client: TestClient, path: str) -> None:
     assert smoke_client.post(path, json={"question": "x", "intent": "x"}).status_code == 404

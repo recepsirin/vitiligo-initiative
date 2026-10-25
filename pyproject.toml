@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vitiligo"
 version = "1.0.0"
-description = "Vitiligo Initiative — AI-native research engine for stopping spread and driving repigmentation."
+description = "Vitiligo Initiative — open, verifiable evidence for stopping vitiligo spread and driving repigmentation."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
@@ -39,7 +39,6 @@ dependencies = [
     "fastembed>=0.3",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
-    "anthropic>=0.39",
 ]
 
 [project.optional-dependencies]

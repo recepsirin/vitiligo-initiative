@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from sqlalchemy import desc, func, or_
 from sqlmodel import Session, select
 
-from vitiligo.graph.normalize import VITILIGO_ENTITY_KEY, normalize_entity_key
+from vitiligo.graph.normalize import normalize_entity_key
 from vitiligo.storage import get_engine
-from vitiligo.storage.models import EntityKind, GraphEdge, GraphEntity
+from vitiligo.storage.models import GraphEdge, GraphEntity
 
 
 @dataclass(frozen=True)
@@ -174,43 +174,6 @@ def get_neighbors(
 
         views.sort(key=lambda v: v.confidence, reverse=True)
         return views[:limit]
-
-
-def retrieve_graph_for_hypothesize(intent: str, *, limit: int = 12) -> list[GraphEdgeView]:
-    """Return high-confidence vitiligo-connected edges for the Hypothesize prompt."""
-    tokens = _intent_tokens(intent)
-    with Session(get_engine(), expire_on_commit=False) as session:
-        vitiligo = session.exec(
-            select(GraphEntity).where(
-                GraphEntity.kind == EntityKind.DISEASE,
-                GraphEntity.key == VITILIGO_ENTITY_KEY,
-            )
-        ).first()
-        if vitiligo is None or vitiligo.id is None:
-            return []
-
-        stmt = (
-            select(GraphEdge)
-            .where(
-                or_(
-                    GraphEdge.subject_id == vitiligo.id,
-                    GraphEdge.object_id == vitiligo.id,
-                )
-            )
-            .order_by(desc(GraphEdge.confidence))
-            .limit(limit * 4)
-        )
-        edges = list(session.exec(stmt).all())
-        views = [_edge_to_view(session, e) for e in edges]
-        views = [v for v in views if v is not None]
-
-    def _score(view: GraphEdgeView) -> float:
-        text = f"{view.subject_name} {view.object_name} {view.predicate}".lower()
-        overlap = sum(1 for t in tokens if t in text)
-        return view.confidence + 0.05 * overlap
-
-    views.sort(key=_score, reverse=True)
-    return views[:limit]
 
 
 def _edge_to_view(session: Session, edge: GraphEdge) -> GraphEdgeView | None:

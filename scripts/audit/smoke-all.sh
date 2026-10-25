@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full local smoke audit — requires data/vitiligo.db and optional ANTHROPIC_API_KEY.
+# Full local smoke audit — requires data/vitiligo.db.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

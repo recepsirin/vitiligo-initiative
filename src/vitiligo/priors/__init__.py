@@ -5,7 +5,6 @@ from vitiligo.priors.query import (
     clinical_stage_rank,
     list_drug_priors,
     list_target_priors,
-    retrieve_priors_for_hypothesize,
     summarize_priors,
 )
 
@@ -14,6 +13,5 @@ __all__ = [
     "clinical_stage_rank",
     "list_drug_priors",
     "list_target_priors",
-    "retrieve_priors_for_hypothesize",
     "summarize_priors",
 ]

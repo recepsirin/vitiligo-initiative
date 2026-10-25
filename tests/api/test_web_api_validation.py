@@ -67,11 +67,12 @@ def test_graph_endpoints_reject_invalid_params(
 
 
 @pytest.mark.parametrize("path", ["/api/ask", "/api/hypothesize"])
-def test_llm_routes_are_not_served(api_client_errors: TestClient, path: str) -> None:
-    """The served page shows what the evidence says, not what a model infers.
+def test_no_generative_route_is_served(api_client_errors: TestClient, path: str) -> None:
+    """The engine calls no model API, and these paths are the ones it used to.
 
-    Both remain available as ``vitiligo ask`` and ``vitiligo hypothesize``, where
-    the caller supplies the key and reads the output as research, not guidance.
+    Kept as a regression guard: the modules behind them are gone, so a 200 here
+    would mean someone reintroduced a generative endpoint rather than merely
+    renamed something.
     """
     assert api_client_errors.post(path, json={"question": "x", "intent": "x"}).status_code == 404
 

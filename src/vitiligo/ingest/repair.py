@@ -25,7 +25,6 @@ from vitiligo.logging import get_logger
 from vitiligo.sources.geo import parse_geo_summary
 from vitiligo.sources.pubmed import full_text
 from vitiligo.storage import Document, Embedding, SourceKind, session_scope
-from vitiligo.storage.models import GraphExtraction
 
 logger = get_logger(__name__)
 
@@ -91,10 +90,6 @@ def repair_corpus(*, apply: bool = False, max_examples: int = 5) -> RepairStats:
             if apply:
                 assert doc.id is not None
                 stats.embeddings_dropped += _drop_embeddings(session, doc.id)
-                for extraction in session.exec(
-                    select(GraphExtraction).where(GraphExtraction.document_id == doc.id)
-                ).all():
-                    session.delete(extraction)
                 session.delete(doc)
 
         if not apply:

@@ -6,7 +6,7 @@ from sqlmodel import select
 
 import vitiligo.config as cfg
 import vitiligo.storage.db as dbmod
-from vitiligo.graph.query import get_neighbors, retrieve_graph_for_hypothesize, summarize_graph
+from vitiligo.graph.query import get_neighbors, summarize_graph
 from vitiligo.graph.seed import seed_graph_from_structured_sources
 from vitiligo.storage import (
     Prior,
@@ -86,10 +86,6 @@ def test_seed_graph_from_priors_and_trials(tmp_path, monkeypatch) -> None:
         "ruxolitinib" in e.subject_name.lower() or "ruxolitinib" in e.object_name.lower()
         for e in vitiligo_neighbors
     )
-
-    graph_hits = retrieve_graph_for_hypothesize("stop spread vitiligo")
-    assert graph_hits
-    assert any(e.predicate in {"treats", "associated_with", "investigates"} for e in graph_hits)
 
     with session_scope() as session:
         vitiligo = session.exec(

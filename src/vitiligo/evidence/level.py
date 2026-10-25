@@ -8,7 +8,7 @@ from vitiligo.storage import Document, Trial
 
 
 class EvidenceLevel(StrEnum):
-    """Canonical evidence tiers surfaced in search, Ask, and Hypothesize."""
+    """Canonical evidence tiers surfaced in search and the reports."""
 
     RCT = "rct"
     CLINICAL_TRIAL = "clinical_trial"

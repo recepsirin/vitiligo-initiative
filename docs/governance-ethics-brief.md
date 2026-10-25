@@ -38,8 +38,8 @@ This brief covers **Phase 0–1** (planning + public Evidence Engine) and outlin
 
 ### What we ship publicly
 
-- Semantic search, Ask, Hypothesize, Graph browse, Trials search over **public literature and trial registries**  
-- Rate-limited HTTP API (per-client POST limit plus global Ask/Hypothesize caps; see [`deploy.md`](deploy.md))  
+- Posted trial results, semantic search, graph browse and trials search over **public literature and trial registries**  
+- Rate-limited HTTP API (per-client POST limit; see [`deploy.md`](deploy.md))  
 - Health endpoint without patient data  
 
 ### Required disclaimers (UI + API)
@@ -55,8 +55,7 @@ Every user-facing surface must state:
 | PubMed / PMC / GEO metadata | NCBI | No | Public scientific metadata |
 | Trial registries | CT.gov, EU CTR, ICTRP | No | Public registry fields |
 | Open Targets / DrugBank priors | Public / licensed XML | No | DrugBank requires academic license for full XML |
-| User queries (Ask/Hypothesize) | User input | Potentially | **Do not log prompts containing identifiable health info in production without policy** |
-| Anthropic API | LLM provider | Query content | Review Anthropic DPA; minimize retention where configurable |
+| Search queries | User input | Potentially | Queries are not logged; nothing is sent to a third party, since no model API is called |
 
 **Action before wide launch:** Publish a short **Privacy Policy** and **Terms of Use** on the deployed site (even if minimal).
 
@@ -65,17 +64,17 @@ Every user-facing surface must state:
 | Risk | Mitigation |
 |------|------------|
 | Hallucinated citations | RAG with retrieved docs only; bracketed citations; refusal when evidence thin |
-| Overconfident treatment advice | System prompts emphasize uncertainty; evidence-level badges |
-| Prompt injection | Input length limits; no tool execution from user text |
+| Overconfident treatment advice | Every figure carries its denominator, its analysis population and its comparator; nothing is narrated |
+| A rate read as an effect | Comparator shown from the same trial, endpoint and week, or none at all |
+| Missing data read as absence | Figures counting only those assessed are bracketed by what the uncounted could have done |
 | Cost / abuse | Rate limits; optional API key tier later |
-| Model vendor change | Configurable `ANTHROPIC_MODEL`; document in changelog |
 
 ### Advisor gate (recommended)
 
-Before treating Hypothesize outputs as “initiative endorsements”:
+Before any ranking or extracted figure is presented as an initiative position:
 
-1. KOL review of **knowledge graph export** (`exports/graph-review.json`)  
-2. Spot-check of **10 Hypothesize runs** on canonical questions (JAK+UVB, SV vs NSV, acral disease)  
+1. KOL review of the **knowledge graph export** (`exports/graph-review.json`)  
+2. Clinical review of the **trial-results table** against the registry records it cites, including the analysis population each figure was computed on  
 3. Sign-off on **public launch vs closed beta** (open question in the [scientific brief](scientific-brief.md#open-scientific-questions-for-advisors))  
 
 ---
@@ -93,7 +92,7 @@ Not live. Requirements recorded now to avoid rework:
 ## Security baseline (production)
 
 - HTTPS only (host platform enforces TLS — e.g. Render, DigitalOcean, reverse proxy)  
-- Secrets in platform vault (`ANTHROPIC_API_KEY` in host env/secrets, not in repo)  
+- No secrets in the deployment, and none in the engine: it calls no model API, so there is no key to vault, leak or rotate  
 - Database on private volume; no public SQLite download endpoint  
 - Dependency scanning via GitHub Actions (CI: pytest + ruff) and Dependabot (pip + Actions)  
 - Incident response: document owner contact; ability to rotate API keys and take app offline  
@@ -135,8 +134,8 @@ Until a formal board exists:
 
 - [ ] Public deploy complete; `/api/health` shows `ready: true`  
 - [x] Privacy Policy + Terms linked from footer (`/privacy`, `/terms`)  
-- [x] Disclaimer visible on Ask / Hypothesize tabs (site-wide banner + panel hints)  
-- [ ] `ANTHROPIC_API_KEY` set only on server, not client  
+- [x] Disclaimer visible site-wide (banner plus per-panel notes)  
+- [ ] Deployment carries no API key at all (the served app makes no model call)  
 - [ ] Rate limits verified  
 - [x] KOL skim of graph export OR documented decision to launch with “beta” label
 - [ ] Contact email for corrections / takedown requests — **parked:** domain not purchased; use GitHub per [SECURITY.md](../SECURITY.md) until `contact@` / `privacy@` are live  

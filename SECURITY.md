@@ -30,14 +30,14 @@ Examples we care about:
 - Remote code execution or SQL injection in the web API
 - Authentication or authorization bypass (if auth is added later)
 - Secrets committed to the repository or logged in production
-- Rate-limit or resource-exhaustion issues that enable sustained abuse of paid LLM endpoints
+- Rate-limit or resource-exhaustion issues that enable sustained abuse of the public endpoints
 - Unsafe deserialization or path traversal in ingestion or export paths
 
 ## Out of scope (typically)
 
 - Missing features (e.g. no user accounts yet)
 - Social engineering of maintainers
-- Issues in third-party services (Anthropic, NCBI, GitHub, Render) — report to those providers
+- Issues in third-party services (NCBI, GitHub, Render) — report to those providers
 - Prompt injection leading to incorrect **research answers** without a technical flaw in our stack (document as product risk, not always a CVE)
 - Vulnerabilities in dependencies already fixed in a newer release we have not yet adopted (please still tell us)
 

@@ -414,7 +414,7 @@ class GraphEdge(SQLModel, table=True):
     extraction_method: str = Field(
         default="structured",
         index=True,
-        description="structured | llm | mesh",
+        description="structured | gwas | trial_result | mechanism_record | mesh",
     )
     claim: ClaimKind = Field(
         default=ClaimKind.ASSERTED,
@@ -433,21 +433,6 @@ class GraphEdge(SQLModel, table=True):
     evidence: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=_utcnow)
     updated_at: datetime = Field(default_factory=_utcnow)
-
-
-class GraphExtraction(SQLModel, table=True):
-    """Tracks LLM graph extraction status per document."""
-
-    __tablename__ = "graph_extractions"
-    __table_args__ = (UniqueConstraint("document_id", name="uq_graph_extraction_document"),)
-
-    id: int | None = Field(default=None, primary_key=True)
-    document_id: int = Field(foreign_key="documents.id", index=True)
-    status: str = Field(default="completed", description="completed | failed | skipped")
-    entity_count: int = Field(default=0)
-    edge_count: int = Field(default=0)
-    error: str | None = Field(default=None)
-    extracted_at: datetime = Field(default_factory=_utcnow)
 
 
 class IngestionRun(SQLModel, table=True):

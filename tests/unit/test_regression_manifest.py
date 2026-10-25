@@ -41,19 +41,6 @@ def test_regression_manifest_structure() -> None:
     assert candidates["must_include_tokens"]
     assert candidates["rank1_token"] in candidates["must_include_tokens"]
 
-    for case in spec.get("ask", []):
-        assert case["id"]
-        assert case["question"].strip()
-        assert case["must_include_citation_source_ids"]
-        assert int(case["top_k"]) >= len(case["must_include_citation_source_ids"])
-
-    for case in spec.get("hypothesize", []):
-        assert case["id"]
-        assert case["intent"].strip()
-        assert case["must_include_citation_source_ids"]
-        assert case["must_include_candidate_names"]
-        assert int(case["top_k"]) >= 1
-
     graph_cases = spec.get("graph", [])
     assert len(graph_cases) >= 3, "graph confidence section must not be empty"
 

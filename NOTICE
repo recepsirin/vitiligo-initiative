@@ -90,11 +90,10 @@ bring their own appropriately licensed export and comply with DrugBank's
 redistribution and citation terms.
 
 ================================================================================
-Optional cloud API (not bundled)
+No model APIs
 ================================================================================
 
-The `vitiligo ask` and `vitiligo hypothesize` commands call the Anthropic
-Messages API when `ANTHROPIC_API_KEY` is configured. They are command-line
-tools: the web application serves no generated content and makes no call to
-any model API. That service is not part of this distribution; use is governed
-by Anthropic's terms at https://www.anthropic.com/legal.
+This engine calls no model API and bundles no model API client. Rankings,
+reports and the served pages are computed from the stored corpus, so the same
+corpus reproduces the same output. The only model it loads is the local ONNX
+embedding model listed above, used to index and retrieve text.

@@ -4,8 +4,9 @@ Rankings are computed deterministically from Open Targets priors, registered
 trials, knowledge-graph edges, and semantic literature retrieval. Every score
 component is exposed in the output for accountability.
 
-Optional LLM synthesis (``include_llm=True``) adds narrative rationale via
-``generate_hypotheses`` when ``ANTHROPIC_API_KEY`` is configured.
+No model is involved. Every number here is computed from stored records, so the
+same corpus gives the same ranking, and each component can be checked against
+its source.
 """
 
 from __future__ import annotations
@@ -148,7 +149,6 @@ class RankedCandidate:
     trial_refs: list[TrialRef]
     literature_refs: list[LiteratureRef]
     caveats: list[str]
-    llm_rationale: str | None = None
 
 
 @dataclass
@@ -561,7 +561,6 @@ def build_candidate_report(
     *,
     intents_path: Path | None = None,
     top_n: int = 10,
-    include_llm: bool = False,
 ) -> CandidateReport:
     """Build a reproducible candidate report from structured evidence."""
     intents = load_intents(intents_path)
@@ -573,8 +572,6 @@ def build_candidate_report(
 
     for intent in intents:
         candidates = _rank_candidates_for_intent(bundles, intent, top_n=top_n)
-        if include_llm:
-            _attach_llm_rationale(intent, candidates)
         intent_reports.append(IntentReport(intent=intent, candidates=candidates))
         for cand in candidates:
             prev = aggregate_scores.get(cand.canonical_token)
@@ -597,9 +594,6 @@ def build_candidate_report(
         "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.",
         "Re-run after corpus updates: vitiligo report candidates",
     ]
-    if include_llm:
-        notes.append("LLM rationale attached where ANTHROPIC_API_KEY is configured.")
-
     return CandidateReport(
         generated_at=datetime.now(UTC).isoformat(),
         engine_version=__version__,
@@ -609,21 +603,6 @@ def build_candidate_report(
         global_top=global_top,
         notes=notes,
     )
-
-
-def _attach_llm_rationale(intent: IntentSpec, candidates: list[RankedCandidate]) -> None:
-    try:
-        from vitiligo.reasoning import CorpusUnavailable, LLMUnavailable, generate_hypotheses
-
-        report = generate_hypotheses(intent=intent.query)
-    except (LLMUnavailable, CorpusUnavailable):
-        return
-
-    by_token = {normalize_drug_token(c.name): c for c in report.candidates}
-    for cand in candidates:
-        llm = by_token.get(cand.canonical_token)
-        if llm:
-            cand.llm_rationale = llm.rationale
 
 
 _METHODOLOGY = (
@@ -741,11 +720,6 @@ def _render_intent_table(candidates: list[RankedCandidate]) -> list[str]:
             f"| {s.trials} | {s.literature} | {top} |"
         )
     lines.append("")
-    rationales = [c for c in candidates if c.llm_rationale]
-    if rationales:
-        lines.append("**LLM rationale (advisory):**")
-        lines.extend(f"- **#{c.rank} {c.name}:** {c.llm_rationale}" for c in rationales)
-        lines.append("")
     return lines
 
 
@@ -794,10 +768,6 @@ def _render_candidate_block(cand: RankedCandidate) -> list[str]:
 
     if cand.caveats:
         lines.append("**Caveats:** " + " ".join(cand.caveats))
-        lines.append("")
-
-    if cand.llm_rationale:
-        lines.append(f"**LLM rationale (advisory):** {cand.llm_rationale}")
         lines.append("")
 
     return lines
