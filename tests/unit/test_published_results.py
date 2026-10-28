@@ -97,29 +97,43 @@ def test_every_row_can_be_bracketed(_=None) -> None:
     """
     for row in _published():
         bounds = bound_rate(
-            responders=row["responders"], analysed=row["n"], group=row["randomised"]
+            responders=row["responders"], analysed=row["n"], group=row["reference_n"]
         )
         assert bounds is not None, f"{row['trial']} {row['arm_label']} wk{row['week']}"
         assert bounds.covers(row["percent"])
-        assert row["n"] <= row["randomised"]
+        assert row["n"] <= row["reference_n"]
 
 
 def test_the_week_156_figure_is_kept_with_what_makes_it_readable() -> None:
-    """100% at three years is two patients out of thirty-one randomised.
+    """100% at three years is two patients, against a reference group of eleven.
 
-    This row is the reason the file exists. Stored as a percentage alone it is
-    the most misleading number in the corpus; stored with its denominators it
-    is bounded at 6.5% to 100%, which says plainly that it settles nothing.
+    This row is why the file exists. The reference is not the day-1 arm of 31:
+    NCT03099304 re-randomised at week 24 and only 11 stayed on 0.15% QD, the
+    rest appearing in other outcome groups. Reading it against 31 would count
+    twenty people twice and understate the floor as 6.5%.
     """
     row = next(
         r
         for r in _published()
         if r["trial"] == "NCT03099304" and r["week"] == 156 and r["percent"] == 100.0
     )
-    assert (row["n"], row["randomised"]) == (2, 31)
-    bounds = bound_rate(responders=2, analysed=2, group=31)
+    assert (row["responders"], row["n"], row["reference_n"]) == (2, 2, 11)
+    assert "post-week-24" in row["reference_basis"]
+    bounds = bound_rate(responders=2, analysed=2, group=11)
     assert bounds is not None
-    assert (bounds.floor, bounds.ceiling) == (6.5, 100.0)
+    assert (bounds.floor, bounds.ceiling) == (18.2, 100.0)
+
+
+def test_a_reference_group_is_never_the_day_one_arm_by_default() -> None:
+    """Every row says what its reference is, because the two can differ.
+
+    HI-Light has no re-randomisation and reads against day 1. NCT03099304's
+    post-week-24 figures do not. A row without the basis stated invites the
+    mistake this file was corrected for.
+    """
+    for row in _published():
+        assert row.get("reference_basis"), f"{row['trial']} {row['arm_label']} wk{row['week']}"
+        assert "randomised" not in row, "the ambiguous field name was replaced"
 
 
 def test_the_two_curation_files_describe_different_trials() -> None:
