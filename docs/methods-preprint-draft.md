@@ -67,6 +67,7 @@ The remainder of this manuscript details system architecture and ingestion metho
 | EU CTR (CTIS) | `euctr` | 25 |
 | WHO ICTRP (XML export) | `ictrp` | — |
 | WHO ICTRP (search export) | `ictrp_csv` | 684 |
+| GEO per-sample labels | `geo_matrix` | 1,240 samples |
 | WHO ICTRP (record page, by id) | `ictrp_web` | — |
 | ISRCTN | `isrctn` | 8 |
 
