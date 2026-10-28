@@ -1761,6 +1761,85 @@ def geo_data_fetch_cmd(
     )
 
 
+@geo_data_app.command("labels")
+def geo_data_labels(
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap series (smoke testing)."),
+    refresh: bool = typer.Option(False, "--refresh", help="Re-read series already labelled."),
+) -> None:
+    """Read each series' per-sample labels from its GEO series matrix.
+
+    The series metadata says a dataset exists and how many samples it has.
+    This says what each sample is — lesional, non-lesional, healthy, treated,
+    repigmented — which is the difference between a dataset we can cite and
+    one we can analyse.
+    """
+    import httpx
+
+    from vitiligo.sources.geo_matrix import (
+        USER_AGENT,
+        fetch_samples,
+        is_about_vitiligo,
+    )
+
+    init_db()
+    with session_scope() as session:
+        series = list(session.exec(select(Document).where(Document.source == SourceKind.GEO)))
+    console.rule("[bold]GEO per-sample labels[/bold]")
+    console.print(f"Series: [cyan]{len(series)}[/cyan]\n")
+
+    labelled = relevant = samples_total = no_matrix = 0
+    table = Table()
+    table.add_column("Series", style="cyan")
+    table.add_column("Samples", justify="right")
+    table.add_column("Vitiligo")
+    table.add_column("Labels")
+
+    with httpx.Client(
+        timeout=180.0, follow_redirects=True, headers={"User-Agent": USER_AGENT}
+    ) as client:
+        for document in series[: limit or len(series)]:
+            metadata = dict(document.raw_metadata or {})
+            if metadata.get("sample_labels") and not refresh:
+                continue
+            samples = fetch_samples(document.source_id, client)
+            if not samples:
+                no_matrix += 1
+                continue
+            about = is_about_vitiligo(samples, title=document.title)
+            labelled += 1
+            relevant += int(about)
+            samples_total += len(samples)
+            metadata["sample_labels"] = [
+                {
+                    "accession": s.accession,
+                    "title": s.title,
+                    "source_name": s.source_name,
+                    "organism": s.organism,
+                    "characteristics": s.characteristics,
+                }
+                for s in samples
+            ]
+            metadata["vitiligo_relevant"] = about
+            with session_scope() as session:
+                stored = session.get(Document, document.id)
+                if stored is not None:
+                    stored.raw_metadata = metadata
+            vocabulary = sorted({s.source_name for s in samples if s.source_name})
+            table.add_row(
+                document.source_id,
+                str(len(samples)),
+                "[green]yes[/green]" if about else "[yellow]no[/yellow]",
+                ", ".join(vocabulary)[:52] or "—",
+            )
+
+    console.print(table)
+    console.print(
+        f"\n[bold]{labelled}[/bold] series labelled, [bold]{samples_total}[/bold] samples. "
+        f"{relevant} are about vitiligo; {labelled - relevant} matched the search on something "
+        f"else. {no_matrix} series have no matrix file."
+    )
+
+
 @geo_data_app.command("status")
 def geo_data_status_cmd(
     cache: str = typer.Option("data/geo", "--cache", help="Where files are stored."),
