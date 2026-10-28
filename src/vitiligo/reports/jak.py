@@ -69,6 +69,16 @@ JAK_AGENTS: tuple[JakAgent, ...] = (
     JakAgent("ivarmacitinib", ("SHR0302",)),
     JakAgent("cerdulatinib", ("DMVT-502",)),
     JakAgent(
+        "ARQ-252",
+        (),
+        note=(
+            "Topical JAK1 inhibitor. No INN appears in the corpus, so the "
+            "development code is the canonical name here; two reviews name the "
+            "mechanism (PMC11291099, PMC10743634). Its one trial with results, "
+            "NCT04811131, was terminated by the sponsor in June 2021."
+        ),
+    ),
+    JakAgent(
         "ifidancitinib",
         ("ATI-50002", "ATI-502"),
         note="Development codes ATI-50002 / ATI-502 per Open Targets (ChEMBL) synonyms.",
