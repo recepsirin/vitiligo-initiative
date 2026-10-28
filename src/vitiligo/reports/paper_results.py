@@ -304,11 +304,13 @@ def toplines_from(entries: list[dict[str, Any]]) -> list[ArmEndpointRow]:
                 loading_dose_value=None,
                 frequency=t["frequency"],
                 route=t["route"],
-                phototherapy=False,
+                phototherapy=bool(t.get("phototherapy", False)),
                 endpoint=f"{t['instrument']}{t['threshold']}",
                 instrument=t["instrument"],
                 threshold=t["threshold"],
-                body_region="face" if t["instrument"] == "F-VASI" else "total body",
+                body_region=t.get(
+                    "body_region", "face" if t["instrument"] == "F-VASI" else "total body"
+                ),
                 assessor=None,
                 week=t["week"],
                 week_source="topline",
