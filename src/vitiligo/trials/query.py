@@ -17,6 +17,7 @@ from sqlalchemy import String, cast, desc, func, or_
 from sqlmodel import Session, select
 
 from vitiligo.storage import Trial, TrialSourceKind, get_engine
+from vitiligo.trials.countries import normalize_country
 
 _ALL_SOURCES: tuple[TrialSourceKind, ...] = tuple(TrialSourceKind)
 
@@ -54,9 +55,11 @@ def _apply_filter(stmt: Any, filt: TrialFilter) -> Any:
         # serialized form is correct and adequately fast at this scale.
         stmt = stmt.where(func.lower(cast(Trial.phases, String)).like(f'%"{filt.phase.lower()}"%'))
     if filt.country:
-        stmt = stmt.where(
-            func.lower(cast(Trial.countries, String)).like(f'%"{filt.country.lower()}"%')
-        )
+        # The stored names are canonical, so the asked-for one is canonicalised
+        # too: a search for "Turkey" must find the six trials ClinicalTrials.gov
+        # files under "Turkey (Türkiye)".
+        wanted = normalize_country(filt.country) or filt.country
+        stmt = stmt.where(func.lower(cast(Trial.countries, String)).like(f'%"{wanted.lower()}"%'))
     if filt.query:
         stmt = stmt.where(_text_match(filt.query))
     return stmt

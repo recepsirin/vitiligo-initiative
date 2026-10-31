@@ -86,6 +86,7 @@ from vitiligo.storage import (
     init_db,
     session_scope,
 )
+from vitiligo.trials.countries import normalize_countries
 
 logger = get_logger(__name__)
 
@@ -971,7 +972,14 @@ _TRIAL_UPSERT_FIELDS = (
 
 
 def _upsert_trial(session, trial: Trial) -> tuple[int, int]:  # type: ignore[no-untyped-def]
-    """Insert a new trial or update the existing row keyed by (source, source_id)."""
+    """Insert a new trial or update the existing row keyed by (source, source_id).
+
+    Country names are canonicalised on the way in, because the country filter
+    matches the stored string: ClinicalTrials.gov files Turkey as "Turkey
+    (Türkiye)" and ICTRP's partners as "Turkey", and a reader searching for
+    one found a seventh of the trials.
+    """
+    trial.countries = normalize_countries(trial.countries or [])
     statement = select(Trial).where(
         Trial.source == trial.source, Trial.source_id == trial.source_id
     )
