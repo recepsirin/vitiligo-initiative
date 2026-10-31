@@ -116,16 +116,24 @@ _evidence_lock = threading.Lock()
 
 
 def _cached_evidence() -> dict[str, Any]:
-    """Posted trial results for the clinician view, rebuilt when the corpus changes."""
+    """Posted trial results for the clinician view, rebuilt when the corpus changes.
+
+    JAK trials and the non-JAK trials that post a threshold responder rate.
+    The scenario model is built from the JAK atlas alone and does not come
+    through here, which is what keeps AMG 714's F-VASI rows out of a fit whose
+    pre-registration describes a JAK-only dataset.
+    """
     from vitiligo.reports import build_jak_atlas
     from vitiligo.reports.jak_arms import harmonize_arms
+    from vitiligo.reports.non_jak import non_jak_arm_rows
 
     db_path = get_settings().resolved_db_path
     key = (str(db_path), db_path.stat().st_mtime_ns if db_path.is_file() else 0)
     with _evidence_lock:
         cached = _evidence_cache.get(key)
         if cached is None:
-            cached = evidence_to_dict(build_evidence_rows(harmonize_arms(build_jak_atlas())))
+            rows = harmonize_arms(build_jak_atlas()) + non_jak_arm_rows()
+            cached = evidence_to_dict(build_evidence_rows(rows))
             _evidence_cache.clear()
             _evidence_cache[key] = cached
         return cached

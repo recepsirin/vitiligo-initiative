@@ -354,7 +354,17 @@ def _rows_for_outcome(trial: JakTrial, outcome: OutcomeResult) -> list[ArmEndpoi
     rows: list[ArmEndpointRow] = []
     is_count = (outcome.param_type or "").upper() == "COUNT_OF_PARTICIPANTS"
     unit = (outcome.unit or "").lower()
-    if not is_count and "percent" not in unit and "percentage" not in outcome.title.lower():
+    # A responder rate is posted three ways. Most trials give a percentage;
+    # some give the count; AMG 714 gives a proportion, so 15% of its arm is
+    # recorded as 0.150 and reading it as a percentage understates the result
+    # by a hundredfold.
+    is_proportion = not is_count and "proportion" in unit
+    if (
+        not is_count
+        and not is_proportion
+        and "percent" not in unit
+        and "percentage" not in outcome.title.lower()
+    ):
         return []
     assessor_match = _ASSESSOR_RE.search(outcome.title)
     for m in outcome.measurements:
@@ -364,7 +374,9 @@ def _rows_for_outcome(trial: JakTrial, outcome: OutcomeResult) -> list[ArmEndpoi
         n = _to_int(m.n_analyzed)
         if n == 0:
             continue  # group not analysed for this outcome
-        rows.append(_build_row(trial, outcome, m, endpoint, n, is_count, assessor_match))
+        rows.append(
+            _build_row(trial, outcome, m, endpoint, n, is_count, assessor_match, is_proportion)
+        )
     return rows
 
 
@@ -376,6 +388,7 @@ def _build_row(
     n: int | None,
     is_count: bool,
     assessor_match: re.Match[str] | None,
+    is_proportion: bool = False,
 ) -> ArmEndpointRow:
     arm = parse_arm(m.group_title or m.group_id, trial)
     flags = list(arm.flags)
@@ -398,7 +411,16 @@ def _build_row(
         responders = int(value)
         if n:
             percent = round(100.0 * value / n, 2)
+    elif is_proportion and value <= 1.0:
+        percent = round(100.0 * value, 2)
+        if n:
+            responders = round(value * n)
+            derived = True
     else:
+        if is_proportion:
+            # The unit says proportion and the value cannot be one. Read it as
+            # a percentage, which is the only other thing it can be, and say so.
+            flags.append("unit_disagrees_with_value")
         percent = value
         if n:
             responders = round(value * n / 100.0)

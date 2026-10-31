@@ -211,8 +211,18 @@ def _usable(
     caps: dict[str, int],
     *,
     allow: frozenset[str] = frozenset(),
+    require_minimum: bool = True,
 ) -> bool:
-    """Whether a row may be shown at all, whatever week it reports."""
+    """Whether a row may be shown at all, whatever week it reports.
+
+    ``require_minimum`` is relaxed only for a comparator. The floor stops a
+    rate from a handful of patients being read as a reliable number, and a
+    control is not read that way: it is read beside the treated arm, with its
+    own denominator printed next to it. AMG 714 randomised 19 to placebo, one
+    short of the floor, and suppressing it left the only placebo-controlled
+    non-JAK result in the corpus showing as an uncontrolled rate — which is
+    the thing this table exists to prevent.
+    """
     if not _reported(row) or row.instrument not in ("F-VASI", "T-VASI"):
         return False
     assert row.week is not None
@@ -226,7 +236,7 @@ def _usable(
     cap = caps.get(row.source_id)
     if cap is not None and row.week > cap and "from_publication" not in row.flags:
         return False
-    return int(row.n_analyzed or 0) >= MIN_ANALYSED
+    return not require_minimum or int(row.n_analyzed or 0) >= MIN_ANALYSED
 
 
 def _dose(row: ArmEndpointRow) -> str | None:
@@ -278,6 +288,9 @@ def build_evidence_rows(rows: Sequence[ArmEndpointRow]) -> list[EvidenceRow]:
     def ok(row: ArmEndpointRow, *, allow: frozenset[str] = frozenset()) -> bool:
         return _usable(row, central, caps, allow=allow)
 
+    def ok_as_control(row: ArmEndpointRow) -> bool:
+        return _usable(row, central, caps, require_minimum=False)
+
     # The largest group each arm ever reported at an endpoint, to catch an arm
     # that is no longer reporting the group it enrolled. Central and local reads
     # are separate measurement sets, not attrition from one another: pooling
@@ -297,7 +310,7 @@ def build_evidence_rows(rows: Sequence[ArmEndpointRow]) -> list[EvidenceRow]:
 
     controls: dict[tuple[str, str], ArmEndpointRow] = {}
     for row in rows:
-        if row.arm_role == "placebo" and row.week == PRIMARY_WEEK and ok(row):
+        if row.arm_role == "placebo" and row.week == PRIMARY_WEEK and ok_as_control(row):
             trial_endpoint = (row.source_id, row.endpoint)
             if _better(row, controls.get(trial_endpoint)):
                 controls[trial_endpoint] = row
