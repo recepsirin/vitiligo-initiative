@@ -36,12 +36,14 @@ from vitiligo.storage.models import Trial, TrialSourceKind
 logger = get_logger(__name__)
 
 # Primary registers whose records we already ingest via dedicated pipelines.
-_SKIP_PRIMARY_REGISTERS: frozenset[str] = frozenset(
-    {
-        "ClinicalTrials.gov",
-        "EU Clinical Trials Register",
-    }
-)
+#
+# "EU Clinical Trials Register" was here and should not have been. The euctr
+# pipeline reads CTIS, the system that replaced that register in 2023; the
+# register's own back catalogue is separate data. Skipping it lost every
+# European vitiligo trial that predates CTIS -- eighteen in the vitiligo
+# export, of which seven are held nowhere else. The eleven that are
+# duplicates are caught by ID instead, which is what dedup is for.
+_SKIP_PRIMARY_REGISTERS: frozenset[str] = frozenset({"ClinicalTrials.gov"})
 
 _PRIMARY_REGISTER_ALIASES: dict[str, str] = {
     "German Clinical Trials Register": "DRKS",
@@ -246,13 +248,31 @@ def parse_ictrp_record(root: Element) -> Trial | None:
     )
 
 
+def normalize_protocol_id(value: str) -> str:
+    """A sponsor's protocol number, comparable across registries.
+
+    The same trial is "INCB 18424-306" on ClinicalTrials.gov and
+    "INCB18424-306" in the EU register, so punctuation and case cannot be
+    part of the comparison.
+    """
+    return re.sub(r"[^A-Z0-9]", "", value.upper())
+
+
 def should_skip_ictrp_record(
     trial: Trial,
     *,
     skip_duplicates: bool,
     existing_keys: set[tuple[str, str]],
+    existing_protocol_ids: set[str] | None = None,
 ) -> bool:
-    """Return True when an ICTRP record should not be inserted."""
+    """Return True when an ICTRP record should not be inserted.
+
+    A record is skipped when its register is one we ingest directly, when one
+    of its ids is a trial we already hold, or when it shares a sponsor
+    protocol number with one. The last matters because a European record
+    usually names the sponsor's protocol rather than the NCT: TRuE-V1 is
+    "INCB18424-306" there and NCT04052425 here, and nothing else links them.
+    """
     meta = trial.raw_metadata or {}
     primary_register = str(meta.get("primary_register") or "")
     if primary_register in _SKIP_PRIMARY_REGISTERS:
@@ -267,6 +287,12 @@ def should_skip_ictrp_record(
     ):
         if (source.value, source_id) in existing_keys:
             return True
+
+    for secondary in meta.get("secondary_ids") or []:
+        for token in re.split(r"[;\n]", str(secondary)):
+            token = normalize_protocol_id(token.strip())
+            if len(token) >= 6 and token in (existing_protocol_ids or ()):
+                return True
     return False
 
 

@@ -44,6 +44,7 @@ from vitiligo.sources.gwas import DEFAULT_TRAIT_QUERY as GWAS_DEFAULT_QUERY
 from vitiligo.sources.ictrp import (
     count_ictrp_records,
     iter_ictrp_trials,
+    normalize_protocol_id,
     should_skip_ictrp_record,
 )
 from vitiligo.sources.ictrp_csv import SEARCH_URL as ICTRP_SEARCH_URL
@@ -360,6 +361,7 @@ def _ingest_ictrp_trials(
                 tracked.total_found = total_found
 
             existing_keys = _load_trial_dedup_keys(session) if skip_duplicates else set()
+            protocol_ids = _load_protocol_ids(session) if skip_duplicates else set()
 
             for trial in trials():
                 fetched += 1
@@ -375,6 +377,7 @@ def _ingest_ictrp_trials(
                     trial,
                     skip_duplicates=skip_duplicates,
                     existing_keys=existing_keys,
+                    existing_protocol_ids=protocol_ids,
                 ):
                     skipped += 1
                     continue
@@ -426,6 +429,34 @@ def _load_trial_dedup_keys(session) -> set[tuple[str, str]]:  # type: ignore[no-
         src = source.value if hasattr(source, "value") else str(source)
         out.add((src, source_id))
     return out
+
+
+def _load_protocol_ids(session) -> set[str]:  # type: ignore[no-untyped-def]
+    """Sponsor protocol numbers that identify exactly one trial we hold.
+
+    A European record names the sponsor's protocol, not the NCT, so this is
+    the only thing linking EUCTR2019-000846-37-FR to NCT04052425. A number
+    two trials both cite identifies neither, so it is dropped: among vitiligo
+    trials that is "TARGETDERM", a cohort name rather than a protocol, and
+    matching on it would skip a real trial as a duplicate.
+    """
+    claimed: dict[str, set[str]] = {}
+    rows = session.exec(
+        select(Trial.source_id, Trial.raw_metadata).where(Trial.source == TrialSourceKind.CTGOV)
+    ).all()
+    for source_id, metadata in rows:
+        identification = (((metadata or {}).get("study") or {}).get("protocolSection") or {}).get(
+            "identificationModule"
+        ) or {}
+        candidates = [(identification.get("orgStudyIdInfo") or {}).get("id")]
+        candidates += [s.get("id") for s in (identification.get("secondaryIdInfos") or [])]
+        for candidate in candidates:
+            if not candidate:
+                continue
+            normalized = normalize_protocol_id(str(candidate))
+            if len(normalized) >= 6:
+                claimed.setdefault(normalized, set()).add(source_id)
+    return {key for key, owners in claimed.items() if len(owners) == 1}
 
 
 def _run_trial_ingestion(
