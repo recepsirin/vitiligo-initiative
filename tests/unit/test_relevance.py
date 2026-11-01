@@ -8,6 +8,7 @@ from vitiligo.storage import Trial, TrialSourceKind
 from vitiligo.trials.relevance import (
     DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
+    DRUG_CLASS_SCOPES,
     in_vitiligo_corpus,
     is_drug_class_trial,
     is_vitiligo_trial,
@@ -226,7 +227,7 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
         # importing the JAK class's 1,358 trials in rheumatoid arthritis and
         # myelofibrosis would make this test fail 1,358 times over and the
         # corpus total mean something else entirely.
-        if (json.loads(metadata or "{}") or {}).get("scope") == DRUG_CLASS_SCOPE:
+        if str((json.loads(metadata or "{}") or {}).get("scope") or "") in DRUG_CLASS_SCOPES:
             continue
         total += 1
         subject = " | ".join(
@@ -238,7 +239,9 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
 
     assert rejected - NOT_VITILIGO == set(), "a record naming no form of the disease was admitted"
     assert NOT_VITILIGO - rejected == set(), "a listed record is gone, or now names the disease"
-    assert total - len(NOT_VITILIGO) == 1061
+    # 1,081 records from registries and 467 reconstructed from the papers of
+    # trials that were never registered, less the twenty above.
+    assert total - len(NOT_VITILIGO) == 1528
 
 
 def test_a_drug_class_trial_is_not_a_vitiligo_trial() -> None:

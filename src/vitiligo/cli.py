@@ -43,6 +43,7 @@ from vitiligo.ingest import (
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_prior_drug_ingestion,
+    run_published_trial_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
 )
@@ -258,6 +259,29 @@ def ingest_oa_fulltext(
     console.print()
 
     stats = run_oa_fulltext_ingestion(source_ids=pmid or None, limit=limit, refresh=refresh)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("published-trials")
+def ingest_published_trials() -> None:
+    """Build trial records for vitiligo trials that were never registered.
+
+    PubMed lists 522 published vitiligo trials and 28 carry a registry
+    accession. The rest were run, reported and never registered, mostly
+    because they predate the 2005 rule, and a trials table built from
+    registries cannot see them. Marked ``scope: published_only``: vitiligo
+    trials, but not registered ones.
+    """
+    settings = get_settings()
+    console.rule("[bold]Trials that exist only as papers[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print("[dim]A paper is not a protocol: title, abstract, country and year only.[/dim]")
+    console.print()
+
+    stats = run_published_trial_ingestion()
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

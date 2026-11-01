@@ -210,12 +210,19 @@ class DocumentChunk(SQLModel, table=True):
 
 
 class TrialSourceKind(StrEnum):
-    """Known clinical-trial registries. Extend as new ingestion modules land."""
+    """Where a trial record came from. Extend as new ingestion modules land.
+
+    ``PUBLICATION`` is not a registry. It is a trial that exists only as a
+    paper, which for vitiligo is most of them: 522 published trials and 28
+    registry accessions between them, because registration became a condition
+    of publication in 2005 and much of this literature is older.
+    """
 
     CTGOV = "ctgov"
     EUCTR = "euctr"
     ICTRP = "ictrp"
     ISRCTN = "isrctn"
+    PUBLICATION = "publication"
 
 
 class Trial(SQLModel, table=True):

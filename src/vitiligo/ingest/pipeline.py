@@ -542,6 +542,94 @@ def run_drug_class_ingestion(
     )
 
 
+def run_published_trial_ingestion(
+    query: str = "vitiligo[MeSH Terms] AND (randomized controlled trial[Publication Type]"
+    " OR clinical trial[Publication Type] OR controlled clinical trial[Publication Type])",
+    commit_every: int = 50,
+) -> IngestionStats:
+    """Build trial records for vitiligo trials that were never registered.
+
+    PubMed lists 522 published vitiligo trials and 28 of them carry a registry
+    accession. The rest were run, reported and never registered, mostly
+    because they predate the 2005 rule that made registration a condition of
+    publication, and they are invisible to a trials table built from
+    registries. Eighteen published Turkish vitiligo trials name no registry id
+    between them.
+
+    The papers are already in the corpus. This reads the ones we hold rather
+    than fetching again, so the search runs against PubMed only to decide
+    which documents are trial reports.
+    """
+    from vitiligo.sources.ictrp import normalize_protocol_id
+    from vitiligo.sources.published_trials import comparison_key, registry_ids, trial_from_document
+
+    init_db()
+    run = IngestionRun(source=TrialSourceKind.PUBLICATION.value, query=query)
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = skipped = 0
+    try:
+        client = PubMedClient()
+        try:
+            pmids = list(client.search_ids(query))
+        finally:
+            client.close()
+        logger.info("PubMed reports %d published trial papers", len(pmids))
+
+        with session_scope() as session:
+            held: set[str] = set()
+            # A one-column select yields the values, not one-tuples.
+            for source_id in session.exec(select(Trial.source_id)).all():
+                held.add(comparison_key(source_id))
+                key = normalize_protocol_id(source_id)
+                if key:
+                    held.add(key)
+
+            wanted = set(pmids)
+            documents = [
+                doc
+                for doc in session.exec(
+                    select(Document).where(Document.source == SourceKind.PUBMED)
+                ).all()
+                if doc.source_id in wanted
+            ]
+            logger.info("%d of them are held as documents", len(documents))
+
+            for document in documents:
+                fetched += 1
+                if any(comparison_key(i) in held for i in registry_ids(document)):
+                    skipped += 1
+                    continue
+                trial = trial_from_document(document)
+                if trial is None:
+                    skipped += 1
+                    continue
+                ins, upd = _upsert_trial(session, trial)
+                inserted += ins
+                updated += upd
+                if fetched % commit_every == 0:
+                    session.commit()
+            session.commit()
+        _finalize_run(run_id, "completed", fetched, inserted, updated, len(pmids), None)
+    except Exception as exc:
+        logger.exception("Published-trial ingestion failed")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="published-trials",
+        total_found=len(pmids),
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
 def run_euctr_ingestion(
     query: str = EUCTR_DEFAULT_QUERY,
     page_size: int = 50,

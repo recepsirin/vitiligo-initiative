@@ -157,6 +157,27 @@ class PubMedClient:
             query=query,
         )
 
+    def search_ids(self, query: str, retmax: int = 10000) -> list[str]:
+        """The PMIDs a query matches, rather than a handle to fetch them with.
+
+        ``search`` returns a history handle for streaming whole records.
+        Deciding which documents already in the corpus are trial reports needs
+        only their identifiers.
+        """
+        params: dict[str, Any] = {
+            "db": "pubmed",
+            "term": query,
+            "retmax": retmax,
+            "retmode": "xml",
+            **self._identity_params(),
+        }
+        logger.info("PubMed esearch (ids): %s", query)
+        response = self._get(ESEARCH_URL, params)
+        root = etree.fromstring(response.content)
+        ids = [el.text or "" for el in root.findall(".//IdList/Id")]
+        logger.info("PubMed esearch returned %d ids", len(ids))
+        return [i for i in ids if i]
+
     def fetch_batch(
         self,
         handle: SearchHandle,

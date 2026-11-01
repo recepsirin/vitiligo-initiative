@@ -160,6 +160,11 @@ DRUG_CLASS_SCOPE = "jak_class"
 DERM_DRUG_SCOPE = "derm_drug"
 DRUG_CLASS_SCOPES: frozenset[str] = frozenset({DRUG_CLASS_SCOPE, DERM_DRUG_SCOPE})
 
+# A vitiligo trial that was never registered, reconstructed from its paper.
+# It belongs to the vitiligo corpus -- it is a trial of this disease -- but
+# it is not a registered trial, and a count of registrations must say so.
+PUBLISHED_ONLY_SCOPE = "published_only"
+
 
 def is_drug_class_trial(trial: Trial) -> bool:
     """True when the trial is held for its drug rather than its disease."""
@@ -214,3 +219,14 @@ def treats_skin_disease(trial: Trial) -> bool:
     if _ONCOLOGY.search(conditions):
         return False
     return bool(_SKIN_DISEASE.search(conditions))
+
+
+def is_registered(trial: Trial) -> bool:
+    """True when a registry holds this trial, rather than only a journal.
+
+    The 18 published Turkish vitiligo trials name no registry id between
+    them, and fourteen of the eighteen predate 2010. They are vitiligo trials
+    and they are not registered trials, and any figure about registration has
+    to keep the two apart.
+    """
+    return str((trial.raw_metadata or {}).get("scope") or "") != PUBLISHED_ONLY_SCOPE
