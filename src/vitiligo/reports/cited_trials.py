@@ -97,6 +97,18 @@ def find_in_text(
             yield registry, match.group(0).upper().replace(" ", ""), " ".join(context.split())
 
 
+def _compare_key(identifier: str) -> str:
+    """An identifier stripped to letters and digits, for comparing across styles.
+
+    A paper writes the number the way its journal set it and a registry the
+    way it files it. ChiCTR-TRC-10000930 is held under exactly that id, and
+    the paper citing it writes ChiCTRTRC10000930, so comparing the two as
+    written reported a trial we already had as a lead worth chasing. The same
+    would happen to every CTRI number, which carries slashes.
+    """
+    return re.sub(r"[^A-Za-z0-9]", "", identifier).upper()
+
+
 def scan(
     documents: Iterable[Document],
     known_identifiers: Iterable[str] = (),
@@ -109,7 +121,7 @@ def scan(
     The first paper to cite an identifier is the one reported, so a number
     repeated across a field's literature appears once.
     """
-    known = {i.upper() for i in known_identifiers}
+    known = {_compare_key(i) for i in known_identifiers}
     seen: dict[str, CitedTrial] = {}
     for document in documents:
         text = document_text(document)
@@ -119,7 +131,7 @@ def scan(
         for registry, identifier, context in find_in_text(
             text, title_is_about_vitiligo=title_match, term=term, window=window
         ):
-            if identifier in known or identifier in seen:
+            if _compare_key(identifier) in known or identifier in seen:
                 continue
             seen[identifier] = CitedTrial(
                 registry=registry,

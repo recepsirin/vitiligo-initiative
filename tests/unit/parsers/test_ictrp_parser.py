@@ -179,3 +179,36 @@ def test_a_number_two_trials_cite_identifies_neither(test_db_path) -> None:
 
     assert normalize_protocol_id("INCB18424-306") in keys, "a unique protocol must be usable"
     assert normalize_protocol_id("TARGETDERM") not in keys, "a shared number identifies neither"
+
+
+def test_a_ctis_record_is_recognised_as_the_euctr_trial_it_duplicates() -> None:
+    """ICTRP keys a CTIS trial by gluing the register to the CTIS number.
+
+    ``_EUCTR_RE`` needs a word boundary before the year, and "S2022" is not
+    one, so the mapper returned nothing and eleven trials were held twice:
+    NCT06113328, 2023-503502-37-00 and CTIS2023-503502-37-00 are all
+    MK-6194-007, the same study counted three times.
+    """
+    keys = extract_cross_registry_keys("CTIS2023-503502-37-00")
+    assert (TrialSourceKind.EUCTR, "2023-503502-37-00") in keys
+
+
+def test_an_isrctn_record_is_recognised_as_the_trial_its_own_api_gave_us() -> None:
+    """ISRCTN had no pattern at all, so its seven trials were held twice.
+
+    Four of the duplicates record enrollment as 0 on the API copy while the
+    ICTRP copy carries the real figure, so the pair is not even consistent.
+    """
+    keys = extract_cross_registry_keys("ISRCTN17160087")
+    assert (TrialSourceKind.ISRCTN, "ISRCTN17160087") in keys
+
+
+def test_an_indian_or_chinese_id_names_no_other_registry() -> None:
+    """The mapper must not invent a cross-registry key from an unrelated id.
+
+    IRCT201508201031N16 contains the letters of no other register, and a
+    pattern loose enough to read one out of it would skip real trials as
+    duplicates of trials they have nothing to do with.
+    """
+    for identifier in ("CTRI/2023/06/053856", "ChiCTR2300072713", "IRCT201508201031N16"):
+        assert extract_cross_registry_keys(identifier) == set()

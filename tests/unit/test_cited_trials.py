@@ -159,3 +159,20 @@ def test_leads_split_into_solid_and_needing_checking() -> None:
     solid, check = split_by_confidence(scan([named, broad]))
     assert [t.identifier for t in solid] == ["CTRI/2017/05/008692"]
     assert [t.identifier for t in check] == ["DRKS00012745"]
+
+
+def test_a_held_trial_is_not_a_lead_when_the_paper_writes_its_id_differently() -> None:
+    """ChiCTR-TRC-10000930 is held under exactly that id, hyphens and all.
+
+    The paper citing it writes ChiCTRTRC10000930, and comparing the two as
+    written reported a trial we already had as a lead worth chasing. The same
+    would happen to every CTRI number, which carries slashes, and the cost is
+    not cosmetic: the report exists so someone fetches each lead by hand.
+    """
+    doc = _doc(body="Vitiligo trial, registered ChiCTRTRC10000930.")
+    assert scan([doc], known_identifiers=["ChiCTR-TRC-10000930"]) == []
+    assert len(scan([doc], known_identifiers=["ChiCTR-TRC-10000931"])) == 1
+
+    indian = _doc(body="Vitiligo trial, registered CTRI/2017/05/008692.")
+    assert scan([indian], known_identifiers=["CTRI/2017/05/008692"]) == []
+    assert scan([indian], known_identifiers=["CTRI201705008692"]) == []

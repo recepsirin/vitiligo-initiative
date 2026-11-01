@@ -54,6 +54,15 @@ _PRIMARY_REGISTER_ALIASES: dict[str, str] = {
 
 _NCT_RE = re.compile(r"\bNCT\d{8}\b", re.IGNORECASE)
 _EUCTR_RE = re.compile(r"\b20\d{2}-\d{6}-\d{2}(?:-\d{2})?\b")
+# A CTIS record's ICTRP id is the CTIS number with the register glued to the
+# front, and "S2022" is no word boundary, so _EUCTR_RE never saw it. Eleven
+# trials were held twice for want of this: NCT06113328, 2023-503502-37-00 and
+# CTIS2023-503502-37-00 are all MK-6194-007.
+_CTIS_RE = re.compile(r"\bCTIS(20\d{2}-\d{6}-\d{2}(?:-\d{2})?)\b", re.IGNORECASE)
+# ISRCTN had no pattern at all, so the seven trials held through its own API
+# were held a second time through ICTRP -- four of them with enrollment 0 on
+# the API copy and the real figure on the ICTRP one.
+_ISRCTN_RE = re.compile(r"\bISRCTN\d{6,}\b", re.IGNORECASE)
 
 _PHASE_PATTERNS: list[tuple[str, str]] = [
     (r"phase\s*1\s*[/&]\s*phase\s*2|phase\s*i\s*[/&]\s*phase\s*ii", "PHASE1/PHASE2"),
@@ -317,6 +326,12 @@ def extract_cross_registry_keys(
                 keys.add((TrialSourceKind.CTGOV, token[:11].upper()))
             if token.upper().startswith("EUCTR"):
                 keys.add((TrialSourceKind.EUCTR, token[:19].upper()))
+            ctis = _CTIS_RE.search(token)
+            if ctis:
+                keys.add((TrialSourceKind.EUCTR, ctis.group(1)[:19]))
+            isrctn = _ISRCTN_RE.search(token)
+            if isrctn:
+                keys.add((TrialSourceKind.ISRCTN, isrctn.group(0).upper()))
     return keys
 
 
