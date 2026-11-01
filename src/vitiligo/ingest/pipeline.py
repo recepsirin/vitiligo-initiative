@@ -304,6 +304,126 @@ def run_ctgov_ingestion(
     )
 
 
+# The JAK inhibitors this project's scenario model is built on, plus the rest
+# of the class in clinical use. A drug's trials in other diseases are the
+# class's evidence base: ritlecitinib and baricitinib are approved in alopecia
+# areata, ruxolitinib in myelofibrosis, and their dose-response and safety do
+# not stop being informative because the skin in question is not vitiligo.
+JAK_INHIBITORS: tuple[str, ...] = (
+    "ruxolitinib",
+    "ritlecitinib",
+    "baricitinib",
+    "upadacitinib",
+    "tofacitinib",
+    "abrocitinib",
+    "deucravacitinib",
+    "delgocitinib",
+    "ivarmacitinib",
+    "povorcitinib",
+)
+
+# What a trial is in the corpus for. Absent means the vitiligo corpus, which
+# is every trial ingested before this scope existed.
+DRUG_CLASS_SCOPE = "jak_class"
+
+
+def run_jak_class_ingestion(
+    drugs: Sequence[str] = JAK_INHIBITORS,
+    page_size: int = 100,
+    limit: int | None = None,
+    commit_every: int = 100,
+) -> IngestionStats:
+    """Import every ClinicalTrials.gov trial of a JAK inhibitor, in any disease.
+
+    There are 1,399 of them and the vitiligo corpus holds 41, because they are
+    not findable by any condition this project reads: they are in rheumatoid
+    arthritis, atopic dermatitis, myelofibrosis, psoriasis and alopecia areata.
+    428 of the ones we lack have posted results, against 65 in the whole
+    vitiligo corpus, which is the asymmetry worth closing.
+
+    **They are marked, not mixed.** Each trial's metadata records
+    ``scope: "jak_class"``, because a trial of ruxolitinib in myelofibrosis is
+    not a vitiligo trial and a count that said otherwise would be wrong. Every
+    figure this project publishes about vitiligo trials filters on the absence
+    of that mark, and ``vitiligo_trials`` is the query to use.
+
+    A trial that is both -- ruxolitinib cream in vitiligo -- is already held
+    from the condition search and keeps its place in the vitiligo corpus: the
+    upsert leaves the scope of an existing row alone.
+    """
+    init_db()
+    run = IngestionRun(source=TrialSourceKind.CTGOV.value, query=f"jak-class:{len(drugs)} drugs")
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = skipped = 0
+    try:
+        client = CTGovClient()
+        try:
+            with session_scope() as session:
+                seen: set[str] = set()
+                for drug in drugs:
+                    logger.info("JAK class: %s", drug)
+                    for trial in client.iter_trials(
+                        query=drug, page_size=page_size, limit=limit, field="query.intr"
+                    ):
+                        if trial.source_id in seen:
+                            continue
+                        seen.add(trial.source_id)
+                        fetched += 1
+                        metadata = dict(trial.raw_metadata or {})
+                        # A trial already in the vitiligo corpus keeps its
+                        # place there. Ruxolitinib cream in vitiligo arrives
+                        # from both searches, and the condition search is the
+                        # one that says what it is.
+                        existing = session.exec(
+                            select(Trial).where(
+                                Trial.source == trial.source,
+                                Trial.source_id == trial.source_id,
+                            )
+                        ).first()
+                        if existing is None:
+                            metadata["scope"] = DRUG_CLASS_SCOPE
+                            metadata["scope_drug"] = drug
+                        else:
+                            prior = existing.raw_metadata or {}
+                            if prior.get("scope"):
+                                metadata["scope"] = prior["scope"]
+                                metadata["scope_drug"] = prior.get("scope_drug", drug)
+                        trial.raw_metadata = metadata
+                        ins, upd = _upsert_trial(session, trial)
+                        inserted += ins
+                        updated += upd
+                        if fetched % commit_every == 0:
+                            session.commit()
+                            logger.info(
+                                "Progress [jak-class]: fetched=%d inserted=%d updated=%d",
+                                fetched,
+                                inserted,
+                                updated,
+                            )
+                session.commit()
+        finally:
+            client.close()
+        _finalize_run(run_id, "completed", fetched, inserted, updated, fetched, None)
+    except Exception as exc:
+        logger.exception("JAK class ingestion failed")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="jak-class",
+        total_found=fetched,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
 def run_euctr_ingestion(
     query: str = EUCTR_DEFAULT_QUERY,
     page_size: int = 50,

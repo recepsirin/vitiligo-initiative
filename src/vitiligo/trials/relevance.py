@@ -143,3 +143,24 @@ def _subject(trial: Trial) -> str:
 def is_vitiligo_trial(trial: Trial) -> bool:
     """True when the record is a vitiligo trial under any of the disease's names."""
     return names_vitiligo(_subject(trial))
+
+
+# What a trial is held for. A trial of a JAK inhibitor in rheumatoid arthritis
+# is in the corpus because the drug class is the same, not because the disease
+# is, and its metadata says so.
+DRUG_CLASS_SCOPE = "jak_class"
+
+
+def is_drug_class_trial(trial: Trial) -> bool:
+    """True when the trial is held for its drug rather than its disease."""
+    return (trial.raw_metadata or {}).get("scope") == DRUG_CLASS_SCOPE
+
+
+def in_vitiligo_corpus(trial: Trial) -> bool:
+    """True when the trial counts towards a figure about vitiligo trials.
+
+    This is the filter behind every published count. Without it, importing a
+    drug class's 1,358 trials in other diseases would silently turn "1,027
+    vitiligo trials" into a number about rheumatoid arthritis.
+    """
+    return not is_drug_class_trial(trial)

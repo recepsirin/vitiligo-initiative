@@ -38,12 +38,14 @@ from vitiligo.ingest import (
     run_ictrp_resolution,
     run_ictrp_search_ingestion,
     run_isrctn_ingestion,
+    run_jak_class_ingestion,
     run_oa_fulltext_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
 )
+from vitiligo.ingest.pipeline import JAK_INHIBITORS
 from vitiligo.ingest.repair import repair_corpus
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
@@ -311,6 +313,31 @@ def ingest_ctgov(
     console.print()
 
     stats = run_ctgov_ingestion(query=query, page_size=page_size, limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("jak-class")
+def ingest_jak_class(
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap trials per drug."),
+) -> None:
+    """Import every ClinicalTrials.gov trial of a JAK inhibitor, in any disease.
+
+    These are marked ``scope: jak_class`` and are not vitiligo trials. They
+    are held because the drug class is the one this project models, and
+    because 428 of them have posted results against 65 in the whole vitiligo
+    corpus. Counts about vitiligo filter them out.
+    """
+    settings = get_settings()
+    console.rule("[bold]JAK inhibitor class[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Drugs:    [yellow]{', '.join(JAK_INHIBITORS)}[/yellow]")
+    console.print("[dim]Marked scope=jak_class; not counted as vitiligo trials.[/dim]")
+    console.print()
+
+    stats = run_jak_class_ingestion(limit=limit)
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

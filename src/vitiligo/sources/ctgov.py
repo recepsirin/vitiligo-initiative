@@ -107,11 +107,17 @@ class CTGovClient:
         study: dict[str, Any] = response.json()
         return study
 
-    def search_count(self, query: str = DEFAULT_VITILIGO_QUERY) -> int:
-        """Return the total number of trials matching `query`."""
+    def search_count(self, query: str = DEFAULT_VITILIGO_QUERY, field: str = "query.cond") -> int:
+        """Return the total number of trials matching `query`.
+
+        ``field`` is the search field, so the same client can ask for a
+        condition or, with ``query.intr``, for every trial of a drug. A JAK
+        inhibitor's trials in other diseases are the drug class's evidence
+        base, and they are not findable by any condition this project reads.
+        """
         response = self._get(
             {
-                "query.cond": query,
+                field: query,
                 "pageSize": 1,
                 "countTotal": "true",
                 "format": "json",
@@ -120,9 +126,11 @@ class CTGovClient:
         data = response.json()
         return int(data.get("totalCount") or 0)
 
-    def search(self, query: str = DEFAULT_VITILIGO_QUERY) -> SearchHandle:
-        total = self.search_count(query)
-        logger.info("ClinicalTrials.gov search matched %d trials for '%s'", total, query)
+    def search(
+        self, query: str = DEFAULT_VITILIGO_QUERY, field: str = "query.cond"
+    ) -> SearchHandle:
+        total = self.search_count(query, field=field)
+        logger.info("ClinicalTrials.gov search matched %d trials for %s='%s'", total, field, query)
         return SearchHandle(total=total, query=query)
 
     def iter_trials(
@@ -130,6 +138,7 @@ class CTGovClient:
         query: str = DEFAULT_VITILIGO_QUERY,
         page_size: int = DEFAULT_PAGE_SIZE,
         limit: int | None = None,
+        field: str = "query.cond",
     ) -> Iterator[Trial]:
         """Yield all trials matching `query`, paginated via `nextPageToken`."""
         page_size = min(page_size, MAX_PAGE_SIZE)
@@ -138,7 +147,7 @@ class CTGovClient:
 
         while True:
             params: dict[str, Any] = {
-                "query.cond": query,
+                field: query,
                 "pageSize": page_size,
                 "format": "json",
             }

@@ -5,7 +5,13 @@ from __future__ import annotations
 import pytest
 
 from vitiligo.storage import Trial, TrialSourceKind
-from vitiligo.trials.relevance import is_vitiligo_trial, names_vitiligo
+from vitiligo.trials.relevance import (
+    DRUG_CLASS_SCOPE,
+    in_vitiligo_corpus,
+    is_drug_class_trial,
+    is_vitiligo_trial,
+    names_vitiligo,
+)
 
 
 def _trial(
@@ -209,9 +215,17 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
     con = sqlite3.connect(f"file:{get_settings().resolved_db_path}?mode=ro", uri=True)
     rejected = set()
     total = 0
-    for sid, cond, kw, brief, official in con.execute(
-        "SELECT source_id, conditions, keywords, brief_title, official_title FROM trials"
+    for sid, cond, kw, brief, official, metadata in con.execute(
+        "SELECT source_id, conditions, keywords, brief_title, official_title, raw_metadata"
+        " FROM trials"
     ):
+        # A trial held for its drug rather than its disease is a different
+        # population and is counted separately. Without this partition,
+        # importing the JAK class's 1,358 trials in rheumatoid arthritis and
+        # myelofibrosis would make this test fail 1,358 times over and the
+        # corpus total mean something else entirely.
+        if (json.loads(metadata or "{}") or {}).get("scope") == DRUG_CLASS_SCOPE:
+            continue
         total += 1
         subject = " | ".join(
             [*json.loads(cond or "[]"), *json.loads(kw or "[]"), brief or "", official or ""]
@@ -223,3 +237,43 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
     assert rejected - NOT_VITILIGO == set(), "a record naming no form of the disease was admitted"
     assert NOT_VITILIGO - rejected == set(), "a listed record is gone, or now names the disease"
     assert total - len(NOT_VITILIGO) == 1061
+
+
+def test_a_drug_class_trial_is_not_a_vitiligo_trial() -> None:
+    """Ruxolitinib in myelofibrosis is held for the drug, not the disease.
+
+    1,358 trials of this drug class are in the corpus because the class is
+    the one the scenario model is built on, and 428 of them have posted
+    results against 65 in the whole vitiligo corpus. None of them is a
+    vitiligo trial, and a count that said otherwise would be a number about
+    rheumatoid arthritis wearing this project's name.
+    """
+    myelofibrosis = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000001",
+        brief_title="Ruxolitinib in primary myelofibrosis",
+        conditions=["Primary Myelofibrosis"],
+        raw_metadata={"scope": DRUG_CLASS_SCOPE, "scope_drug": "ruxolitinib"},
+    )
+    assert is_drug_class_trial(myelofibrosis)
+    assert not in_vitiligo_corpus(myelofibrosis)
+    assert not is_vitiligo_trial(myelofibrosis)
+
+
+def test_a_vitiligo_trial_of_the_same_drug_stays_in_the_corpus() -> None:
+    """Ruxolitinib cream in vitiligo arrives from both searches.
+
+    The condition search is the one that says what it is, so the drug search
+    must not relabel it. A trial with no scope mark is a vitiligo trial, which
+    is every trial ingested before the mark existed.
+    """
+    in_vitiligo = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT04052425",
+        brief_title="Ruxolitinib cream in non-segmental vitiligo",
+        conditions=["Vitiligo"],
+        raw_metadata={"study": {}},
+    )
+    assert not is_drug_class_trial(in_vitiligo)
+    assert in_vitiligo_corpus(in_vitiligo)
+    assert is_vitiligo_trial(in_vitiligo)
