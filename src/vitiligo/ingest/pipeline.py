@@ -147,6 +147,114 @@ def run_pmc_ingestion(
     )
 
 
+def run_oa_fulltext_ingestion(
+    source_ids: Sequence[str] | None = None,
+    limit: int | None = None,
+    commit_every: int = 25,
+    refresh: bool = False,
+) -> IngestionStats:
+    """Give the papers we hold as abstracts their open-access body.
+
+    PMC holds the full text of 44 of the 522 published vitiligo trials.
+    Unpaywall finds a free copy for 154 of the 463 with a DOI, mostly on the
+    publisher's own site, and 71 of those carry a Creative Commons licence --
+    the only ones this fetches. What a licence permits is recorded on the
+    document beside the text, because "we hold this" and "we may hold this"
+    are different claims.
+
+    The body is merged into the existing PubMed document rather than stored as
+    a second record: the paper is one paper, and splitting it would double it
+    the way a registry record doubles when two registries hold it.
+
+    Most of it fails, and that is the finding rather than a bug. Of 40
+    licensed papers, 21 were refused outright and 13 answered with a
+    JavaScript shell -- Wiley, Oxford, Elsevier and JAMA all decline a
+    programmatic request for an article they published under CC BY. Six
+    answered: two repositories, two SciELO journals, a Springer PDF and the
+    NIHR's HI-Light report.
+    """
+    import httpx
+
+    from vitiligo.sources.oa_fulltext import USER_AGENT, find_open_copy, read_open_copy
+
+    init_db()
+    run = IngestionRun(source=SourceKind.PUBMED.value, query="oa-fulltext")
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = skipped = 0
+    try:
+        with session_scope() as session:
+            statement = select(Document).where(Document.source == SourceKind.PUBMED)
+            if source_ids:
+                statement = statement.where(Document.source_id.in_(list(source_ids)))  # type: ignore[attr-defined]
+            candidates = [
+                doc
+                for doc in session.exec(statement).all()
+                if (doc.doi or "").strip()
+                and (refresh or not ((doc.raw_metadata or {}).get("full_text") or "").strip())
+            ]
+            if limit is not None:
+                candidates = candidates[:limit]
+            total_found = len(candidates)
+            logger.info("Open-access full text: %d candidates", total_found)
+
+            with httpx.Client(
+                headers={"User-Agent": USER_AGENT}, timeout=60.0, follow_redirects=True
+            ) as client:
+                for doc in candidates:
+                    fetched += 1
+                    copy = find_open_copy(str(doc.doi), client=client)
+                    if copy is None or not copy.may_fetch:
+                        skipped += 1
+                        continue
+                    got = read_open_copy(copy, client=client, refresh=refresh)
+                    if got is None:
+                        skipped += 1
+                        continue
+                    text, tables = got
+                    metadata = dict(doc.raw_metadata or {})
+                    metadata.update(
+                        {
+                            "full_text": text,
+                            "tables": tables,
+                            "oa_licence": copy.licence,
+                            "oa_url": copy.best_url,
+                            "oa_host": copy.host_type,
+                        }
+                    )
+                    doc.raw_metadata = metadata
+                    doc.retrieved_at = datetime.now(UTC)
+                    session.add(doc)
+                    updated += 1
+                    if fetched % commit_every == 0:
+                        session.commit()
+                        logger.info(
+                            "Progress [oa-fulltext]: fetched=%d updated=%d skipped=%d",
+                            fetched,
+                            updated,
+                            skipped,
+                        )
+            session.commit()
+        _finalize_run(run_id, "completed", fetched, inserted, updated, total_found, None)
+    except Exception as exc:
+        logger.exception("Open-access full-text ingestion failed")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="oa-fulltext",
+        total_found=total_found,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
 def run_geo_ingestion(
     query: str = GEO_DEFAULT_QUERY,
     batch_size: int = 100,

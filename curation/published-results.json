@@ -1,5 +1,5 @@
 {
-  "description": "Trial results the VASI-shaped extraction does not reach, each with the reference group its figure must be read against. Two kinds: a published primary outcome whose full text is not fetchable (HI-Light, Vitiligo Noticeability Scale), and a posted secondary outcome on an instrument the arm table does not parse (NCT03099304, patient global impression of change). reference_basis says what the reference is, because it is not always the day-1 randomisation: NCT03099304 re-randomised at week 24, so a week-52 figure must be read against who was on that regimen afterwards, which the record states and which is 11 rather than 31 for the 0.15% arm. Counts are stored, not derived, because a rate kept to one decimal does not always recover its numerator. These rows are kept out of curation/topline-results.json, which is frozen by hash because v0.4, v0.5 and the evidence ranking are defined by it. No row is a VASI threshold, so none can reach a model.",
+  "description": "Trial results the VASI-shaped extraction does not reach, each with the reference group its figure must be read against. Two kinds: a published primary outcome the extraction cannot parse (HI-Light, Vitiligo Noticeability Scale; its abstract was the only source until the HTA report was fetched under CC BY, and the three counts now check out against it), and a posted secondary outcome on an instrument the arm table does not parse (NCT03099304, patient global impression of change). reference_basis says what the reference is, because it is not always the day-1 randomisation: NCT03099304 re-randomised at week 24, so a week-52 figure must be read against who was on that regimen afterwards, which the record states and which is 11 rather than 31 for the 0.15% arm. Counts are stored, not derived, because a rate kept to one decimal does not always recover its numerator. These rows are kept out of curation/topline-results.json, which is frozen by hash because v0.4, v0.5 and the evidence ranking are defined by it. No row is a VASI threshold, so none can reach a model.",
   "curated": "2026-10-28",
   "results": [
     {
@@ -22,7 +22,7 @@
       "public_on": "2020-10-02",
       "source": "HI-Light Vitiligo Trial, Br J Dermatol 2021 (PMID 33006767); HTA 24(64) (PMID 33245043)",
       "population": "as_observed",
-      "note": "Counts as printed in the abstract. The full text could not be fetched: the NIHR library, the institutional repository and Europe PMC's book page each answer a bot check, so no table cell was verified.",
+      "note": "Counts as printed in the abstract and since checked against the HTA report itself (NIHR Journals Library, DOI 10.3310/hta24640, CC BY), which prints this arm as \"20 out of 119\" and states 517 randomised against the three reference groups 173, 169 and 175.",
       "responders": 20,
       "reference_n": 173,
       "reference_basis": "randomised at day 1"
@@ -47,7 +47,7 @@
       "public_on": "2020-10-02",
       "source": "HI-Light Vitiligo Trial, Br J Dermatol 2021 (PMID 33006767); HTA 24(64) (PMID 33245043)",
       "population": "as_observed",
-      "note": "Counts as printed in the abstract. The full text could not be fetched: the NIHR library, the institutional repository and Europe PMC's book page each answer a bot check, so no table cell was verified.",
+      "note": "Counts as printed in the abstract and since checked against the HTA report itself (NIHR Journals Library, DOI 10.3310/hta24640, CC BY), which prints this arm as \"27 out of 123\" and states 517 randomised against the three reference groups 173, 169 and 175.",
       "responders": 27,
       "reference_n": 169,
       "reference_basis": "randomised at day 1"
@@ -72,7 +72,7 @@
       "public_on": "2020-10-02",
       "source": "HI-Light Vitiligo Trial, Br J Dermatol 2021 (PMID 33006767); HTA 24(64) (PMID 33245043)",
       "population": "as_observed",
-      "note": "Counts as printed in the abstract. The full text could not be fetched: the NIHR library, the institutional repository and Europe PMC's book page each answer a bot check, so no table cell was verified.",
+      "note": "Counts as printed in the abstract and since checked against the HTA report itself (NIHR Journals Library, DOI 10.3310/hta24640, CC BY), which prints this arm as \"34 out of 128\" and states 517 randomised against the three reference groups 173, 169 and 175.",
       "responders": 34,
       "reference_n": 175,
       "reference_basis": "randomised at day 1"

@@ -38,6 +38,7 @@ from vitiligo.ingest import (
     run_ictrp_resolution,
     run_ictrp_search_ingestion,
     run_isrctn_ingestion,
+    run_oa_fulltext_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
     run_pubmed_ingestion,
@@ -222,6 +223,38 @@ def ingest_pmc(
     console.print()
 
     stats = run_pmc_ingestion(query=query, batch_size=batch_size, limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("oa-fulltext")
+def ingest_oa_fulltext(
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap papers attempted."),
+    pmid: list[str] | None = typer.Option(  # noqa: B008 (a repeated option is a list)
+        None, "--pmid", help="Only these PubMed ids."
+    ),
+    refresh: bool = typer.Option(False, "--refresh", help="Refetch even when a body is held."),
+) -> None:
+    """Fetch the open-access body of papers held only as abstracts.
+
+    Only a Creative Commons copy is taken, and the licence is stored beside
+    the text. Most publishers refuse a programmatic request even for an
+    article they licensed CC BY, so a low success rate here is the
+    publishers' answer, not a failure of the fetch.
+    """
+    settings = get_settings()
+    console.rule("[bold]Open-access full text[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    if not settings.unpaywall_email:
+        console.print(
+            "[yellow]UNPAYWALL_EMAIL is not set.[/yellow] Unpaywall requires a contact "
+            "address on every call, so nothing will be looked up."
+        )
+    console.print()
+
+    stats = run_oa_fulltext_ingestion(source_ids=pmid or None, limit=limit, refresh=refresh)
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

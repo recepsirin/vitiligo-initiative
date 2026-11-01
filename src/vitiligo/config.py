@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     # declared contact, e.g. "Jane Doe jane@example.org"; unset skips SEC.
     sec_user_agent: str | None = Field(default=None, alias="SEC_USER_AGENT")
 
+    # Unpaywall, which says where a paper's open-access copy is. It requires a
+    # contact address on every call and is skipped when this is unset, so the
+    # address lives in the environment rather than in the repository.
+    unpaywall_email: str | None = Field(default=None, alias="UNPAYWALL_EMAIL")
+
     # Storage
     db_path: Path = Field(default=Path("data/vitiligo.db"), alias="VITILIGO_DB_PATH")
 

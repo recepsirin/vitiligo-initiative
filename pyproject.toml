@@ -53,6 +53,11 @@ dev = [
 model = [
     "pymc>=5.16",
 ]
+# Reading an open-access paper the publisher serves as a PDF. Optional
+# because HTML is preferred and most of the corpus never needs it.
+papers = [
+    "pypdf>=4.2",
+]
 
 [project.scripts]
 vitiligo = "vitiligo.cli:app"

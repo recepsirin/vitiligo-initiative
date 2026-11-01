@@ -34,6 +34,7 @@ from tenacity import (
 
 from vitiligo.config import Settings, get_settings
 from vitiligo.logging import get_logger
+from vitiligo.sources.tables import Table, render_tables, tables_from_jats
 from vitiligo.storage.models import Document, SourceKind
 
 logger = get_logger(__name__)
@@ -240,7 +241,8 @@ def _parse_pmc_article(article: etree._Element) -> Document | None:
     authors = _parse_authors(article)
     keywords = _parse_keywords(article)
     publication_types = [article.get("article-type")] if article.get("article-type") else []
-    sections, full_text = _collect_body(article)
+    tables = tables_from_jats(article)
+    sections, full_text = _collect_body(article, tables)
 
     raw: dict[str, Any] = {
         "pmcid": pmcid,
@@ -248,6 +250,7 @@ def _parse_pmc_article(article: etree._Element) -> Document | None:
         "doi": doi,
         "sections": sections,
         "full_text": full_text,
+        "tables": tables,
     }
 
     return Document(
@@ -366,8 +369,12 @@ def _parse_keywords(article: etree._Element) -> list[str]:
     return keywords
 
 
-def _collect_body(article: etree._Element) -> tuple[dict[str, str], str]:
-    """Return (sections-by-canonical-name, full_text)."""
+def _collect_body(article: etree._Element, tables: list[Table]) -> tuple[dict[str, str], str]:
+    """Return (sections-by-canonical-name, full_text).
+
+    ``full_text`` ends with the article's tables when it has any, because that
+    is where a trial's numbers are.
+    """
     sections: dict[str, list[str]] = {}
     body = article.find(".//body")
     if body is None:
@@ -388,4 +395,8 @@ def _collect_body(article: etree._Element) -> tuple[dict[str, str], str]:
 
     merged = {name: "\n\n".join(parts) for name, parts in sections.items()}
     full_text = "\n\n".join(f"## {name.title()}\n\n{text}" for name, text in merged.items())
+    rendered = render_tables(tables)
+    if rendered:
+        merged["tables"] = rendered
+        full_text = f"{full_text}\n\n## Tables\n\n{rendered}".strip()
     return merged, full_text
