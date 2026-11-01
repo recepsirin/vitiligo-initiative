@@ -49,7 +49,7 @@ from vitiligo.sources.ictrp import (
 )
 from vitiligo.sources.ictrp_csv import SEARCH_URL as ICTRP_SEARCH_URL
 from vitiligo.sources.ictrp_csv import count_csv_rows, iter_csv_trials, redacted_csv, search
-from vitiligo.sources.ictrp_web import is_about_vitiligo, resolve_trials
+from vitiligo.sources.ictrp_web import resolve_trials
 from vitiligo.sources.isrctn import DEFAULT_VITILIGO_QUERY as ISRCTN_DEFAULT_QUERY
 from vitiligo.sources.isrctn import ISRCTNClient
 from vitiligo.sources.opentargets import (
@@ -87,6 +87,7 @@ from vitiligo.storage import (
     session_scope,
 )
 from vitiligo.trials.countries import normalize_countries
+from vitiligo.trials.relevance import is_vitiligo_trial
 
 logger = get_logger(__name__)
 
@@ -238,13 +239,12 @@ def run_ictrp_ingestion(
     Export from https://trialsearch.who.int/ (Export results to XML).
     Records already present via ctgov/euctr ingestion are skipped by default.
 
-    Unlike the by-id route, this one keeps every record by default. The export
-    is the result of ICTRP's own disease-scoped search, which is a far better
-    filter than a word match -- and registries misspell the disease, so
-    "vtiligo" and "Vilitigo" are both real conditions in the store already.
-    Dropping those silently out of a thousand records would lose real trials.
-    ``require_vitiligo`` turns the check on when an export is broader than one
-    disease.
+    Unlike the by-id route, this one keeps every record by default, because
+    the export is the result of ICTRP's own disease-scoped search.
+    ``require_vitiligo`` turns on ``is_vitiligo_trial``, which is worth having
+    when the export is broader than one disease: a search for the synonyms
+    returns gingival depigmentation and orthodontic white spot lesions in far
+    greater numbers than it returns vitiligo.
     """
     if not file.is_file():
         raise FileNotFoundError(f"ICTRP export not found: {file}")
@@ -259,7 +259,7 @@ def run_ictrp_ingestion(
         total_found=total_found,
         skip_duplicates=skip_duplicates,
         commit_every=commit_every,
-        keep=is_about_vitiligo if require_vitiligo else None,
+        keep=is_vitiligo_trial if require_vitiligo else None,
     )
 
 
@@ -283,7 +283,7 @@ def run_ictrp_resolution(
         total_found=len(trial_ids),
         skip_duplicates=skip_duplicates,
         commit_every=commit_every,
-        keep=is_about_vitiligo if require_vitiligo else None,
+        keep=is_vitiligo_trial if require_vitiligo else None,
     )
 
 
@@ -329,7 +329,7 @@ def run_ictrp_search_ingestion(
         total_found=total_found,
         skip_duplicates=skip_duplicates,
         commit_every=commit_every,
-        keep=is_about_vitiligo if require_vitiligo else None,
+        keep=is_vitiligo_trial if require_vitiligo else None,
     )
 
 
