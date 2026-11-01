@@ -9,6 +9,7 @@ from vitiligo.trials.relevance import (
     DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
     DRUG_CLASS_SCOPES,
+    drug_class_relation,
     in_vitiligo_corpus,
     is_drug_class_trial,
     is_vitiligo_trial,
@@ -343,3 +344,63 @@ def test_both_drug_scopes_are_kept_out_of_the_vitiligo_count() -> None:
         )
         assert is_drug_class_trial(trial), scope
         assert not in_vitiligo_corpus(trial), scope
+
+
+@pytest.mark.parametrize(
+    ("conditions", "relation"),
+    [
+        (["Alopecia Areata"], "skin"),
+        (["Atopic Dermatitis"], "skin"),
+        (["Acne Vulgaris"], "skin"),
+        (["Rosacea"], "skin"),
+        (["Rheumatoid Arthritis"], "class_safety"),
+        (["Systemic Lupus Erythematosus"], "class_safety"),
+        (["Primary Myelofibrosis"], "distant"),
+        (["COVID-19"], "distant"),
+        (["Healthy"], "distant"),
+    ],
+)
+def test_a_drug_class_trial_says_how_near_it_sits(conditions: list[str], relation: str) -> None:
+    """ "Held for the drug" is true of all of them and says too little.
+
+    Ritlecitinib in alopecia areata and ruxolitinib in myelofibrosis are not
+    equally informative about vitiligo: the first is approved in both diseases
+    and shares the mechanism, the second is JAK2 inhibition of a driver
+    mutation in a cancer at far higher exposure. Of 1,358 JAK trials, 323 are
+    skin, 332 are another autoimmune disease on the same molecule -- which is
+    where the class's boxed warning came from -- and 703 are neither.
+    """
+    trial = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000004",
+        brief_title="A drug study",
+        conditions=conditions,
+    )
+    assert drug_class_relation(trial) == relation
+
+
+def test_the_skin_list_is_one_list() -> None:
+    """Written twice, it drifted, and the two copies disagreed on 88 trials.
+
+    ``treats_skin_disease`` decides whether a prior drug's trial is worth
+    holding; ``drug_class_relation`` decides how near it sits. They are the
+    same question about the same word and must not answer differently, which
+    they did for acne, rosacea, seborrhoeic dermatitis and contact dermatitis
+    until the second copy was deleted.
+    """
+    for condition in (
+        "Acne Vulgaris",
+        "Rosacea",
+        "Seborrheic Dermatitis",
+        "Allergic Contact Dermatitis",
+        "Pityriasis Alba",
+        "Psoriasis",
+    ):
+        trial = Trial(
+            source=TrialSourceKind.CTGOV,
+            source_id="NCT00000005",
+            brief_title="A drug study",
+            conditions=[condition],
+        )
+        assert treats_skin_disease(trial), condition
+        assert drug_class_relation(trial) == "skin", condition

@@ -230,3 +230,43 @@ def is_registered(trial: Trial) -> bool:
     to keep the two apart.
     """
     return str((trial.raw_metadata or {}).get("scope") or "") != PUBLISHED_ONLY_SCOPE
+
+
+# How near a drug-class trial sits to this disease. "Held for the drug" is
+# true of all of them and says too little: ritlecitinib in alopecia areata
+# and ruxolitinib in myelofibrosis are not equally informative about vitiligo,
+# and a figure that counted them together would imply they were.
+CLOSE_RELATION = "skin"
+SAFETY_RELATION = "class_safety"
+DISTANT_RELATION = "distant"
+
+# Another autoimmune disease on the same drug. The class's boxed warning comes
+# from ORAL Surveillance, a tofacitinib trial in rheumatoid arthritis, so this
+# is where a vitiligo prescriber's safety evidence actually lives.
+_SAFETY = re.compile(
+    r"arthritis|lupus|colitis|crohn|spondyl|sjogren|thyroid|diabetes|uveitis"
+    r"|myositis|sarcoid|autoimmun|celiac|vasculitis|behcet",
+    re.I,
+)
+
+
+def drug_class_relation(trial: Trial) -> str:
+    """How near this drug-class trial sits to vitiligo.
+
+    ``skin`` is ``_SKIN_DISEASE``, the same list that decides whether a
+    prior drug's trial is worth holding at all -- written twice, it drifted,
+    and 88 acne and rosacea trials were called distant by one copy and skin
+    by the other. Alopecia areata matters most within it: ritlecitinib and
+    baricitinib are approved in it, ritlecitinib is in vitiligo trials, and it
+    shares the CD8 and interferon-gamma mechanism. ``class_safety`` means another autoimmune disease on the same
+    molecule, which is where the class's adverse-event evidence is.
+    ``distant`` is the rest: ruxolitinib in myelofibrosis is JAK2 inhibition
+    of a driver mutation in a cancer at far higher exposure, and it shares a
+    molecule with vitiligo and very little else.
+    """
+    conditions = " | ".join([*(trial.conditions or []), *(trial.keywords or [])])
+    if _SKIN_DISEASE.search(conditions):
+        return CLOSE_RELATION
+    if _SAFETY.search(conditions):
+        return SAFETY_RELATION
+    return DISTANT_RELATION
