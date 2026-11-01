@@ -148,12 +148,22 @@ def is_vitiligo_trial(trial: Trial) -> bool:
 # What a trial is held for. A trial of a JAK inhibitor in rheumatoid arthritis
 # is in the corpus because the drug class is the same, not because the disease
 # is, and its metadata says so.
+#
+# Two such scopes exist. ``jak_class`` is every trial of the ten JAK
+# inhibitors, in any disease, because that class is what the scenario model is
+# built on. ``derm_drug`` is every trial of a drug this project holds a
+# vitiligo prior for -- tacrolimus, calcipotriol, methotrexate, afamelanotide
+# and the rest -- restricted to skin and autoimmune disease, because
+# "metformin in type 2 diabetes" is a trial of a vitiligo prior and is not
+# about vitiligo in any useful sense.
 DRUG_CLASS_SCOPE = "jak_class"
+DERM_DRUG_SCOPE = "derm_drug"
+DRUG_CLASS_SCOPES: frozenset[str] = frozenset({DRUG_CLASS_SCOPE, DERM_DRUG_SCOPE})
 
 
 def is_drug_class_trial(trial: Trial) -> bool:
     """True when the trial is held for its drug rather than its disease."""
-    return (trial.raw_metadata or {}).get("scope") == DRUG_CLASS_SCOPE
+    return str((trial.raw_metadata or {}).get("scope") or "") in DRUG_CLASS_SCOPES
 
 
 def in_vitiligo_corpus(trial: Trial) -> bool:
@@ -164,3 +174,43 @@ def in_vitiligo_corpus(trial: Trial) -> bool:
     vitiligo trials" into a number about rheumatoid arthritis.
     """
     return not is_drug_class_trial(trial)
+
+
+# The skin and autoimmune diseases whose trials of a vitiligo drug are worth
+# holding, and the oncology words that mean the trial is chemotherapy.
+#
+# Both lists are needed because a search cannot be trusted to answer the
+# question it was asked. Requesting these drugs "in a list of skin diseases"
+# returned 2,974 trials, of which 1,579 were oncology -- 420 breast cancer at
+# the top, because methotrexate and fluorouracil are chemotherapy drugs and
+# the condition expression expands much further than it reads.
+_SKIN_DISEASE = re.compile(
+    r"""
+      vitilig | psoriasis | psoriatic | atopic\s+dermatit | dermatitis,\s*atopic | eczema
+    | alopecia\s+areata | lichen\s+planus | lichen\s+sclerosus | hidradenitis | urticaria
+    | pemphig | morphea | localized\s+scleroderma | cutaneous\s+lupus | discoid\s+lupus
+    | seborrh | contact\s+dermatit | hypopigmentat | prurigo
+    | rosacea | acne | granuloma\s+annulare | pityriasis | leukoderma | dermatomyositis
+    """,
+    re.X | re.I,
+)
+_ONCOLOGY = re.compile(
+    r"cancer|neoplas|carcinoma|lymphoma|leukemia|leukaemia|melanoma|sarcoma|myeloma|tumou?r"
+    r"|mycosis\s+fungoides|sezary|s..zary",
+    re.I,
+)
+
+
+def treats_skin_disease(trial: Trial) -> bool:
+    """True when the record's own conditions are a skin or autoimmune disease.
+
+    Checked against the conditions the record carries, not the search that
+    found it. A disease that is both is refused: mycosis fungoides is a
+    lymphoma of the skin, and its population is an oncology population
+    whatever organ it presents in. The 33 such records are not worth the
+    1,579 oncology trials they would let in beside them.
+    """
+    conditions = " | ".join([*(trial.conditions or []), *(trial.keywords or [])])
+    if _ONCOLOGY.search(conditions):
+        return False
+    return bool(_SKIN_DISEASE.search(conditions))

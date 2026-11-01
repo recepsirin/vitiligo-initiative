@@ -42,10 +42,11 @@ from vitiligo.ingest import (
     run_oa_fulltext_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
+    run_prior_drug_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
 )
-from vitiligo.ingest.pipeline import JAK_INHIBITORS
+from vitiligo.ingest.pipeline import JAK_INHIBITORS, PRIOR_DRUGS
 from vitiligo.ingest.repair import repair_corpus
 from vitiligo.logging import configure_logging, get_logger
 from vitiligo.priors import list_drug_priors, list_target_priors, summarize_priors
@@ -338,6 +339,33 @@ def ingest_jak_class(
     console.print()
 
     stats = run_jak_class_ingestion(limit=limit)
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("prior-drugs")
+def ingest_prior_drugs(
+    limit: int | None = typer.Option(None, "--limit", "-l", help="Cap trials per drug."),
+) -> None:
+    """Import trials of the drugs this project holds vitiligo priors for.
+
+    Restricted to skin and autoimmune disease, and checked against the
+    conditions each record carries rather than the search that found it:
+    methotrexate and fluorouracil are chemotherapy drugs, and without that
+    check 1,579 oncology trials arrive, 420 of them breast cancer.
+
+    Marked ``scope: derm_drug``; not counted as vitiligo trials.
+    """
+    settings = get_settings()
+    console.rule("[bold]Prior drugs, in skin disease[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(f"Drugs:    [yellow]{len(PRIOR_DRUGS)}[/yellow] from the project's drug priors")
+    console.print("[dim]Marked scope=derm_drug; not counted as vitiligo trials.[/dim]")
+    console.print()
+
+    stats = run_prior_drug_ingestion(limit=limit)
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

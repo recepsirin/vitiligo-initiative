@@ -15,6 +15,7 @@ from vitiligo.ingest.pipeline import (
     run_oa_fulltext_ingestion,
     run_opentargets_ingestion,
     run_pmc_ingestion,
+    run_prior_drug_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "run_oa_fulltext_ingestion",
     "run_opentargets_ingestion",
     "run_pmc_ingestion",
+    "run_prior_drug_ingestion",
     "run_pubmed_ingestion",
     "run_reporter_ingestion",
 ]

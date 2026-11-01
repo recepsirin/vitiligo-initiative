@@ -139,6 +139,7 @@ class CTGovClient:
         page_size: int = DEFAULT_PAGE_SIZE,
         limit: int | None = None,
         field: str = "query.cond",
+        condition: str | None = None,
     ) -> Iterator[Trial]:
         """Yield all trials matching `query`, paginated via `nextPageToken`."""
         page_size = min(page_size, MAX_PAGE_SIZE)
@@ -151,6 +152,8 @@ class CTGovClient:
                 "pageSize": page_size,
                 "format": "json",
             }
+            if condition and field != "query.cond":
+                params["query.cond"] = condition
             if page_token:
                 params["pageToken"] = page_token
 

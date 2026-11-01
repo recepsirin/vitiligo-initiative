@@ -87,7 +87,12 @@ from vitiligo.storage import (
     session_scope,
 )
 from vitiligo.trials.countries import normalize_countries
-from vitiligo.trials.relevance import is_vitiligo_trial
+from vitiligo.trials.relevance import (
+    DERM_DRUG_SCOPE,
+    DRUG_CLASS_SCOPE,
+    is_vitiligo_trial,
+    treats_skin_disease,
+)
 
 logger = get_logger(__name__)
 
@@ -322,9 +327,86 @@ JAK_INHIBITORS: tuple[str, ...] = (
     "povorcitinib",
 )
 
-# What a trial is in the corpus for. Absent means the vitiligo corpus, which
-# is every trial ingested before this scope existed.
-DRUG_CLASS_SCOPE = "jak_class"
+
+# The drugs this project holds a vitiligo prior for, beyond the JAK class, and
+# the diseases their trials have to be in to be worth holding. Without the
+# condition filter these 34 drugs return 31,881 trials, most of them
+# "dexamethasone in septic shock" and "metformin in type 2 diabetes": a trial
+# of a vitiligo prior that is not about skin at all. Restricted to skin and
+# autoimmune disease they return 3,763.
+PRIOR_DRUGS: tuple[str, ...] = (
+    "tacrolimus",
+    "pimecrolimus",
+    "methotrexate",
+    "afamelanotide",
+    "latanoprost",
+    "bimatoprost",
+    "trioxsalen",
+    "tretinoin",
+    "triamcinolone",
+    "dexamethasone",
+    "beclomethasone",
+    "fluticasone",
+    "simvastatin",
+    "atorvastatin",
+    "metformin",
+    "sirolimus",
+    "apremilast",
+    "abatacept",
+    "etanercept",
+    "anifrolumab",
+    "piperine",
+    "ibuprofen",
+    "fluorouracil",
+    "cerdulatinib",
+    "mycophenolate",
+    "ciclosporin",
+    "azathioprine",
+    "calcipotriol",
+    "clobetasol",
+    "betamethasone",
+    "mometasone",
+    "dupilumab",
+    "ustekinumab",
+    "secukinumab",
+)
+
+SKIN_AND_AUTOIMMUNE = (
+    '(vitiligo OR psoriasis OR "atopic dermatitis" OR eczema OR "alopecia areata" OR '
+    '"lichen planus" OR "lichen sclerosus" OR "hidradenitis suppurativa" OR urticaria OR '
+    'pemphigus OR pemphigoid OR morphea OR scleroderma OR "cutaneous lupus" OR '
+    '"mycosis fungoides" OR "seborrheic dermatitis" OR "contact dermatitis" OR '
+    '"hypopigmentation" OR "skin disease")'
+)
+
+
+def run_prior_drug_ingestion(
+    drugs: Sequence[str] = PRIOR_DRUGS,
+    page_size: int = 100,
+    limit: int | None = None,
+    commit_every: int = 100,
+) -> IngestionStats:
+    """Import trials of the project's prior drugs, in skin and autoimmune disease.
+
+    These are the drugs Open Targets and DrugBank tie to vitiligo and that a
+    dermatologist actually reaches for: tacrolimus, calcipotriol, clobetasol,
+    methotrexate, afamelanotide. Their trials in psoriasis and atopic
+    dermatitis are the comparative evidence for the same molecules.
+
+    Marked ``derm_drug`` and counted separately, for the same reason as the
+    JAK class: a trial of tacrolimus in atopic dermatitis is not a vitiligo
+    trial.
+    """
+    return run_drug_class_ingestion(
+        drugs=drugs,
+        scope=DERM_DRUG_SCOPE,
+        condition=SKIN_AND_AUTOIMMUNE,
+        keep=treats_skin_disease,
+        page_size=page_size,
+        limit=limit,
+        commit_every=commit_every,
+        label="prior-drugs",
+    )
 
 
 def run_jak_class_ingestion(
@@ -335,24 +417,55 @@ def run_jak_class_ingestion(
 ) -> IngestionStats:
     """Import every ClinicalTrials.gov trial of a JAK inhibitor, in any disease.
 
-    There are 1,399 of them and the vitiligo corpus holds 41, because they are
+    There are 1,399 of them and the vitiligo corpus held 41, because they are
     not findable by any condition this project reads: they are in rheumatoid
-    arthritis, atopic dermatitis, myelofibrosis, psoriasis and alopecia areata.
-    428 of the ones we lack have posted results, against 65 in the whole
-    vitiligo corpus, which is the asymmetry worth closing.
+    arthritis, atopic dermatitis, myelofibrosis, psoriasis and alopecia
+    areata. 428 of the ones we lacked have posted results, against 65 in the
+    whole vitiligo corpus, which is the asymmetry worth closing.
+    """
+    return run_drug_class_ingestion(
+        drugs=drugs,
+        scope=DRUG_CLASS_SCOPE,
+        page_size=page_size,
+        limit=limit,
+        commit_every=commit_every,
+        label="jak-class",
+    )
 
-    **They are marked, not mixed.** Each trial's metadata records
-    ``scope: "jak_class"``, because a trial of ruxolitinib in myelofibrosis is
-    not a vitiligo trial and a count that said otherwise would be wrong. Every
-    figure this project publishes about vitiligo trials filters on the absence
-    of that mark, and ``vitiligo_trials`` is the query to use.
 
-    A trial that is both -- ruxolitinib cream in vitiligo -- is already held
-    from the condition search and keeps its place in the vitiligo corpus: the
-    upsert leaves the scope of an existing row alone.
+def run_drug_class_ingestion(
+    drugs: Sequence[str],
+    scope: str,
+    condition: str | None = None,
+    keep: Callable[[Trial], bool] | None = None,
+    page_size: int = 100,
+    limit: int | None = None,
+    commit_every: int = 100,
+    label: str = "drug-class",
+) -> IngestionStats:
+    """Import trials by the drug they give, not the disease they treat.
+
+    **They are marked, not mixed.** Each trial's metadata records its
+    ``scope``, because a trial of ruxolitinib in myelofibrosis is not a
+    vitiligo trial and a count that said otherwise would be a number about
+    another disease wearing this project's name. Every published figure about
+    vitiligo trials filters on ``in_vitiligo_corpus``.
+
+    A trial that is both -- ruxolitinib cream in vitiligo -- keeps its place
+    in the vitiligo corpus: the condition search is the one that says what it
+    is, so an existing row's scope is read and carried over rather than
+    stamped.
+
+    ``condition`` narrows the search and ``keep`` checks what came back, which
+    is not the same thing and both are needed. Asking ClinicalTrials.gov for
+    these drugs in a list of skin diseases returned 2,974 trials we did not
+    hold, and 1,579 of them were oncology -- 420 breast cancer at the top,
+    because methotrexate and fluorouracil are chemotherapy and the condition
+    expression expands further than it reads. Filtering on the conditions the
+    record actually carries leaves 1,362.
     """
     init_db()
-    run = IngestionRun(source=TrialSourceKind.CTGOV.value, query=f"jak-class:{len(drugs)} drugs")
+    run = IngestionRun(source=TrialSourceKind.CTGOV.value, query=f"{label}:{len(drugs)} drugs")
     with session_scope() as bookkeeping:
         bookkeeping.add(run)
         bookkeeping.flush()
@@ -365,19 +478,22 @@ def run_jak_class_ingestion(
             with session_scope() as session:
                 seen: set[str] = set()
                 for drug in drugs:
-                    logger.info("JAK class: %s", drug)
+                    logger.info("%s: %s", label, drug)
                     for trial in client.iter_trials(
-                        query=drug, page_size=page_size, limit=limit, field="query.intr"
+                        query=drug,
+                        page_size=page_size,
+                        limit=limit,
+                        field="query.intr",
+                        condition=condition,
                     ):
                         if trial.source_id in seen:
                             continue
                         seen.add(trial.source_id)
                         fetched += 1
+                        if keep is not None and not keep(trial):
+                            skipped += 1
+                            continue
                         metadata = dict(trial.raw_metadata or {})
-                        # A trial already in the vitiligo corpus keeps its
-                        # place there. Ruxolitinib cream in vitiligo arrives
-                        # from both searches, and the condition search is the
-                        # one that says what it is.
                         existing = session.exec(
                             select(Trial).where(
                                 Trial.source == trial.source,
@@ -385,7 +501,7 @@ def run_jak_class_ingestion(
                             )
                         ).first()
                         if existing is None:
-                            metadata["scope"] = DRUG_CLASS_SCOPE
+                            metadata["scope"] = scope
                             metadata["scope_drug"] = drug
                         else:
                             prior = existing.raw_metadata or {}
@@ -399,22 +515,24 @@ def run_jak_class_ingestion(
                         if fetched % commit_every == 0:
                             session.commit()
                             logger.info(
-                                "Progress [jak-class]: fetched=%d inserted=%d updated=%d",
+                                "Progress [%s]: fetched=%d inserted=%d updated=%d skipped=%d",
+                                label,
                                 fetched,
                                 inserted,
                                 updated,
+                                skipped,
                             )
                 session.commit()
         finally:
             client.close()
         _finalize_run(run_id, "completed", fetched, inserted, updated, fetched, None)
     except Exception as exc:
-        logger.exception("JAK class ingestion failed")
+        logger.exception("%s ingestion failed", label)
         _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
         raise
 
     return IngestionStats(
-        source="jak-class",
+        source=label,
         total_found=fetched,
         fetched=fetched,
         inserted=inserted,

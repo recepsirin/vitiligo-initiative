@@ -6,11 +6,13 @@ import pytest
 
 from vitiligo.storage import Trial, TrialSourceKind
 from vitiligo.trials.relevance import (
+    DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
     in_vitiligo_corpus,
     is_drug_class_trial,
     is_vitiligo_trial,
     names_vitiligo,
+    treats_skin_disease,
 )
 
 
@@ -277,3 +279,64 @@ def test_a_vitiligo_trial_of_the_same_drug_stays_in_the_corpus() -> None:
     assert not is_drug_class_trial(in_vitiligo)
     assert in_vitiligo_corpus(in_vitiligo)
     assert is_vitiligo_trial(in_vitiligo)
+
+
+@pytest.mark.parametrize(
+    ("conditions", "expected"),
+    [
+        (["Psoriasis"], True),
+        (["Atopic Dermatitis"], True),
+        (["Dermatitis, Atopic"], True),
+        (["Alopecia Areata"], True),
+        (["Oral Lichen Planus"], True),
+        (["Hidradenitis Suppurativa"], True),
+        (["Vitiligo"], True),
+        (["Breast Cancer"], False),
+        (["Metastatic Breast Cancer", "Psoriasis"], False),
+        (["Mycosis Fungoides"], False),
+        (["Sezary Syndrome"], False),
+        (["Type 2 Diabetes"], False),
+        (["Septic Shock"], False),
+    ],
+)
+def test_a_drug_trial_counts_only_where_the_disease_is_skin(
+    conditions: list[str], expected: bool
+) -> None:
+    """The search cannot be trusted to answer the question it was asked.
+
+    Asking ClinicalTrials.gov for these drugs "in a list of skin diseases"
+    returned 2,974 trials we did not hold and 1,579 were oncology, 420 of them
+    breast cancer, because methotrexate and fluorouracil are chemotherapy and
+    the condition expression expands much further than it reads. Filtering on
+    the conditions each record carries leaves 1,362.
+
+    A disease that is both is refused. Mycosis fungoides is a lymphoma of the
+    skin and its population is an oncology population whatever organ it
+    presents in.
+    """
+    trial = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00000002",
+        brief_title="A study of a drug",
+        conditions=conditions,
+    )
+    assert treats_skin_disease(trial) is expected
+
+
+def test_both_drug_scopes_are_kept_out_of_the_vitiligo_count() -> None:
+    """Two scopes exist and a count of vitiligo trials must exclude both.
+
+    ``jak_class`` is the drug class the scenario model is built on, in any
+    disease. ``derm_drug`` is a vitiligo prior drug in skin disease. Neither
+    is a vitiligo trial, and 2,661 of them join 1,027 that are.
+    """
+    for scope in (DRUG_CLASS_SCOPE, DERM_DRUG_SCOPE):
+        trial = Trial(
+            source=TrialSourceKind.CTGOV,
+            source_id="NCT00000003",
+            brief_title="Tacrolimus in atopic dermatitis",
+            conditions=["Atopic Dermatitis"],
+            raw_metadata={"scope": scope},
+        )
+        assert is_drug_class_trial(trial), scope
+        assert not in_vitiligo_corpus(trial), scope
