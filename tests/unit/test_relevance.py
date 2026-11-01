@@ -240,9 +240,9 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
 
     assert rejected - NOT_VITILIGO == set(), "a record naming no form of the disease was admitted"
     assert NOT_VITILIGO - rejected == set(), "a listed record is gone, or now names the disease"
-    # 1,081 records from registries and 467 reconstructed from the papers of
+    # 1,081 records from registries and 620 reconstructed from the papers of
     # trials that were never registered, less the twenty above.
-    assert total - len(NOT_VITILIGO) == 1528
+    assert total - len(NOT_VITILIGO) == 1681
 
 
 def test_a_drug_class_trial_is_not_a_vitiligo_trial() -> None:

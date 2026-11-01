@@ -8,11 +8,12 @@ from vitiligo.sources.published_trials import (
     PUBLISHED_ONLY_SCOPE,
     countries_of,
     registry_ids,
+    reports_a_trial,
     trial_from_document,
     unregistered_trials,
 )
 from vitiligo.storage.models import Document, SourceKind, TrialSourceKind
-from vitiligo.trials.relevance import in_vitiligo_corpus, is_registered
+from vitiligo.trials.relevance import in_vitiligo_corpus, is_registered, studies_vitiligo
 
 DATABANK = (
     "<PubmedArticle><MedlineCitation><PMID>25902042</PMID></MedlineCitation>"
@@ -161,3 +162,71 @@ def test_the_store_keeps_the_two_kinds_apart(require_local_corpus) -> None:
     for source_id, metadata, has_results in rows:
         assert (json.loads(metadata or "{}") or {}).get("scope") == PUBLISHED_ONLY_SCOPE
         assert not has_results, f"{source_id} claims a posted result it cannot have"
+
+
+@pytest.mark.parametrize(
+    ("title", "abstract", "studied"),
+    [
+        ("Efficacy of tacrolimus versus clobetasol in vitiligo", "", True),
+        (
+            "Syringes versus Chinese cups in blister grafting",
+            "Thirty patients with stable vitiligo were enrolled.",
+            True,
+        ),
+        ("Polypodium leucotomos extract", "In the treatment of vitiligo, patients received", True),
+        (
+            "Complete response to nivolumab in melanoma",
+            "Vitiligo developed in three patients during treatment.",
+            False,
+        ),
+        (
+            "Autoimmune toxicities of antitumor vaccines",
+            "Autoimmune toxicities including vitiligo were observed.",
+            False,
+        ),
+    ],
+)
+def test_whose_disease_it_was_decides(title: str, abstract: str, studied: bool) -> None:
+    """Reading a title and abstract together for the word was not enough.
+
+    A melanoma immunotherapy paper names vitiligo because depigmentation was
+    an adverse event, and six of them reached a corpus of vitiligo trials
+    that way. The title settles it when it names the disease; otherwise the
+    abstract has to say the disease is who was studied.
+    """
+    assert studies_vitiligo(title, abstract) is studied
+
+
+@pytest.mark.parametrize(
+    ("types", "abstract", "reports"),
+    [
+        (["Randomized Controlled Trial"], "", True),
+        (["Letter", "Randomized Controlled Trial"], "", True),
+        (["Review"], "Forty patients were randomised in the trials reviewed.", False),
+        (["Meta-Analysis"], "Nine randomised trials of 400 patients were pooled.", False),
+        (["Case Reports", "Clinical Trial"], "", False),
+        (["Journal Article"], "Fifty-five patients applied ruxolitinib cream twice daily.", False),
+        (["Journal Article"], "55 patients with vitiligo applied cream twice daily.", True),
+        (["Journal Article"], "Patients were randomly assigned to two groups.", True),
+        (["Journal Article"], "This review covers recent advances.", False),
+    ],
+)
+def test_a_report_of_a_trial_is_not_a_paper_about_trials(
+    types: list[str], abstract: str, reports: bool
+) -> None:
+    """Searching the text for "randomised" finds 545 more papers and 71 are reviews.
+
+    Where PubMed has typed it there is nothing to decide, in both directions.
+    Where it has not, the abstract must count the people enrolled or say how
+    they were assigned -- either, not both, because requiring both rejected
+    the single-arm ruxolitinib and narrow-band UVB study along with 333 other
+    records already held.
+    """
+    document = Document(
+        source=SourceKind.PUBMED,
+        source_id="1",
+        title="A study",
+        abstract=abstract,
+        publication_types=types,
+    )
+    assert reports_a_trial(document) is reports

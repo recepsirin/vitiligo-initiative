@@ -543,8 +543,13 @@ def run_drug_class_ingestion(
 
 
 def run_published_trial_ingestion(
-    query: str = "vitiligo[MeSH Terms] AND (randomized controlled trial[Publication Type]"
-    " OR clinical trial[Publication Type] OR controlled clinical trial[Publication Type])",
+    query: str = (
+        "(vitiligo[MeSH Terms] AND (randomized controlled trial[Publication Type]"
+        " OR clinical trial[Publication Type] OR controlled clinical trial[Publication Type]))"
+        " OR (vitiligo[MeSH Terms] AND comparative study[Publication Type])"
+        " OR (vitiligo[tiab] AND (randomized[tiab] OR randomised[tiab] OR placebo[tiab]"
+        ' OR double-blind[tiab] OR "double blind"[tiab]))'
+    ),
     commit_every: int = 50,
 ) -> IngestionStats:
     """Build trial records for vitiligo trials that were never registered.

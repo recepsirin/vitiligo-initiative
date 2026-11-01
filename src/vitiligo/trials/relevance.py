@@ -270,3 +270,32 @@ def drug_class_relation(trial: Trial) -> str:
     if _SAFETY.search(conditions):
         return SAFETY_RELATION
     return DISTANT_RELATION
+
+
+# Vitiligo as the population a paper studied, rather than as something that
+# happened to one. A melanoma immunotherapy paper names the disease because
+# depigmentation was an adverse event, and reading a title and an abstract
+# together for the word admitted six of them to a corpus of vitiligo trials.
+_STUDIED = re.compile(
+    r"""
+      (?:patients?|subjects?|participants?|cases?|volunteers?|individuals?|children|adults?)
+      \s+(?:\w+\s+){0,3}?with\s+(?:\w+\s+){0,2}?vitiligo
+    | vitiligo\s+(?:patients?|subjects?|participants?|cases?|lesions?|skin|vulgaris|areas?)
+    | (?:treatment|therapy|management)\s+of\s+(?:\w+\s+){0,2}?vitiligo
+    | \bin\s+(?:stable|segmental|non-?segmental|generalized|localized|active)?\s*vitiligo\b
+    """,
+    re.X | re.I,
+)
+
+
+def studies_vitiligo(title: str, abstract: str) -> bool:
+    """True when the paper's subjects were people with vitiligo.
+
+    A title that names the disease settles it. Otherwise the abstract has to
+    name it as who was studied -- "patients with vitiligo", "treatment of
+    vitiligo" -- and not merely mention it, because a paper reporting that
+    vitiligo-like depigmentation followed a cancer vaccine mentions it too.
+    """
+    if names_vitiligo(title or ""):
+        return True
+    return bool(_STUDIED.search(abstract or ""))

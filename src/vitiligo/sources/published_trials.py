@@ -41,7 +41,7 @@ from collections.abc import Iterable, Iterator
 from vitiligo.logging import get_logger
 from vitiligo.storage.models import Document, Trial, TrialSourceKind
 from vitiligo.trials.countries import normalize_country
-from vitiligo.trials.relevance import names_vitiligo
+from vitiligo.trials.relevance import studies_vitiligo
 
 logger = get_logger(__name__)
 
@@ -167,15 +167,96 @@ _COUNTRY_NAMES: tuple[tuple[str, str], ...] = (
 _COUNTRY_PATTERNS = tuple((name, re.compile(p)) for name, p in _COUNTRY_NAMES)
 
 
+# Publication types that are about trials without being one. These beat a
+# trial type: a systematic review of randomised trials is not a trial.
+#
+# "Letter" is deliberately absent. It is a length, not a content type:
+# dermatology journals publish short randomised trials as letters, and 47
+# held records carry both labels. "Can topical phenytoin augment the
+# therapeutic efficacy of PUVA against vitiligo", typed Letter and Randomized
+# Controlled Trial, is a trial. A letter PubMed has not also called a trial
+# still has to earn it from its abstract, like anything else.
+NOT_A_TRIAL: frozenset[str] = frozenset(
+    {
+        "Review",
+        "Systematic Review",
+        "Meta-Analysis",
+        "Network Meta-Analysis",
+        "Comment",
+        "Editorial",
+        "Case Reports",
+        "Published Erratum",
+        "Practice Guideline",
+        "Guideline",
+        "Observational Study",
+    }
+)
+
+# Publication types that say PubMed has already decided it is a trial.
+TRIAL_TYPES: frozenset[str] = frozenset(
+    {
+        "Randomized Controlled Trial",
+        "Clinical Trial",
+        "Controlled Clinical Trial",
+        "Clinical Trial, Phase I",
+        "Clinical Trial, Phase II",
+        "Clinical Trial, Phase III",
+        "Clinical Trial, Phase IV",
+        "Pragmatic Clinical Trial",
+        "Equivalence Trial",
+        "Adaptive Clinical Trial",
+        "Multicenter Study",
+    }
+)
+
+# A trial report counts the people it enrolled or says how they were assigned.
+_ENROLLED = re.compile(
+    r"\b\d{1,4}\s+(?:patients?|participants?|subjects?|cases?|volunteers?)\b", re.I
+)
+_ALLOCATED = re.compile(
+    r"randomi[sz]ed|randomly\s+(?:assigned|allocated|divided)|double[- ]blind"
+    r"|placebo[- ]controlled|were\s+(?:assigned|allocated|treated\s+with)"
+    r"|split[- ]body|intra[- ]individual",
+    re.I,
+)
+
+
+def reports_a_trial(document: Document) -> bool:
+    """True when the paper reports a trial rather than discussing trials.
+
+    PubMed labels only some of them. Searching the text instead for
+    "randomised" and "placebo" finds 545 more papers, and 71 are reviews, 42
+    meta-analyses and 37 letters: the word appears because they are *about*
+    trials. The publication type settles those, in both directions -- where
+    PubMed has called it a trial there is nothing left to decide.
+
+    Where it has not, the abstract has to count the people enrolled or say
+    how they were assigned. Either will do, not both: requiring both rejected
+    the ruxolitinib and narrow-band UVB study, which is single-arm and
+    open-label and so allocates nobody, along with 333 other records already
+    held.
+    """
+    types = set(document.publication_types or [])
+    if types & NOT_A_TRIAL:
+        return False
+    if types & TRIAL_TYPES:
+        return True
+    abstract = document.abstract or ""
+    return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
+
+
 def trial_from_document(document: Document) -> Trial | None:
     """A trial record for a paper that reports one, or ``None``.
 
-    ``None`` when the paper is not about vitiligo, which the publication type
-    alone does not settle: PubMed indexes a trial of something else that
-    merely measured vitiligo as an outcome.
+    ``None`` when the paper's subjects were not people with vitiligo, which
+    neither the publication type nor the presence of the word settles: a
+    melanoma immunotherapy paper names the disease because depigmentation was
+    an adverse event, and six of them reached a corpus of vitiligo trials
+    before the test asked whose disease it was.
     """
-    subject = f"{document.title or ''}\n{document.abstract or ''}"
-    if not names_vitiligo(subject):
+    if not studies_vitiligo(document.title or "", document.abstract or ""):
+        return None
+    if not reports_a_trial(document):
         return None
     year = document.year
     return Trial(
