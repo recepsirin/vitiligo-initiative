@@ -79,12 +79,29 @@ def comparison_key(identifier: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", identifier).upper()
 
 
+# A US affiliation often ends at the state. Sixty-three of these papers write
+# "Ann Arbor, Michigan" or "Houston, Texas" and never the country, and reading
+# only country names lost every one of them.
+_US_STATE = re.compile(
+    r"\b(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida"
+    r"|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland"
+    r"|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada"
+    r"|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio"
+    r"|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee"
+    r"|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming)\b"
+)
+
+
 def countries_of(document: Document) -> list[str]:
     """The countries the authors wrote in their affiliations.
 
     An affiliation ends with its country far more often than it names a city
     this project could recognise, so the country names are searched for
     directly and the rest of the line ignored.
+
+    A US state is read as the United States, except where the affiliation is
+    Georgian: "Georgia" is a state and a country, and the one paper here that
+    means the country says Tbilisi.
     """
     affiliations: list[str] = []
     for author in document.authors or []:
@@ -97,6 +114,10 @@ def countries_of(document: Document) -> list[str]:
             canonical = normalize_country(name)
             if canonical and canonical not in out:
                 out.append(canonical)
+    if "Georgia" not in out and _US_STATE.search(text):
+        united = normalize_country("United States")
+        if united and united not in out:
+            out.append(united)
     return out
 
 
@@ -163,6 +184,21 @@ _COUNTRY_NAMES: tuple[tuple[str, str], ...] = (
     ("Australia", r"\bAustralia\b"),
     ("New Zealand", r"\bNew Zealand\b"),
     ("Canada", r"\bCanada\b"),
+    # Seen in these papers' affiliations and absent above until they were read.
+    ("Kuwait", r"\bKuwait\b"),
+    ("Libya", r"\bLibya\b"),
+    ("Croatia", r"\bCroatia\b|\bHrvatska\b"),
+    ("Estonia", r"\bEstonia\b"),
+    ("Cyprus", r"\bCyprus\b"),
+    ("Venezuela", r"\bVenezuela\b"),
+    ("Nepal", r"\bNepal\b"),
+    ("Viet Nam", r"\bVietnam\b|\bViet Nam\b"),
+    ("Malta", r"\bMalta\b"),
+    ("Slovakia", r"\bSlovakia\b|\bSlovak Republic\b"),
+    # Georgia is named by its capital rather than itself, because the word
+    # alone is a US state far more often. Tbilisi State Medical University
+    # ran the one Georgian vitiligo trial in this corpus.
+    ("Georgia", r"\bTbilisi\b"),
 )
 _COUNTRY_PATTERNS = tuple((name, re.compile(p)) for name, p in _COUNTRY_NAMES)
 

@@ -103,6 +103,31 @@ def test_the_country_reaches_the_trial_record() -> None:
     assert trial.countries == ["Turkey"]
 
 
+@pytest.mark.parametrize(
+    ("affiliation", "country"),
+    [
+        (
+            "Department of Dermatology, University of Michigan, Ann Arbor, Michigan.",
+            "United States",
+        ),
+        ("Department of Dermatology, Baylor, Houston, Texas", "United States"),
+        ("Medical College of Georgia, Augusta, Georgia", "United States"),
+        ("Department of Dermatology, Tbilisi State Medical University, Georgia.", "Georgia"),
+    ],
+)
+def test_a_us_state_is_a_country_except_when_it_is_georgia(affiliation: str, country: str) -> None:
+    """Sixty-three of these papers name a state and never the country.
+
+    "Ann Arbor, Michigan" and "Houston, Texas" end there, and reading only
+    country names lost every one. Georgia is the exception in both
+    directions: it is a state far more often than a country, so it counts as
+    the United States unless the affiliation says Tbilisi, which the one
+    Georgian vitiligo trial in this corpus does.
+    """
+    doc = _doc(affiliations=[affiliation])
+    assert countries_of(doc) == [country]
+
+
 def test_a_letterhead_spelling_becomes_the_project_s_name() -> None:
     """ "USA" is not how a registry writes it, and the filter matches one string."""
     doc = _doc(affiliations=["Department of Dermatology, Boston, MA, USA"])
