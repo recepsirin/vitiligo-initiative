@@ -165,6 +165,17 @@ DRUG_CLASS_SCOPES: frozenset[str] = frozenset({DRUG_CLASS_SCOPE, DERM_DRUG_SCOPE
 # it is not a registered trial, and a count of registrations must say so.
 PUBLISHED_ONLY_SCOPE = "published_only"
 
+# A cancer immunotherapy trial in which vitiligo appeared. Checkpoint
+# blockade and melanoma vaccines cause depigmentation through the same CD8
+# response to melanocyte antigens, and it predicts durable response, so these
+# are the mechanism evidence that the disease's own literature cannot supply.
+# The disease treated is a cancer, so they are not vitiligo trials.
+VITILIGO_AS_OUTCOME_SCOPE = "vitiligo_outcome"
+
+# Every scope that is in the corpus for a reason other than being a trial of
+# this disease. A figure about vitiligo trials excludes all of them.
+NON_VITILIGO_SCOPES: frozenset[str] = DRUG_CLASS_SCOPES | {VITILIGO_AS_OUTCOME_SCOPE}
+
 
 def is_drug_class_trial(trial: Trial) -> bool:
     """True when the trial is held for its drug rather than its disease."""
@@ -176,9 +187,10 @@ def in_vitiligo_corpus(trial: Trial) -> bool:
 
     This is the filter behind every published count. Without it, importing a
     drug class's 1,358 trials in other diseases would silently turn "1,027
-    vitiligo trials" into a number about rheumatoid arthritis.
+    vitiligo trials" into a number about rheumatoid arthritis, and 77 melanoma
+    immunotherapy trials would turn it into one about melanoma.
     """
-    return not is_drug_class_trial(trial)
+    return str((trial.raw_metadata or {}).get("scope") or "") not in NON_VITILIGO_SCOPES
 
 
 # The skin and autoimmune diseases whose trials of a vitiligo drug are worth

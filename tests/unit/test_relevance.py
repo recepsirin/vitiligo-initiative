@@ -8,7 +8,7 @@ from vitiligo.storage import Trial, TrialSourceKind
 from vitiligo.trials.relevance import (
     DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
-    DRUG_CLASS_SCOPES,
+    NON_VITILIGO_SCOPES,
     drug_class_relation,
     in_vitiligo_corpus,
     is_drug_class_trial,
@@ -223,12 +223,12 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
         "SELECT source_id, conditions, keywords, brief_title, official_title, raw_metadata"
         " FROM trials"
     ):
-        # A trial held for its drug rather than its disease is a different
-        # population and is counted separately. Without this partition,
-        # importing the JAK class's 1,358 trials in rheumatoid arthritis and
-        # myelofibrosis would make this test fail 1,358 times over and the
-        # corpus total mean something else entirely.
-        if str((json.loads(metadata or "{}") or {}).get("scope") or "") in DRUG_CLASS_SCOPES:
+        # A trial held for its drug, or for the cancer whose treatment
+        # caused vitiligo, is a different population and is counted
+        # separately. Without this partition, the JAK class's 1,358 trials in
+        # rheumatoid arthritis and myelofibrosis would make this test fail
+        # 1,358 times over and the corpus total mean something else.
+        if str((json.loads(metadata or "{}") or {}).get("scope") or "") in NON_VITILIGO_SCOPES:
             continue
         total += 1
         subject = " | ".join(

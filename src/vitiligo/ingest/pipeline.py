@@ -635,6 +635,63 @@ def run_published_trial_ingestion(
     )
 
 
+def run_vitiligo_outcome_ingestion(commit_every: int = 50) -> IngestionStats:
+    """Hold the cancer immunotherapy trials in which vitiligo appeared.
+
+    Checkpoint blockade and melanoma vaccines cause depigmentation through the
+    same CD8 response to melanocyte antigens that causes the disease, and its
+    appearance predicts durable response. That makes these the mechanism
+    evidence the disease's own literature cannot supply, because nobody
+    randomises people to develop vitiligo.
+
+    They are marked ``vitiligo_outcome`` and excluded from every figure about
+    vitiligo trials: the disease being treated is a cancer. The papers are
+    already in the corpus, so this reads them rather than fetching again.
+    """
+    from vitiligo.sources.published_trials import outcome_trial_from_document
+
+    init_db()
+    run = IngestionRun(source=TrialSourceKind.PUBLICATION.value, query="vitiligo-as-outcome")
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = skipped = 0
+    try:
+        with session_scope() as session:
+            documents = session.exec(
+                select(Document).where(Document.source == SourceKind.PUBMED)
+            ).all()
+            for document in documents:
+                fetched += 1
+                trial = outcome_trial_from_document(document)
+                if trial is None:
+                    skipped += 1
+                    continue
+                ins, upd = _upsert_trial(session, trial)
+                inserted += ins
+                updated += upd
+                if inserted % commit_every == 0 and ins:
+                    session.commit()
+            session.commit()
+        _finalize_run(run_id, "completed", fetched, inserted, updated, fetched, None)
+    except Exception as exc:
+        logger.exception("Vitiligo-as-outcome ingestion failed")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="vitiligo-as-outcome",
+        total_found=fetched,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
 def run_euctr_ingestion(
     query: str = EUCTR_DEFAULT_QUERY,
     page_size: int = 50,

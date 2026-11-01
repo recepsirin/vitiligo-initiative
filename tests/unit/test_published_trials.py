@@ -7,13 +7,20 @@ import pytest
 from vitiligo.sources.published_trials import (
     PUBLISHED_ONLY_SCOPE,
     countries_of,
+    observes_vitiligo_under_immunotherapy,
+    outcome_trial_from_document,
     registry_ids,
     reports_a_trial,
     trial_from_document,
     unregistered_trials,
 )
 from vitiligo.storage.models import Document, SourceKind, TrialSourceKind
-from vitiligo.trials.relevance import in_vitiligo_corpus, is_registered, studies_vitiligo
+from vitiligo.trials.relevance import (
+    VITILIGO_AS_OUTCOME_SCOPE,
+    in_vitiligo_corpus,
+    is_registered,
+    studies_vitiligo,
+)
 
 DATABANK = (
     "<PubmedArticle><MedlineCitation><PMID>25902042</PMID></MedlineCitation>"
@@ -158,9 +165,13 @@ def test_the_store_keeps_the_two_kinds_apart(require_local_corpus) -> None:
         )
     )
     con.close()
-    assert rows, "no published-only trials held"
+    assert rows, "no trials reconstructed from papers are held"
     for source_id, metadata, has_results in rows:
-        assert (json.loads(metadata or "{}") or {}).get("scope") == PUBLISHED_ONLY_SCOPE
+        # Two kinds come from papers and they are different claims: a trial
+        # of this disease that nobody registered, and a cancer trial in which
+        # the disease appeared.
+        scope = (json.loads(metadata or "{}") or {}).get("scope")
+        assert scope in {PUBLISHED_ONLY_SCOPE, VITILIGO_AS_OUTCOME_SCOPE}, source_id
         assert not has_results, f"{source_id} claims a posted result it cannot have"
 
 
@@ -230,3 +241,85 @@ def test_a_report_of_a_trial_is_not_a_paper_about_trials(
         publication_types=types,
     )
     assert reports_a_trial(document) is reports
+
+
+@pytest.mark.parametrize(
+    ("title", "abstract", "types", "held"),
+    [
+        # Every case below turns on exactly one of the four conditions, so a
+        # test that passes says which guard held.
+        (
+            "Poliosis predicts durable response to immune-checkpoint blockade",
+            "Of 120 patients with melanoma treated with pembrolizumab, 14 developed "
+            "depigmentation.",
+            ["Journal Article"],
+            True,
+        ),
+        # No cancer: interferon depigments outside oncology too, without the
+        # melanocyte antigens that make these trials informative.
+        (
+            "Interferon alfa for chronic hepatitis C",
+            "90 patients were randomised; vitiligo developed in two.",
+            ["Journal Article"],
+            False,
+        ),
+        # Cancer, but no immunotherapy: a cytotoxic drug depigments skin
+        # without provoking a response to melanocytes.
+        (
+            "Docetaxel in metastatic breast cancer",
+            "80 patients were randomised; hypopigmentation occurred in four.",
+            ["Journal Article"],
+            False,
+        ),
+        # Cancer and immunotherapy, but a review of trials rather than one.
+        (
+            "Checkpoint inhibitors in melanoma: a review",
+            "Across 40 trials of nivolumab, 300 patients were randomised and "
+            "vitiligo was reported.",
+            ["Review"],
+            False,
+        ),
+        # Cancer and immunotherapy named, but the treated disease is vitiligo:
+        # interferon has been trialled in it, and that belongs in the corpus.
+        (
+            "Interferon alfa in the treatment of vitiligo",
+            "In melanoma, interferon causes depigmentation. Here 40 patients with "
+            "vitiligo were randomised.",
+            ["Journal Article"],
+            False,
+        ),
+        # Cancer, immunotherapy and a trial, but nothing depigmented.
+        (
+            "Nivolumab in advanced melanoma",
+            "200 patients were randomised; fatigue was the commonest event.",
+            ["Journal Article"],
+            False,
+        ),
+    ],
+)
+def test_a_cancer_trial_that_caused_vitiligo_is_held_apart(
+    title: str, abstract: str, types: list[str], held: bool
+) -> None:
+    """Checkpoint blockade causes vitiligo by the mechanism that causes it.
+
+    The same CD8 response to melanocyte antigens, and its appearance predicts
+    durable response, so these trials are mechanism evidence the disease's own
+    literature cannot supply: nobody randomises people to develop vitiligo.
+    The disease being treated is a cancer, so they are not vitiligo trials.
+    """
+    document = Document(
+        source=SourceKind.PUBMED,
+        source_id="1",
+        title=title,
+        abstract=abstract,
+        publication_types=types,
+    )
+    assert observes_vitiligo_under_immunotherapy(document) is held
+    trial = outcome_trial_from_document(document)
+    assert (trial is not None) is held
+    if trial is not None:
+        assert (trial.raw_metadata or {})["scope"] == VITILIGO_AS_OUTCOME_SCOPE
+        assert not in_vitiligo_corpus(trial)
+        # The paper names the cancer in prose; guessing it would put a wrong
+        # disease in a field readers filter on.
+        assert trial.conditions == []

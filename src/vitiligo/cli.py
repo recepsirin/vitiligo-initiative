@@ -46,6 +46,7 @@ from vitiligo.ingest import (
     run_published_trial_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
+    run_vitiligo_outcome_ingestion,
 )
 from vitiligo.ingest.pipeline import JAK_INHIBITORS, PRIOR_DRUGS
 from vitiligo.ingest.repair import repair_corpus
@@ -282,6 +283,28 @@ def ingest_published_trials() -> None:
     console.print()
 
     stats = run_published_trial_ingestion()
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("vitiligo-as-outcome")
+def ingest_vitiligo_as_outcome() -> None:
+    """Hold the cancer immunotherapy trials in which vitiligo appeared.
+
+    Checkpoint blockade and melanoma vaccines cause depigmentation through the
+    same mechanism as the disease, and it predicts durable response. Marked
+    ``scope: vitiligo_outcome`` and excluded from every vitiligo figure,
+    because the disease being treated is a cancer.
+    """
+    settings = get_settings()
+    console.rule("[bold]Vitiligo as an outcome of immunotherapy[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print("[dim]Not vitiligo trials: the disease treated is a cancer.[/dim]")
+    console.print()
+
+    stats = run_vitiligo_outcome_ingestion()
 
     console.print()
     console.rule("[bold green]Done[/bold green]")

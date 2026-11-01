@@ -41,7 +41,7 @@ from collections.abc import Iterable, Iterator
 from vitiligo.logging import get_logger
 from vitiligo.storage.models import Document, Trial, TrialSourceKind
 from vitiligo.trials.countries import normalize_country
-from vitiligo.trials.relevance import studies_vitiligo
+from vitiligo.trials.relevance import VITILIGO_AS_OUTCOME_SCOPE, studies_vitiligo
 
 logger = get_logger(__name__)
 
@@ -243,6 +243,76 @@ def reports_a_trial(document: Document) -> bool:
         return True
     abstract = document.abstract or ""
     return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
+
+
+# A cancer, and an immunotherapy given for it. Both are needed: a melanoma
+# trial of a cytotoxic drug that mentions depigmentation is reporting a rash,
+# not an immune response to melanocytes, and 45 such papers are left out.
+_ONCOLOGY_CONDITION = re.compile(
+    r"melanoma|carcinoma|cancer|tumou?r|neoplas|lymphoma|leukemi|sarcoma|myeloma", re.I
+)
+_IMMUNOTHERAPY = re.compile(
+    r"nivolumab|ipilimumab|pembrolizumab|atezolizumab|durvalumab|avelumab|tremelimumab"
+    r"|checkpoint|anti-?PD-?1|anti-?PD-?L1|anti-?CTLA-?4|vaccin|dendritic\s+cell"
+    r"|interleukin-2|\bIL-2\b|interferon|adoptive|tumou?r-infiltrating|CAR-?T|immunotherap"
+    r"|\bTIL\b",
+    re.I,
+)
+_DEPIGMENTATION = re.compile(r"vitilig|depigment|leukoderma|hypopigment|poliosis", re.I)
+
+
+def observes_vitiligo_under_immunotherapy(document: Document) -> bool:
+    """True when a cancer immunotherapy trial reports depigmentation.
+
+    Checkpoint blockade and melanoma vaccines cause vitiligo through the same
+    CD8 response to melanocyte antigens that causes the disease, and its
+    appearance predicts durable response. That makes these trials mechanism
+    evidence the disease's own literature cannot supply -- nobody randomises
+    people to develop vitiligo -- while the disease being treated is a cancer,
+    so they are not vitiligo trials and are held apart.
+    """
+    text = f"{document.title or ''} {document.abstract or ''}"
+    if not _DEPIGMENTATION.search(text):
+        return False
+    if studies_vitiligo(document.title or "", document.abstract or ""):
+        return False
+    if not reports_a_trial(document):
+        return False
+    return bool(_ONCOLOGY_CONDITION.search(text) and _IMMUNOTHERAPY.search(text))
+
+
+def outcome_trial_from_document(document: Document) -> Trial | None:
+    """A record for a cancer trial in which vitiligo appeared.
+
+    Conditions are left empty rather than guessed. The paper says which
+    cancer in prose and this cannot read it reliably; the title carries it,
+    and inventing a condition would put a wrong disease in a field readers
+    filter on.
+    """
+    if not observes_vitiligo_under_immunotherapy(document):
+        return None
+    year = document.year
+    return Trial(
+        source=TrialSourceKind.PUBLICATION,
+        source_id=str(document.source_id),
+        brief_title=(document.title or "").strip() or None,
+        summary=(document.abstract or "").strip() or None,
+        conditions=[],
+        countries=countries_of(document),
+        study_type="INTERVENTIONAL",
+        status="COMPLETED",
+        has_results=False,
+        start_date=str(year) if year else None,
+        completion_date=str(year) if year else None,
+        raw_metadata={
+            "scope": VITILIGO_AS_OUTCOME_SCOPE,
+            "pmid": str(document.source_id),
+            "journal": document.journal,
+            "year": year,
+            "doi": document.doi,
+            "publication_types": document.publication_types or [],
+        },
+    )
 
 
 def trial_from_document(document: Document) -> Trial | None:

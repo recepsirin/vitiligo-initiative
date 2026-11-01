@@ -19,6 +19,7 @@ from vitiligo.ingest.pipeline import (
     run_published_trial_ingestion,
     run_pubmed_ingestion,
     run_reporter_ingestion,
+    run_vitiligo_outcome_ingestion,
 )
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "run_published_trial_ingestion",
     "run_pubmed_ingestion",
     "run_reporter_ingestion",
+    "run_vitiligo_outcome_ingestion",
 ]
