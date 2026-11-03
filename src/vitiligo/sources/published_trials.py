@@ -257,6 +257,30 @@ _ALLOCATED = re.compile(
 )
 
 
+# What a title says when the record carries nothing else. Of 401 vitiligo
+# papers from before 1970, 399 have no abstract -- and Europe PMC has none
+# either, because it mirrors MEDLINE -- so the title is the whole record.
+# Only wording that names a design counts: "Treatment of vitiligo with
+# psoralen derivatives" could be a trial, a case series or an opinion, and
+# nothing in the record decides.
+_TITLE_DESIGN = re.compile(
+    r"\b(?:double[- ]blind|single[- ]blind|placebo[- ]controlled|vehicle[- ]controlled"
+    r"|controlled trial|controlled study|randomi[sz]ed|cross[- ]?over"
+    r"|comparative\s+(?:study|trial)|a\s+(?:clinical\s+|therapeutic\s+)?trial\b"
+    r"|clinical\s+trial|split[- ]body|left[- ]right)",
+    re.I,
+)
+
+# A trial report names one trial. A paper whose title says "trials" is about
+# them: a systematic review, a commentary, a survey of how trials report skin
+# colour. One word replaces the list of phrases this started as, catches
+# every such record here, and rejects one that had been admitted -- "Can we
+# navigate the pitfalls of tofacitinib randomized controlled trials", which
+# is a commentary. It misses one instrument-validation paper, which is a
+# better trade than a regex of hand-picked titles.
+_TITLE_ABOUT_TRIALS = re.compile(r"\btrials\b", re.I)
+
+
 def reports_a_trial(document: Document) -> bool:
     """True when the paper reports a trial rather than discussing trials.
 
@@ -271,13 +295,25 @@ def reports_a_trial(document: Document) -> bool:
     the ruxolitinib and narrow-band UVB study, which is single-arm and
     open-label and so allocates nobody, along with 333 other records already
     held.
+
+    Where there is no abstract either, the title has to name a design. That is
+    the whole record for 399 of the 401 vitiligo papers before 1970, and
+    Europe PMC has no abstract for them either; it mirrors MEDLINE. Two
+    survive the test, from 1975 and 1976. The rest cannot be judged: a 1958
+    paper called "The treatment of vitiligo with psoralen derivatives" may be
+    a trial, a case series or an opinion, and guessing would be inventing.
     """
     types = set(document.publication_types or [])
     if types & NOT_A_TRIAL:
         return False
+    title = document.title or ""
+    if _TITLE_ABOUT_TRIALS.search(title):
+        return False
     if types & TRIAL_TYPES:
         return True
     abstract = document.abstract or ""
+    if not abstract.strip():
+        return bool(_TITLE_DESIGN.search(title))
     return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
 
 

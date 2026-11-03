@@ -348,3 +348,32 @@ def test_a_cancer_trial_that_caused_vitiligo_is_held_apart(
         # The paper names the cancer in prose; guessing it would put a wrong
         # disease in a field readers filter on.
         assert trial.conditions == []
+
+
+@pytest.mark.parametrize(
+    ("title", "reports"),
+    [
+        ("[4-5-8 trimethylpsoralen in vitiligo. Controlled study of its effect]", True),
+        # Names a treatment but no design: it could be a trial, a case series
+        # or an opinion, and the record says nothing more.
+        ("The treatment of vitiligo with psoralen derivatives", False),
+        # Plural: a paper about trials rather than a report of one.
+        ("Randomized controlled trials in vitiligo: a systematic review", False),
+    ],
+)
+def test_with_no_abstract_the_title_must_name_a_design(title: str, reports: bool) -> None:
+    """For 399 of the 401 vitiligo papers before 1970 the title is the record.
+
+    They carry no abstract, and Europe PMC has none either because it mirrors
+    MEDLINE. So the title decides: it must name a design, and it must name one
+    trial rather than discuss several. Two survive from the 1970s; guessing at
+    the rest would be inventing trials out of treatment papers.
+    """
+    document = Document(
+        source=SourceKind.PUBMED,
+        source_id="1",
+        title=title,
+        abstract="",
+        publication_types=["Journal Article"],
+    )
+    assert reports_a_trial(document) is reports

@@ -549,6 +549,15 @@ def run_published_trial_ingestion(
         " OR (vitiligo[MeSH Terms] AND comparative study[Publication Type])"
         " OR (vitiligo[tiab] AND (randomized[tiab] OR randomised[tiab] OR placebo[tiab]"
         ' OR double-blind[tiab] OR "double blind"[tiab]))'
+        # An old record is a title and nothing else, so the title has to be
+        # searched directly: 399 of the 401 vitiligo papers before 1970 carry
+        # no abstract, in PubMed or in Europe PMC.
+        " OR ((vitiligo[Title] OR leucoderma[Title] OR leukoderma[Title])"
+        ' AND ("controlled study"[Title] OR "controlled trial"[Title]'
+        ' OR "clinical trial"[Title] OR "double blind"[Title] OR "double-blind"[Title]'
+        ' OR "single blind"[Title] OR randomized[Title] OR randomised[Title]'
+        ' OR crossover[Title] OR "cross-over"[Title] OR "comparative study"[Title]'
+        ' OR "comparative trial"[Title] OR placebo[Title]))'
     ),
     commit_every: int = 50,
 ) -> IngestionStats:
