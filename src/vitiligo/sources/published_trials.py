@@ -246,9 +246,23 @@ TRIAL_TYPES: frozenset[str] = frozenset(
 )
 
 # A trial report counts the people it enrolled or says how they were assigned.
-_ENROLLED = re.compile(
-    r"\b\d{1,4}\s+(?:patients?|participants?|subjects?|cases?|volunteers?)\b", re.I
+# A dermatology abstract writes its sample size either way, and reading only
+# digits lost 28 trials: "Twenty-two patients who were diagnosed with
+# localized vitiligo", "Forty patients with stable vitiligo were equally
+# divided".
+_NUMBER_WORD = (
+    r"(?:one\s+hundred(?:\s+and)?\s+)?"
+    r"(?:ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen"
+    r"|twenty|thirty|forty|fourty|fifty|sixty|seventy|eighty|ninety|hundred)"
+    r"(?:[-\s](?:one|two|three|four|five|six|seven|eight|nine))?"
 )
+_ENROLLED = re.compile(
+    rf"(?:\b\d{{1,4}}|\b{_NUMBER_WORD})\s+"
+    r"(?:\w+\s+){0,2}?(?:patients?|participants?|subjects?|cases?|volunteers?)\b",
+    re.I,
+)
+
+
 _ALLOCATED = re.compile(
     r"randomi[sz]ed|randomly\s+(?:assigned|allocated|divided)|double[- ]blind"
     r"|placebo[- ]controlled|were\s+(?:assigned|allocated|treated\s+with)"
@@ -264,21 +278,36 @@ _ALLOCATED = re.compile(
 # psoralen derivatives" could be a trial, a case series or an opinion, and
 # nothing in the record decides.
 _TITLE_DESIGN = re.compile(
-    r"\b(?:double[- ]blind|single[- ]blind|placebo[- ]controlled|vehicle[- ]controlled"
-    r"|controlled trial|controlled study|randomi[sz]ed|cross[- ]?over"
-    r"|comparative\s+(?:study|trial)|a\s+(?:clinical\s+|therapeutic\s+)?trial\b"
-    r"|clinical\s+trial|split[- ]body|left[- ]right)",
-    re.I,
+    r"""
+      double[- ]blind | single[- ]blind | placebo[- ]controlled | vehicle[- ]controlled
+    | controlled\s+trial | controlled\s+study | randomi[sz]ed | cross[- ]?over
+    | comparative\s+(?:study|trial) | a\s+(?:clinical\s+|therapeutic\s+)?trial\b
+    | clinical\s+trial | split[- ]body | left[- ]right
+    # A head-to-head comparison is a design statement. Leaving it out lost 30
+    # papers whose title is the only record they have -- "Platelet-rich plasma
+    # and follicular transplantation versus follicular transplantation", "A
+    # comparative pilot study of dipstick versus open-spray cryotherapy".
+    | \bversus\b | \bvs\.? | compared\s+(?:with|to) | comparison\s+of
+    """,
+    re.X | re.I,
 )
+
+# Diseases whose names contain a comparison word. "Graft-versus-host disease"
+# is not a comparison of graft with host.
+_NOT_A_COMPARISON = re.compile(r"graft[- ]versus[- ]host|host[- ]versus[- ]graft", re.I)
+
 
 # A trial report names one trial. A paper whose title says "trials" is about
 # them: a systematic review, a commentary, a survey of how trials report skin
-# colour. One word replaces the list of phrases this started as, catches
-# every such record here, and rejects one that had been admitted -- "Can we
-# navigate the pitfalls of tofacitinib randomized controlled trials", which
-# is a commentary. It misses one instrument-validation paper, which is a
-# better trade than a regex of hand-picked titles.
-_TITLE_ABOUT_TRIALS = re.compile(r"\btrials\b", re.I)
+# colour. That one word replaced a list of fifteen phrases and caught every
+# record the others did.
+#
+# Widening the design wording above brought back two of them. "Meta-analysis
+# reveals a lower UV signature in vitiligo skin compared to..." says
+# "compared to" and carries no publication type, so the synthesis words have
+# to be here after all: they were dead against the narrow pattern and are
+# load-bearing against this one.
+_TITLE_ABOUT_TRIALS = re.compile(r"\btrials\b|systematic\s+review|meta-?analys|comment\s+on", re.I)
 
 
 def reports_a_trial(document: Document) -> bool:
@@ -313,6 +342,8 @@ def reports_a_trial(document: Document) -> bool:
         return True
     abstract = document.abstract or ""
     if not abstract.strip():
+        if _NOT_A_COMPARISON.search(title):
+            return False
         return bool(_TITLE_DESIGN.search(title))
     return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
 

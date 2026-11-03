@@ -241,7 +241,9 @@ def test_whose_disease_it_was_decides(title: str, abstract: str, studied: bool) 
         (["Review"], "Forty patients were randomised in the trials reviewed.", False),
         (["Meta-Analysis"], "Nine randomised trials of 400 patients were pooled.", False),
         (["Case Reports", "Clinical Trial"], "", False),
-        (["Journal Article"], "Fifty-five patients applied ruxolitinib cream twice daily.", False),
+        # A dermatology abstract writes its sample size either way, and
+        # reading only digits lost 28 trials.
+        (["Journal Article"], "Fifty-five patients applied ruxolitinib cream twice daily.", True),
         (["Journal Article"], "55 patients with vitiligo applied cream twice daily.", True),
         (["Journal Article"], "Patients were randomly assigned to two groups.", True),
         (["Journal Article"], "This review covers recent advances.", False),
@@ -359,6 +361,16 @@ def test_a_cancer_trial_that_caused_vitiligo_is_held_apart(
         ("The treatment of vitiligo with psoralen derivatives", False),
         # Plural: a paper about trials rather than a report of one.
         ("Randomized controlled trials in vitiligo: a systematic review", False),
+        # A head-to-head comparison is a design statement.
+        ("Mini punch graft versus suction blister grafting in stable vitiligo", True),
+        # ...which a synthesis can also make, so the synthesis words decide
+        # here: this one says "compared to" and never says "trials".
+        (
+            "Meta-analysis reveals a lower UV signature in vitiligo skin compared to normal skin",
+            False,
+        ),
+        # Except where the comparison is part of a disease's name.
+        ("Vitiligo-like manifestations of graft-versus-host disease in a child", False),
     ],
 )
 def test_with_no_abstract_the_title_must_name_a_design(title: str, reports: bool) -> None:

@@ -557,7 +557,11 @@ def run_published_trial_ingestion(
         ' OR "clinical trial"[Title] OR "double blind"[Title] OR "double-blind"[Title]'
         ' OR "single blind"[Title] OR randomized[Title] OR randomised[Title]'
         ' OR crossover[Title] OR "cross-over"[Title] OR "comparative study"[Title]'
-        ' OR "comparative trial"[Title] OR placebo[Title]))'
+        ' OR "comparative trial"[Title] OR placebo[Title]'
+        # A head-to-head comparison is a design statement, and for a record
+        # with no abstract the title is all there is.
+        ' OR versus[Title] OR "vs"[Title] OR "comparison of"[Title]'
+        ' OR "compared with"[Title] OR "compared to"[Title]))'
     ),
     commit_every: int = 50,
 ) -> IngestionStats:
