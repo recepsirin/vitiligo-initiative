@@ -199,6 +199,9 @@ _COUNTRY_NAMES: tuple[tuple[str, str], ...] = (
     # alone is a US state far more often. Tbilisi State Medical University
     # ran the one Georgian vitiligo trial in this corpus.
     ("Georgia", r"\bTbilisi\b"),
+    ("Ethiopia", r"\bEthiopia\b"),
+    ("Eritrea", r"\bEritrea\b"),
+    ("Luxembourg", r"\bLuxembourg\b"),
 )
 _COUNTRY_PATTERNS = tuple((name, re.compile(p)) for name, p in _COUNTRY_NAMES)
 
@@ -418,6 +421,31 @@ def outcome_trial_from_document(document: Document) -> Trial | None:
     )
 
 
+# What the paper says it did. A retrospective comparison of two treatments is
+# a study of this disease and belongs in the corpus, but it assigned nobody to
+# anything, so a count of trials that included it would overstate by 45.
+_RETROSPECTIVE = re.compile(
+    r"\bretrospectiv|chart\s+review|medical\s+records?\s+(?:were\s+)?(?:review|retriev)"
+    r"|record\s+review|case[- ]control|cross[- ]sectional|registry\s+study"
+    r"|database\s+(?:study|analysis)",
+    re.I,
+)
+_PROSPECTIVE = re.compile(r"\bprospectiv|randomi[sz]ed|double[- ]blind|placebo", re.I)
+
+
+def design_of(document: Document) -> str:
+    """``"retrospective"`` where the paper says so and does not say otherwise.
+
+    Nine papers say both -- "a prospective arm and a retrospective cohort" --
+    and those keep the benefit of the doubt, because a paper that says
+    randomised is reporting an assignment whatever else it did.
+    """
+    text = f"{document.title or ''} {document.abstract or ''}"
+    if _RETROSPECTIVE.search(text) and not _PROSPECTIVE.search(text):
+        return "retrospective"
+    return "prospective_or_unstated"
+
+
 def trial_from_document(document: Document) -> Trial | None:
     """A trial record for a paper that reports one, or ``None``.
 
@@ -449,6 +477,7 @@ def trial_from_document(document: Document) -> Trial | None:
         completion_date=str(year) if year else None,
         raw_metadata={
             "scope": PUBLISHED_ONLY_SCOPE,
+            "design": design_of(document),
             "pmid": str(document.source_id),
             "journal": document.journal,
             "year": year,
