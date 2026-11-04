@@ -39,9 +39,14 @@ import re
 from collections.abc import Iterable, Iterator
 
 from vitiligo.logging import get_logger
-from vitiligo.storage.models import Document, Trial, TrialSourceKind
+from vitiligo.storage.models import Document, SourceKind, Trial, TrialSourceKind
 from vitiligo.trials.countries import normalize_country
-from vitiligo.trials.relevance import VITILIGO_AS_OUTCOME_SCOPE, studies_vitiligo
+from vitiligo.trials.relevance import (
+    ONCOLOGY_CONDITION,
+    VITILIGO_AS_OUTCOME_SCOPE,
+    fold,
+    studies_vitiligo,
+)
 
 logger = get_logger(__name__)
 
@@ -83,21 +88,108 @@ def comparison_key(identifier: str) -> str:
 # "Ann Arbor, Michigan" or "Houston, Texas" and never the country, and reading
 # only country names lost every one of them.
 _US_STATE = re.compile(
-    r"\b(?:Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida"
-    r"|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland"
-    r"|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada"
-    r"|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio"
-    r"|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee"
-    r"|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming)\b"
+    r"\b(?:alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida"
+    r"|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland"
+    r"|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada"
+    r"|new hampshire|new jersey|new mexico|new york|north carolina|north dakota|ohio"
+    r"|oklahoma|oregon|pennsylvania|rhode island|south carolina|south dakota|tennessee"
+    r"|texas|utah|vermont|virginia|washington|west virginia|wisconsin|wyoming)\b"
 )
+
+# A state or province by its postal code, which is how an American or Canadian
+# address ends: "Chicago, IL.", "IL 60637", "Ottawa, ON". The code is read only
+# after a comma or before a ZIP, because on its own "IN" is a preposition, "OR"
+# a conjunction and "ME" a pronoun. Cased, for the same reason.
+_SUBDIVISION_CODE = re.compile(
+    r"(?:,\s*|\b)(A[LKZR]|C[AOT]|D[CE]|FL|GA|HI|I[ADLN]|K[SY]|LA|M[ADEINOST]|N[CDEHJMVY]"
+    r"|O[HKR]|PA|RI|S[CD]|T[NX]|UT|V[AT]|W[AIVY]|ON|QC|BC|AB|MB|SK|NS|NB|NL|PE)"
+    r"(?=\s*\d{5}\b|[.,;)\s]*$|\s*\|)"
+)
+_CANADIAN_CODE = frozenset({"ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "NL", "PE"})
+
+# Where a letterhead names the place but not the country. Every entry here was
+# read off an affiliation this corpus holds and could not otherwise place: 66
+# of them named an institution or a city and no country at all, and 11 of those
+# say only "Lahore". A city's country is a fact, not an inference -- but the
+# list is deliberately only as long as the evidence, so nothing is placed by
+# guesswork about where an institution probably is.
+_PLACES: tuple[tuple[str, str], ...] = (
+    ("Pakistan", r"\blahore\b|\bmultan\b|\brawalpindi\b|\bgujranwala\b|\bsahiwal\b"),
+    ("Egypt", r"\bain[- ]?shams\b|\bal[- ]?azhar\b|\bzagazig\b|\bmansoura\b"),
+    (
+        "India",
+        r"\bchandigarh\b|\bjamnagar\b|\bsolapur\b|\bmaharashtra\b|\bbengaluru\b"
+        r"|\bkarnataka\b|\bsrinagar\b|\bmumbai\b|\bbombay\b",
+    ),
+    ("Russia", r"\bsechenov\b|\bmoscow\b"),
+    ("Brazil", r"\bsao paulo\b"),
+    ("Poland", r"\blublin"),
+    ("China", r"\bpeking\b|\bxingtai\b|\bnanfang\b|\bnanhua\b|\bhunan\b"),
+    ("Japan", r"\bnagasaki\b"),
+    ("Saudi Arabia", r"\briyadh\b|\bqassim\b|\bburaidah\b|\balmadinah\b|\btaibah\b"),
+    ("Indonesia", r"\bsebelas maret\b|\bhang tuah\b"),
+    ("Germany", r"\bfrankfurt\b|\bberlin\b"),
+    ("United States", r"\bchicago\b|\bnew haven\b|\bwayne state\b|\bcarolinas\b"),
+    ("Canada", r"\bottawa\b"),
+    # "Cali, Columbia" is Colombia misspelled, and reading the misspelling
+    # itself would make Colombians of Columbia University and British
+    # Columbia. The city carries the fact without the collision.
+    ("Colombia", r"\bcali\b"),
+)
+_PLACE_PATTERNS = tuple((n, re.compile(p)) for n, p in _PLACES)
+
+# The country code at the end of an email address. One held paper's whole
+# affiliation is "raffaele.cagiano@uniba.it." -- a domain is as much a
+# statement of country as a city is.
+_EMAIL_TLD = re.compile(r"@[\w.-]+\.([a-z]{2})\b")
+_TLD_COUNTRY = {
+    "it": "Italy",
+    "fr": "France",
+    "de": "Germany",
+    "es": "Spain",
+    "nl": "Netherlands",
+    "be": "Belgium",
+    "at": "Austria",
+    "ch": "Switzerland",
+    "pl": "Poland",
+    "pt": "Portugal",
+    "gr": "Greece",
+    "tr": "Turkey",
+    "ru": "Russia",
+    "cn": "China",
+    "jp": "Japan",
+    "kr": "South Korea",
+    "tw": "Taiwan",
+    "in": "India",
+    "pk": "Pakistan",
+    "eg": "Egypt",
+    "ir": "Iran",
+    "il": "Israel",
+    "br": "Brazil",
+    "mx": "Mexico",
+    "ca": "Canada",
+    "au": "Australia",
+    "nz": "New Zealand",
+    "za": "South Africa",
+    "sa": "Saudi Arabia",
+    "th": "Thailand",
+    "my": "Malaysia",
+    "id": "Indonesia",
+    "sg": "Singapore",
+    "ng": "Nigeria",
+}
 
 
 def countries_of(document: Document) -> list[str]:
     """The countries the authors wrote in their affiliations.
 
-    An affiliation ends with its country far more often than it names a city
-    this project could recognise, so the country names are searched for
-    directly and the rest of the line ignored.
+    An affiliation ends with its country more often than it names a city, so
+    the country names are searched for first and the rest of the line ignored.
+    That left 66 held papers placed nowhere, because a national journal's
+    letterhead names the institution and assumes the country: "Department of
+    Dermatology, Ain Shams University" is Cairo to every reader of it, and
+    eleven more say only "Lahore". Those are read from the place, and a
+    postal code, an abbreviation and an email domain are read too.
 
     A US state is read as the United States, except where the affiliation is
     Georgian: "Georgia" is a state and a country, and the one paper here that
@@ -107,103 +199,242 @@ def countries_of(document: Document) -> list[str]:
     for author in document.authors or []:
         if isinstance(author, dict):
             affiliations += [str(a) for a in (author.get("affiliations") or [])]
-    text = " | ".join(affiliations)
+    written = " | ".join(affiliations)
+    text = fold(written)
     out: list[str] = []
+
+    def add(name: str) -> None:
+        canonical = normalize_country(name)
+        if canonical and canonical not in out:
+            out.append(canonical)
+
     for name, pattern in _COUNTRY_PATTERNS:
         if pattern.search(text):
-            canonical = normalize_country(name)
-            if canonical and canonical not in out:
-                out.append(canonical)
-    if "Georgia" not in out and _US_STATE.search(text):
-        united = normalize_country("United States")
-        if united and united not in out:
-            out.append(united)
+            add(name)
+    for name, pattern in _ABBREVIATION_PATTERNS:
+        if pattern.search(written):
+            add(name)
+    if not out:
+        # Only where the country is named nowhere, so a place never overrides
+        # what the affiliation actually says.
+        for name, pattern in _PLACE_PATTERNS:
+            if pattern.search(text):
+                add(name)
+        for match in _EMAIL_TLD.finditer(text):
+            country = _TLD_COUNTRY.get(match.group(1))
+            if country:
+                add(country)
+    # Benin is a country and a Nigerian city, and every held paper that names
+    # it means the city: "University of Benin Teaching Hospital, Benin City,
+    # Edo State, Nigeria". Where both appear, the one the affiliation spells
+    # out wins. This is the Georgia rule again, for neighbours rather than for
+    # a state and a country.
+    # A country's name that is also a place inside another country, where both
+    # are found: the one the affiliation spells out as its own last word wins.
+    # These three are what an audit of every country in three papers or fewer
+    # turned up -- "Benin City, Edo State, Nigeria", "Armenia, Colombia" and
+    # "Jamaica Plain, MA, USA" -- and the Georgia rule above is the fourth.
+    for city, country in (("Benin", "Nigeria"), ("Armenia", "Colombia")):
+        if city in out and country in out:
+            out.remove(city)
+    if "Georgia" not in out:
+        codes = {m.group(1) for m in _SUBDIVISION_CODE.finditer(written)}
+        if _US_STATE.search(text) or (codes - _CANADIAN_CODE):
+            add("United States")
+        if codes & _CANADIAN_CODE:
+            add("Canada")
     return out
 
 
-# Countries as an affiliation writes them. The spelling a registry uses is
-# not the spelling a letterhead uses, so "USA" and "UK" are here and
-# ``normalize_country`` turns both into the project's name for the place.
+# Countries as an affiliation writes them, matched against folded text: every
+# pattern below is lower case and carries no accent, so "Türkiye", "México"
+# and "España" need no variant of their own.
+#
+# The list is every sovereign state, not only the countries seen so far. It
+# held 73, and 30 more that this corpus already knew from a registry's
+# location field had no pattern at all -- a paper written in Latvia, the
+# Philippines, Sri Lanka, Qatar, Kenya or Ghana could not be placed however
+# plainly it said so. An incomplete list fails silently, and under-counting a
+# country is the one error this table exists to prevent.
 _COUNTRY_NAMES: tuple[tuple[str, str], ...] = (
-    ("United States", r"\bU\.?S\.?A\.?\b|\bUnited States\b"),
-    ("United Kingdom", r"\bU\.?K\.?\b|\bUnited Kingdom\b|\bEngland\b|\bScotland\b|\bWales\b"),
-    ("Turkey", r"\bTurkey\b|\bT[uü]rkiye\b"),
-    ("Iran", r"\bIran\b"),
-    ("Egypt", r"\bEgypt\b"),
-    ("India", r"\bIndia\b"),
-    ("China", r"\bChina\b|\bP\.?R\.? China\b"),
-    ("Brazil", r"\bBrazil\b|\bBrasil\b"),
-    ("Mexico", r"\bMexico\b|\bM[eé]xico\b"),
-    ("Argentina", r"\bArgentina\b"),
-    ("Chile", r"\bChile\b"),
-    ("Colombia", r"\bColombia\b"),
-    ("Cuba", r"\bCuba\b"),
-    ("Peru", r"\bPeru\b|\bPer[uú]\b"),
-    ("Russia", r"\bRussia\b|\bRussian Federation\b"),
-    ("Ukraine", r"\bUkraine\b"),
-    ("Poland", r"\bPoland\b"),
-    ("Serbia", r"\bSerbia\b"),
-    ("Hungary", r"\bHungary\b"),
-    ("Czechia", r"\bCzech\b"),
-    ("Romania", r"\bRomania\b"),
-    ("Bulgaria", r"\bBulgaria\b"),
-    ("Greece", r"\bGreece\b"),
-    ("Italy", r"\bItaly\b|\bItalia\b"),
-    ("Spain", r"\bSpain\b|\bEspa[nñ]a\b"),
-    ("France", r"\bFrance\b"),
-    ("Germany", r"\bGermany\b|\bDeutschland\b"),
-    ("Netherlands", r"\bNetherlands\b|\bThe Netherlands\b"),
-    ("Belgium", r"\bBelgium\b"),
-    ("Switzerland", r"\bSwitzerland\b"),
-    ("Austria", r"\bAustria\b"),
-    ("Portugal", r"\bPortugal\b"),
-    ("Denmark", r"\bDenmark\b"),
-    ("Sweden", r"\bSweden\b"),
-    ("Norway", r"\bNorway\b"),
-    ("Finland", r"\bFinland\b"),
-    ("Ireland", r"\bIreland\b"),
-    ("Israel", r"\bIsrael\b"),
-    ("Saudi Arabia", r"\bSaudi Arabia\b"),
-    ("United Arab Emirates", r"\bUnited Arab Emirates\b|\bU\.?A\.?E\.?\b"),
-    ("Jordan", r"\bJordan\b"),
-    ("Lebanon", r"\bLebanon\b"),
-    ("Iraq", r"\bIraq\b"),
-    ("Pakistan", r"\bPakistan\b"),
-    ("Bangladesh", r"\bBangladesh\b"),
-    ("Nigeria", r"\bNigeria\b"),
-    ("South Africa", r"\bSouth Africa\b"),
-    ("Morocco", r"\bMorocco\b|\bMaroc\b"),
-    ("Tunisia", r"\bTunisia\b|\bTunisie\b"),
-    ("Japan", r"\bJapan\b"),
-    ("South Korea", r"\bKorea\b"),
-    ("Taiwan", r"\bTaiwan\b"),
-    ("Thailand", r"\bThailand\b"),
-    ("Malaysia", r"\bMalaysia\b"),
-    ("Indonesia", r"\bIndonesia\b"),
-    ("Singapore", r"\bSingapore\b"),
-    ("Australia", r"\bAustralia\b"),
-    ("New Zealand", r"\bNew Zealand\b"),
-    ("Canada", r"\bCanada\b"),
-    # Seen in these papers' affiliations and absent above until they were read.
-    ("Kuwait", r"\bKuwait\b"),
-    ("Libya", r"\bLibya\b"),
-    ("Croatia", r"\bCroatia\b|\bHrvatska\b"),
-    ("Estonia", r"\bEstonia\b"),
-    ("Cyprus", r"\bCyprus\b"),
-    ("Venezuela", r"\bVenezuela\b"),
-    ("Nepal", r"\bNepal\b"),
-    ("Viet Nam", r"\bVietnam\b|\bViet Nam\b"),
-    ("Malta", r"\bMalta\b"),
-    ("Slovakia", r"\bSlovakia\b|\bSlovak Republic\b"),
-    # Georgia is named by its capital rather than itself, because the word
-    # alone is a US state far more often. Tbilisi State Medical University
-    # ran the one Georgian vitiligo trial in this corpus.
-    ("Georgia", r"\bTbilisi\b"),
-    ("Ethiopia", r"\bEthiopia\b"),
-    ("Eritrea", r"\bEritrea\b"),
-    ("Luxembourg", r"\bLuxembourg\b"),
+    ("Afghanistan", "\\bafghanistan\\b"),
+    ("Albania", "\\balbania\\b"),
+    ("Algeria", "\\balgeria\\b"),
+    ("Andorra", "\\bandorra\\b"),
+    ("Angola", "\\bangola\\b"),
+    ("Argentina", "\\bargentina\\b"),
+    ("Armenia", "\\barmenia\\b"),
+    ("Australia", "\\baustralia\\b"),
+    ("Austria", "\\baustria\\b"),
+    ("Azerbaijan", "\\bazerbaijan\\b"),
+    ("Bahrain", "\\bbahrain\\b"),
+    ("Bangladesh", "\\bbangladesh\\b"),
+    ("Belarus", "\\bbelarus\\b"),
+    ("Belgium", "\\bbelgium\\b"),
+    ("Belize", "\\bbelize\\b"),
+    ("Benin", "\\bbenin\\b"),
+    ("Bhutan", "\\bbhutan\\b"),
+    ("Bolivia", "\\bbolivia\\b"),
+    ("Bosnia and Herzegovina", "\\bbosnia\\b"),
+    ("Botswana", "\\bbotswana\\b"),
+    ("Brazil", "\\bbrazil\\b|\\bbrasil\\b"),
+    ("Brunei", "\\bbrunei\\b"),
+    ("Bulgaria", "\\bbulgaria\\b"),
+    ("Burkina Faso", "\\bburkina faso\\b"),
+    ("Cambodia", "\\bcambodia\\b"),
+    ("Cameroon", "\\bcameroon\\b"),
+    ("Canada", "\\bcanada\\b"),
+    ("Chad", "\\bchad\\b"),
+    ("Chile", "\\bchile\\b"),
+    ("China", "\\bchina\\b"),
+    ("Colombia", "\\bcolombia\\b"),
+    ("Costa Rica", "\\bcosta rica\\b"),
+    ("Croatia", "\\bcroatia\\b|\\bhrvatska\\b"),
+    ("Cuba", "\\bcuba\\b"),
+    ("Cyprus", "\\bcyprus\\b"),
+    ("Czechia", "\\bczech\\b|\\bczechia\\b|\\bczech republic\\b"),
+    ("Denmark", "\\bdenmark\\b"),
+    ("Dominican Republic", "\\bdominican republic\\b"),
+    ("Ecuador", "\\becuador\\b"),
+    ("Egypt", "\\begypt\\b"),
+    ("El Salvador", "\\bel salvador\\b"),
+    ("Eritrea", "\\beritrea\\b"),
+    ("Estonia", "\\bestonia\\b"),
+    ("Ethiopia", "\\bethiopia\\b"),
+    ("Fiji", "\\bfiji\\b"),
+    ("Finland", "\\bfinland\\b"),
+    ("France", "\\bfrance\\b"),
+    ("French Guiana", "\\bfrench guiana\\b"),
+    ("Gabon", "\\bgabon\\b"),
+    ("Gambia", "\\bgambia\\b"),
+    ("Georgia", "\\btbilisi\\b"),
+    ("Germany", "\\bgermany\\b|\\bdeutschland\\b"),
+    ("Ghana", "\\bghana\\b"),
+    ("Greece", "\\bgreece\\b"),
+    ("Guatemala", "\\bguatemala\\b"),
+    ("Guinea", "\\bguinea\\b"),
+    ("Haiti", "\\bhaiti\\b"),
+    ("Honduras", "\\bhonduras\\b"),
+    ("Hungary", "\\bhungary\\b"),
+    ("Iceland", "\\biceland\\b"),
+    ("India", "\\bindia\\b"),
+    ("Indonesia", "\\bindonesia\\b"),
+    ("Iran", "\\biran\\b"),
+    ("Iraq", "\\biraq\\b"),
+    ("Ireland", "\\bireland\\b"),
+    ("Israel", "\\bisrael\\b"),
+    ("Italy", "\\bitaly\\b|\\bitalia\\b"),
+    ("Ivory Coast", "\\bivory coast\\b|\\bcote d.?ivoire\\b"),
+    ("Jamaica", "\\bjamaica\\b(?!\\s+plain)"),
+    ("Japan", "\\bjapan\\b"),
+    ("Jordan", "\\bjordan\\b"),
+    ("Kazakhstan", "\\bkazakhstan\\b"),
+    ("Kenya", "\\bkenya\\b"),
+    ("Kuwait", "\\bkuwait\\b"),
+    ("Kyrgyzstan", "\\bkyrgyzstan\\b"),
+    ("Laos", "\\blaos\\b|\\blao pdr\\b"),
+    ("Latvia", "\\blatvia\\b"),
+    ("Lebanon", "\\blebanon\\b"),
+    ("Libya", "\\blibya\\b"),
+    ("Liechtenstein", "\\bliechtenstein\\b"),
+    ("Lithuania", "\\blithuania\\b"),
+    ("Luxembourg", "\\bluxembourg\\b"),
+    ("Madagascar", "\\bmadagascar\\b"),
+    ("Malawi", "\\bmalawi\\b"),
+    ("Malaysia", "\\bmalaysia\\b"),
+    ("Maldives", "\\bmaldives\\b"),
+    ("Mali", "\\bmali\\b"),
+    ("Malta", "\\bmalta\\b"),
+    ("Mauritania", "\\bmauritania\\b"),
+    ("Mauritius", "\\bmauritius\\b"),
+    ("Mexico", "\\bmexico\\b|\\bm[ee]xico\\b"),
+    ("Moldova", "\\bmoldova\\b"),
+    ("Monaco", "\\bmonaco\\b"),
+    ("Mongolia", "\\bmongolia\\b"),
+    ("Montenegro", "\\bmontenegro\\b"),
+    ("Morocco", "\\bmorocco\\b|\\bmaroc\\b"),
+    ("Mozambique", "\\bmozambique\\b"),
+    ("Myanmar", "\\bmyanmar\\b|\\bburma\\b"),
+    ("Namibia", "\\bnamibia\\b"),
+    ("Nepal", "\\bnepal\\b"),
+    ("Netherlands", "\\bnetherlands\\b|\\bthe netherlands\\b|\\bholland\\b"),
+    ("New Zealand", "\\bnew zealand\\b"),
+    ("Nicaragua", "\\bnicaragua\\b"),
+    ("Niger", "\\bniger\\b"),
+    ("Nigeria", "\\bnigeria\\b"),
+    ("North Macedonia", "\\bnorth macedonia\\b|\\bmacedonia\\b"),
+    ("Norway", "\\bnorway\\b"),
+    ("Oman", "\\boman\\b"),
+    ("Pakistan", "\\bpakistan\\b"),
+    ("Palestine", "\\bpalestin"),
+    ("Panama", "\\bpanama\\b"),
+    ("Papua New Guinea", "\\bpapua new guinea\\b"),
+    ("Paraguay", "\\bparaguay\\b"),
+    ("Peru", "\\bperu\\b|\\bper[uu]\\b"),
+    ("Philippines", "\\bphili?l?ippines\\b"),
+    ("Poland", "\\bpoland\\b"),
+    ("Portugal", "\\bportugal\\b"),
+    ("Puerto Rico", "\\bpuerto rico\\b"),
+    ("Qatar", "\\bqatar\\b"),
+    ("Reunion", "\\breunion\\b"),
+    ("Romania", "\\bromania\\b"),
+    ("Russia", "\\brussia\\b|\\brussian federation\\b|\\brossiya\\b"),
+    ("Rwanda", "\\brwanda\\b"),
+    ("Saudi Arabia", "\\bsaudi arabia\\b"),
+    ("Senegal", "\\bsenegal\\b"),
+    ("Serbia", "\\bserbia\\b"),
+    ("Sierra Leone", "\\bsierra leone\\b"),
+    ("Singapore", "\\bsingapore\\b"),
+    ("Slovakia", "\\bslovakia\\b|\\bslovak republic\\b"),
+    ("Slovenia", "\\bslovenia\\b"),
+    ("Somalia", "\\bsomalia\\b"),
+    ("South Africa", "\\bsouth africa\\b"),
+    ("South Korea", "\\bkorea\\b|\\bsouth korea\\b|\\brepublic of korea\\b"),
+    ("Spain", "\\bspain\\b|\\bespa[nn]a\\b|\\bespana\\b"),
+    ("Sri Lanka", "\\bsri ?lanka\\b|\\bceylon\\b"),
+    ("Sudan", "\\bsudan\\b"),
+    ("Suriname", "\\bsuriname\\b"),
+    ("Sweden", "\\bsweden\\b"),
+    ("Switzerland", "\\bswitzerland\\b"),
+    ("Syria", "\\bsyria\\b"),
+    ("Taiwan", "\\btaiwan\\b"),
+    ("Tajikistan", "\\btajikistan\\b"),
+    ("Tanzania", "\\btanzania\\b"),
+    ("Thailand", "\\bthailand\\b"),
+    ("Togo", "\\btogo\\b"),
+    ("Trinidad and Tobago", "\\btrinidad\\b"),
+    ("Tunisia", "\\btunisia\\b|\\btunisie\\b"),
+    ("Turkey", "\\bturkey\\b|\\bt[uu]rkiye\\b"),
+    ("Turkmenistan", "\\bturkmenistan\\b"),
+    ("Uganda", "\\buganda\\b"),
+    ("Ukraine", "\\bukraine\\b"),
+    ("United Arab Emirates", "\\bunited arab emirates\\b"),
+    ("United Kingdom", "\\bunited kingdom\\b|\\bengland\\b|\\bscotland\\b|\\bwales\\b"),
+    ("United States", "\\bunited states\\b"),
+    ("Uruguay", "\\buruguay\\b"),
+    ("Uzbekistan", "\\buzbekistan\\b"),
+    ("Venezuela", "\\bvenezuela\\b"),
+    ("Viet Nam", "\\bvietnam\\b|\\bviet nam\\b|\\bviet ?nam\\b"),
+    ("Yemen", "\\byemen\\b"),
+    ("Zambia", "\\bzambia\\b"),
+    ("Zimbabwe", "\\bzimbabwe\\b"),
 )
-_COUNTRY_PATTERNS = tuple((name, re.compile(p)) for name, p in _COUNTRY_NAMES)
+_COUNTRY_PATTERNS = tuple((n, re.compile(p)) for n, p in _COUNTRY_NAMES)
+
+# Abbreviations, matched against the affiliation as written rather than folded.
+# Lower-cased, "UK" would match the word "uk" and "IND" the first syllable of
+# an Indonesian or Indian word; cased, each one is unambiguous. "KSA" and
+# "IND" are here because three held papers write only those: "Qassim
+# University, Buraidah, KSA" names no other country.
+_COUNTRY_ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("United States", "\\bU\\.?S\\.?A\\.?\\b"),
+    ("United Kingdom", "\\bU\\.?K\\.?\\b"),
+    ("United Arab Emirates", "\\bU\\.?A\\.?E\\.?\\b"),
+    ("China", "\\bP\\.?R\\.? China\\b"),
+    ("Saudi Arabia", "\\bKSA\\b"),
+    ("India", "\\bIND\\b"),
+)
+_ABBREVIATION_PATTERNS = tuple((n, re.compile(p)) for n, p in _COUNTRY_ABBREVIATIONS)
 
 
 # Publication types that are about trials without being one. These beat a
@@ -280,16 +511,44 @@ _ALLOCATED = re.compile(
 # Only wording that names a design counts: "Treatment of vitiligo with
 # psoralen derivatives" could be a trial, a case series or an opinion, and
 # nothing in the record decides.
-_TITLE_DESIGN = re.compile(
+# A title that names how the arms were formed states the design outright, and
+# nothing else in the title can take that back: "Artificial intelligence-driven
+# comparative efficacy of topical crisaborole versus halometasone for vitiligo:
+# A randomized and noninferiority study" is a trial, whatever its first words
+# are about.
+#
+# "Controlled study" is not here. In observational writing it means a
+# case-control study -- "Anti-thyroid peroxidase antibody and vitiligo: a
+# controlled study" -- so it goes with the weaker wording below, where it
+# still earns a 1975 trimethylpsoralen trial its place.
+_TITLE_TRIAL = re.compile(
     r"""
       double[- ]blind | single[- ]blind | placebo[- ]controlled | vehicle[- ]controlled
-    | controlled\s+trial | controlled\s+study | randomi[sz]ed | cross[- ]?over
-    | comparative\s+(?:study|trial) | a\s+(?:clinical\s+|therapeutic\s+)?trial\b
-    | clinical\s+trial | split[- ]body | left[- ]right
-    # A head-to-head comparison is a design statement. Leaving it out lost 30
-    # papers whose title is the only record they have -- "Platelet-rich plasma
-    # and follicular transplantation versus follicular transplantation", "A
-    # comparative pilot study of dipstick versus open-spray cryotherapy".
+    | controlled\s+trial | randomi[sz]ed | cross[- ]?over
+    | a\s+(?:clinical\s+|therapeutic\s+)?trial\b | clinical\s+trial
+    | split[- ]body | left[- ]right
+    # The same statement where the paper is not written in Latin script.
+    # 疗效观察 is "observation of therapeutic effect" and 临床观察 "clinical
+    # observation": in a Chinese title both declare a study of a treatment in
+    # patients, the way "a clinical trial" does in English.
+    #
+    # 随机 (randomised), 双盲, 安慰剂 and the Russian equivalents were here and
+    # are not: across 12,086 documents not one verdict turned on them, because
+    # a Chinese title that says 随机 says 临床观察 or 疗效观察 too, and the
+    # Chinese trials that do not reach Crossref at all are in CNKI, which this
+    # project cannot read. They would have been guards against nothing.
+    | 疗效观察 | 临床观察 | 临床研究
+    """,
+    re.X | re.I,
+)
+
+# A head-to-head comparison only implies one. Leaving it out lost 30 papers
+# whose title is the only record they have -- "Platelet-rich plasma and
+# follicular transplantation versus follicular transplantation", "A
+# comparative pilot study of dipstick versus open-spray cryotherapy".
+_TITLE_COMPARISON = re.compile(
+    r"""
+      comparative\s+(?:study|trial) | controlled\s+study
     | \bversus\b | \bvs\.? | compared\s+(?:with|to) | comparison\s+of
     """,
     re.X | re.I,
@@ -299,6 +558,99 @@ _TITLE_DESIGN = re.compile(
 # is not a comparison of graft with host.
 _NOT_A_COMPARISON = re.compile(r"graft[- ]versus[- ]host|host[- ]versus[- ]graft", re.I)
 
+# A trial gives somebody something. Either the title claims a therapeutic
+# effect, or it names what was given -- surgical trials claim nothing and name
+# only the procedures they put side by side: "Blister roof grafting versus
+# epidermal cell suspension in stable vitiligo", "Comparison of follicular
+# unit extraction vs. plucking of hair follicles". Requiring the claim alone
+# rejected five of those.
+_NAMES_A_TREATMENT = re.compile(
+    r"""
+    # What it claims to have done to somebody.
+      efficac | effectiv | treatment | treating | treated | therap | repigment
+    | pigmentation | tolerab | \bdose | management\s+of | regimen | intervention
+    | monotherap | placebo | supplement | irritancy
+    # How it was given.
+    | topical | \boral\b | systemic | intraven | intralesional | injection
+    | irradiation | exposure | occlusive
+    # What was given, where the title names a modality rather than a drug.
+    | graft | dermabras | laser | suspen | transplant | micro-?needl | dermaroller
+    | cryotherap | phototherap | photochemotherap | \bUV[AB]?\b | ultraviolet
+    | psoralen | PUVA | KUVA | excimer | punch | tattoo | moxibustion | needling
+    | ointment | \bcream\b | \bgel\b | tincture | blister | platelet[- ]rich
+    | lepa | vamana | virechana | chikitsa
+    # Romance languages drop the h from phototherapy -- "fototerapia" is not
+    # "phototherap" to a pattern -- and name the treatment with a word of
+    # their own. German's "Heliotherapie" needs nothing: it still has therap.
+    | terapi | tratamien | tratamen | traitement | behandlung | salbe
+    | pomada | \bcrema\b | unguento
+    """,
+    re.X | re.I,
+)
+
+# What is left after the treatment test. Of 49 phrases tried here, 27 never
+# changed a verdict once the title had to name a treatment, and another six --
+# "serum", "biomarker", "quality of life", "anxiety", "psychosocial",
+# "imaging" -- rejected more real trials than studies: "Treatment of vitiligo
+# patients by excimer laser improves patients' quality of life", "Efficacy and
+# safety of ritlecitinib in vitiligo patients across Fitzpatrick skin types
+# with biomarkers", "Three-dimensional imaging for facial vitiligo: Results
+# from a phase 2 randomized controlled trial". These sixteen are the ones that
+# were right every time they fired.
+#
+# "Correlat" is right four times in five; it loses "Correlation of clinical
+# efficacy and psychosocial impact on vitiligo patients by excimer laser
+# treatment" to keep out three re-analyses of trials already held.
+_NOT_A_TREATMENT_STUDY = re.compile(
+    r"""
+      pathogenesis | prevalence | \bsurvey\b | oxidative\s+stress | correlat
+    | immunolog\w+\s+profile | histopathological\s+char | baseline\s+differences
+    | neural\s+network | image\s+analysis | differential\s+diagnosis
+    | cross[-\u2010\u2011 ]sectional
+    | \blevels?\s+(?:in|of)\b | serum\s+level
+    | (?:assessment|evaluation|comparison|estimation)\s+of\s+serum
+    | segmental\s+(?:and|versus|vs\.?)\s+non[- ]?segmental
+    # A paper can name a treatment and claim an effect on something that is
+    # not a patient: a target, an omics layer, a questionnaire, a genotype.
+    | therapeutic\s+targets? | polymorphism | biomarkers?\s+associated
+    | multi-?omics | proteomic | transcriptomic | metabolomic | bioinformatic
+    | single-?cell | development\s+and\s+validation | computer-?aided
+    # What a paper claims when it followed people who were treated but gave
+    # them nothing: their risk, their perspective, the pattern of their
+    # disease, the strata of a severity scale. "Predict" and "expression"
+    # were tried here and are not: "Suction blister grafting for vitiligo:
+    # efficacy and clinical predictive factors" is a trial, and so is
+    # "Expression of Janus Kinase 1 before and after narrow band UVB".
+    | perspectives?\b | insights\s+from | \brisk\s+of\b | patterns\s+in\b
+    | severity\s+strata | global\s+assessment
+    """,
+    re.X | re.I,
+)
+
+# A trial is run in people. Nothing else in the record outranks this: "fire
+# needle therapy on vitiligo induced by hydroquinone in modeled mice" and
+# "topical Mycophenolate mofetil on hydroquinone-induced depigmentation in
+# Guinea pigs and mice" both name a treatment and claim an effect, and a
+# depigmented mouse is not a participant. "Keratinocyte" cannot go here: the
+# melanocyte-keratinocyte transplant procedure is surgery on people, and
+# listing the word cost 21 real surgical trials. Nor can "in vitro" or "cell
+# line": a melanoma vaccine of "peptide-pulsed dendritic cells generated in
+# vitro" and one of "a genetically modified interleukin 2-producing melanoma
+# cell line" are both phase I trials in people, and the laboratory is where
+# the product was made, not where the trial was run.
+#
+# Mendelian randomisation belongs here for the same reason: it randomises
+# nothing and nobody. It is an analysis of inherited variants in people who
+# were never assigned anything, and the word "randomization" in its name
+# would otherwise settle the question by itself.
+_NOT_IN_PEOPLE = re.compile(
+    r"""
+      \bmice\b | \bmouse\b | murine | \brats?\b | guinea\s+pigs? | zebrafish
+    | \brabbits?\b | \bswine\b | \bporcine\b | B16[A-Z]?\d*
+    | reconstructed\s+(?:human\s+)?skin | mendelian\s+randomi[sz]ation
+    """,
+    re.X | re.I,
+)
 
 # A trial report names one trial. A paper whose title says "trials" is about
 # them: a systematic review, a commentary, a survey of how trials report skin
@@ -310,7 +662,13 @@ _NOT_A_COMPARISON = re.compile(r"graft[- ]versus[- ]host|host[- ]versus[- ]graft
 # "compared to" and carries no publication type, so the synthesis words have
 # to be here after all: they were dead against the narrow pattern and are
 # load-bearing against this one.
-_TITLE_ABOUT_TRIALS = re.compile(r"\btrials\b|systematic\s+review|meta-?analys|comment\s+on", re.I)
+_TITLE_ABOUT_TRIALS = re.compile(
+    r"\btrials\b|systematic\s+review|meta-?analys|comment\s+on|^comment:"
+    r"|subgroup\s+analysis|pooled\s+(?:results|analysis|subgroup)|post\s*-?hoc"
+    r"|trial\s+landscape|trend\s+analysis|case\s+report|^incorrect\b|^erratum"
+    r"|guidelines?\s+and\s+consensus|process\s+evaluation",
+    re.I,
+)
 
 
 def reports_a_trial(document: Document) -> bool:
@@ -322,41 +680,70 @@ def reports_a_trial(document: Document) -> bool:
     trials. The publication type settles those, in both directions -- where
     PubMed has called it a trial there is nothing left to decide.
 
-    Where it has not, the abstract has to count the people enrolled or say
-    how they were assigned. Either will do, not both: requiring both rejected
-    the ruxolitinib and narrow-band UVB study, which is single-arm and
-    open-label and so allocates nobody, along with 333 other records already
-    held.
+    Where it has not, the title has to name a treatment first, because a trial
+    gives somebody something. This is the test that does the work. Without it
+    the abstract decided, and an abstract cannot: "148 patients were
+    classified" and "148 patients were randomised" are the same sentence to a
+    pattern, so every case-control study passed. The corpus was holding 120
+    such papers as trials -- HLA typing, autoantibody titres, quality-of-life
+    scales, electron microscopy, "[The pathogenesis of vitiligo]" -- and 116
+    of them name no treatment at all. Of the four that do, two are
+    re-analyses of trials held elsewhere and two are retrospective reviews.
 
-    Where there is no abstract either, the title has to name a design. That is
-    the whole record for 399 of the 401 vitiligo papers before 1970, and
-    Europe PMC has no abstract for them either; it mirrors MEDLINE. Two
-    survive the test, from 1975 and 1976. The rest cannot be judged: a 1958
-    paper called "The treatment of vitiligo with psoralen derivatives" may be
-    a trial, a case series or an opinion, and guessing would be inventing.
+    Then the abstract has to count the people enrolled or say how they were
+    assigned. Either will do, not both: requiring both rejected the
+    ruxolitinib and narrow-band UVB study, which is single-arm and open-label
+    and so allocates nobody, along with 333 other records already held.
+
+    Where there is no abstract either, the title has to compare. That is the
+    whole record for 399 of the 401 vitiligo papers before 1970, and Europe
+    PMC has no abstract for them either; it mirrors MEDLINE. Two survive the
+    test, from 1975 and 1976. The rest cannot be judged: a 1958 paper called
+    "The treatment of vitiligo with psoralen derivatives" may be a trial, a
+    case series or an opinion, and guessing would be inventing.
     """
     types = set(document.publication_types or [])
     if types & NOT_A_TRIAL:
         return False
-    title = document.title or ""
+    # Folded, for the same reason the disease gate folds: "Efficacité de
+    # l'association baricitinib et photothérapie versus photothérapie seule"
+    # names a design and a treatment, and "phototherap" matches neither
+    # spelling of the word it is written with.
+    title = fold(document.title)
     if _TITLE_ABOUT_TRIALS.search(title):
+        return False
+    if _NOT_IN_PEOPLE.search(title):
+        return False
+    if _TITLE_TRIAL.search(title):
+        return True
+    # Before the publication type, not after it. PubMed types "Prevalence of
+    # vitiligo in Brazil-A population survey" and "Turnover in humans of
+    # iodine- and cobalamin-labeled transcobalamin I" as clinical trials, and
+    # deferring to that let fifteen measurements in: pathogenesis, serum
+    # vitamin D, oxidative stress, a neural network, a confocal-microscopy
+    # differential diagnosis. The type says a trial happened somewhere; the
+    # title says what this paper measured, and it is the more specific claim.
+    # A title that names a design is checked first, so "randomised" still
+    # outranks both.
+    if _NOT_A_TREATMENT_STUDY.search(title) or _NOT_A_COMPARISON.search(title):
         return False
     if types & TRIAL_TYPES:
         return True
-    abstract = document.abstract or ""
-    if not abstract.strip():
-        if _NOT_A_COMPARISON.search(title):
-            return False
-        return bool(_TITLE_DESIGN.search(title))
-    return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
+    # A checkpoint inhibitor is a treatment too, and those papers name the
+    # drug where a vitiligo paper names a modality. The oncology stratum's own
+    # vocabulary is the list of them; writing a second one here is how the
+    # skin-disease list came to disagree with itself over 88 trials.
+    if not (_NAMES_A_TREATMENT.search(title) or _IMMUNOTHERAPY.search(title)):
+        return False
+    abstract = fold(document.abstract)
+    if abstract.strip():
+        return bool(_ENROLLED.search(abstract) or _ALLOCATED.search(abstract))
+    return bool(_TITLE_COMPARISON.search(title))
 
 
 # A cancer, and an immunotherapy given for it. Both are needed: a melanoma
 # trial of a cytotoxic drug that mentions depigmentation is reporting a rash,
 # not an immune response to melanocytes, and 45 such papers are left out.
-_ONCOLOGY_CONDITION = re.compile(
-    r"melanoma|carcinoma|cancer|tumou?r|neoplas|lymphoma|leukemi|sarcoma|myeloma", re.I
-)
 _IMMUNOTHERAPY = re.compile(
     r"nivolumab|ipilimumab|pembrolizumab|atezolizumab|durvalumab|avelumab|tremelimumab"
     r"|checkpoint|anti-?PD-?1|anti-?PD-?L1|anti-?CTLA-?4|vaccin|dendritic\s+cell"
@@ -377,14 +764,14 @@ def observes_vitiligo_under_immunotherapy(document: Document) -> bool:
     people to develop vitiligo -- while the disease being treated is a cancer,
     so they are not vitiligo trials and are held apart.
     """
-    text = f"{document.title or ''} {document.abstract or ''}"
+    text = fold(f"{document.title or ''} {document.abstract or ''}")
     if not _DEPIGMENTATION.search(text):
         return False
     if studies_vitiligo(document.title or "", document.abstract or ""):
         return False
     if not reports_a_trial(document):
         return False
-    return bool(_ONCOLOGY_CONDITION.search(text) and _IMMUNOTHERAPY.search(text))
+    return bool(ONCOLOGY_CONDITION.search(text) and _IMMUNOTHERAPY.search(text))
 
 
 def outcome_trial_from_document(document: Document) -> Trial | None:
@@ -412,7 +799,9 @@ def outcome_trial_from_document(document: Document) -> Trial | None:
         completion_date=str(year) if year else None,
         raw_metadata={
             "scope": VITILIGO_AS_OUTCOME_SCOPE,
-            "pmid": str(document.source_id),
+            # A Crossref paper has a DOI and no PMID; recording one under
+            # the other's name would make the identifier unusable.
+            "pmid": (str(document.source_id) if document.source == SourceKind.PUBMED else None),
             "journal": document.journal,
             "year": year,
             "doi": document.doi,
@@ -440,7 +829,7 @@ def design_of(document: Document) -> str:
     and those keep the benefit of the doubt, because a paper that says
     randomised is reporting an assignment whatever else it did.
     """
-    text = f"{document.title or ''} {document.abstract or ''}"
+    text = fold(f"{document.title or ''} {document.abstract or ''}")
     if _RETROSPECTIVE.search(text) and not _PROSPECTIVE.search(text):
         return "retrospective"
     return "prospective_or_unstated"
@@ -478,7 +867,7 @@ def trial_from_document(document: Document) -> Trial | None:
         raw_metadata={
             "scope": PUBLISHED_ONLY_SCOPE,
             "design": design_of(document),
-            "pmid": str(document.source_id),
+            "pmid": (str(document.source_id) if document.source == SourceKind.PUBMED else None),
             "journal": document.journal,
             "year": year,
             "doi": document.doi,

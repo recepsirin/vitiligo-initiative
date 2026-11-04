@@ -90,6 +90,7 @@ from vitiligo.trials.countries import normalize_countries
 from vitiligo.trials.relevance import (
     DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
+    fold,
     is_vitiligo_trial,
     treats_skin_disease,
 )
@@ -562,6 +563,33 @@ def run_published_trial_ingestion(
         # with no abstract the title is all there is.
         ' OR versus[Title] OR "vs"[Title] OR "comparison of"[Title]'
         ' OR "compared with"[Title] OR "compared to"[Title]))'
+        # A trial need not say so. "Efficacy and Safety Profile of Oral
+        # Tofacitinib in Non-Segmental Vitiligo", "Triple Combination of
+        # Fractional CO2 Laser With Topical Corticosteroid and Ultraviolet B
+        # Narrow Band in Treatment of Stable Vitiligo" and 195 others claim a
+        # treatment effect and name no design, and the clauses above asked
+        # for a design. They are mostly the single-centre Chinese, Egyptian,
+        # Indian and Iranian studies, prospective and retrospective, that a
+        # registry never saw either.
+        " OR ((vitiligo[Title] OR leucoderma[Title] OR leukoderma[Title])"
+        " AND (efficacy[Title] OR effectiveness[Title] OR therapeutic[Title]"
+        ' OR therapy[Title] OR "treatment of"[Title] OR "in the treatment"[Title]))'
+        # Nor need it claim an effect. A surgical series says only how it
+        # turned out: "Ultrathin Skin Grafting in Resistant Stable Vitiligo: A
+        # Follow-up Study of 8 Years in 370 Patients", "Twelve-month and
+        # sixty-month outcomes of noncultured cellular grafting", "Suction
+        # Blister Epidermal Grafting: Experience of 112 Patients".
+        #
+        # The wording matters more than it looks. Of the 7,938 papers with the
+        # disease in the title, 6,000 had never been put to the gate, and
+        # asking it about all of them admits three non-trials for every trial:
+        # the query is carrying precision the gate cannot, because the gate
+        # cannot see what the query asked.
+        " OR ((vitiligo[Title] OR leucoderma[Title] OR leukoderma[Title])"
+        ' AND (outcome[Title] OR outcomes[Title] OR "follow-up"[Title]'
+        ' OR "follow up"[Title] OR "treated with"[Title] OR "treated by"[Title]'
+        ' OR experience[Title] OR repigmentation[Title] OR "response to"[Title]'
+        " OR safety[Title]))"
     ),
     commit_every: int = 50,
 ) -> IngestionStats:
@@ -605,6 +633,19 @@ def run_published_trial_ingestion(
                 key = normalize_protocol_id(source_id)
                 if key:
                     held.add(key)
+            # PubMed files a paper twice when it appears ahead of print and
+            # again in an issue, under two PMIDs and with no registry id to
+            # tie them together. "Treatment of vitiligo patients by excimer
+            # laser improves patients' quality of life" was held twice that
+            # way, as one trial counted two.
+            held_titles = {
+                _title_key(title)
+                for title in session.exec(select(Trial.brief_title)).all()
+                if title
+            }
+            # The records already holding those titles, so a re-run refreshes
+            # them instead of mistaking each for its own duplicate.
+            held_source_ids = set(session.exec(select(Trial.source_id)).all())
 
             wanted = set(pmids)
             documents = [
@@ -625,6 +666,15 @@ def run_published_trial_ingestion(
                 if trial is None:
                     skipped += 1
                     continue
+                title_key = _title_key(trial.brief_title)
+                if (
+                    title_key
+                    and title_key in held_titles
+                    and trial.source_id not in held_source_ids
+                ):
+                    skipped += 1
+                    continue
+                held_titles.add(title_key)
                 ins, upd = _upsert_trial(session, trial)
                 inserted += ins
                 updated += upd
@@ -646,6 +696,164 @@ def run_published_trial_ingestion(
         skipped=skipped,
         run_id=run_id,
     )
+
+
+# Crossref's title index is fuzzy: a search for "vitiligo" returns papers
+# that only cite one. The title has to carry a name of the disease itself,
+# and the disease gate then decides whether that name means this disease.
+_NAMES_THE_DISEASE = re.compile(r"vitilig|leu[ck]oderma|sh?[wv]itra|白癜风", re.I)
+
+# The disease's other names, which the CTRI and the Ayurvedic and Unani
+# journals use in place of "vitiligo". A sweep of all four found 537 titles
+# naming the disease and 534 already held, so the synonym space is almost
+# entirely covered by the vitiligo sweep -- those journals write both words.
+# "Shwitra" is the exception worth the request.
+# The last three are the disease's name where the paper is not written in
+# Latin script, which no spelling of "vitiligo" can reach: Chinese bai dian
+# feng, Japanese "vitiligo vulgaris", and the Russian transliteration.
+CROSSREF_TERMS = (
+    "vitiligo",
+    "leucoderma",
+    "leukoderma",
+    "switra",
+    "shwitra",
+    "白癜风",
+)
+# Japanese and Russian are not searched. 尋常性白斑 makes Crossref match the
+# 尋常性 ("vulgaris") and return 92,000 works about acne and warts, and витилиго
+# returns sixteen, none of them a trial report -- the Russian journals that
+# publish vitiligo trials give their titles in English, which is how four
+# Russian trials are already held.
+
+
+def run_crossref_trial_ingestion(
+    terms: Sequence[str] = CROSSREF_TERMS,
+    commit_every: int = 25,
+) -> IngestionStats:
+    """Hold the trials reported in journals MEDLINE does not index.
+
+    Everything before this reads PubMed, so the corpus knew only the trials
+    published in the 5,500 journals MEDLINE indexes. Crossref registers a DOI
+    for almost everything else. A title search returns 10,719 vitiligo journal
+    articles, 4,111 of them held here under neither their DOI nor their title,
+    and the gate finds 190 trial reports among them: the *Journal of Pakistan
+    Association of Dermatologists*, *Pigment International*, *The Egyptian
+    Journal of Hospital Medicine*, *Al-Azhar International Medical Journal*,
+    the *Chinese Journal of Dermatology*, Unani and Ayurvedic journals, and
+    the conference abstracts of the BJD, JAAD and JID.
+
+    Crossref's search response carries no affiliation, and the affiliation is
+    where the country comes from, so each record the gate keeps is fetched
+    again in full. That is 190 extra requests rather than 4,111.
+    """
+    from vitiligo.sources.crossref import CrossrefClient, document_from_work
+    from vitiligo.sources.ictrp import normalize_protocol_id
+    from vitiligo.sources.published_trials import (
+        comparison_key,
+        registry_ids,
+        trial_from_document,
+    )
+
+    init_db()
+    run = IngestionRun(source=SourceKind.CROSSREF.value, query=" OR ".join(terms))
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    fetched = inserted = updated = skipped = 0
+    try:
+        with session_scope() as session:
+            held_dois = {
+                (doi or "").lower().strip()
+                for doi in session.exec(select(Document.doi)).all()
+                if doi
+            }
+            held_titles = {
+                _title_key(title) for title in session.exec(select(Document.title)).all() if title
+            }
+            held_titles |= {
+                _title_key(title)
+                for title in session.exec(select(Trial.brief_title)).all()
+                if title
+            }
+            # A conference abstract of a registered trial is that trial, and
+            # the registration is the better record. Nine of them came in --
+            # ritlecitinib and upadacitinib reported twice each at the BJD --
+            # because this skipped a paper by its DOI and its title and never
+            # read the accession its abstract gives.
+            held_ids: set[str] = set()
+            for source_id in session.exec(select(Trial.source_id)).all():
+                held_ids.add(comparison_key(source_id))
+                protocol = normalize_protocol_id(source_id)
+                if protocol:
+                    held_ids.add(protocol)
+
+            client = CrossrefClient()
+            try:
+                for item in (work for one in terms for work in client.search_titles(one)):
+                    fetched += 1
+                    candidate = document_from_work(item)
+                    # Folded, or "Vitíligo en niños" is fetched and then dropped.
+                    if candidate is None or not _NAMES_THE_DISEASE.search(fold(candidate.title)):
+                        skipped += 1
+                        continue
+                    if candidate.doi in held_dois or _title_key(candidate.title) in held_titles:
+                        skipped += 1
+                        continue
+                    if any(comparison_key(i) in held_ids for i in registry_ids(candidate)):
+                        skipped += 1
+                        continue
+                    if trial_from_document(candidate) is None:
+                        skipped += 1
+                        continue
+                    full = client.work(candidate.source_id)
+                    document = document_from_work(full) if full else None
+                    if document is None:
+                        document = candidate
+                    trial = trial_from_document(document)
+                    if trial is None:
+                        skipped += 1
+                        continue
+                    _upsert_document(session, document)
+                    ins, upd = _upsert_trial(session, trial)
+                    inserted += ins
+                    updated += upd
+                    held_dois.add(document.doi or "")
+                    held_titles.add(_title_key(document.title))
+                    # Two abstracts of one trial at the same meeting is the
+                    # ordinary case, not the exception.
+                    held_ids.update(comparison_key(i) for i in registry_ids(document))
+                    if (inserted + updated) % commit_every == 0:
+                        session.commit()
+            finally:
+                client.close()
+            session.commit()
+        _finalize_run(run_id, "completed", fetched, inserted, updated, fetched, None)
+    except Exception as exc:
+        logger.exception("Crossref trial ingestion failed")
+        _finalize_run(run_id, "failed", fetched, inserted, updated, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="crossref-trials",
+        total_found=fetched,
+        fetched=fetched,
+        inserted=inserted,
+        updated=updated,
+        skipped=skipped,
+        run_id=run_id,
+    )
+
+
+def _title_key(title: str | None) -> str:
+    """A title stripped to its letters and digits.
+
+    Two records of one paper differ in punctuation, case and whitespace --
+    "Vitiligo: a review" against "Vitiligo - A Review" -- and comparing them
+    as written held seven trials twice.
+    """
+    return re.sub(r"[^a-z0-9]", "", (title or "").lower())
 
 
 def run_vitiligo_outcome_ingestion(commit_every: int = 50) -> IngestionStats:

@@ -100,6 +100,12 @@ def test_depigmentation_with_a_known_external_cause_is_not_vitiligo(
         "Retinoic acid cream in cutis laxa senilis with leukoderma",
         "Melanocyte suspension transplantation in postburn leukoderma",
         "Rhododenol-induced Leukoderma: a long-term treatment study",
+        # The same agent, spelled the other way the literature spells it.
+        "Topical bimatoprost on rhododendrol-induced refractory leukoderma",
+        # A pale patch that is a stretch mark.
+        "UVB laser treatment of leukoderma in striae distensae",
+        # Another disease, treated, whose complication is the pale patch.
+        "Fractional CO2 in the treatment of melasma reduces punctate leukoderma",
     ],
 )
 def test_a_suggestive_name_in_the_wrong_setting_is_refused(subject: str) -> None:
@@ -112,6 +118,28 @@ def test_a_suggestive_name_in_the_wrong_setting_is_refused(subject: str) -> None
     that decide whether the list is doing anything.
     """
     assert not names_vitiligo(subject)
+
+
+@pytest.mark.parametrize(
+    "subject",
+    [
+        # Spanish and Portuguese write the disease with an accent, and four
+        # held papers sat outside the gate because of it. Folding is what a
+        # list of spellings cannot be: one rule for every language that
+        # writes Latin script with marks on it.
+        "Lesiones faciales de vitíligo tras la administración de la vacuna",
+        # The one script folding cannot reach that this corpus writes in.
+        "白癜风患者管理指南",
+    ],
+)
+def test_the_disease_is_named_in_any_script_and_under_any_accent(subject: str) -> None:
+    """An accent is not a different disease, and nor is an alphabet.
+
+    One case each, because one case each is all that can fail on its own:
+    the accent turns on the fold, and 白癜风 on the only non-Latin name any
+    of the 17,124 subject strings here is written with.
+    """
+    assert names_vitiligo(subject)
 
 
 def test_depigmentation_and_white_spot_alone_never_qualify() -> None:
@@ -240,9 +268,10 @@ def test_the_corpus_holds_exactly_these_twenty_non_vitiligo_records(
 
     assert rejected - NOT_VITILIGO == set(), "a record naming no form of the disease was admitted"
     assert NOT_VITILIGO - rejected == set(), "a listed record is gone, or now names the disease"
-    # 1,082 records from registries and 746 reconstructed from the papers of
-    # trials that were never registered, less the twenty above.
-    assert total - len(NOT_VITILIGO) == 1808
+    # 1,082 records from registries and 1,196 reconstructed from the papers of
+    # trials that were never registered -- 851 from PubMed and 345 from
+    # journals Crossref indexes and MEDLINE does not -- less the twenty above.
+    assert total - len(NOT_VITILIGO) == 2258
 
 
 def test_a_drug_class_trial_is_not_a_vitiligo_trial() -> None:

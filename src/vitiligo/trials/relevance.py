@@ -70,8 +70,10 @@ list of other diseases can be.
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from vitiligo.storage import Trial
+from vitiligo.storage.models import TrialSourceKind
 
 # Names that mean this disease and no other.
 #
@@ -84,12 +86,38 @@ from vitiligo.storage import Trial
 # enough to catch words that are not the disease at all.
 DECISIVE = re.compile(
     r"""
-    vitilig                      # every language's spelling begins this way
+    vitilig                      # every Latin-script spelling begins this way
     | vtiligo | vilitigo | vitligo  # the three misspellings in the corpus
     | sh?witra                   # Ayurvedic; "shvitra" always appears beside it
+    # The one script fold() cannot reach that this corpus actually writes in.
+    # Chinese 白斑 is not here -- on its own it means a white patch anywhere,
+    # oral leukoplakia included -- and neither are the traditional-Chinese
+    # 白癜風, the Japanese 尋常性白斑 or the Russian витилиго: none appears in
+    # any of the 17,124 titles, conditions and keywords this corpus holds.
+    | 白癜风
     """,
     re.X,
 )
+
+
+def fold(text: str | None) -> str:
+    """Lower-cased, with every diacritic removed.
+
+    Spanish and Portuguese write the disease "vitíligo", and the accent put
+    four held papers beyond the gate's reach: "Lesiones faciales de vitíligo
+    tras la administración de la vacuna frente a SARS-CoV-2" names the
+    disease as plainly as any English title. French does the same to the
+    treatment words -- "photothérapie" is not "phototherap" to a pattern.
+
+    Folding is what a list of spellings cannot be: complete. Every pattern in
+    this project that reads free text reads it folded, so one rule covers
+    every language that writes Latin script with marks on it. Cyrillic and
+    CJK are untouched by the fold and are named above instead.
+    """
+    return "".join(
+        ch for ch in unicodedata.normalize("NFKD", text or "") if not unicodedata.combining(ch)
+    ).lower()
+
 
 # Names this disease shares with others, accepted when nothing disqualifies.
 SUGGESTIVE = re.compile(r"leukoderma | leucoderma | white\s+patch", re.X)
@@ -98,11 +126,26 @@ SUGGESTIVE = re.compile(r"leukoderma | leucoderma | white\s+patch", re.X)
 DISQUALIFYING = re.compile(
     r"""
     # Another cause of the same melanocyte loss.
-      post[\s-]?burn | burn\s+scar | rhododenol | chemical\s+leuk | occupational
+      post[\s-]?burn | burn\s+scar | chemical\s+leuk | occupational
     | actinic | photoag | photodamag | nonionizing | cutis\s+laxa  # sun-damaged skin
+    # The skin-whitening agent withdrawn in 2013, spelled both ways in the
+    # literature. Reading only "rhododenol" let in an open-label bimatoprost
+    # study of "rhododendrol-induced refractory leukoderma".
+    | rhododen\w*ol
     # Another disease that also presents as a pale patch.
     | idiopathic\s+guttate | \bigh\b | pityriasis | bahaq
     | mycosis\s+fungoides | lichen\s+sclerosus | nevus\s+depigmentosus
+    | striae\s+distensae | stretch\s+marks
+    | dowling[\s-]?degos | acropigmentation | kitamura
+    # Leukoderma in a melanoma paper is the immunotherapy's doing, and those
+    # trials are held as their own stratum, keyed on the word vitiligo.
+    | melanoma
+    # Another disease, treated, whose complication is the pale patch. A laser
+    # trial in melasma that counts punctate leukoderma as a safety outcome is
+    # a melasma trial. These only ever fire where "leukoderma" or "white
+    # patch" is the whole of the evidence, so a trial that says vitiligo is
+    # untouched by them.
+    | melasma
     # Another tissue. One word covers it: every oral record in the sweep
     # says "oral", the leukoplakia ones as "leukoplakia ... of oral
     # epithelium". Gingival and orthodontic studies need no entry at all --
@@ -116,7 +159,7 @@ DISQUALIFYING = re.compile(
 
 def names_vitiligo(text: str) -> bool:
     """True when this text names vitiligo rather than something like it."""
-    lowered = (text or "").lower()
+    lowered = fold(text)
     if DECISIVE.search(lowered):
         return True
     return bool(SUGGESTIVE.search(lowered)) and not DISQUALIFYING.search(lowered)
@@ -240,8 +283,13 @@ def is_registered(trial: Trial) -> bool:
     them, and fourteen of the eighteen predate 2010. They are vitiligo trials
     and they are not registered trials, and any figure about registration has
     to keep the two apart.
+
+    What decides it is where the record came from, not which stratum it sits
+    in. Reading one scope name called all 62 cancer immunotherapy trials
+    registered, and every one of those was reconstructed from a paper and
+    names no registry either.
     """
-    return str((trial.raw_metadata or {}).get("scope") or "") != PUBLISHED_ONLY_SCOPE
+    return trial.source != TrialSourceKind.PUBLICATION
 
 
 # How near a drug-class trial sits to this disease. "Held for the drug" is
@@ -300,6 +348,21 @@ _STUDIED = re.compile(
 )
 
 
+# A cancer, where the word means a cancer. "Anti-tumor necrosis factor" is a
+# cytokine blocker given for arthritis and psoriasis, and reading "tumor" out
+# of it called a population-based study of anti-TNF therapy an oncology paper.
+ONCOLOGY_CONDITION = re.compile(
+    r"melanoma|carcinoma|cancer|neoplas|lymphoma|leukemi|sarcoma|myeloma"
+    r"|(?<!necrosis factor)(?<!anti-)tumou?r(?!\s+necrosis)",
+    re.I,
+)
+
+# The disease as the population rather than as something that happened to one.
+_VITILIGO_POPULATION = re.compile(
+    r"vitiligo\s+(?:patients?|vulgaris)|\bin\s+vitiligo\b|patients?\s+with\s+vitiligo", re.I
+)
+
+
 def studies_vitiligo(title: str, abstract: str) -> bool:
     """True when the paper's subjects were people with vitiligo.
 
@@ -308,6 +371,14 @@ def studies_vitiligo(title: str, abstract: str) -> bool:
     vitiligo" -- and not merely mention it, because a paper reporting that
     vitiligo-like depigmentation followed a cancer vaccine mentions it too.
     """
+    folded = fold(title)
+    # A paper whose title names a cancer studied people with that cancer, and
+    # vitiligo is what the treatment did to them. Six held records read as
+    # vitiligo trials this way -- tebentafusp, pembrolizumab, a GM-CSF
+    # melanoma vaccine -- and each belongs in the stratum kept for exactly
+    # that, where the population is honestly described as cancer patients.
+    if ONCOLOGY_CONDITION.search(folded) and not _VITILIGO_POPULATION.search(folded):
+        return False
     if names_vitiligo(title or ""):
         return True
-    return bool(_STUDIED.search(abstract or ""))
+    return bool(_STUDIED.search(fold(abstract)))

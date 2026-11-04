@@ -2,6 +2,7 @@
 
 from vitiligo.ingest.pipeline import (
     IngestionStats,
+    run_crossref_trial_ingestion,
     run_ctgov_ingestion,
     run_drugbank_ingestion,
     run_euctr_ingestion,
@@ -24,6 +25,7 @@ from vitiligo.ingest.pipeline import (
 
 __all__ = [
     "IngestionStats",
+    "run_crossref_trial_ingestion",
     "run_ctgov_ingestion",
     "run_drugbank_ingestion",
     "run_euctr_ingestion",

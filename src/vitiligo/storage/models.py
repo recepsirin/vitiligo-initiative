@@ -30,6 +30,7 @@ class SourceKind(StrEnum):
     CLINICALTRIALS = "clinicaltrials"
     OPENTARGETS = "opentargets"
     DRUGBANK = "drugbank"
+    CROSSREF = "crossref"
 
 
 class Document(SQLModel, table=True):
@@ -297,6 +298,7 @@ class PriorSourceKind(StrEnum):
 
     OPENTARGETS = "opentargets"
     DRUGBANK = "drugbank"
+    CROSSREF = "crossref"
 
 
 class Prior(SQLModel, table=True):

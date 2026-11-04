@@ -128,6 +128,78 @@ def test_a_us_state_is_a_country_except_when_it_is_georgia(affiliation: str, cou
     assert countries_of(doc) == [country]
 
 
+@pytest.mark.parametrize(
+    ("affiliation", "country"),
+    [
+        # A country the list did not have. Thirty that this corpus already
+        # knew from a registry had no affiliation pattern at all.
+        ("Clinical Centre of Skin, Riga 1st Hospital, Riga, LV-1001, Latvia", "Latvia"),
+        # A country written only as a postal code.
+        (
+            "Section of Medical Oncology, Rush-Presbyterian Medical Center, Chicago, IL.",
+            "United States",
+        ),
+        # A letterhead that names the institution and assumes the country.
+        # Eleven held papers say only "Lahore".
+        ("KEMU/ Mayo Hospital Lahore", "Pakistan"),
+        # An affiliation that is nothing but an email address.
+        ("raffaele.cagiano@uniba.it.", "Italy"),
+    ],
+)
+def test_a_country_is_read_from_a_code_a_city_or_a_domain(affiliation: str, country: str) -> None:
+    """Sixty-six held papers named a place and were placed nowhere.
+
+    A national journal's letterhead names the institution and assumes the
+    country, because its readers share it. Each of these is a different way
+    the country is stated without being spelled: a name the list lacked, a
+    postal code, a city, a domain. A place is read only where the
+    affiliation names no country at all, so it can never override one.
+    """
+    doc = _doc(affiliations=[affiliation])
+    assert countries_of(doc) == [country]
+
+
+def test_a_country_that_is_a_place_inside_another_country() -> None:
+    """Three such names are in this corpus, found by auditing the rare ones.
+
+    "University of Benin Teaching Hospital, Benin City, Edo State, Nigeria"
+    is five papers of the five that name Benin, and reading the country out
+    of it invented a Beninese literature. Armenia is a city in Colombia and
+    Jamaica Plain is in Boston. The kept paper beside each proves the country
+    is still read where it really is the country.
+    """
+    assert countries_of(
+        _doc(
+            affiliations=["University of Benin Teaching Hospital, Benin City, Edo State, Nigeria."]
+        )
+    ) == ["Nigeria"]
+    assert countries_of(_doc(affiliations=["Service de Dermatologie, Cotonou, Benin."])) == [
+        "Benin"
+    ]
+    assert countries_of(
+        _doc(affiliations=["Universitaria Empresarial Alexander von Humboldt, Armenia, Colombia."])
+    ) == ["Colombia"]
+    assert countries_of(_doc(affiliations=["Institute of Dermatology, Yerevan, Armenia"])) == [
+        "Armenia"
+    ]
+    assert countries_of(
+        _doc(affiliations=["VA Boston Healthcare System, Jamaica Plain, MA, USA"])
+    ) == ["United States"]
+    assert countries_of(_doc(affiliations=["Department of Dermatology, Kingston, Jamaica"])) == [
+        "Jamaica"
+    ]
+
+
+def test_a_place_never_overrides_a_country_the_affiliation_states() -> None:
+    """Otherwise the gazetteer would decide against the evidence.
+
+    "Moscow Institute ... Cairo, Egypt" names Egypt; Moscow is the name of an
+    institute in it.
+    """
+    doc = _doc(affiliations=["Moscow Institute, Department of Dermatology, Cairo, Egypt"])
+    assert countries_of(doc) == ["Egypt"]
+
+
 def test_a_letterhead_spelling_becomes_the_project_s_name() -> None:
     """ "USA" is not how a registry writes it, and the filter matches one string."""
     doc = _doc(affiliations=["Department of Dermatology, Boston, MA, USA"])
@@ -263,11 +335,35 @@ def test_a_report_of_a_trial_is_not_a_paper_about_trials(
     document = Document(
         source=SourceKind.PUBMED,
         source_id="1",
-        title="A study",
+        title="Tacrolimus ointment in vitiligo",
         abstract=abstract,
         publication_types=types,
     )
     assert reports_a_trial(document) is reports
+
+
+def test_an_abstract_cannot_tell_a_trial_from_a_case_control_study() -> None:
+    """Both count their participants in the same sentence, so the title decides.
+
+    "148 patients were classified" and "148 patients were randomised" are one
+    pattern to a reader of abstracts, and the corpus was holding 132
+    case-control and epidemiology papers as trials because of it. A trial
+    gives somebody something; this paper gives nobody anything.
+
+    The title is one that nothing else in the gate refuses -- it names no
+    design, carries no publication type and matches no disqualifier -- so
+    this passes for one reason only. "TLR2 and TLR4 gene polymorphisms in
+    Turkish vitiligo patients" was tried first and was refused for saying
+    "polymorphism", which left the rule itself untested.
+    """
+    document = Document(
+        source=SourceKind.PUBMED,
+        source_id="1",
+        title="Audiological abnormalities in patients with vitiligo",
+        abstract="Ninety patients with vitiligo and 90 controls were examined.",
+        publication_types=["Journal Article"],
+    )
+    assert reports_a_trial(document) is False
 
 
 @pytest.mark.parametrize(
@@ -347,9 +443,43 @@ def test_a_cancer_trial_that_caused_vitiligo_is_held_apart(
     if trial is not None:
         assert (trial.raw_metadata or {})["scope"] == VITILIGO_AS_OUTCOME_SCOPE
         assert not in_vitiligo_corpus(trial)
+        # It came from a paper, so no registry holds it either. Reading one
+        # scope name here called all 62 of these registered trials.
+        assert not is_registered(trial)
         # The paper names the cancer in prose; guessing it would put a wrong
         # disease in a field readers filter on.
         assert trial.conditions == []
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        # "Observation of therapeutic effect" declares a study of a treatment
+        # in patients, the way "a clinical trial" does in English.
+        "复方甘草酸苷联合窄谱中波紫外线治疗白癜风的疗效观察",
+        # Romance languages drop the h from phototherapy and name the
+        # treatment with a word of their own, so "corticoterapia sistêmica no
+        # tratamento de vitiligo" says what it gave and matched nothing.
+        "Estudo comparativo do uso da minociclina sistêmica versus"
+        " corticoterapia sistêmica no tratamento de vitiligo em atividade",
+    ],
+)
+def test_a_design_is_read_where_the_paper_is_not_in_english(title: str) -> None:
+    """Each of these is a trial refused for the language it was written in.
+
+    The disease gate was taught to read such a title and this one was not.
+    Both cases are here because each turns on wording nothing else supplies:
+    drop 疗效观察 and the first is refused, drop the Romance treatment words
+    and so is the second.
+    """
+    document = Document(
+        source=SourceKind.PUBMED,
+        source_id="1",
+        title=title,
+        abstract="",
+        publication_types=["Journal Article"],
+    )
+    assert reports_a_trial(document) is True
 
 
 @pytest.mark.parametrize(

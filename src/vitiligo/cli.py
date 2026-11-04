@@ -29,6 +29,7 @@ from vitiligo.graph import (
 )
 from vitiligo.graph.seed import seed_graph_from_structured_sources
 from vitiligo.ingest import (
+    run_crossref_trial_ingestion,
     run_ctgov_ingestion,
     run_drugbank_ingestion,
     run_euctr_ingestion,
@@ -283,6 +284,29 @@ def ingest_published_trials() -> None:
     console.print()
 
     stats = run_published_trial_ingestion()
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("crossref-trials")
+def ingest_crossref_trials() -> None:
+    """Hold the trials reported in journals MEDLINE does not index.
+
+    Every other source here reads PubMed, so the corpus knew only the trials
+    published in the 5,500 journals MEDLINE indexes. Crossref registers a DOI
+    for the rest: Pakistani, Egyptian, Indian, Chinese and Unani dermatology
+    journals, and the conference abstracts of the BJD, JAAD and JID. Marked
+    ``scope: published_only``, like any other trial known only from its paper.
+    """
+    settings = get_settings()
+    console.rule("[bold]Trials from journals outside MEDLINE[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print("[dim]Crossref has no publication types, so the title is the evidence.[/dim]")
+    console.print()
+
+    stats = run_crossref_trial_ingestion()
 
     console.print()
     console.rule("[bold green]Done[/bold green]")
@@ -921,7 +945,7 @@ def db_repair(
         False, "--apply", help="Write the fixes (default: dry run that only reports)."
     ),
 ) -> None:
-    """Fix truncated PubMed titles and drop non-series GEO records in an existing corpus."""
+    """Fix truncated titles, drop non-series GEO records, re-judge trials built from papers."""
     init_db()
     stats = repair_corpus(apply=apply)
     mode = "[green]applied[/green]" if apply else "[yellow]dry run[/yellow]"
@@ -932,12 +956,22 @@ def db_repair(
     console.print(
         f"Non-series GEO documents removed:        [cyan]{stats.geo_documents_removed}[/cyan]"
     )
+    console.print(
+        f"Paper trials the gate no longer admits:  [cyan]{stats.paper_trials_rejudged}[/cyan]"
+    )
+    console.print(
+        f"Paper trials whose country was re-read:  [cyan]{stats.paper_countries_fixed}[/cyan]"
+    )
     if apply:
         console.print(
             f"Embeddings dropped:                      [cyan]{stats.embeddings_dropped}[/cyan]"
         )
     for source_id, old, new in stats.title_examples:
         console.print(f"  [dim]PMID {source_id}:[/dim] {old!r} -> {new!r}")
+    for source_id, title in stats.rejudged_examples:
+        console.print(f"  [dim]not a trial {source_id}:[/dim] {title}")
+    for source_id, before, after in stats.country_examples:
+        console.print(f"  [dim]{source_id}:[/dim] {before or '[]'} -> {after}")
     if not apply:
         console.print("\n[dim]Re-run with --apply to write. Back up the database first.[/dim]")
     elif stats.embeddings_dropped:
