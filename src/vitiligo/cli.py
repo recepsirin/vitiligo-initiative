@@ -1258,6 +1258,7 @@ def graph_seed_cmd() -> None:
     table.add_row("Entities", str(stats.entities))
     table.add_row("Edges inserted", str(stats.edges_inserted))
     table.add_row("Edges merged", str(stats.edges_merged))
+    table.add_row("Edges removed", str(stats.edges_removed))
     console.print(table)
 
 
