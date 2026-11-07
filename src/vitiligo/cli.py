@@ -1461,6 +1461,102 @@ def priors_sample(
 # --------------------------------------------------------------------- trials
 
 
+@trials_app.command("sources")
+def trials_sources(
+    trial: str = typer.Argument(..., help="A trial id, pmid:..., or doi:..."),
+) -> None:
+    """Print a trial's results sources as read while curating, tables numbered."""
+    from vitiligo.trials.curated_results import Sources, render, worklist
+
+    with session_scope() as session:
+        item = next((i for i in worklist(session) if i["trial"] == trial), None)
+        if item is None:
+            console.print(f"[yellow]{trial} has no source in the store.[/yellow]")
+            raise typer.Exit(1)
+        console.print(item["title"], markup=False)
+        console.print(render(Sources(session), item["sources"]), markup=False, highlight=False)
+
+
+@trials_app.command("verify-results")
+def trials_verify_results() -> None:
+    """Check every curated trial result against its source; list every failure."""
+    from vitiligo.trials.curated_results import Sources, records, verify, worklist
+
+    with session_scope() as session:
+        sources = Sources(session)
+        curated = list(records())
+        failures = 0
+        values = 0
+        for record in curated:
+            values += len(record.get("values") or [])
+            for problem in verify(record, sources):
+                failures += 1
+                console.print(f"[red]{record['trial']}[/red] {problem}", highlight=False)
+        to_read = len(worklist(session))
+    console.print(
+        f"{len(curated)} of {to_read} trials curated, {values} values, "
+        f"{'[green]no failures[/green]' if not failures else f'[red]{failures} failures[/red]'}"
+    )
+    if failures:
+        raise typer.Exit(1)
+
+
+@trials_app.command("registry-results")
+def trials_registry_results() -> None:
+    """Parse every vitiligo trial's posted registry results; check them against its papers."""
+    from vitiligo.trials.curated_results import (
+        REGISTRY,
+        records,
+        registry_results,
+        unmatched_primary,
+    )
+
+    with session_scope() as session:
+        posted = registry_results(session)
+    REGISTRY.write_text("".join(json.dumps(item, ensure_ascii=False) + "\n" for item in posted))
+    console.print(f"{len(posted)} trials' posted results written to {REGISTRY}")
+    curated = list(records())
+    for item in posted:
+        trial = item["trial"]
+        mine = [r for r in curated if r["trial"] == trial or trial in (r.get("linked") or [])]
+        if not any(r.get("values") for r in mine):
+            continue
+        tally = unmatched_primary(item, mine)
+        posted_numbers = sum(n for _, n, _ in tally)
+        carried = posted_numbers - sum(len(m) for _, _, m in tally)
+        console.print(
+            f"{trial}: {carried} of {posted_numbers} primary-outcome numbers in its papers"
+        )
+        for title, n, missing in tally:
+            if missing:
+                shown = ", ".join(missing[:6]) + (" ..." if len(missing) > 6 else "")
+                console.print(f"  {title}: {len(missing)} of {n} not ({shown})", markup=False)
+
+
+@trials_app.command("compare-results")
+def trials_compare_results() -> None:
+    """Compare the blind re-extraction with the first pass, field by field."""
+    from vitiligo.trials.curated_results import BLIND, compare, records
+
+    second = list(records(BLIND))
+    result = compare(list(records()), second)
+    console.print(f"{result.trials} of {len(second)} re-extracted trials found in the first pass")
+    for title, table in (("trial", result.trial_fields), ("paired value", result.value_fields)):
+        for name, (same, differ, alone) in table.items():
+            console.print(
+                f"  {title} {name}: {same} agree, {differ} differ, {alone} recorded by one reader only"
+            )
+    console.print(
+        f"values with numbers: {result.first} first, {result.second} second, {result.paired} paired "
+        f"({result.paired / max(result.first, 1):.0%} of the first, "
+        f"{result.paired / max(result.second, 1):.0%} of the second)"
+    )
+    console.print(
+        f"values without numbers: {result.first_qualitative} first, {result.second_qualitative} second, "
+        f"{result.paired_qualitative} of the second citing a sentence the first also cited"
+    )
+
+
 @trials_app.command("stats")
 def trials_stats() -> None:
     """High-level statistics over the trials table."""
