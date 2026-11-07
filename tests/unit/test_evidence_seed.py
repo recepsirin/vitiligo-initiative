@@ -19,6 +19,7 @@ from vitiligo.graph.evidence_seed import (
     seed_genetics,
     seed_mechanisms,
     seed_trial_outcomes,
+    seed_trial_results,
     split_genes,
 )
 from vitiligo.graph.store import upsert_entity
@@ -323,3 +324,72 @@ def test_evidence_upgrades_an_asserted_edge_but_never_downgrades_it(graph_db: No
         [edge] = session.exec(select(GraphEdge)).all()
     assert edge.claim == ClaimKind.OBSERVED
     assert edge.causal_level == "human_genetics"
+
+
+def _results(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    arms = [
+        {"id": "A", "components": [{"agent": "tacrolimus"}], "phototherapy": "NBUVB twice weekly"},
+        {"id": "B", "components": [], "phototherapy": "NB-UVB 2-3 times weekly"},
+        {"id": "C", "label": "placebo cream", "components": [{"agent": "placebo"}]},
+    ]
+    return [{"trial": "pmid:1", "arms": arms, "values": values}]
+
+
+def test_a_trial_paper_result_joins_its_regimen_to_what_it_measured(graph_db: None) -> None:
+    """A combination is its own regimen, a comparison names the other arm, and a pooled
+    value or a placebo arm names no regimen. A rerun after a value is corrected away
+    leaves nothing of it, and inserts nothing for a result already held.
+    """
+    responders = {
+        "arm": "A",
+        "outcome": ">=50% repigmentation",
+        "type": "responders",
+        "responders": 12,
+        "n": 20,
+        "percent": 60,
+        "source": "pmc:PMC1#table",
+    }
+    compared = {
+        "arm": "A vs B",
+        "outcome": ">=50% repigmentation",
+        "type": "comparison",
+        "p": "= 0.03",
+        "direction": "higher with A",
+        "source": "pmid:1#abstract",
+    }
+    harm = {"arm": "B", "outcome": "erythema", "type": "adverse event", "responders": 2, "n": 20}
+    against_placebo = {**compared, "arm": "A vs C"}
+    on_placebo = {**responders, "arm": "C", "responders": 1}
+    unresolved = {
+        "arm": "A vs historical controls",
+        "outcome": ">=50% repigmentation",
+        "type": "comparison",
+        "p": "< 0.05",
+    }
+    pooled = {"arm": "both groups", "outcome": "erythema", "type": "adverse event", "responders": 3}
+
+    def observed() -> dict[tuple[str, str], list[dict[str, Any]]]:
+        with session_scope() as session:
+            names = {e.id: e.name for e in session.exec(select(GraphEntity)).all()}
+            return {
+                (names[e.subject_id], names[e.object_id]): list(e.evidence or [])
+                for e in session.exec(select(GraphEdge)).all()
+                if e.claim == ClaimKind.OBSERVED and e.predicate == RelationKind.CHANGES
+            }
+
+    with session_scope() as session:
+        seed_trial_results(
+            session,
+            _results([responders, compared, against_placebo, on_placebo, unresolved, harm, pooled]),
+        )
+    edges = observed()
+    assert set(edges) == {("NB-UVB + tacrolimus", "Repigmentation"), ("NB-UVB", "Adverse events")}
+    assert [e.get("versus") for e in edges[("NB-UVB + tacrolimus", "Repigmentation")]] == [
+        None,
+        "NB-UVB",
+        "placebo cream",
+    ]
+
+    with session_scope() as session:
+        assert seed_trial_results(session, _results([responders])) == 0
+    assert set(observed()) == {("NB-UVB + tacrolimus", "Repigmentation")}

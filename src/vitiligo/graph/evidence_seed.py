@@ -14,6 +14,9 @@ measurements with a cohort and a number behind them:
 - **Trial results.** A posted responder rate is what happened when people
   took a drug: an intervention effect measured in humans, the strongest rung
   of the ladder.
+- **Results read from trial papers.** Each value in
+  ``curation/trial-results.jsonl`` is a number a trial's paper prints, checked
+  against its source by ``vitiligo trials verify-results``.
 - **Mechanistic hypotheses.** Each record in ``curation/mechanisms.json``
   carries its own evidence on that ladder, already gated by
   ``vitiligo mechanism verify``.
@@ -33,7 +36,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Session, select
 
@@ -42,7 +45,7 @@ from vitiligo.logging import get_logger
 from vitiligo.mechanisms.schema import CURATION_PATH, Mechanism
 from vitiligo.mechanisms.schema import load as load_mechanisms
 from vitiligo.storage import GeneticAssociation, init_db, session_scope
-from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
+from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
 
 if TYPE_CHECKING:  # reports imports graph, so this one stays a type-only import
     from vitiligo.reports.jak_arms import ArmEndpointRow
@@ -65,12 +68,13 @@ class EvidenceSeedStats:
 
     genetic_edges: int = 0
     outcome_edges: int = 0
+    result_edges: int = 0
     mechanism_edges: int = 0
     entities: int = 0
 
     @property
     def total_edges(self) -> int:
-        return self.genetic_edges + self.outcome_edges + self.mechanism_edges
+        return self.genetic_edges + self.outcome_edges + self.result_edges + self.mechanism_edges
 
 
 def split_genes(mapped_gene: str | None) -> list[str]:
@@ -275,6 +279,141 @@ def seed_mechanisms(
     return edges, entities
 
 
+# Results are grouped by what they measure, so that a regimen has one edge to
+# "Repigmentation" however many scales and thresholds its trials used; the
+# exact outcome, its numbers and the paper's pointer stay on each evidence entry.
+# The order matters: "time to repigmentation" is a time, not a repigmentation.
+_FAMILIES = (
+    ("Quality of life", re.compile(r"dlqi|quality of life|vitiqol|skindex|\bqol\b")),
+    ("Patient satisfaction", re.compile(r"satisf")),
+    ("Relapse", re.compile(r"relapse|recurr|loss of (?:re)?pigment|retain|maintain")),
+    ("Disease activity", re.compile(r"vida|activity|stabil|spread|new lesion|progress|arrest")),
+    ("Colour match", re.compile(r"colou?r")),
+    ("Repigmentation pattern", re.compile(r"pattern|perifollicular|marginal|diffuse")),
+    ("Time to repigmentation", re.compile(r"onset|time to|days to|weeks to")),
+    (
+        "Biomarkers",
+        re.compile(r"serum|plasma|\bil-|cxcl|ifn|tnf|cytokine|expression|catalase|antibod|cd8"),
+    ),
+    (
+        "Repigmentation",
+        re.compile(
+            r"repigment|vasi|vetf|\bves\b|response|improvement|lesion|\bbsa\b|extent"
+            r"|\bpga\b|\biga\b|clearance|efficacy|effective|cure"
+        ),
+    ),
+)
+_NUMBERS = (
+    "responders", "n", "percent", "mean", "sd", "se", "median", "q1", "q3", "effect",
+    "ci_low", "ci_high", "ci_level", "measure", "p", "direction", "time", "weeks",
+    "subgroup", "population", "threshold",
+)  # fmt: skip
+
+
+def outcome_family(value: dict[str, Any]) -> str:
+    """The kind of result a curated value is, as an outcome node names it."""
+    if value.get("type") == "adverse event":
+        return "Adverse events"
+    text = f"{value.get('instrument') or ''} {value.get('outcome') or ''}".lower()
+    return next((name for name, pattern in _FAMILIES if pattern.search(text)), "Other outcomes")
+
+
+def seed_trial_results(session: Session, results: Sequence[dict[str, Any]]) -> int:
+    """Regimen-outcome edges from the results read out of trial papers.
+
+    Each value names its arm, or two arms as "A vs B"; the arm's agents,
+    procedure and phototherapy make the regimen, and a combination is a
+    regimen of its own, since its effect belongs to neither part alone. A value
+    pooled across arms names no regimen and is left out. The graph is brought
+    to what the curation says now: a corrected value leaves nothing stale, and
+    an edge whose results are unchanged is left as it is. Returns the edges
+    inserted.
+    """
+    wanted: dict[tuple[int | None, int | None], tuple[GraphEntity, GraphEntity, list[Any]]] = {}
+    outcomes: dict[str, GraphEntity] = {}
+    for record in results:
+        if str(record.get("trial", "")).startswith("pooled:"):
+            continue
+        arms = {a["id"]: a for a in record.get("arms") or []}
+        regimens = {i: _regimen(session, a) for i, a in arms.items()}
+        for index, value in enumerate(record.get("values") or []):
+            first, _, second = str(value.get("arm", "")).partition(" vs ")
+            subject = regimens.get(first.strip())
+            other = arms.get(second.strip()) if second else None
+            if subject is None or (second and other is None):
+                continue
+            family = outcome_family(value)
+            if family not in outcomes:
+                outcomes[family] = upsert_entity(session, kind=EntityKind.OUTCOME, name=family)
+            evidence: dict[str, Any] = {
+                "source_type": "curated_result",
+                "source_id": f"trial:{record['trial']}",
+                "value": index,
+                "arm": value["arm"],
+                "outcome": value.get("outcome"),
+                "result_type": value.get("type"),
+                "cited": value.get("source"),
+                **{k: value[k] for k in _NUMBERS if value.get(k) is not None},
+            }
+            if other is not None:
+                # A placebo or untreated arm is no regimen, but it is what was compared.
+                versus = regimens[other["id"]]
+                evidence["versus"] = versus.name if versus else other["label"]
+            outcome = outcomes[family]
+            wanted.setdefault((subject.id, outcome.id), (subject, outcome, []))[2].append(evidence)
+    total = len(wanted)
+
+    removed = 0
+    for edge in session.exec(select(GraphEdge)).all():
+        held = list(edge.evidence or [])
+        others = [e for e in held if e.get("source_type") != "curated_result"]
+        key = (edge.subject_id, edge.object_id)
+        mine = wanted[key][2] if edge.predicate == RelationKind.CHANGES and key in wanted else []
+        if others + mine == held:
+            if mine:
+                del wanted[key]
+            continue
+        if others or mine:
+            edge.evidence = others  # what the curation says now is added back below
+            session.add(edge)
+        else:
+            session.delete(edge)
+            removed += 1
+    session.flush()
+
+    inserted = 0
+    for subject, outcome, rows in wanted.values():
+        for row in rows:
+            _, new = upsert_edge(
+                session,
+                subject=subject,
+                predicate=RelationKind.CHANGES,
+                obj=outcome,
+                confidence=0.9,
+                extraction_method="curated_result",
+                evidence=row,
+                claim=ClaimKind.OBSERVED,
+                causal_level="perturbation_in_human",
+            )
+            inserted += int(new)
+    logger.info("Curated results: %d edges, %d inserted, %d removed", total, inserted, removed)
+    return inserted
+
+
+def _regimen(session: Session, arm: dict[str, Any]) -> GraphEntity | None:
+    from vitiligo.graph.seed import CONTROL, arm_treatments  # seed reads reports, as above
+
+    # Placebo changes nothing: "NB-UVB + placebo" is NB-UVB, and placebo alone no regimen.
+    treatments = [t for t in arm_treatments(arm) if not CONTROL.search(t["name"])]
+    names = sorted({t["name"] for t in treatments}, key=str.lower)
+    if not names:
+        return None
+    if len(names) == 1:
+        kind = EntityKind.DRUG if treatments[0]["type"] == "DRUG" else EntityKind.INTERVENTION
+        return upsert_entity(session, kind=kind, name=names[0])
+    return upsert_entity(session, kind=EntityKind.INTERVENTION, name=" + ".join(names))
+
+
 def seed_graph_from_evidence(
     mechanisms_path: Path = CURATION_PATH,
     *,
@@ -289,6 +428,8 @@ def seed_graph_from_evidence(
         from vitiligo.reports.jak_arms import harmonize_arms
 
         rows = harmonize_arms(build_jak_atlas())
+    # Deferred like the reports above: curated_results reads reports.
+    from vitiligo.trials.curated_results import records
 
     mechanisms = load_mechanisms(mechanisms_path) if mechanisms_path.is_file() else []
 
@@ -296,14 +437,16 @@ def seed_graph_from_evidence(
         disease = _disease(session)
         stats.genetic_edges, genetic_entities = seed_genetics(session, disease)
         stats.outcome_edges, outcome_entities = seed_trial_outcomes(session, rows)
+        stats.result_edges = seed_trial_results(session, list(records()))
         stats.mechanism_edges, mechanism_entities = seed_mechanisms(session, disease, mechanisms)
         stats.entities = genetic_entities + outcome_entities + mechanism_entities
         session.commit()
 
     logger.info(
-        "Evidence seed: %d genetic, %d outcome, %d mechanism edge(s)",
+        "Evidence seed: %d genetic, %d outcome, %d result, %d mechanism edge(s)",
         stats.genetic_edges,
         stats.outcome_edges,
+        stats.result_edges,
         stats.mechanism_edges,
     )
     return stats

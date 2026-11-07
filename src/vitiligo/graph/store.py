@@ -122,8 +122,8 @@ def _stronger_level(current: str | None, incoming: str) -> str:
 
 
 def _evidence_seen(existing: list[dict[str, Any]], item: dict[str, Any]) -> bool:
-    sig = (item.get("source_type"), item.get("source_id"), item.get("snippet"))
-    for row in existing:
-        if (row.get("source_type"), row.get("source_id"), row.get("snippet")) == sig:
-            return True
-    return False
+    # ``value`` tells apart several measurements one source reports on one edge.
+    def sig(row: dict[str, Any]) -> tuple[Any, ...]:
+        return (row.get("source_type"), row.get("source_id"), row.get("snippet"), row.get("value"))
+
+    return any(sig(row) == sig(item) for row in existing)

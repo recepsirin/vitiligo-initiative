@@ -20,13 +20,13 @@ logger = get_logger(__name__)
 
 _HIGH_CONFIDENCE_STAGES = frozenset({"PHASE_3", "PHASE_4", "APPROVAL"})
 # A comparator that is nothing: tested in a trial, never a treatment.
-_CONTROL = re.compile(
+CONTROL = re.compile(
     r"\b(?:placebos?|vehicles?|sham)\b|^(?:(?:normal\s+)?saline|control(?:\s+group)?|no\s+treatment)$",
     re.IGNORECASE,
 )
 # "NB-UVB twice weekly" and "NB-UVB thrice weekly" are one treatment given twice.
 _SCHEDULE = re.compile(
-    r"\s*,?\s*\b(?:once|twice|thrice|two times|three times|\d+\s*times|daily|weekly|every)\b.*$",
+    r"\s*,?\s*\b(?:once|twice|thrice|two times|three times|(?:\d+\s*-\s*)?\d+\s*times|daily|weekly|every)\b.*$",
     re.IGNORECASE,
 )
 
@@ -96,21 +96,25 @@ def _curated_interventions() -> dict[str, list[dict[str, Any]]]:
     """
     found: dict[str, list[dict[str, Any]]] = {}
     for record in records():
-        items: list[dict[str, Any]] = []
-        for arm in record.get("arms") or []:
-            items += [
-                {"type": "DRUG", "name": c["agent"]}
-                for c in arm.get("components") or []
-                if c.get("agent")
-            ]
-            for field in ("procedure", "phototherapy"):
-                if arm.get(field):
-                    name = _SCHEDULE.sub("", str(arm[field])).strip()
-                    items.append(
-                        {"type": field.upper(), "name": re.sub(r"\bNBUVB\b", "NB-UVB", name)}
-                    )
+        items = [t for arm in record.get("arms") or [] for t in arm_treatments(arm)]
         found.setdefault(record["trial"].split(":", 1)[-1], []).extend(items)
     return found
+
+
+def arm_treatments(arm: dict[str, Any]) -> list[dict[str, Any]]:
+    """A curated arm's agents, procedure and phototherapy, each named once.
+
+    "NB-UVB twice weekly" and "NBUVB" are both NB-UVB: the schedule is not
+    part of the treatment's name.
+    """
+    items = [
+        {"type": "DRUG", "name": c["agent"]} for c in arm.get("components") or [] if c.get("agent")
+    ]
+    for field in ("procedure", "phototherapy"):
+        if arm.get(field):
+            name = _SCHEDULE.sub("", str(arm[field])).strip()
+            items.append({"type": field.upper(), "name": re.sub(r"\bNBUVB\b", "NB-UVB", name)})
+    return items
 
 
 def _drop_untrue_trial_claims(session: Session, kept: set[str]) -> int:
@@ -125,7 +129,7 @@ def _drop_untrue_trial_claims(session: Session, kept: set[str]) -> int:
     """
     removed = 0
     controls = {
-        e.id for e in session.exec(select(GraphEntity)).all() if _CONTROL.search(e.name or "")
+        e.id for e in session.exec(select(GraphEntity)).all() if CONTROL.search(e.name or "")
     }
     for edge in session.exec(select(GraphEdge)).all():
         evidence = list(edge.evidence or [])
@@ -309,7 +313,7 @@ def _seed_trial(
         )
         inserted += int(ins)
         merged += int(not ins)
-        if _CONTROL.search(name):
+        if CONTROL.search(name):
             continue
 
         _, ins = upsert_edge(
