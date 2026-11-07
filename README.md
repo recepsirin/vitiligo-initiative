@@ -19,19 +19,14 @@ Research and education software, not medical advice.
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
 | **Mechanisms** | Falsifiable hypotheses from biology to clinical outcome, each with its evidence on a causal ladder, the strongest rival explanation, and the test that separates them. | `vitiligo mechanism list` · [`docs/mechanisms/`](docs/mechanisms/README.md) |
+| **Relation extractor** | A BiomedBERT model fine-tuned to read which drugs, diseases and genes a paper relates, and how. It fills the knowledge graph from the full texts PubTator does not read, and every edge it adds cites its sentence. BioRED test F1 0.687 for the related pair, 0.540 with its type; 75% of the relations it loads were correct when checked by hand. | [Model card](https://huggingface.co/re-cep/vitiligo-relation-extractor) · `vitiligo relations evaluate` |
 
 **Nothing on the served page is generated.** Every figure it shows is one a trial
 posted to a public registry, reproduced with its denominator and a link to its
 record, so any number on the page can be checked against its source. That holds
 without a caveat because nothing here generates text: there is no model API
-client in this repository and no key to configure. Two models run on this
-machine and only read: the embedding model behind search, and the relation
-extractor that reads papers into the knowledge graph (`vitiligo.relations`,
-trained on NCBI's BioRED and judged on its held-out test split), each of whose
-edges cites the sentence it was read from. The extractor's weights are public at
-[re-cep/vitiligo-relation-extractor](https://huggingface.co/re-cep/vitiligo-relation-extractor);
-`--model re-cep/vitiligo-relation-extractor@9e54e13fc6f6d4dc494e54c9b38998683ca40873`
-loads the version whose scores are on its card.
+client in this repository and no key to configure. The only models are two
+local readers: the embeddings behind search and the relation extractor above.
 
 ## What the trial-results view will and will not show
 

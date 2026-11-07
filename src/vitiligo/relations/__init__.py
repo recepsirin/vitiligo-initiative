@@ -7,7 +7,8 @@ test split before anything it reads reaches the graph. It produces the same
 eight relation types PubTator does, so the graph loader that checks
 PubTator's relations checks these too.
 
-The model in use is BiomedBERT trained first on PubTator's reading of 11,106
+The model in use is published as re-cep/vitiligo-relation-extractor on
+Hugging Face. It is BiomedBERT trained first on PubTator's reading of 11,106
 abstracts in this corpus, then on BioRED's 400 training abstracts. On BioRED's
 test split it finds a related pair with F1 0.687, and the pair with its
 relation type with F1 0.540 (precision 0.559, recall 0.522). The BioRED
