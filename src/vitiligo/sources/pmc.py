@@ -17,9 +17,10 @@ API docs:
 
 from __future__ import annotations
 
+import json
 import re
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -34,6 +35,7 @@ from tenacity import (
 
 from vitiligo.config import Settings, get_settings
 from vitiligo.logging import get_logger
+from vitiligo.sources.raw_cache import load_payload, save_payload
 from vitiligo.sources.tables import Table, render_tables, tables_from_jats
 from vitiligo.storage.models import Document, SourceKind
 
@@ -49,6 +51,44 @@ DEFAULT_VITILIGO_QUERY = (
 
 # PMC payloads are large (full text). Keep batches small.
 DEFAULT_BATCH_SIZE = 50
+EUROPEPMC_SEARCH_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
+
+
+def article_licences(pmcids: Sequence[str]) -> dict[str, str | None]:
+    """Each article's licence as Europe PMC records it: "cc by", "cc by-nc" and so on.
+
+    The store keeps no licence for the full texts it parsed, and whether a
+    sentence of one may be quoted depends on it. Europe PMC is asked a hundred
+    articles at a time and the answers are cached under ``data/raw/europepmc``,
+    so a rerun asks only about articles it has not seen. None means Europe PMC
+    records no licence for the article.
+    """
+    cached = load_payload("europepmc", "licences.json")
+    licences: dict[str, str | None] = json.loads(cached) if cached else {}
+    todo = sorted({p for p in pmcids if p not in licences})
+    if todo:
+        with httpx.Client(timeout=60) as client:
+            for start in range(0, len(todo), 100):
+                batch = todo[start : start + 100]
+                response = client.get(
+                    EUROPEPMC_SEARCH_URL,
+                    params={
+                        "query": " OR ".join(f"PMCID:{p}" for p in batch),
+                        "resultType": "core",
+                        "format": "json",
+                        "pageSize": 1000,
+                    },
+                )
+                response.raise_for_status()
+                found = {
+                    r["pmcid"]: r.get("license")
+                    for r in response.json()["resultList"]["result"]
+                    if r.get("pmcid")
+                }
+                licences.update({p: found.get(p) for p in batch})
+        data = json.dumps(licences, indent=1, sort_keys=True).encode()
+        save_payload("europepmc", "licences.json", data, url=EUROPEPMC_SEARCH_URL)
+    return {p: licences.get(p) for p in pmcids}
 
 
 @dataclass(frozen=True)

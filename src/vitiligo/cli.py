@@ -1371,6 +1371,48 @@ def graph_neighbors_cmd(
         )
 
 
+@graph_app.command("release")
+def graph_release_cmd(
+    out: str = typer.Option("data/release/knowledge-graph", help="The directory to write."),
+) -> None:
+    """Write the graph as a reusable dataset, within each source's terms.
+
+    Entities, relations and evidence as JSON Lines, CC BY 4.0; what rests on
+    WHO ICTRP alone in ictrp/, under WHO's terms. A sentence quoted from a
+    paper is included only where the paper's licence allows it.
+    """
+    from pathlib import Path
+
+    from vitiligo.graph.export import export_release
+    from vitiligo.sources.pmc import article_licences
+    from vitiligo.storage.models import Document
+
+    init_db()
+    with session_scope() as session:
+        papers = {
+            str(meta["pmid"]): str(meta["pmcid"])
+            for meta in (d.raw_metadata or {} for d in session.exec(select(Document)).all())
+            if meta.get("pmid") and meta.get("pmcid")
+        }
+    by_article = article_licences(sorted(set(papers.values())))
+    stats = export_release(
+        Path(out), {pmid: by_article.get(pmcid) for pmid, pmcid in papers.items()}
+    )
+    table = Table(show_header=False, box=None)
+    for label, value in (
+        ("Entities", stats.entities),
+        ("Relations", stats.relations),
+        ("Evidence", stats.evidence),
+        ("Sentences quoted", stats.quoted),
+        ("ICTRP relations", stats.ictrp_relations),
+        ("ICTRP evidence", stats.ictrp_evidence),
+        ("Left out (DrugBank)", stats.dropped),
+    ):
+        table.add_row(label, f"{value:,}")
+    console.print(table)
+    console.print(f"Written to [cyan]{out}[/cyan]")
+
+
 @graph_app.command("export")
 def graph_export_cmd(
     output: str = typer.Option(
