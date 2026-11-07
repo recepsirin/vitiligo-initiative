@@ -28,7 +28,10 @@ client in this repository and no key to configure. Two models run on this
 machine and only read: the embedding model behind search, and the relation
 extractor that reads papers into the knowledge graph (`vitiligo.relations`,
 trained on NCBI's BioRED and judged on its held-out test split), each of whose
-edges cites the sentence it was read from.
+edges cites the sentence it was read from. The extractor's weights are public at
+[re-cep/vitiligo-relation-extractor](https://huggingface.co/re-cep/vitiligo-relation-extractor);
+`--model re-cep/vitiligo-relation-extractor@9e54e13fc6f6d4dc494e54c9b38998683ca40873`
+loads the version whose scores are on its card.
 
 ## What the trial-results view will and will not show
 
