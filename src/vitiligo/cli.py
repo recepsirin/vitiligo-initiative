@@ -141,6 +141,10 @@ relations_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(relations_app, name="relations")
+MODEL_HELP = (
+    "A model saved by `vitiligo relations train`: its directory, or its Hugging Face id"
+    " (id@revision pins one version)."
+)
 PAPER_CURATION = Path("curation/paper-results.json")
 MECHANISM_CURATION = Path("curation/mechanisms.json")
 
@@ -348,7 +352,7 @@ def ingest_pubtator() -> None:
 
 @ingest_app.command("fulltext-relations")
 def ingest_fulltext_relations(
-    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+    model: str = typer.Option(..., help=MODEL_HELP),
 ) -> None:
     """Read the relations in the bodies of the full texts into the knowledge graph.
 
@@ -370,7 +374,7 @@ def ingest_fulltext_relations(
 
 @ingest_app.command("unannotated-relations")
 def ingest_unannotated_relations(
-    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+    model: str = typer.Option(..., help=MODEL_HELP),
 ) -> None:
     """Read relations out of the text PubTator never annotated into the graph.
 
@@ -395,7 +399,7 @@ def relations_train(
     encoder: str = typer.Option(
         ..., help="A Hugging Face encoder, e.g. microsoft/deberta-v3-base."
     ),
-    out: str = typer.Option(..., help="Where to save the model."),
+    out: str = typer.Option(..., help="The directory to save the model in."),
     epochs: int = typer.Option(15, help="Passes over the training documents."),
     lr: float = typer.Option(2e-5, help="Learning rate for the encoder."),
     silver: bool = typer.Option(
@@ -422,7 +426,7 @@ def relations_train(
 
 @relations_app.command("evaluate")
 def relations_evaluate(
-    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+    model: str = typer.Option(..., help=MODEL_HELP),
     split: str = typer.Option(
         "Test", help="Train, Dev or Test of BioRED, or PubTator for the held-out abstracts here."
     ),

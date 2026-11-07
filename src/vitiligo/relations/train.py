@@ -11,6 +11,7 @@ the end, with that number fixed.
 from __future__ import annotations
 
 import hashlib
+import json
 import math
 import random
 import time
@@ -190,29 +191,61 @@ def fit(
     return best_state, best_bias, history
 
 
-def save(model: RelationModel, bias: float, path: Path, **meta: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save(
-        {
-            "state": model.state_dict(),
-            "encoder": model.encoder_name,
-            "bias": bias,
-            "labels": LABELS,
-            "special": (model.cls_id, model.sep_id, model.pad_id),
-            **meta,
-        },
-        path,
-    )
+WEIGHTS = "model.safetensors"
+SETTINGS = "relations.json"
 
 
-def load(path: Path) -> tuple[RelationModel, float, dict[str, Any]]:
-    saved: dict[str, Any] = torch.load(path, map_location="cpu", weights_only=False)
-    if tuple(saved["labels"]) != LABELS:
-        raise ValueError(f"{path} was trained on other labels: {saved['labels']}")
-    cls_id, sep_id, pad_id = saved["special"]
-    model = RelationModel(saved["encoder"], cls_id=cls_id, sep_id=sep_id, pad_id=pad_id)
-    model.load_state_dict(saved["state"])
-    return model.to(device()), float(saved["bias"]), saved
+def save(model: RelationModel, bias: float, path: Path, tokenizer: Any, **meta: Any) -> None:
+    """A directory Hugging Face can host as it is.
+
+    The weights are safetensors, which hold tensors and nothing else; a pickled
+    checkpoint runs whatever code it carries when it is loaded. Beside them go
+    the encoder's config and tokenizer, so loading needs nothing from the
+    encoder's own repository, and this model's settings.
+    """
+    from safetensors.torch import save_file
+
+    path.mkdir(parents=True, exist_ok=True)
+    save_file({k: v.contiguous() for k, v in model.state_dict().items()}, str(path / WEIGHTS))
+    model.encoder.config.save_pretrained(path)
+    tokenizer.save_pretrained(path)
+    settings = {
+        "base_model": model.encoder_name,
+        "bias": bias,
+        "labels": list(LABELS),
+        "special": [model.cls_id, model.sep_id, model.pad_id],
+        **meta,
+    }
+    (path / SETTINGS).write_text(json.dumps(settings, indent=2) + "\n")
+
+
+def resolve(source: str | Path) -> Path:
+    """A saved model's directory: a local one, or a Hugging Face model id.
+
+    ``id@revision`` pins the id to one commit of its repository, so a model
+    cannot change under a run that names it.
+    """
+    if Path(source).is_dir():
+        return Path(source)
+    from huggingface_hub import snapshot_download
+
+    repo_id, _, revision = str(source).partition("@")
+    return Path(snapshot_download(repo_id, revision=revision or None))
+
+
+def load(source: str | Path) -> tuple[RelationModel, float, dict[str, Any]]:
+    """A model saved by :func:`save`; ``encoder`` in the settings is where its tokenizer is."""
+    from safetensors.torch import load_file
+
+    path = resolve(source)
+    settings: dict[str, Any] = json.loads((path / SETTINGS).read_text())
+    if tuple(settings["labels"]) != LABELS:
+        raise ValueError(f"{source} was trained on other labels: {settings['labels']}")
+    cls_id, sep_id, pad_id = settings["special"]
+    model = RelationModel(str(path), cls_id=cls_id, sep_id=sep_id, pad_id=pad_id, pretrained=False)
+    model.load_state_dict(load_file(str(path / WEIGHTS)))
+    model.encoder_name = settings["base_model"]
+    return model.to(device()), float(settings["bias"]), {**settings, "encoder": str(path)}
 
 
 def _encoded(documents: Iterable[Any], tokenizer: Any) -> list[Encoded]:
@@ -259,13 +292,23 @@ def train_model(
         pad_id=tokenizer.pad_token_id,
     )
     if init is not None:
-        model.load_state_dict(torch.load(init, map_location="cpu", weights_only=False)["state"])
+        from safetensors.torch import load_file
+
+        model.load_state_dict(load_file(str(resolve(init) / WEIGHTS)))
     model.to(device())
     state, bias, history = fit(
         model, train, dev, gold_keys(dev_documents), epochs=epochs, encoder_lr=encoder_lr
     )
     model.load_state_dict(state)
-    save(model, bias, out, history=history, silver=silver, init=str(init) if init else None)
+    save(
+        model,
+        bias,
+        out,
+        tokenizer,
+        history=history,
+        silver=silver,
+        init=str(init) if init else None,
+    )
     return max(history, key=lambda h: h["f1"])
 
 

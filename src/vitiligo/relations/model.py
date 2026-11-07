@@ -19,19 +19,27 @@ from typing import Any
 
 import torch
 from torch import nn
-from transformers import AutoModel
+from transformers import AutoConfig, AutoModel
 
 from vitiligo.relations.data import ENTITY_TYPES, LABELS, WINDOW, Encoded, window_starts
 
 
 class RelationModel(nn.Module):
-    def __init__(self, encoder: str, *, cls_id: int, sep_id: int, pad_id: int) -> None:
+    def __init__(
+        self, encoder: str, *, cls_id: int, sep_id: int, pad_id: int, pretrained: bool = True
+    ) -> None:
         super().__init__()
         self.encoder_name = encoder
         # Explicitly float32: transformers 5 loads a checkpoint in the precision it
         # was saved in, which for DeBERTa-v3 is float16, and the first optimiser
-        # step in float16 overflows every weight to NaN.
-        self.encoder: Any = AutoModel.from_pretrained(encoder, dtype=torch.float32)
+        # step in float16 overflows every weight to NaN. A saved model holds every
+        # encoder weight, so loading one needs only the encoder's shape.
+        config = AutoConfig.from_pretrained(encoder)
+        self.encoder: Any = (
+            AutoModel.from_pretrained(encoder, dtype=torch.float32)
+            if pretrained
+            else AutoModel.from_config(config, dtype=torch.float32)  # type: ignore[no-untyped-call]
+        )
         hidden = int(self.encoder.config.hidden_size)
         self.type_embedding = nn.Embedding(len(ENTITY_TYPES), 64)
         self.head = nn.Sequential(
