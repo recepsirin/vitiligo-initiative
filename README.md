@@ -22,9 +22,13 @@ Research and education software, not medical advice.
 
 **Nothing on the served page is generated.** Every figure it shows is one a trial
 posted to a public registry, reproduced with its denominator and a link to its
-record, so any number on the page can be checked against its source. Cited Q&A
-No model is involved anywhere, which is why that holds without a caveat: there
-is no model API client in this repository and no key to configure.
+record, so any number on the page can be checked against its source. That holds
+without a caveat because nothing here generates text: there is no model API
+client in this repository and no key to configure. Two models run on this
+machine and only read: the embedding model behind search, and the relation
+extractor that reads papers into the knowledge graph (`vitiligo.relations`,
+trained on NCBI's BioRED and judged on its held-out test split), each of whose
+edges cites the sentence it was read from.
 
 ## What the trial-results view will and will not show
 

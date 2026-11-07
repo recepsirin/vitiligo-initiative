@@ -375,6 +375,16 @@ class RelationKind(StrEnum):
     CHANGES = "changes"  # an intervention moved a measured outcome
     EXPRESSED_IN = "expressed_in"  # a gene or pathway acts in a cell type
     OCCURS_IN = "occurs_in"  # a cell type or process sits in a phenotype
+    # A drug or exposure brought a disease on: checkpoint inhibitors and
+    # imiquimod depigmenting skin, rhododendrol causing leukoderma, an adverse
+    # effect of treatment. 2,226 relations in the literature say this, and the
+    # only alternatives were to drop them or to call the drug associated_with
+    # the disease it produced, which a reader could take either way.
+    CAUSES = "causes"
+    # Two agents given together: tacrolimus with clobetasol, a CO2 laser with
+    # 5-fluorouracil, monobenzone with imiquimod. Undirected. PubTator's
+    # Cotreatment, 13 of 15 sampled right; its Comparison, 6 of 15, is not loaded.
+    COMBINED_WITH = "combined_with"
 
 
 class ClaimKind(StrEnum):
@@ -423,7 +433,7 @@ class GraphEdge(SQLModel, table=True):
     extraction_method: str = Field(
         default="structured",
         index=True,
-        description="structured | gwas | trial_result | mechanism_record | mesh",
+        description="structured | gwas | trial_result | mechanism_record | mesh | pubtator3",
     )
     claim: ClaimKind = Field(
         default=ClaimKind.ASSERTED,

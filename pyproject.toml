@@ -58,6 +58,13 @@ model = [
 papers = [
     "pypdf>=4.2",
 ]
+# Training and running the local relation extractor. Optional because only
+# the corpus build uses it; the model runs on this machine and calls no API.
+train = [
+    "torch>=2.6",
+    "transformers>=4.48",
+    "sentencepiece>=0.2",
+]
 
 [project.scripts]
 vitiligo = "vitiligo.cli:app"

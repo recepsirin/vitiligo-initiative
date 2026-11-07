@@ -101,7 +101,11 @@ def upsert_edge(
     merged = list(existing.evidence or [])
     if not _evidence_seen(merged, evidence):
         merged.append(evidence)
-    existing.evidence = merged[-20:]
+    # Every entry is kept. A cap of 20 used to drop the oldest, which is the
+    # source that created the edge: 27 registry edges lost theirs to the papers
+    # that repeat them, and an edge's evidence count stopped at 20 however many
+    # papers asserted it.
+    existing.evidence = merged
     existing.updated_at = datetime.now(UTC)
     session.add(existing)
     session.flush()

@@ -6,6 +6,7 @@ from vitiligo.ingest.pipeline import (
     run_ctgov_ingestion,
     run_drugbank_ingestion,
     run_euctr_ingestion,
+    run_fulltext_relation_ingestion,
     run_geo_ingestion,
     run_gwas_ingestion,
     run_ictrp_ingestion,
@@ -19,7 +20,9 @@ from vitiligo.ingest.pipeline import (
     run_prior_drug_ingestion,
     run_published_trial_ingestion,
     run_pubmed_ingestion,
+    run_pubtator_ingestion,
     run_reporter_ingestion,
+    run_unannotated_relation_ingestion,
     run_vitiligo_outcome_ingestion,
 )
 
@@ -29,6 +32,7 @@ __all__ = [
     "run_ctgov_ingestion",
     "run_drugbank_ingestion",
     "run_euctr_ingestion",
+    "run_fulltext_relation_ingestion",
     "run_geo_ingestion",
     "run_gwas_ingestion",
     "run_ictrp_ingestion",
@@ -42,6 +46,8 @@ __all__ = [
     "run_prior_drug_ingestion",
     "run_published_trial_ingestion",
     "run_pubmed_ingestion",
+    "run_pubtator_ingestion",
     "run_reporter_ingestion",
+    "run_unannotated_relation_ingestion",
     "run_vitiligo_outcome_ingestion",
 ]

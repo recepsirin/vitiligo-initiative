@@ -33,6 +33,7 @@ from vitiligo.ingest import (
     run_ctgov_ingestion,
     run_drugbank_ingestion,
     run_euctr_ingestion,
+    run_fulltext_relation_ingestion,
     run_geo_ingestion,
     run_gwas_ingestion,
     run_ictrp_ingestion,
@@ -46,7 +47,9 @@ from vitiligo.ingest import (
     run_prior_drug_ingestion,
     run_published_trial_ingestion,
     run_pubmed_ingestion,
+    run_pubtator_ingestion,
     run_reporter_ingestion,
+    run_unannotated_relation_ingestion,
     run_vitiligo_outcome_ingestion,
 )
 from vitiligo.ingest.pipeline import JAK_INHIBITORS, PRIOR_DRUGS
@@ -133,6 +136,11 @@ mechanism_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(mechanism_app, name="mechanism")
+relations_app = typer.Typer(
+    help="The relation extractor, trained and judged on BioRED (needs: pip install -e '.[train]').",
+    no_args_is_help=True,
+)
+app.add_typer(relations_app, name="relations")
 PAPER_CURATION = Path("curation/paper-results.json")
 MECHANISM_CURATION = Path("curation/mechanisms.json")
 
@@ -311,6 +319,134 @@ def ingest_crossref_trials() -> None:
     console.print()
     console.rule("[bold green]Done[/bold green]")
     _print_ingest_stats(stats)
+
+
+@ingest_app.command("pubtator")
+def ingest_pubtator() -> None:
+    """Read the relations the literature asserts into the knowledge graph.
+
+    PubTator 3.0 has already read every PubMed abstract in the corpus for
+    chemicals, diseases, genes and the relations between them. Each relation
+    is checked against MeSH before it becomes an edge -- the disease against
+    the words the paper used, the chemical against whether anyone gives it --
+    and every edge is marked ``asserted``.
+    """
+    settings = get_settings()
+    console.rule("[bold]Relations the literature asserts[/bold]")
+    console.print(f"Database: [cyan]{settings.resolved_db_path}[/cyan]")
+    console.print(
+        "[dim]Read by PubTator 3.0, checked against MeSH, written as asserted edges.[/dim]"
+    )
+    console.print()
+
+    stats = run_pubtator_ingestion()
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("fulltext-relations")
+def ingest_fulltext_relations(
+    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+) -> None:
+    """Read the relations in the bodies of the full texts into the knowledge graph.
+
+    PubTator reads relations only out of abstracts. This reads every other
+    passage of the full texts it annotated, with a model trained and judged on
+    BioRED, and loads what it finds through the same checks as PubTator's.
+    """
+    console.rule("[bold]Relations in the full texts[/bold]")
+    console.print(f"Database: [cyan]{get_settings().resolved_db_path}[/cyan]")
+    console.print(f"Model: [cyan]{model}[/cyan]")
+    console.print()
+
+    stats = run_fulltext_relation_ingestion(Path(model))
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@ingest_app.command("unannotated-relations")
+def ingest_unannotated_relations(
+    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+) -> None:
+    """Read relations out of the text PubTator never annotated into the graph.
+
+    The Crossref papers, the NIH project abstracts and the registered trials'
+    summaries: entities found by a lexicon of PubTator's own forms, relations
+    read by the trained model, both checked as PubTator's are.
+    """
+    console.rule("[bold]Relations in text PubTator never read[/bold]")
+    console.print(f"Database: [cyan]{get_settings().resolved_db_path}[/cyan]")
+    console.print(f"Model: [cyan]{model}[/cyan]")
+    console.print()
+
+    stats = run_unannotated_relation_ingestion(Path(model))
+
+    console.print()
+    console.rule("[bold green]Done[/bold green]")
+    _print_ingest_stats(stats)
+
+
+@relations_app.command("train")
+def relations_train(
+    encoder: str = typer.Option(
+        ..., help="A Hugging Face encoder, e.g. microsoft/deberta-v3-base."
+    ),
+    out: str = typer.Option(..., help="Where to save the model."),
+    epochs: int = typer.Option(15, help="Passes over the training documents."),
+    lr: float = typer.Option(2e-5, help="Learning rate for the encoder."),
+    silver: bool = typer.Option(
+        False, help="Train on PubTator's reading of this corpus instead of BioRED's training split."
+    ),
+    init: str | None = typer.Option(None, help="Start from a saved model's weights."),
+) -> None:
+    """Train the relation model; BioRED's development split picks the epoch."""
+    from vitiligo.relations.train import train_model
+
+    best = train_model(
+        encoder,
+        Path(out),
+        epochs=epochs,
+        encoder_lr=lr,
+        silver=silver,
+        init=Path(init) if init else None,
+    )
+    console.print(
+        f"Best epoch {best['epoch']}: dev precision {best['precision']:.3f}, "
+        f"recall {best['recall']:.3f}, F1 [bold]{best['f1']:.3f}[/bold]. Saved to {out}"
+    )
+
+
+@relations_app.command("evaluate")
+def relations_evaluate(
+    model: str = typer.Option(..., help="A model saved by `vitiligo relations train`."),
+    split: str = typer.Option(
+        "Test", help="Train, Dev or Test of BioRED, or PubTator for the held-out abstracts here."
+    ),
+) -> None:
+    """Score a saved model on a BioRED split: pair and type, then pair alone."""
+    from vitiligo.relations.train import evaluate_model
+
+    title = (
+        "Agreement with PubTator, held-out abstracts" if split == "PubTator" else f"BioRED {split}"
+    )
+    table = Table(title=title)
+    for column in ("Match", "Precision", "Recall", "F1", "Correct", "Predicted", "Gold"):
+        table.add_column(column, justify="right" if column != "Match" else "left")
+    for name, result in evaluate_model(Path(model), split).items():
+        table.add_row(
+            "pair and type" if name == "relation" else "pair",
+            f"{result.precision:.3f}",
+            f"{result.recall:.3f}",
+            f"{result.f1:.3f}",
+            str(result.correct),
+            str(result.predicted),
+            str(result.gold),
+        )
+    console.print(table)
 
 
 @ingest_app.command("vitiligo-as-outcome")

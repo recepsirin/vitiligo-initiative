@@ -10,12 +10,12 @@ import json
 import re
 import tempfile
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlmodel import and_, select
+from sqlmodel import Session, and_, select
 
 from vitiligo.logging import get_logger
 from vitiligo.sources.ctgov import DEFAULT_VITILIGO_QUERY as CTGOV_DEFAULT_QUERY
@@ -80,6 +80,7 @@ from vitiligo.storage import (
     Prior,
     PriorKind,
     PriorSourceKind,
+    ResearchProject,
     SourceKind,
     Trial,
     TrialSourceKind,
@@ -856,6 +857,409 @@ def _title_key(title: str | None) -> str:
     return re.sub(r"[^a-z0-9]", "", (title or "").lower())
 
 
+def _given_names(session: Session) -> list[str]:
+    """Every name a trial gives a drug, biological or supplement under."""
+    given: list[str] = []
+    for interventions in session.exec(select(Trial.interventions)).all():
+        for item in interventions or []:
+            if isinstance(item, dict) and str(item.get("type") or "").upper() in {
+                "DRUG",
+                "BIOLOGICAL",
+                "DIETARY_SUPPLEMENT",
+                "COMBINATION_PRODUCT",
+            }:
+                given += [str(item.get("name") or ""), *map(str, item.get("other_names") or [])]
+    return given
+
+
+def run_pubtator_ingestion() -> IngestionStats:
+    """Put the relations the literature asserts into the knowledge graph.
+
+    Until now every graph edge came from a registry, a database or a curated
+    record; none had been read out of a paper, so the graph points the
+    candidate report reserves for paper evidence had nothing to score. PubTator
+    3.0 has already read every PubMed abstract in this corpus: 22,202 typed
+    relations from 11,697 of them. This fetches what is not yet cached, reads
+    it through MeSH, and writes what survives as asserted edges --
+    ``graph.literature_seed`` says what survives and why.
+
+    The 360 Crossref papers are not in PubMed, and PubTator's service for
+    annotating submitted text answers "This resource is not available", so
+    they are not reached here.
+    """
+    from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
+    from vitiligo.sources.mesh import load_index
+    from vitiligo.sources.pubtator import PubtatorClient, cached_documents
+
+    init_db()
+    run = IngestionRun(source="pubtator", query="pubtator3 relations")
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    try:
+        with session_scope() as session:
+            pmids = [
+                str(p)
+                for p in session.exec(
+                    select(Document.source_id).where(Document.source == SourceKind.PUBMED)
+                ).all()
+            ]
+            # A PMC paper carries its PMID in its metadata; two are not in the
+            # PubMed set, and their abstracts are read like the rest.
+            pmids += [
+                str(meta["pmid"])
+                for meta in session.exec(
+                    select(Document.raw_metadata).where(Document.source == SourceKind.PMC)
+                ).all()
+                if isinstance(meta, dict) and meta.get("pmid")
+            ]
+            given = _given_names(session)
+
+        with PubtatorClient() as client:
+            fetched = sum(n for _, n in client.harvest(pmids))
+
+        documents = list(cached_documents(kind="abstracts"))
+        # A full-text export repeats its abstract's relations, and for 13 papers
+        # adds 40 more; those are read too, with the full text's mentions.
+        asserted = {
+            d.pmid: {(r.type, r.first.identifier, r.second.identifier) for r in d.relations}
+            for d in documents
+        }
+        for doc in cached_documents(kind="fulltext"):
+            held = asserted.get(doc.pmid, set())
+            extra = tuple(
+                r
+                for r in doc.relations
+                if (r.type, r.first.identifier, r.second.identifier) not in held
+            )
+            if extra:
+                documents.append(replace(doc, relations=extra))
+        wanted = {
+            side.identifier
+            for doc in documents
+            for relation in doc.relations
+            for side in (relation.first, relation.second)
+        }
+        reader = LiteratureReader(load_index(wanted), given, gene_symbols(documents))
+        with session_scope() as session:
+            stats = load_literature(session, documents, reader)
+        logger.info(
+            "PubTator: %d relations from %d documents; %d loaded into %d new edges; dropped %s",
+            stats.relations,
+            stats.documents,
+            stats.loaded,
+            stats.edges_inserted,
+            dict(stats.dropped.most_common()),
+        )
+        _finalize_run(
+            run_id,
+            "completed",
+            stats.documents,
+            stats.edges_inserted,
+            stats.loaded - stats.edges_inserted,
+            stats.relations,
+            None,
+        )
+    except Exception as exc:
+        logger.exception("PubTator ingestion failed")
+        _finalize_run(run_id, "failed", 0, 0, 0, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="pubtator",
+        total_found=stats.relations,
+        fetched=fetched,
+        inserted=stats.edges_inserted,
+        updated=stats.loaded - stats.edges_inserted,
+        skipped=sum(stats.dropped.values()),
+        run_id=run_id,
+    )
+
+
+def run_fulltext_relation_ingestion(model_path: Path) -> IngestionStats:
+    """Read relations out of the bodies of the full texts with the trained model.
+
+    PubTator annotates every entity in the 2,712 full texts it holds but reads
+    relations only out of their abstracts. ``relations.apply`` reads the rest
+    with a model trained and judged on BioRED; what it reads is checked by the
+    same loader as PubTator's relations and written as asserted edges, each
+    citing the passage it came from. Needs the ``train`` extra.
+    """
+    from transformers import AutoTokenizer
+
+    from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
+    from vitiligo.relations.apply import CONFIDENCE, MIN_SCORE, read_documents, trusted
+    from vitiligo.relations.train import load
+    from vitiligo.sources.mesh import load_index
+    from vitiligo.sources.pubtator import cached_documents
+
+    init_db()
+    run = IngestionRun(source="fulltext-relations", query=str(model_path))
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    try:
+        model, bias, saved = load(model_path)
+        tokenizer = AutoTokenizer.from_pretrained(saved["encoder"])
+        fulltexts = list(cached_documents(kind="fulltext"))
+        read = list(read_documents(model, tokenizer, bias, fulltexts))
+        wanted = {
+            side.identifier
+            for doc in read
+            for relation in doc.relations
+            for side in (relation.first, relation.second)
+        }
+        with session_scope() as session:
+            given = _given_names(session)
+        symbols = gene_symbols([*cached_documents(kind="abstracts"), *fulltexts])
+        reader = LiteratureReader(load_index(wanted), given, symbols)
+        method = "biored-" + str(saved["encoder"]).rsplit("/", 1)[-1]
+        with session_scope() as session:
+            stats = load_literature(
+                session,
+                read,
+                reader,
+                method=method,
+                min_score=MIN_SCORE,
+                confidence=CONFIDENCE,
+                accept=trusted,
+            )
+        logger.info(
+            "Full texts: %d relations read from %d papers; %d loaded into %d new edges; dropped %s",
+            stats.relations,
+            stats.documents,
+            stats.loaded,
+            stats.edges_inserted,
+            dict(stats.dropped.most_common()),
+        )
+        _finalize_run(
+            run_id,
+            "completed",
+            stats.documents,
+            stats.edges_inserted,
+            stats.loaded - stats.edges_inserted,
+            stats.relations,
+            None,
+        )
+    except Exception as exc:
+        logger.exception("Full-text relation ingestion failed")
+        _finalize_run(run_id, "failed", 0, 0, 0, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="fulltext-relations",
+        total_found=stats.relations,
+        fetched=len(fulltexts),
+        inserted=stats.edges_inserted,
+        updated=stats.loaded - stats.edges_inserted,
+        skipped=sum(stats.dropped.values()),
+        run_id=run_id,
+    )
+
+
+# A paper's own sections, by the heading it gives them, in PubTator's codes; and
+# the headings under which a paper asserts nothing about biology.
+_SECTIONS = (
+    (re.compile(r"introduc|background"), "INTRO"),
+    (re.compile(r"method|material|patients and"), "METHODS"),
+    (re.compile(r"result|finding"), "RESULTS"),
+    (re.compile(r"discussion"), "DISCUSS"),
+    (re.compile(r"conclu"), "CONCL"),
+    (re.compile(r"case"), "CASE"),
+    (re.compile(r"^tables?\b"), "TABLE"),
+)
+_NOT_CLAIMS = re.compile(
+    r"author|contribution|ethic|funding|conflict|competing|consent|supporting information"
+    r"|supplementar|data availability|acknowledg|reference|abbreviation|disclosure"
+)
+
+
+def _body_passages(body: str) -> list[tuple[str, str]]:
+    """A full text kept as Markdown, as (section, paragraph) passages."""
+    passages: list[tuple[str, str]] = []
+    section, skipped = "BODY", False
+    for paragraph in (p.strip() for p in body.split("\n\n")):
+        if paragraph.startswith("#"):
+            # A table's caption is a heading with its rows directly beneath it, in
+            # the same paragraph; the rows are the table, and are kept.
+            line, _, paragraph = paragraph.partition("\n")
+            heading = re.sub(r"^#+\s*(\d+(\.\d+)*\.?\s*)?", "", line).strip().lower()
+            skipped = bool(_NOT_CLAIMS.search(heading))
+            section = next((code for rule, code in _SECTIONS if rule.search(heading)), section)
+            paragraph = paragraph.strip()
+        if paragraph and not skipped:
+            # A Markdown table can sit under any heading ("Case presentation");
+            # its rows are a table's, whatever the section.
+            rows = paragraph.split("\n")
+            is_table = sum(" | " in row for row in rows) > len(rows) / 2
+            passages.append(("TABLE" if is_table else section, paragraph))
+    return passages
+
+
+def _unannotated_texts(
+    read_abstracts: set[str], read_full_texts: set[str]
+) -> list[tuple[str, list[tuple[str, str]]]]:
+    """(id, [(section, text), ...]) for every text PubTator never annotated.
+
+    The Crossref papers, the NIH project abstracts, the summaries of the
+    registered vitiligo trials, the GEO series descriptions, the PubMed
+    abstracts PubTator does not hold, and the PMC full texts it never
+    annotated. A trial known only from its paper is not here: its text is
+    that paper's abstract. Each id carries the scheme the graph's evidence
+    already uses.
+    """
+
+    def abstract(title: str | None, text: str | None) -> list[tuple[str, str]]:
+        return [("ABSTRACT", f"{title or ''}\n{text or ''}")]
+
+    texts: list[tuple[str, list[tuple[str, str]]]] = []
+    with session_scope() as session:
+        for doc in session.exec(select(Document)):
+            if doc.source == SourceKind.CROSSREF:
+                texts.append((f"doi:{doc.source_id}", abstract(doc.title, doc.abstract)))
+            elif doc.source == SourceKind.GEO and doc.abstract:
+                texts.append((f"geo:{doc.source_id}", abstract(doc.title, doc.abstract)))
+            elif doc.source == SourceKind.PUBMED and doc.source_id not in read_abstracts:
+                if doc.abstract:
+                    texts.append((f"pmid:{doc.source_id}", abstract(doc.title, doc.abstract)))
+            elif doc.source == SourceKind.PMC:
+                meta = doc.raw_metadata or {}
+                pmid = str(meta.get("pmid") or "")
+                body = str(meta.get("full_text") or "")
+                if len(body) <= 500 or pmid in read_full_texts:
+                    continue
+                passages = [] if pmid in read_abstracts else abstract(doc.title, doc.abstract)
+                texts.append(
+                    (
+                        f"pmid:{pmid}" if pmid else f"pmc:{doc.source_id}",
+                        passages + _body_passages(body),
+                    )
+                )
+        for project in session.exec(select(ResearchProject)):
+            texts.append(
+                (f"reporter:{project.source_id}", abstract(project.title, project.abstract))
+            )
+        for trial in session.exec(select(Trial)):
+            if trial.source == TrialSourceKind.PUBLICATION or not trial.summary:
+                continue
+            if (trial.raw_metadata or {}).get("scope"):  # held for its drug, not the disease
+                continue
+            title = trial.official_title or trial.brief_title or ""
+            texts.append(
+                (
+                    f"{trial.source.value.lower()}:{trial.source_id}",
+                    [("REGISTRY", f"{title}\n{trial.summary}")],
+                )
+            )
+    return texts
+
+
+def run_unannotated_relation_ingestion(model_path: Path) -> IngestionStats:
+    """Read relations out of the text PubTator never annotated.
+
+    The Crossref papers, the NIH project abstracts and the registered trials'
+    summaries have no PubTator annotations, so their entities are found with a
+    lexicon of PubTator's own surface forms (``relations.lexicon``, measured
+    against PubTator on abstracts it was not built from), and their relations
+    read by the same model, checks and loader as the full texts. Needs the
+    ``train`` extra.
+    """
+    from transformers import AutoTokenizer
+
+    from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
+    from vitiligo.relations.apply import (
+        CONFIDENCE,
+        MIN_SCORE,
+        UNRELIABLE,
+        read_documents,
+        trusted,
+    )
+    from vitiligo.relations.lexicon import build
+    from vitiligo.relations.train import load
+    from vitiligo.sources.mesh import load_index
+    from vitiligo.sources.pubtator import cached_documents
+
+    init_db()
+    run = IngestionRun(source="unannotated-relations", query=str(model_path))
+    with session_scope() as bookkeeping:
+        bookkeeping.add(run)
+        bookkeeping.flush()
+        run_id = run.id
+
+    try:
+        abstracts = list(cached_documents(kind="abstracts"))
+        fulltexts = list(cached_documents(kind="fulltext"))
+        lexicon = build(abstracts)
+        documents = [
+            lexicon.annotate(i, passages)
+            for i, passages in _unannotated_texts(
+                {d.pmid for d in abstracts}, {d.pmid for d in fulltexts}
+            )
+        ]
+
+        model, bias, saved = load(model_path)
+        tokenizer = AutoTokenizer.from_pretrained(saved["encoder"])
+        # Sections that assert nothing were left out above; tables and captions
+        # are not read here either.
+        read = list(read_documents(model, tokenizer, bias, documents, skip=UNRELIABLE))
+        wanted = {
+            side.identifier
+            for doc in read
+            for relation in doc.relations
+            for side in (relation.first, relation.second)
+        }
+        with session_scope() as session:
+            given = _given_names(session)
+        symbols = gene_symbols([*abstracts, *fulltexts])
+        reader = LiteratureReader(load_index(wanted), given, symbols)
+        method = "biored-" + str(saved["encoder"]).rsplit("/", 1)[-1]
+        with session_scope() as session:
+            stats = load_literature(
+                session,
+                read,
+                reader,
+                method=method,
+                min_score=MIN_SCORE,
+                confidence=CONFIDENCE,
+                accept=trusted,
+            )
+        logger.info(
+            "Unannotated text: %d relations read from %d of %d texts; %d loaded into %d new edges",
+            stats.relations,
+            stats.documents,
+            len(documents),
+            stats.loaded,
+            stats.edges_inserted,
+        )
+        _finalize_run(
+            run_id,
+            "completed",
+            stats.documents,
+            stats.edges_inserted,
+            stats.loaded - stats.edges_inserted,
+            stats.relations,
+            None,
+        )
+    except Exception as exc:
+        logger.exception("Relation ingestion from unannotated text failed")
+        _finalize_run(run_id, "failed", 0, 0, 0, None, str(exc))
+        raise
+
+    return IngestionStats(
+        source="unannotated-relations",
+        total_found=stats.relations,
+        fetched=len(documents),
+        inserted=stats.edges_inserted,
+        updated=stats.loaded - stats.edges_inserted,
+        skipped=sum(stats.dropped.values()),
+        run_id=run_id,
+    )
+
+
 def run_vitiligo_outcome_ingestion(commit_every: int = 50) -> IngestionStats:
     """Hold the cancer immunotherapy trials in which vitiligo appeared.
 
@@ -1448,7 +1852,6 @@ def run_reporter_ingestion(
     commit_every: int = 50,
 ) -> IngestionStats:
     """Import NIH-funded projects matching the query from NIH RePORTER."""
-    from vitiligo.storage import ResearchProject
 
     init_db()
     source = "nih_reporter"

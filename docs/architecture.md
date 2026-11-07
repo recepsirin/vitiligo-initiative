@@ -35,7 +35,7 @@ flowchart TB
   SEARCH & EVID & CAND --> UI[FastAPI web UI · CLI]
 ```
 
-Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `serve`. Ingest does not embed or build the graph; those are separate steps. Every step is deterministic: the engine calls no model API, so the same corpus reproduces the same output.
+Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `serve`. Ingest does not embed or build the graph; those are separate steps. The engine calls no model API. Every step is deterministic except training the relation extractor (`relations train`), which is seeded but runs on a GPU whose arithmetic is not bit-for-bit repeatable; a saved model then reads the same corpus into the same edges.
 
 ## Modules
 
@@ -46,7 +46,8 @@ Typical order: `db init` → `ingest …` → `embed run` → `graph seed` → `
 | `vitiligo.storage` | SQLModel schema: documents, embeddings, trials, priors, graph |
 | `vitiligo.embed` | fastembed ONNX embeddings (`BAAI/bge-small-en-v1.5`), brute-force cosine search. Two indexes: one vector per document over title and abstract, and one per passage of a paper's body (`chunking.py`, `full_text.py`), where a document scores as its best passage |
 | `vitiligo.evidence` | Evidence levels for papers and trials; search down-ranks mouse (−0.08) and in-vitro (−0.05) studies |
-| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph seed-evidence` from GWAS associations, trial results and mechanism records. Every edge records whether it is **asserted** (a source states it) or **observed** (measured), and an observed one carries its rung on the causal ladder |
+| `vitiligo.graph` | `graph seed` from priors and trials (deterministic); `graph seed-evidence` from GWAS associations, trial results and mechanism records; `literature_seed.py` from the relations papers assert, read by PubTator 3.0 (`ingest pubtator`) or by the relation extractor (`ingest fulltext-relations`, `ingest unannotated-relations`) and checked against MeSH. Every edge records whether it is **asserted** (a source states it) or **observed** (measured), and an observed one carries its rung on the causal ladder |
+| `vitiligo.relations` | The relation extractor: an encoder fine-tuned on NCBI's BioRED (and PubTator's reading of this corpus) that reads every entity pair in a passage at once (`model.py`), judged on BioRED's test split and on agreement with PubTator (`train.py`, `scoring.py`); full-text reading (`apply.py`); a lexicon of PubTator's own forms for text PubTator never annotated (`lexicon.py`). Needs the `[train]` extra |
 | `vitiligo.trials`, `vitiligo.priors` | Query helpers over the store |
 | `vitiligo.reports` | Candidate report (deterministic); JAK atlas (`jak.py`); harmonized arm table (`jak_arms.py`); curated paper results (`paper_results.py`); the clinician trial-results table (`clinical.py`) and partial-identification bounds (`bounds.py`) |
 | `vitiligo.models` | Scenario model (`jak_mbma.py`); needs the `[model]` extra |
