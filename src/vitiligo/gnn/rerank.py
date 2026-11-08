@@ -191,7 +191,9 @@ def build_candidate_feature_tensor(
     # 7. Transcriptomic GSE256271 signature alignment score (1D)
     # Target matches weighted by log2FoldChange
     trans_score = 0.0
-    for g, score in zip(CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=False):
+    for g, score in zip(
+        CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=False
+    ):
         if score > 0.0 and g in gse_fc:
             # Overcoming elevated barrier (negative fc in responding means higher in non-responding)
             trans_score += max(0.0, score) * (-gse_fc[g])
@@ -224,39 +226,85 @@ def train_dense_reranker(
         h_gnn = gnn_model.encode(
             dataset.edge_index.to(device),
             dataset.edge_type.to(device),
-            node_features=dataset.node_features.to(device) if dataset.node_features is not None else None,
+            node_features=dataset.node_features.to(device)
+            if dataset.node_features is not None
+            else None,
         )
 
     # Curate positive training exemplars: approved/clinical dermatologic/autoimmune modalities
     positive_names = [
-        "ruxolitinib", "tofacitinib", "baricitinib", "upadacitinib", "ritlecitinib",
-        "tacrolimus", "pimecrolimus", "cyclosporine", "apremilast", "crisaborole",
-        "dexamethasone", "betamethasone", "clobetasol", "fluocinolone", "prednisone",
-        "methotrexate", "etanercept", "adalimumab", "infliximab", "ustekinumab",
-        "secukinumab", "ixekizumab", "vilazodone", "fluoxetine", "latanoprost",
-        "bimatoprost", "minoxidil", "metformin", "simvastatin", "atorvastatin"
+        "ruxolitinib",
+        "tofacitinib",
+        "baricitinib",
+        "upadacitinib",
+        "ritlecitinib",
+        "tacrolimus",
+        "pimecrolimus",
+        "cyclosporine",
+        "apremilast",
+        "crisaborole",
+        "dexamethasone",
+        "betamethasone",
+        "clobetasol",
+        "fluocinolone",
+        "prednisone",
+        "methotrexate",
+        "etanercept",
+        "adalimumab",
+        "infliximab",
+        "ustekinumab",
+        "secukinumab",
+        "ixekizumab",
+        "vilazodone",
+        "fluoxetine",
+        "latanoprost",
+        "bimatoprost",
+        "minoxidil",
+        "metformin",
+        "simvastatin",
+        "atorvastatin",
     ]
 
     # Hard negative decoys: cytotoxic chemotherapeutics and non-dermatologic toxics
     negative_names = [
-        "paclitaxel", "cisplatin", "doxorubicin", "cyclophosphamide", "vincristine",
-        "fluorouracil", "gemcitabine", "carboplatin", "bleomycin", "dacarbazine",
-        "warfarin", "heparin", "digoxin", "furosemide", "amiodarone",
-        "gentamicin", "vancomycin", "phenytoin", "propofol", "halothane"
+        "paclitaxel",
+        "cisplatin",
+        "doxorubicin",
+        "cyclophosphamide",
+        "vincristine",
+        "fluorouracil",
+        "gemcitabine",
+        "carboplatin",
+        "bleomycin",
+        "dacarbazine",
+        "warfarin",
+        "heparin",
+        "digoxin",
+        "furosemide",
+        "amiodarone",
+        "gentamicin",
+        "vancomycin",
+        "phenytoin",
+        "propofol",
+        "halothane",
     ]
 
     pos_features: list[torch.Tensor] = []
     for name in positive_names:
         idx = dataset.name_to_idx.get(name) or dataset.name_to_idx.get(name.lower())
         if idx is not None:
-            feat = build_candidate_feature_tensor(idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device)
+            feat = build_candidate_feature_tensor(
+                idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device
+            )
             pos_features.append(feat)
 
     neg_features: list[torch.Tensor] = []
     for name in negative_names:
         idx = dataset.name_to_idx.get(name) or dataset.name_to_idx.get(name.lower())
         if idx is not None:
-            feat = build_candidate_feature_tensor(idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device)
+            feat = build_candidate_feature_tensor(
+                idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device
+            )
             neg_features.append(feat)
 
     # Sample additional random non-dermatologic candidates as background negatives
@@ -266,20 +314,36 @@ def train_dense_reranker(
         cand_idx = canonical_indices[p_idx]
         ent = dataset.entities[cand_idx]
         if ent.name.lower() not in positive_names and ent.name.lower() not in negative_names:
-            feat = build_candidate_feature_tensor(cand_idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device)
+            feat = build_candidate_feature_tensor(
+                cand_idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device
+            )
             neg_features.append(feat)
 
-    x_pos = torch.stack(pos_features) if pos_features else torch.empty((0, RERANKER_FEATURE_DIM), device=device)
-    x_neg = torch.stack(neg_features) if neg_features else torch.empty((0, RERANKER_FEATURE_DIM), device=device)
+    x_pos = (
+        torch.stack(pos_features)
+        if pos_features
+        else torch.empty((0, RERANKER_FEATURE_DIM), device=device)
+    )
+    x_neg = (
+        torch.stack(neg_features)
+        if neg_features
+        else torch.empty((0, RERANKER_FEATURE_DIM), device=device)
+    )
 
     x_train = torch.cat([x_pos, x_neg], dim=0).detach()
-    y = torch.cat([torch.ones(len(x_pos), device=device), torch.zeros(len(x_neg), device=device)], dim=0).detach()
+    y = torch.cat(
+        [torch.ones(len(x_pos), device=device), torch.zeros(len(x_neg), device=device)], dim=0
+    ).detach()
 
     reranker = DenseCurativeReranker(in_dim=RERANKER_FEATURE_DIM).to(device)
     optimizer = AdamW(reranker.parameters(), lr=lr, weight_decay=1e-4)
     criterion = nn.BCEWithLogitsLoss()
 
-    logger.info("Training Stage-2 Dense Cross-Encoder (%d positive, %d negative samples)...", len(x_pos), len(x_neg))
+    logger.info(
+        "Training Stage-2 Dense Cross-Encoder (%d positive, %d negative samples)...",
+        len(x_pos),
+        len(x_neg),
+    )
     reranker.train()
     for epoch in range(1, num_epochs + 1):
         optimizer.zero_grad()
@@ -291,7 +355,13 @@ def train_dense_reranker(
             with torch.no_grad():
                 preds = (torch.sigmoid(logits) >= 0.5).float()
                 acc = (preds == y).float().mean().item()
-            logger.info("Reranker Epoch %02d/%02d | Loss: %.4f | Accuracy: %.1f%%", epoch, num_epochs, loss.item(), acc * 100)
+            logger.info(
+                "Reranker Epoch %02d/%02d | Loss: %.4f | Accuracy: %.1f%%",
+                epoch,
+                num_epochs,
+                loss.item(),
+                acc * 100,
+            )
 
     torch.save({"state_dict": reranker.state_dict(), "in_dim": RERANKER_FEATURE_DIM}, save_path)
     logger.info("Saved trained dense reranker to %s", save_path)
@@ -327,7 +397,9 @@ def rerank_curative_candidates(
         h_gnn = gnn_model.encode(
             dataset.edge_index.to(device),
             dataset.edge_type.to(device),
-            node_features=dataset.node_features.to(device) if dataset.node_features is not None else None,
+            node_features=dataset.node_features.to(device)
+            if dataset.node_features is not None
+            else None,
         )
 
     canonical_indices = dataset.canonical_drug_indices or dataset.kind_to_indices.get("DRUG", [])
@@ -361,8 +433,10 @@ def rerank_curative_candidates(
 
     selected_indices: set[int] = set()
     # Add top direct TREATS candidates
-    s1_ranked = sorted(zip(canonical_indices, s1_scores, strict=False), key=lambda x: x[1], reverse=True)
-    for d_idx, _ in s1_ranked[:top_stage1 // 2]:
+    s1_ranked = sorted(
+        zip(canonical_indices, s1_scores, strict=False), key=lambda x: x[1], reverse=True
+    )
+    for d_idx, _ in s1_ranked[: top_stage1 // 2]:
         selected_indices.add(d_idx)
 
     # Add top durability and regeneration candidates
@@ -377,8 +451,7 @@ def rerank_curative_candidates(
             selected_indices.add(idx)
 
     top_s1_candidates = [
-        (d_idx, candidate_score_dict.get(d_idx, 0.0))
-        for d_idx in selected_indices
+        (d_idx, candidate_score_dict.get(d_idx, 0.0)) for d_idx in selected_indices
     ]
 
     # Stage 2: Cross-Encoder Reranking
@@ -396,7 +469,9 @@ def rerank_curative_candidates(
         d_entity = dataset.entities[d_idx]
         safety_tier, is_chemo = get_safety_profile(d_entity.name)
 
-        feat = build_candidate_feature_tensor(d_idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device)
+        feat = build_candidate_feature_tensor(
+            d_idx, dataset, h_gnn, gnn_model, fingerprints, gse_fc, device
+        )
         with torch.no_grad():
             r_logit = reranker(feat.unsqueeze(0)).item()
             prob = torch.sigmoid(torch.tensor(r_logit)).item()
@@ -427,7 +502,9 @@ def rerank_curative_candidates(
         triad_profile: list[str] = []
         if any(g in matched_targets for g in ["IL15 (Inh)", "JAK1 (Inh)", "JAK3 (Inh)"]):
             triad_profile.append("Pillar 1: TRM Disarmament")
-        if any(g in matched_targets for g in ["CTNNB1 (Act)", "MITF (Act)", "EDNRB (Act)", "KIT (Act)"]):
+        if any(
+            g in matched_targets for g in ["CTNNB1 (Act)", "MITF (Act)", "EDNRB (Act)", "KIT (Act)"]
+        ):
             triad_profile.append("Pillar 2: Stem-Cell Regeneration")
         if any(g in matched_targets for g in ["PDE4B (Inh)", "PDE4A (Inh)"]):
             triad_profile.append("Pillar 3: PDE4B Barrier Suppression")
@@ -448,7 +525,9 @@ def rerank_curative_candidates(
                 matched_targets=matched_targets,
                 safety_tier=safety_tier,
                 is_cytotoxic=is_chemo,
-                curative_triad_alignment=" + ".join(triad_profile) if triad_profile else "Broad Modulator",
+                curative_triad_alignment=" + ".join(triad_profile)
+                if triad_profile
+                else "Broad Modulator",
             )
         )
 
@@ -492,7 +571,7 @@ def rerank_curative_candidates(
     ]
     for c in top_results:
         md_lines.append(
-            f"| {c.stage2_rank} | **{c.drug_name}** | {c.reranker_score:.3f} | {c.probability*100:.1f}% | {c.gnn_affinity_score:.3f} | {c.safety_tier} | {c.curative_triad_alignment} |"
+            f"| {c.stage2_rank} | **{c.drug_name}** | {c.reranker_score:.3f} | {c.probability * 100:.1f}% | {c.gnn_affinity_score:.3f} | {c.safety_tier} | {c.curative_triad_alignment} |"
         )
 
     with open(export_markdown, "w", encoding="utf-8") as f:

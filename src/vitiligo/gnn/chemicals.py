@@ -150,7 +150,11 @@ def build_chemical_node_features(
         try:
             tensor = torch.load(cache_path, weights_only=True)
             if tensor.shape[0] == dataset.num_nodes and tensor.shape[1] == FINGERPRINT_BITS:
-                logger.info("Loaded cached chemical fingerprints from %s (shape: %s)", cache_path, tensor.shape)
+                logger.info(
+                    "Loaded cached chemical fingerprints from %s (shape: %s)",
+                    cache_path,
+                    tensor.shape,
+                )
                 return tensor
         except Exception as e:
             logger.warning("Could not load chemical cache (%s); regenerating...", e)

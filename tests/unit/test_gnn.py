@@ -40,8 +40,7 @@ def _make_dummy_dataset() -> GraphDataset:
     # 1 -> 4 (ritlecitinib INHIBITS IL15)
     # 2 -> 3 (vitiligo ASSOCIATED_WITH JAK1)
     edge_index = torch.tensor(
-        [[0, 1, 0, 1, 2],
-         [2, 2, 3, 4, 3]],
+        [[0, 1, 0, 1, 2], [2, 2, 3, 4, 3]],
         dtype=torch.long,
     )
     edge_type = torch.tensor([0, 0, 1, 1, 3], dtype=torch.long)
@@ -72,7 +71,10 @@ def test_compute_causal_edge_weight() -> None:
     # Floor weight for low confidence assertion
     assert compute_causal_edge_weight("ASSERTED", None, 0.1) == 0.20
     # Predicate-specific calibration
-    assert compute_causal_edge_weight("OBSERVED", "perturbation_in_human", 0.9, predicate="CHANGES") == 0.30
+    assert (
+        compute_causal_edge_weight("OBSERVED", "perturbation_in_human", 0.9, predicate="CHANGES")
+        == 0.30
+    )
     assert compute_causal_edge_weight("ASSERTED", None, 0.88, predicate="TREATS") >= 0.75
     assert compute_causal_edge_weight("ASSERTED", None, 0.84, predicate="INHIBITS") >= 0.70
 
@@ -97,12 +99,17 @@ def test_dataset_conversions() -> None:
 def test_dataset_split() -> None:
     ds = _make_dummy_dataset()
     train_ds, val_edges, test_edges = ds.split_edges(val_ratio=0.2, test_ratio=0.2, seed=42)
-    assert train_ds.num_edges + val_edges["edge_index"].size(1) + test_edges["edge_index"].size(1) == ds.num_edges
+    assert (
+        train_ds.num_edges + val_edges["edge_index"].size(1) + test_edges["edge_index"].size(1)
+        == ds.num_edges
+    )
 
 
 def test_relational_gnn_forward_and_loss() -> None:
     ds = _make_dummy_dataset()
-    model = RelationalGNN(num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=32, num_layers=1)
+    model = RelationalGNN(
+        num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=32, num_layers=1
+    )
 
     h = model.encode(ds.edge_index, ds.edge_type)
     assert h.shape == (ds.num_nodes, 32)
@@ -159,7 +166,9 @@ def test_screen_candidates(tmp_path) -> None:
     from vitiligo.gnn.screen import screen_candidates
 
     ds = _make_dummy_dataset()
-    model = RelationalGNN(num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1)
+    model = RelationalGNN(
+        num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1
+    )
 
     json_path = tmp_path / "screen_test.json"
     md_path = tmp_path / "screen_test.md"
@@ -182,7 +191,9 @@ def test_evaluate_link_prediction_filtered() -> None:
     from vitiligo.gnn.train import evaluate_link_prediction
 
     ds = _make_dummy_dataset()
-    model = RelationalGNN(num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1)
+    model = RelationalGNN(
+        num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1
+    )
     eval_edges = {
         "edge_index": ds.edge_index,
         "edge_type": ds.edge_type,
@@ -232,7 +243,3 @@ def test_rgat_forward_and_loss() -> None:
         edge_weights=ds.edge_weight,
     )
     assert loss.item() > 0.0
-
-
-
-

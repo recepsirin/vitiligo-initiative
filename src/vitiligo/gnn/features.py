@@ -149,7 +149,12 @@ def extract_geo_target_features(
     normalized_gwas = {g: (s / max_gwas) * 5.0 for g, s in gwas_scores.items()}
 
     # Merge all into 4D vector per gene
-    all_genes = set(gse311770_fc.keys()) | set(gse150954_fc.keys()) | set(gse344141_fc.keys()) | set(normalized_gwas.keys())
+    all_genes = (
+        set(gse311770_fc.keys())
+        | set(gse150954_fc.keys())
+        | set(gse344141_fc.keys())
+        | set(normalized_gwas.keys())
+    )
     target_features: dict[str, list[float]] = {}
     for g in all_genes:
         target_features[g] = [
@@ -172,14 +177,20 @@ def extract_biomedbert_node_embeddings(
     """Encode all entity names using the exact fine-tuned BiomedBERT model checkpoint."""
     if device is None:
         device_obj = torch.device(
-            "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+            "mps"
+            if torch.backends.mps.is_available()
+            else ("cuda" if torch.cuda.is_available() else "cpu")
         )
     else:
         device_obj = torch.device(device)
 
-    logger.info("Encoding %d entities with fine-tuned BiomedBERT on %s...", dataset.num_nodes, device_obj)
+    logger.info(
+        "Encoding %d entities with fine-tuned BiomedBERT on %s...", dataset.num_nodes, device_obj
+    )
     tokenizer = AutoTokenizer.from_pretrained(biomedbert_dir)
-    bert = AutoModel.from_pretrained("microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext").to(device_obj)
+    bert = AutoModel.from_pretrained(
+        "microsoft/BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext"
+    ).to(device_obj)
 
     # Load fine-tuned weights
     weights_path = biomedbert_dir / "model.safetensors"
@@ -290,7 +301,9 @@ def build_multimodal_node_features(
             pass
 
     if not bert_geo_cached:
-        bert_features = extract_biomedbert_node_embeddings(dataset, biomedbert_dir=biomedbert_dir, device=device)
+        bert_features = extract_biomedbert_node_embeddings(
+            dataset, biomedbert_dir=biomedbert_dir, device=device
+        )
         geo_features = extract_geo_target_features()
         geo_tensor = torch.zeros((dataset.num_nodes, 4), dtype=torch.float32)
 
@@ -299,10 +312,13 @@ def build_multimodal_node_features(
             if name_key in geo_features:
                 geo_tensor[entity.idx] = torch.tensor(geo_features[name_key], dtype=torch.float32)
             elif entity.key.upper() in geo_features:
-                geo_tensor[entity.idx] = torch.tensor(geo_features[entity.key.upper()], dtype=torch.float32)
+                geo_tensor[entity.idx] = torch.tensor(
+                    geo_features[entity.key.upper()], dtype=torch.float32
+                )
 
     # 2. Chemical structure Morgan fingerprints (N, 1024)
     from vitiligo.gnn.chemicals import build_chemical_node_features
+
     chem_tensor = build_chemical_node_features(dataset)
 
     # 3. Target functional family & domain features (N, 128)
@@ -313,5 +329,9 @@ def build_multimodal_node_features(
 
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(multimodal_x, cache_path)
-    logger.info("Saved 1924-D multimodal node features (shape %s) to %s", list(multimodal_x.shape), cache_path)
+    logger.info(
+        "Saved 1924-D multimodal node features (shape %s) to %s",
+        list(multimodal_x.shape),
+        cache_path,
+    )
     return multimodal_x

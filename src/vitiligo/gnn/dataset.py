@@ -62,8 +62,8 @@ class GraphDataset:
     idx_to_relation: list[str]
 
     edge_index: torch.Tensor  # shape (2, E)
-    edge_type: torch.Tensor   # shape (E,)
-    edge_weight: torch.Tensor # shape (E,)
+    edge_type: torch.Tensor  # shape (E,)
+    edge_weight: torch.Tensor  # shape (E,)
 
     # Optional node features (fused BiomedBERT + GEO transcriptomics + GWAS)
     node_features: torch.Tensor | None = None
@@ -123,7 +123,9 @@ class GraphDataset:
             hetero_edges[edge_key][2].append(w)
 
         for (u_kind, rel_name, v_kind), (u_list, v_list, w_list) in hetero_edges.items():
-            data[u_kind, rel_name, v_kind].edge_index = torch.tensor([u_list, v_list], dtype=torch.long)
+            data[u_kind, rel_name, v_kind].edge_index = torch.tensor(
+                [u_list, v_list], dtype=torch.long
+            )
             data[u_kind, rel_name, v_kind].edge_weight = torch.tensor(w_list, dtype=torch.float)
 
         return data
@@ -139,7 +141,9 @@ class GraphDataset:
         with open(output_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f, delimiter="\t")
             for u, v, r in zip(src, dst, rel, strict=False):
-                writer.writerow([self.entities[u].name, self.idx_to_relation[r], self.entities[v].name])
+                writer.writerow(
+                    [self.entities[u].name, self.idx_to_relation[r], self.entities[v].name]
+                )
         logger.info("Exported %d triples to %s", len(src), output_path)
 
     def split_edges(
@@ -270,16 +274,17 @@ def load_graph_dataset(
             ext = json.loads(ext_raw) if ext_raw else {}
             has_id = any(k in ext for k in ["mesh", "drugbank", "opentargets", "pubchem", "chembl"])
             name_l = name.lower()
-            not_artifact = not any(w in name_l for w in ["placebo", "vehicle", "sham", "control", ":n/a;", "unspecified"])
+            not_artifact = not any(
+                w in name_l
+                for w in ["placebo", "vehicle", "sham", "control", ":n/a;", "unspecified"]
+            )
             if has_id and not_artifact:
                 canonical_drug_indices.append(idx)
 
     # 2. Map predicates
     pred_set = list(PREDICATES)
     # Check for any unexpected predicates in database
-    db_preds = [
-        r[0] for r in cur.execute("SELECT DISTINCT predicate FROM graph_edges").fetchall()
-    ]
+    db_preds = [r[0] for r in cur.execute("SELECT DISTINCT predicate FROM graph_edges").fetchall()]
     for p in db_preds:
         if p not in pred_set:
             pred_set.append(p)
@@ -358,5 +363,10 @@ def load_graph_dataset(
         },
         cache_path,
     )
-    logger.info("Saved GNN dataset cache to %s (%d nodes, %d edges)", cache_path, dataset.num_nodes, dataset.num_edges)
+    logger.info(
+        "Saved GNN dataset cache to %s (%d nodes, %d edges)",
+        cache_path,
+        dataset.num_nodes,
+        dataset.num_edges,
+    )
     return dataset

@@ -45,14 +45,14 @@ STEM_CELL_REGENERATION_TARGETS = [
     "WNT1",
     "WNT3A",
     "MITF",
-    "EDNRB",   # Endothelin receptor B
+    "EDNRB",  # Endothelin receptor B
     "EDN3",
-    "KIT",     # c-Kit / stem cell factor receptor
-    "HTR1A",   # 5-HT1A (Fluoxetine / GSE344141)
+    "KIT",  # c-Kit / stem cell factor receptor
+    "HTR1A",  # 5-HT1A (Fluoxetine / GSE344141)
     "TYR",
     "DCT",
-    "CSNK1G3", # Casein Kinase 1 gamma 3 (GSE256271 responder marker)
-    "MAML1",   # Mastermind-like 1 Notch co-factor (GSE256271 responder marker)
+    "CSNK1G3",  # Casein Kinase 1 gamma 3 (GSE256271 responder marker)
+    "MAML1",  # Mastermind-like 1 Notch co-factor (GSE256271 responder marker)
 ]
 
 # Targets identified from paired responder vs non-responder RNA-seq (GSE256271)
@@ -66,10 +66,27 @@ NON_RESPONDER_BARRIER_TARGETS = [
 ]
 
 CYTOTOXIC_CHEMO_KEYWORDS = {
-    "docetaxel", "paclitaxel", "ifosfamide", "cyclophosphamide", "gemcitabine",
-    "capecitabine", "cisplatin", "carboplatin", "oxaliplatin", "doxorubicin",
-    "epirubicin", "vincristine", "vinblastine", "etoposide", "irinotecan",
-    "topotecan", "rucaparib", "olaparib", "niraparib", "bleomycin", "dacarbazine"
+    "docetaxel",
+    "paclitaxel",
+    "ifosfamide",
+    "cyclophosphamide",
+    "gemcitabine",
+    "capecitabine",
+    "cisplatin",
+    "carboplatin",
+    "oxaliplatin",
+    "doxorubicin",
+    "epirubicin",
+    "vincristine",
+    "vinblastine",
+    "etoposide",
+    "irinotecan",
+    "topotecan",
+    "rucaparib",
+    "olaparib",
+    "niraparib",
+    "bleomycin",
+    "dacarbazine",
 }
 
 
@@ -80,11 +97,48 @@ def get_safety_profile(drug_name: str) -> tuple[str, bool]:
         return "Cytotoxic Chemo (Contraindicated in non-malignant skin)", True
     if any(t in name_l for t in ["cream", "topical", "ointment", "spray", "gel"]):
         return "Topical (Minimal systemic exposure; high tolerability)", False
-    if any(j in name_l for j in ["ruxolitinib", "ritlecitinib", "itacitinib", "baricitinib", "tofacitinib", "upadacitinib", "apremilast", "deucravacitinib", "povorcitinib", "ivarmacitinib"]):
+    if any(
+        j in name_l
+        for j in [
+            "ruxolitinib",
+            "ritlecitinib",
+            "itacitinib",
+            "baricitinib",
+            "tofacitinib",
+            "upadacitinib",
+            "apremilast",
+            "deucravacitinib",
+            "povorcitinib",
+            "ivarmacitinib",
+        ]
+    ):
         return "Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum)", False
-    if any(s in name_l for s in ["clobetasol", "betamethasone", "fluticasone", "clobetasone", "triamcinolone", "dexamethasone", "prednisone"]):
+    if any(
+        s in name_l
+        for s in [
+            "clobetasol",
+            "betamethasone",
+            "fluticasone",
+            "clobetasone",
+            "triamcinolone",
+            "dexamethasone",
+            "prednisone",
+        ]
+    ):
         return "Corticosteroid (Well-established dermatologic rescue)", False
-    if any(r in name_l for r in ["vilazodone", "fluoxetine", "latanoprost", "bimatoprost", "sacubitril", "valsartan", "metformin", "simvastatin"]):
+    if any(
+        r in name_l
+        for r in [
+            "vilazodone",
+            "fluoxetine",
+            "latanoprost",
+            "bimatoprost",
+            "sacubitril",
+            "valsartan",
+            "metformin",
+            "simvastatin",
+        ]
+    ):
         return "Repurposed Non-Oncology (Favorable systemic safety profile)", False
     return "Standard Molecular Entity", False
 
@@ -313,11 +367,15 @@ def screen_candidates(
 
             # Classify combination route and tolerability
             if "Topical" in imm.safety_tier and "Topical" in reg.safety_tier:
-                safety_notes = "Dual Topical: Minimal systemic absorption; high dermatologic tolerability."
+                safety_notes = (
+                    "Dual Topical: Minimal systemic absorption; high dermatologic tolerability."
+                )
             elif "Topical" in imm.safety_tier or "Topical" in reg.safety_tier:
                 safety_notes = "Targeted Oral + Topical Adjuvant: Potent systemic reset with targeted local niche activation."
             else:
-                safety_notes = "Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox."
+                safety_notes = (
+                    "Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox."
+                )
 
             comb_score = round((imm.affinity_score + reg.affinity_score) / 2.0, 4)
             cocktails.append(
@@ -357,7 +415,11 @@ def screen_candidates(
     export_markdown_path.parent.mkdir(parents=True, exist_ok=True)
     _render_markdown_report(screen_output, export_markdown_path)
 
-    logger.info("Candidate discovery screen finished. Reports saved to %s and %s", export_json_path, export_markdown_path)
+    logger.info(
+        "Candidate discovery screen finished. Reports saved to %s and %s",
+        export_json_path,
+        export_markdown_path,
+    )
     return screen_output
 
 
@@ -379,36 +441,46 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
     for c in data["durability_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
-        lines.append(f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |")
+        lines.append(
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+        )
 
-    lines.extend([
-        "",
-        "## 2. Top Regeneration & Non-Response Overcomers (Stem Cell Awakening / PDE4B Reversal)",
-        "",
-        "Molecules mobilizing melanocyte stem cells (`CTNNB1`, `HTR1A`, `MITF`) and reversing the `PDE4B` non-response barrier (+9.09 $\\log_2\\text{FC}$ in GSE256271):",
-        "",
-        "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets |",
-        "|:---:|:---|:---:|:---:|:---|:---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## 2. Top Regeneration & Non-Response Overcomers (Stem Cell Awakening / PDE4B Reversal)",
+            "",
+            "Molecules mobilizing melanocyte stem cells (`CTNNB1`, `HTR1A`, `MITF`) and reversing the `PDE4B` non-response barrier (+9.09 $\\log_2\\text{FC}$ in GSE256271):",
+            "",
+            "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets |",
+            "|:---:|:---|:---:|:---:|:---|:---|",
+        ]
+    )
     for c in data["regeneration_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
-        lines.append(f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |")
+        lines.append(
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+        )
 
-    lines.extend([
-        "",
-        "## 3. Synergistic Combination Cocktails (Pulsed Curative Regimens)",
-        "",
-        "Rationally paired 2-drug combinations pairing an **Immune Reset** agent with a **Regenerative Adjuvant**:",
-        "",
-        "| Rank | Immune Reset (Memory Disarmer) | Regenerative Adjuvant | Score | Mechanism Synergy | Safety & Delivery Rationale |",
-        "|:---:|:---|:---|:---:|:---|:---|",
-    ])
+    lines.extend(
+        [
+            "",
+            "## 3. Synergistic Combination Cocktails (Pulsed Curative Regimens)",
+            "",
+            "Rationally paired 2-drug combinations pairing an **Immune Reset** agent with a **Regenerative Adjuvant**:",
+            "",
+            "| Rank | Immune Reset (Memory Disarmer) | Regenerative Adjuvant | Score | Mechanism Synergy | Safety & Delivery Rationale |",
+            "|:---:|:---|:---|:---:|:---|:---|",
+        ]
+    )
     for c in data["synergistic_combinations_top_k"][:10]:
         imm_t = ", ".join(c["immune_targets"])
         reg_t = ", ".join(c["regenerative_targets"])
         safety = c.get("safety_notes", "")
-        lines.append(f"| {c['rank']} | **{c['immune_drug']}** | **{c['regenerative_drug']}** | {c['combined_score']:.3f} | {imm_t} + {reg_t} | {safety} |")
+        lines.append(
+            f"| {c['rank']} | **{c['immune_drug']}** | **{c['regenerative_drug']}** | {c['combined_score']:.3f} | {imm_t} + {reg_t} | {safety} |"
+        )
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

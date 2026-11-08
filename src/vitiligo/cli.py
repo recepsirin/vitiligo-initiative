@@ -477,7 +477,9 @@ def gnn_export(
     table = Table(title="Node Breakdown by Kind")
     table.add_column("Kind", style="cyan")
     table.add_column("Count", justify="right")
-    for kind, indices in sorted(dataset.kind_to_indices.items(), key=lambda x: len(x[1]), reverse=True):
+    for kind, indices in sorted(
+        dataset.kind_to_indices.items(), key=lambda x: len(x[1]), reverse=True
+    ):
         table.add_row(kind, f"{len(indices):,}")
     console.print(table)
 
@@ -497,7 +499,9 @@ def gnn_baseline(
     from vitiligo.gnn.baseline import run_kge_baseline
 
     console.rule(f"[bold]KGE Baseline: {model}[/bold]")
-    metrics = run_kge_baseline(model_name=model, num_epochs=epochs, embedding_dim=dim, batch_size=batch_size)
+    metrics = run_kge_baseline(
+        model_name=model, num_epochs=epochs, embedding_dim=dim, batch_size=batch_size
+    )
 
     table = Table(title=f"Baseline Results ({model})")
     table.add_column("Metric", style="cyan")
@@ -519,7 +523,9 @@ def gnn_train(
     batch_size: int = typer.Option(4096, "--batch-size", help="Batch size."),
     encoder: str = typer.Option("rgat", "--encoder", help="Encoder type: 'rgat' or 'rgcn'."),
     heads: int = typer.Option(4, "--heads", help="Number of attention heads (for RGAT)."),
-    decoder: str = typer.Option("complex", "--decoder", help="Link decoder: 'complex' or 'distmult'."),
+    decoder: str = typer.Option(
+        "complex", "--decoder", help="Link decoder: 'complex' or 'distmult'."
+    ),
     neg_samples: int = typer.Option(4, "--neg-samples", help="Negative candidates per edge."),
 ) -> None:
     """Train the Relational GNN on knowledge graph edge prediction."""
@@ -539,11 +545,21 @@ def gnn_train(
     )
     test_metrics = report["test_metrics"]
     console.print(f"Training completed in [bold]{report['training_time_seconds']}s[/bold]")
-    console.print(f"Best Val Filtered MRR:    [bold green]{report['best_val_mrr']:.4f}[/bold green]")
-    console.print(f"Test Filtered MRR:        [bold green]{test_metrics.get('filtered_mrr', test_metrics['mrr']):.4f}[/bold green]")
-    console.print(f"Test Filtered Hits@10:    [bold green]{test_metrics.get('filtered_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold green]")
-    console.print(f"Therapeutic Subset MRR:   [bold cyan]{test_metrics.get('therapeutic_mrr', test_metrics['mrr']):.4f}[/bold cyan]")
-    console.print(f"Therapeutic Hits@10:      [bold cyan]{test_metrics.get('therapeutic_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold cyan]")
+    console.print(
+        f"Best Val Filtered MRR:    [bold green]{report['best_val_mrr']:.4f}[/bold green]"
+    )
+    console.print(
+        f"Test Filtered MRR:        [bold green]{test_metrics.get('filtered_mrr', test_metrics['mrr']):.4f}[/bold green]"
+    )
+    console.print(
+        f"Test Filtered Hits@10:    [bold green]{test_metrics.get('filtered_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold green]"
+    )
+    console.print(
+        f"Therapeutic Subset MRR:   [bold cyan]{test_metrics.get('therapeutic_mrr', test_metrics['mrr']):.4f}[/bold cyan]"
+    )
+    console.print(
+        f"Therapeutic Hits@10:      [bold cyan]{test_metrics.get('therapeutic_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold cyan]"
+    )
     console.print(f"Raw Test MRR:             [bold yellow]{test_metrics['mrr']:.4f}[/bold yellow]")
 
     # Per-relation breakdown table
@@ -573,7 +589,9 @@ def gnn_train(
 
 @gnn_app.command("screen")
 def gnn_screen(
-    top_k: int = typer.Option(15, "--top-k", help="Number of top candidates per category to display."),
+    top_k: int = typer.Option(
+        15, "--top-k", help="Number of top candidates per category to display."
+    ),
 ) -> None:
     """Run candidate screening across durability, stem-cell regeneration, and combinations."""
     from vitiligo.gnn.screen import screen_candidates
@@ -592,7 +610,14 @@ def gnn_screen(
     for r in results["durability_top_k"][:10]:
         targets = ", ".join(r["target_matches"]) if r["target_matches"] else "Pathway modulation"
         safety = r.get("safety_tier", "Standard")
-        table_dur.add_row(str(r["rank"]), r["drug_name"], f"{r['affinity_score']:.3f}", f"{r['probability']:.1%}", safety, targets)
+        table_dur.add_row(
+            str(r["rank"]),
+            r["drug_name"],
+            f"{r['affinity_score']:.3f}",
+            f"{r['probability']:.1%}",
+            safety,
+            targets,
+        )
     console.print(table_dur)
 
     # Regeneration table
@@ -606,7 +631,14 @@ def gnn_screen(
     for r in results["regeneration_top_k"][:10]:
         targets = ", ".join(r["target_matches"]) if r["target_matches"] else "Pathway modulation"
         safety = r.get("safety_tier", "Standard")
-        table_reg.add_row(str(r["rank"]), r["drug_name"], f"{r['affinity_score']:.3f}", f"{r['probability']:.1%}", safety, targets)
+        table_reg.add_row(
+            str(r["rank"]),
+            r["drug_name"],
+            f"{r['affinity_score']:.3f}",
+            f"{r['probability']:.1%}",
+            safety,
+            targets,
+        )
     console.print(table_reg)
 
     # Combination table
@@ -619,15 +651,27 @@ def gnn_screen(
     for c in results["synergistic_combinations_top_k"][:8]:
         imm_t = ", ".join(c["immune_targets"])
         reg_t = ", ".join(c["regenerative_targets"])
-        table_comb.add_row(str(c["rank"]), c["immune_drug"], c["regenerative_drug"], f"{c['combined_score']:.3f}", f"{imm_t} + {reg_t}")
+        table_comb.add_row(
+            str(c["rank"]),
+            c["immune_drug"],
+            c["regenerative_drug"],
+            f"{c['combined_score']:.3f}",
+            f"{imm_t} + {reg_t}",
+        )
     console.print(table_comb)
-    console.print("Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]docs/gnn-discovery-report.md[/cyan]")
+    console.print(
+        "Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]docs/gnn-discovery-report.md[/cyan]"
+    )
 
 
 @gnn_app.command("rerank")
 def gnn_rerank(
-    top_stage1: int = typer.Option(60, "--top-stage1", help="Number of Stage-1 candidates to retrieve."),
-    top_final: int = typer.Option(20, "--top-final", help="Number of final Stage-2 candidates to report."),
+    top_stage1: int = typer.Option(
+        60, "--top-stage1", help="Number of Stage-1 candidates to retrieve."
+    ),
+    top_final: int = typer.Option(
+        20, "--top-final", help="Number of final Stage-2 candidates to report."
+    ),
 ) -> None:
     """Run two-stage candidate retrieval and dense cross-encoder reranking."""
     from vitiligo.gnn.rerank import rerank_curative_candidates
@@ -662,10 +706,16 @@ def gnn_rerank(
 @gnn_app.command("predict")
 def gnn_predict(
     head: str = typer.Argument(..., help="Head entity name (e.g. 'vitiligo' or drug name)."),
-    relation: str = typer.Argument(..., help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."),
+    relation: str = typer.Argument(
+        ..., help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."
+    ),
     top_k: int = typer.Option(10, "--top-k", help="Number of predictions."),
-    kind: str | None = typer.Option(None, "--kind", help="Filter target entity kind (e.g. DRUG, TARGET, DISEASE)."),
-    canonical: bool = typer.Option(True, "--canonical/--all", help="Restrict DRUG predictions to canonical molecules."),
+    kind: str | None = typer.Option(
+        None, "--kind", help="Filter target entity kind (e.g. DRUG, TARGET, DISEASE)."
+    ),
+    canonical: bool = typer.Option(
+        True, "--canonical/--all", help="Restrict DRUG predictions to canonical molecules."
+    ),
 ) -> None:
     """Predict top tail entities for a query triple (head, relation, ?)."""
     from vitiligo.gnn.dataset import load_graph_dataset
@@ -689,7 +739,13 @@ def gnn_predict(
     table.add_column("Score", justify="right")
     table.add_column("Probability", justify="right")
     for r in results:
-        table.add_row(str(r["rank"]), str(r["name"]), str(r["kind"]), f"{r['score']:.3f}", f"{r['probability']:.1%}")
+        table.add_row(
+            str(r["rank"]),
+            str(r["name"]),
+            str(r["kind"]),
+            f"{r['score']:.3f}",
+            f"{r['probability']:.1%}",
+        )
     console.print(table)
 
 
@@ -1658,7 +1714,9 @@ def graph_release_cmd(
 
 @graph_app.command("enrich")
 def graph_enrich_cmd(
-    min_corr: float = typer.Option(0.70, "--min-corr", help="Minimum Pearson |r| for patient co-expression."),
+    min_corr: float = typer.Option(
+        0.70, "--min-corr", help="Minimum Pearson |r| for patient co-expression."
+    ),
 ) -> None:
     """Enrich the graph with patient biopsy co-expression and canonical pathway hierarchies."""
     from vitiligo.graph.enrich_release import enrich_knowledge_graph

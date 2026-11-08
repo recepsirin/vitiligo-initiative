@@ -124,9 +124,13 @@ def extract_multi_cohort_expression_signatures(
         symbols = [ens_map.get(str(gid).strip(), "") for gid in df_311["gene_id"]]
         sample_cols = [c for c in df_311.columns if c != "gene_id"]
 
-        lesional_cols = [c for c in sample_cols if "lesioneel_huid" in c.lower() or "lesioneel__" in c.lower()]
+        lesional_cols = [
+            c for c in sample_cols if "lesioneel_huid" in c.lower() or "lesioneel__" in c.lower()
+        ]
         perilesional_cols = [c for c in sample_cols if "perilesioneel" in c.lower()]
-        healthy_cols = [c for c in sample_cols if "gezond_huid" in c.lower() or "gezond_" in c.lower()]
+        healthy_cols = [
+            c for c in sample_cols if "gezond_huid" in c.lower() or "gezond_" in c.lower()
+        ]
 
         mat = df_311[sample_cols].values.astype(np.float32)
         lib_size = mat.sum(axis=0, keepdims=True)
@@ -146,7 +150,9 @@ def extract_multi_cohort_expression_signatures(
         overall_mean = log_cpm.mean(axis=1)
         overall_std = log_cpm.std(axis=1)
 
-        for sym, l_lfc, p_lfc, m_expr, s_expr in zip(symbols, lfc_les, lfc_peri, overall_mean, overall_std, strict=False):
+        for sym, l_lfc, p_lfc, m_expr, s_expr in zip(
+            symbols, lfc_les, lfc_peri, overall_mean, overall_std, strict=False
+        ):
             if sym and sym in sym_to_node:
                 n_idx = sym_to_node[sym]
                 features[n_idx, 0] = float(np.clip(l_lfc, -6.0, 6.0))
@@ -161,11 +167,16 @@ def extract_multi_cohort_expression_signatures(
         qvals_by_gene: dict[str, list[float]] = {}
 
         for p_num in range(1, 6):
-            p_file = GSE186928_DIR / f"GSE186928_Gene_differential_expression_NP{p_num}--VP{p_num}.all.gene.txt.gz"
+            p_file = (
+                GSE186928_DIR
+                / f"GSE186928_Gene_differential_expression_NP{p_num}--VP{p_num}.all.gene.txt.gz"
+            )
             if p_file.exists():
                 try:
                     with gzip.open(p_file, "rt") as f:
-                        df_p = pd.read_csv(f, sep="\t", usecols=["gene", "log2(Fold_change)", "q-value"])
+                        df_p = pd.read_csv(
+                            f, sep="\t", usecols=["gene", "log2(Fold_change)", "q-value"]
+                        )
                         for _, row in df_p.dropna().iterrows():
                             g_sym = str(row["gene"]).strip().upper()
                             try:
@@ -270,7 +281,9 @@ def extract_multi_cohort_expression_signatures(
                     if len(fpkm_cols) >= 2:
                         control_col = fpkm_cols[0]
                         treated_col = fpkm_cols[1]
-                        for _, row in df_344.dropna(subset=[col_gene, control_col, treated_col]).iterrows():
+                        for _, row in df_344.dropna(
+                            subset=[col_gene, control_col, treated_col]
+                        ).iterrows():
                             g_sym = str(row[col_gene]).strip().upper()
                             if g_sym in sym_to_node:
                                 n_idx = sym_to_node[g_sym]
@@ -286,7 +299,19 @@ def extract_multi_cohort_expression_signatures(
 
     # 7. Melanocyte Lineage Depletion & Autoreactive T-cell score
     melanocyte_markers = {"TYR", "DCT", "MLANA", "PMEL", "MITF", "OCA2", "TYRP1"}
-    trm_markers = {"CD8A", "CD8B", "CD69", "ITGAE", "IL15", "IL15RA", "CXCR6", "CXCL16", "IFNG", "CXCL9", "CXCL10"}
+    trm_markers = {
+        "CD8A",
+        "CD8B",
+        "CD69",
+        "ITGAE",
+        "IL15",
+        "IL15RA",
+        "CXCR6",
+        "CXCL16",
+        "IFNG",
+        "CXCL9",
+        "CXCL10",
+    }
     for m in melanocyte_markers:
         if m in sym_to_node:
             features[sym_to_node[m], 14] = -2.5
@@ -308,13 +333,17 @@ def extract_multi_cohort_expression_signatures(
                     except ValueError:
                         score = 2.0
                     if g_sym in sym_to_node:
-                        features[sym_to_node[g_sym], 15] = max(features[sym_to_node[g_sym], 15], float(score))
+                        features[sym_to_node[g_sym], 15] = max(
+                            features[sym_to_node[g_sym], 15], float(score)
+                        )
         except Exception as exc:
             logger.debug("GWAS parse note: %s", exc)
 
     tensor = torch.from_numpy(features)
     torch.save(tensor, cache_path)
-    logger.info("Saved 16-D GEO consensus transcriptomic tensor to %s (shape: %s)", cache_path, tensor.shape)
+    logger.info(
+        "Saved 16-D GEO consensus transcriptomic tensor to %s (shape: %s)", cache_path, tensor.shape
+    )
     return tensor
 
 
@@ -332,12 +361,18 @@ def extract_coexpression_edges(
     if not force_reload and cache_path.exists():
         try:
             edges = torch.load(cache_path, weights_only=True)
-            logger.info("Loaded cached co-expression edges from %s (%d edges)", cache_path, edges["edge_index"].size(1))
+            logger.info(
+                "Loaded cached co-expression edges from %s (%d edges)",
+                cache_path,
+                edges["edge_index"].size(1),
+            )
             return edges
         except Exception as exc:
             logger.warning("Could not load co-expression cache (%s); recomputing...", exc)
 
-    logger.info("Mining functional gene-gene co-expression edges from GSE311770 (105 punch biopsies)...")
+    logger.info(
+        "Mining functional gene-gene co-expression edges from GSE311770 (105 punch biopsies)..."
+    )
     ens_map = load_hgnc_ensembl_mapping()
 
     with gzip.open(GSE311770_PATH, "rt") as f:
@@ -373,7 +408,9 @@ def extract_coexpression_edges(
     node_indices = df_targets["node_idx"].values[var_mask]
 
     num_genes = len(node_indices)
-    logger.info("Computing Pearson correlation matrix for %d variable vitiligo target genes...", num_genes)
+    logger.info(
+        "Computing Pearson correlation matrix for %d variable vitiligo target genes...", num_genes
+    )
 
     # Standardize rows for correlation
     t_mat = torch.from_numpy(filtered_log_cpm)
@@ -428,7 +465,9 @@ def build_enriched_graph_dataset(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if dataset is None:
-        dataset = load_graph_dataset(cache_path=DEFAULT_BASE_DATASET_PATH, force_reload=force_reload)
+        dataset = load_graph_dataset(
+            cache_path=DEFAULT_BASE_DATASET_PATH, force_reload=force_reload
+        )
 
     # 1. Extract / load 16-D consensus GEO transcriptomics
     geo_16d = extract_multi_cohort_expression_signatures(dataset, force_reload=force_reload)
@@ -471,7 +510,9 @@ def build_enriched_graph_dataset(
 
     # Fused tensor: 768 + 1024 + 128 + 16 = 1936D
     enriched_features = torch.cat([bert_feats, chem_feats, family_feats, geo_16d], dim=1)
-    logger.info("Constructed unified 1936-D enriched multimodal node features: %s", enriched_features.shape)
+    logger.info(
+        "Constructed unified 1936-D enriched multimodal node features: %s", enriched_features.shape
+    )
 
     enriched_dataset = GraphDataset(
         entities=dataset.entities,

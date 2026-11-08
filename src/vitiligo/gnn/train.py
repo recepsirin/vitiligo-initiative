@@ -22,7 +22,9 @@ logger = get_logger(__name__)
 DEFAULT_MODEL_PATH = Path("data/models/gnn/relational_gnn.pt")
 DEFAULT_REPORT_PATH = Path("exports/gnn_train_results.json")
 
-THEAPEUTIC_PREDICATES = frozenset({"TREATS", "INVESTIGATES", "ASSOCIATED_WITH", "INHIBITS", "ACTIVATES", "CAUSES"})
+THEAPEUTIC_PREDICATES = frozenset(
+    {"TREATS", "INVESTIGATES", "ASSOCIATED_WITH", "INHIBITS", "ACTIVATES", "CAUSES"}
+)
 
 
 @dataclass
@@ -153,7 +155,11 @@ def evaluate_link_prediction(
     per_rel_raw: dict[str, list[float]] = defaultdict(list)
     per_rel_filt: dict[str, list[float]] = defaultdict(list)
     for r_idx, r_val, f_val in zip(rel_ids, raw_ranks, filt_ranks, strict=False):
-        r_name = dataset.idx_to_relation[r_idx] if r_idx < len(dataset.idx_to_relation) else f"rel_{r_idx}"
+        r_name = (
+            dataset.idx_to_relation[r_idx]
+            if r_idx < len(dataset.idx_to_relation)
+            else f"rel_{r_idx}"
+        )
         per_rel_raw[r_name].append(r_val)
         per_rel_filt[r_name].append(f_val)
 
@@ -236,13 +242,22 @@ def train_relational_gnn(
 
     if device is None:
         device_obj = torch.device(
-            "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+            "mps"
+            if torch.backends.mps.is_available()
+            else ("cuda" if torch.cuda.is_available() else "cpu")
         )
     else:
         device_obj = torch.device(device)
 
-    logger.info("Initializing Relational GNN on device: %s (encoder: %s, decoder: %s)", device_obj, encoder_type, decoder_type)
-    train_ds, val_edges, test_edges = dataset.split_edges(val_ratio=0.1, test_ratio=0.1, seed=random_seed)
+    logger.info(
+        "Initializing Relational GNN on device: %s (encoder: %s, decoder: %s)",
+        device_obj,
+        encoder_type,
+        decoder_type,
+    )
+    train_ds, val_edges, test_edges = dataset.split_edges(
+        val_ratio=0.1, test_ratio=0.1, seed=random_seed
+    )
 
     feature_dim = dataset.node_features.size(1) if dataset.node_features is not None else None
     model = RelationalGNN(
@@ -434,7 +449,9 @@ def load_trained_gnn(
 
     if device is None:
         device_obj = torch.device(
-            "mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu")
+            "mps"
+            if torch.backends.mps.is_available()
+            else ("cuda" if torch.cuda.is_available() else "cpu")
         )
     else:
         device_obj = torch.device(device)

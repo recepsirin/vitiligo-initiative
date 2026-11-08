@@ -29,31 +29,94 @@ CANONICAL_PATHWAYS: list[dict[str, Any]] = [
         "name": "IFN-gamma Signaling Pathway",
         "external_ids": {"go": "GO:0060333", "reactome": "R-HSA-877300"},
         "description": "Core driver of vitiligo autoimmunity: IFN-g activates JAK1/STAT1 to induce CXCL9/CXCL10 chemokines.",
-        "genes": ["IFNG", "IFNGR1", "IFNGR2", "JAK1", "JAK2", "STAT1", "STAT2", "IRF1", "CXCL9", "CXCL10", "CXCL11", "CXCR3"],
+        "genes": [
+            "IFNG",
+            "IFNGR1",
+            "IFNGR2",
+            "JAK1",
+            "JAK2",
+            "STAT1",
+            "STAT2",
+            "IRF1",
+            "CXCL9",
+            "CXCL10",
+            "CXCL11",
+            "CXCR3",
+        ],
     },
     {
         "name": "JAK-STAT Signaling Cascade",
         "external_ids": {"go": "GO:0007259", "reactome": "R-HSA-909733"},
         "description": "Intracellular cytokine transduction cascade mediating IFN-gamma, IL-15, and common gamma-chain signaling.",
-        "genes": ["JAK1", "JAK2", "JAK3", "TYK2", "STAT1", "STAT2", "STAT3", "STAT4", "STAT5A", "STAT5B", "STAT6"],
+        "genes": [
+            "JAK1",
+            "JAK2",
+            "JAK3",
+            "TYK2",
+            "STAT1",
+            "STAT2",
+            "STAT3",
+            "STAT4",
+            "STAT5A",
+            "STAT5B",
+            "STAT6",
+        ],
     },
     {
         "name": "Melanocyte Differentiation and Pigmentation",
         "external_ids": {"go": "GO:0043473", "reactome": "R-HSA-5579029"},
         "description": "Enzymatic and transcriptional pathway executing melanin synthesis and melanosome biogenesis.",
-        "genes": ["MITF", "TYR", "DCT", "TYRP1", "PMEL", "MLANA", "OCA2", "MC1R", "ASIP", "KIT", "EDNRB", "SOX10", "PAX3"],
+        "genes": [
+            "MITF",
+            "TYR",
+            "DCT",
+            "TYRP1",
+            "PMEL",
+            "MLANA",
+            "OCA2",
+            "MC1R",
+            "ASIP",
+            "KIT",
+            "EDNRB",
+            "SOX10",
+            "PAX3",
+        ],
     },
     {
         "name": "Wnt/Beta-Catenin Stem-Cell Signaling",
         "external_ids": {"go": "GO:0016055", "reactome": "R-HSA-195721"},
         "description": "Essential mobilization pathway driving hair-follicle melanocyte stem cell (McSC) migration and differentiation.",
-        "genes": ["WNT1", "WNT3A", "WNT5A", "CTNNB1", "LEF1", "TCF7L2", "AXIN2", "GSK3B", "FZD1", "FZD4", "LRP5", "LRP6"],
+        "genes": [
+            "WNT1",
+            "WNT3A",
+            "WNT5A",
+            "CTNNB1",
+            "LEF1",
+            "TCF7L2",
+            "AXIN2",
+            "GSK3B",
+            "FZD1",
+            "FZD4",
+            "LRP5",
+            "LRP6",
+        ],
     },
     {
         "name": "Tissue-Resident Memory T-Cell Activation",
         "external_ids": {"go": "GO:0042110", "mesh": "D000085442"},
         "description": "Maintenance and cytotoxic reactivation of skin-resident autoreactive CD8+ CD69+ CD103+ memory T cells.",
-        "genes": ["IL15", "IL15RA", "CD8A", "CD8B", "ITGAE", "CD69", "CXCR6", "ZNF683", "PRDM1", "RUNX3"],
+        "genes": [
+            "IL15",
+            "IL15RA",
+            "CD8A",
+            "CD8B",
+            "ITGAE",
+            "CD69",
+            "CXCR6",
+            "ZNF683",
+            "PRDM1",
+            "RUNX3",
+        ],
     },
     {
         "name": "cGAS-STING Cytosolic DNA Sensing Pathway",
@@ -135,11 +198,17 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
 
         for g_sym in p_info["genes"]:
             g_sym_upper = g_sym.upper()
-            t_ent = target_entities.get(g_sym_upper) or target_entities.get(normalize_entity_key(g_sym))
+            t_ent = target_entities.get(g_sym_upper) or target_entities.get(
+                normalize_entity_key(g_sym)
+            )
             if t_ent is not None:
                 evidence = {
                     "source_type": "pathway_knowledge_base",
-                    "source_id": str(p_info["external_ids"].get("go") or p_info["external_ids"].get("reactome") or "pathway:curated"),
+                    "source_id": str(
+                        p_info["external_ids"].get("go")
+                        or p_info["external_ids"].get("reactome")
+                        or "pathway:curated"
+                    ),
                     "relation": "participates_in",
                     "score": 1.0,
                     "section": "canonical_pathway_definition",
@@ -172,11 +241,15 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
 
         for m_sym in c_info["markers"]:
             m_sym_upper = m_sym.upper()
-            t_ent = target_entities.get(m_sym_upper) or target_entities.get(normalize_entity_key(m_sym))
+            t_ent = target_entities.get(m_sym_upper) or target_entities.get(
+                normalize_entity_key(m_sym)
+            )
             if t_ent is not None:
                 evidence = {
                     "source_type": "cell_ontology",
-                    "source_id": str(c_info["external_ids"].get("cell_ontology") or "cell_type:curated"),
+                    "source_id": str(
+                        c_info["external_ids"].get("cell_ontology") or "cell_type:curated"
+                    ),
                     "relation": "expressed_in",
                     "score": 0.95,
                     "section": "canonical_marker",
@@ -304,7 +377,10 @@ def seed_patient_coexpression_edges(
             break
 
     session.flush()
-    logger.info("Committed %d unique patient punch biopsy co-expression edges into graph_edges", inserted_count)
+    logger.info(
+        "Committed %d unique patient punch biopsy co-expression edges into graph_edges",
+        inserted_count,
+    )
     return inserted_count
 
 

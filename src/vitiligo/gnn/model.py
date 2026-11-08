@@ -305,7 +305,9 @@ class RelationalGNN(nn.Module):
         # Draw negative candidates with bidirectional corruption (50% head, 50% tail)
         total_negs = batch_size * num_neg_samples
         if sampling_weights is not None:
-            corrupt_nodes = torch.multinomial(sampling_weights, num_samples=total_negs, replacement=True).to(self.device)
+            corrupt_nodes = torch.multinomial(
+                sampling_weights, num_samples=total_negs, replacement=True
+            ).to(self.device)
         else:
             corrupt_nodes = torch.randint(0, self.num_nodes, (total_negs,), device=self.device)
 
@@ -325,7 +327,9 @@ class RelationalGNN(nn.Module):
 
         # Self-adversarial weighting: penalize hard negative candidates proportionally
         if adversarial_temperature > 0.0 and num_neg_samples > 1:
-            adv_weights = torch.softmax(adversarial_temperature * neg_scores_matrix, dim=-1).detach()
+            adv_weights = torch.softmax(
+                adversarial_temperature * neg_scores_matrix, dim=-1
+            ).detach()
             mean_neg_loss = (adv_weights * neg_losses).sum(dim=-1).mean()
         else:
             mean_neg_loss = neg_losses.mean()
