@@ -288,8 +288,9 @@ class RelationalGNN(nn.Module):
         sampling_weights: torch.Tensor | None = None,
         num_neg_samples: int = 4,
         adversarial_temperature: float = 1.0,
+        type_sampler: dict[str, torch.Tensor] | None = None,
     ) -> torch.Tensor:
-        """Compute causal-weighted BCE loss with bidirectional self-adversarial negative sampling."""
+        """Compute causal-weighted BCE loss with bidirectional type-constrained self-adversarial negative sampling."""
         batch_size = pos_heads.size(0)
 
         # Positive scores
@@ -297,7 +298,7 @@ class RelationalGNN(nn.Module):
         pos_targets = torch.ones_like(pos_scores)
         pos_loss = self.bce_loss(pos_scores, pos_targets)
 
-        # Scale positive loss by causal ladder edge weights if provided
+        # Scale positive loss by causal ladder & relation-balance edge weights if provided
         if edge_weights is not None:
             pos_loss = pos_loss * edge_weights
         mean_pos_loss = pos_loss.mean()
@@ -305,17 +306,46 @@ class RelationalGNN(nn.Module):
         # Draw negative candidates with bidirectional corruption (50% head, 50% tail)
         total_negs = batch_size * num_neg_samples
         if sampling_weights is not None:
-            corrupt_nodes = torch.multinomial(
+            global_corrupt = torch.multinomial(
                 sampling_weights, num_samples=total_negs, replacement=True
             ).to(self.device)
         else:
-            corrupt_nodes = torch.randint(0, self.num_nodes, (total_negs,), device=self.device)
+            global_corrupt = torch.randint(0, self.num_nodes, (total_negs,), device=self.device)
 
         neg_heads = pos_heads.repeat_interleave(num_neg_samples)
         neg_tails = pos_tails.repeat_interleave(num_neg_samples)
         neg_rels = pos_rels.repeat_interleave(num_neg_samples)
 
         corrupt_head_mask = torch.rand(total_negs, device=self.device) < 0.5
+        target_to_corrupt = torch.where(corrupt_head_mask, neg_heads, neg_tails)
+
+        if type_sampler is not None:
+            # Apply domain/type-constrained hard negative sampling on tail corruptions of molecular/pathway edges
+            # Avoid same-kind head corruption on hub relations (e.g. TREATS/INVESTIGATES/ASSOCIATED_WITH -> vitiligo)
+            # where >90% of same-kind nodes (DRUG, TRIAL, TARGET) are true positives.
+            kind_ids = type_sampler["node_to_kind"][target_to_corrupt]
+            counts = type_sampler["kind_counts"][kind_ids]
+            offsets = type_sampler["kind_offsets"][kind_ids]
+            sorted_nodes = type_sampler["sorted_nodes"]
+
+            rand_offset = (torch.rand(total_negs, device=self.device) * counts.float()).long()
+            typed_corrupt = sorted_nodes[offsets + rand_offset]
+            same_mask = (typed_corrupt == target_to_corrupt) & (counts > 1)
+            if same_mask.any():
+                alt_offset = (rand_offset + 1) % counts.clamp(min=1)
+                typed_corrupt = torch.where(
+                    same_mask, sorted_nodes[offsets + alt_offset], typed_corrupt
+                )
+            use_typed = (
+                (~corrupt_head_mask)
+                & (counts >= 10)
+                & (counts <= 5000)
+                & (torch.rand(total_negs, device=self.device) < 0.70)
+            )
+            corrupt_nodes = torch.where(use_typed, typed_corrupt, global_corrupt)
+        else:
+            corrupt_nodes = global_corrupt
+
         neg_heads = torch.where(corrupt_head_mask, corrupt_nodes, neg_heads)
         neg_tails = torch.where(~corrupt_head_mask, corrupt_nodes, neg_tails)
 
@@ -330,11 +360,14 @@ class RelationalGNN(nn.Module):
             adv_weights = torch.softmax(
                 adversarial_temperature * neg_scores_matrix, dim=-1
             ).detach()
-            mean_neg_loss = (adv_weights * neg_losses).sum(dim=-1).mean()
+            per_edge_neg_loss = (adv_weights * neg_losses).sum(dim=-1)
         else:
-            mean_neg_loss = neg_losses.mean()
+            per_edge_neg_loss = neg_losses.mean(dim=-1)
 
-        return mean_pos_loss + mean_neg_loss
+        if edge_weights is not None:
+            per_edge_neg_loss = per_edge_neg_loss * edge_weights
+
+        return mean_pos_loss + per_edge_neg_loss.mean()
 
     @torch.no_grad()
     def predict_top_k(

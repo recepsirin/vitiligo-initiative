@@ -1,29 +1,28 @@
-# Stage-2 Dense Cross-Encoder Curative Discovery Screen
+# Stage-2 Dense Cross-Encoder Reranked Curative Candidates
 
-## Executive Summary
-- **Stage 1 (Retrieval):** Relational ComplEx GNN screened 893 canonical compounds and retrieved Top-60.
-- **Stage 2 (Reranking):** Cross-encoder fused 1024-D Morgan fingerprints, 128-D ComplEx embeddings, GSE256271 PDE4B non-responder barrier, and melanocyte stem-cell regeneration pathways.
+**Architecture:** `Two-Stage Retrieve-and-Rerank (Stage 1: RGAT-4H ComplEx GNN -> Stage 2: Modality-Balanced Bottleneck Cross-Encoder)`  
+**Feature Vector:** `1172-D` (1024-D Morgan Fingerprints + 128-D RGAT-ComplEx Latent + 18-D Triad Target Affinities + GSE256271 Barrier Alignment)  
+**5-Fold Out-of-Fold CV:** `AUROC = 0.9490`, `Accuracy = 85.7%`  
 
-## Top Reranked Curative Candidates
-| Rank | Drug | Reranker Score | Prob | GNN Score | Safety Profile | Curative Triad Alignment |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **betamethasone** | -0.048 | 48.8% | 1.733 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 2 | **betamethasone valerate** | -0.057 | 48.6% | 1.857 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 3 | **triamcinolone** | -0.271 | 43.3% | 1.893 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 4 | **clobetasol** | -0.297 | 42.6% | 1.955 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 5 | **clobetasone butyrate** | -1.133 | 24.3% | 2.018 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 6 | **bimatoprost** | -1.214 | 22.9% | 1.978 | Repurposed Non-Oncology (Favorable systemic safety profile) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 7 | **pimecrolimus** | -1.217 | 22.9% | 1.777 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 8 | **Beclomethasone** | -1.225 | 22.7% | 1.941 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 9 | **TACROLIMUS ANHYDROUS** | -1.334 | 20.8% | 2.022 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 10 | **triamcinolone acetonide** | -1.390 | 19.9% | 1.964 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 11 | **Fluticasone** | -1.392 | 19.9% | 1.837 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 12 | **fluticasone propionate** | -1.432 | 19.3% | 1.858 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 13 | **betamethasone-17,21-dipropionate** | -1.535 | 17.7% | 1.799 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 14 | **betamethasone dipropionate, betamethasone sodium phosphate drug combination** | -1.580 | 17.1% | 1.931 | Corticosteroid (Well-established dermatologic rescue) | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 15 | **Pravastatin** | -1.756 | 14.7% | 1.631 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 16 | **travoprost** | -1.782 | 14.4% | 1.764 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 17 | **fluprostenol** | -2.030 | 11.6% | 1.758 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 18 | **prednisolone** | -2.077 | 11.1% | 1.985 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 19 | **Fludrocortisone** | -2.100 | 10.9% | 1.844 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
-| 20 | **Epoprostenol** | -2.146 | 10.5% | 1.617 | Standard Molecular Entity | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression |
+| S2 Rank | S1 Rank | Candidate Drug | Prob | Rerank Logit | TRM Disarm | McSC Regen | PDE4B Barrier | Curative Triad Alignment | Key Targets (`*` = Verified) |
+|---:|---:|---|---:|---:|---:|---:|---:|---|---|
+| **1** | 183 | **baricitinib** | `0.999` | `7.08` | `1.49` | `1.49` | `1.35` | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration | JAK1 (Inh*), JAK3 (Inh*), STAT1 (Inh*), STAT3 (Inh*), CD8A (Inh*) (+1) |
+| **2** | 65 | **itacitinib** | `0.999` | `6.87` | `1.84` | `1.61` | `1.68` | Pillar 1: TRM Disarmament | JAK1 (Inh*), PDE4A (Inh) |
+| **3** | 18 | **ruxolitinib** | `0.999` | `6.49` | `1.56` | `1.42` | `1.45` | Pillar 1: TRM Disarmament | IL15 (Inh*), JAK1 (Inh*), JAK3 (Inh*), STAT3 (Inh*), CD8A (Inh*) (+1) |
+| **4** | 300 | **tofacitinib** | `0.997` | `5.83` | `2.13` | `0.84` | `1.62` | Pillar 1: TRM Disarmament | IL15 (Inh*), JAK1 (Inh*), JAK3 (Inh*), STAT1 (Inh*), CD8A (Inh*) (+1) |
+| **5** | 120 | **voclosporin** | `0.997` | `5.65` | `2.62` | `2.20` | `1.81` | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression | IL15 (Inh), JAK1 (Inh), CD8A (Inh), MITF (Act), TYR (Act) (+1) |
+| **6** | 45 | **Leflunomide** | `0.996` | `5.58` | `1.84` | `1.21` | `1.61` | Supportive Immunomodulator | JAK1 (Inh), PDE4A (Inh) |
+| **7** | 164 | **ritlecitinib** | `0.996` | `5.45` | `1.91` | `1.80` | `1.70` | Pillar 1: TRM Disarmament | JAK1 (Inh), JAK3 (Inh*), PDE4A (Inh) |
+| **8** | 11 | **Roflumilast** | `0.995` | `5.26` | `1.92` | `1.63` | `1.75` | Pillar 3: PDE4B Barrier Suppression | JAK1 (Inh), PDE4B (Inh*), PDE4A (Inh*) |
+| **9** | 142 | **fluoxetine** | `0.990` | `4.58` | `2.17` | `2.00` | `1.64` | Pillar 2: Stem-Cell Regeneration | JAK1 (Inh), MITF (Act), HTR1A (Act*), TYR (Act), PDE4A (Inh) |
+| **10** | 225 | **lorlatinib** | `0.988` | `4.37` | `2.45` | `1.71` | `2.06` | Pillar 1: TRM Disarmament + Pillar 3: PDE4B Barrier Suppression | IL15 (Inh), JAK1 (Inh), CD8A (Inh), PDE4B (Inh), PDE4A (Inh) |
+| **11** | 86 | **abrocitinib** | `0.981` | `3.96` | `1.90` | `1.45` | `1.60` | Pillar 1: TRM Disarmament | JAK1 (Inh*), JAK3 (Inh*), PDE4A (Inh) |
+| **12** | 4 | **Ustekinumab** | `0.976` | `3.72` | `1.43` | `0.10` | `1.20` | Pillar 1: TRM Disarmament + Pillar 3: PDE4B Barrier Suppression | JAK1 (Inh*), PDE4A (Inh*) |
+| **13** | 213 | **givinostat hydrochloride** | `0.971` | `3.49` | `2.07` | `1.75` | `1.73` | Supportive Immunomodulator | JAK1 (Inh), PDE4A (Inh) |
+| **14** | 62 | **Voriconazole** | `0.970` | `3.47` | `2.05` | `1.48` | `1.59` | Supportive Immunomodulator | JAK1 (Inh), PDE4A (Inh) |
+| **15** | 28 | **Mycophenolic Acid** | `0.969` | `3.46` | `2.11` | `1.66` | `1.45` | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration | JAK1 (Inh), CD8A (Inh*), MITF (Act*), TYR (Act*), PDE4A (Inh) |
+| **16** | 117 | **peficitinib** | `0.968` | `3.39` | `1.81` | `1.41` | `1.56` | Pillar 1: TRM Disarmament | JAK1 (Inh*), JAK3 (Inh*), PDE4A (Inh) |
+| **17** | 12 | **Vilazodone Hydrochloride** | `0.959` | `3.15` | `2.44` | `1.86` | `1.99` | Pillar 1: TRM Disarmament + Pillar 2: Stem-Cell Regeneration + Pillar 3: PDE4B Barrier Suppression | IL15 (Inh), JAK1 (Inh), CD8A (Inh), MITF (Act), HTR1A (Act*) (+2) |
+| **18** | 10 | **Amifostine** | `0.957` | `3.11` | `1.57` | `1.15` | `1.31` | Supportive Immunomodulator |  |
+| **19** | 31 | **Formoterol Fumarate** | `0.956` | `3.07` | `2.25` | `1.84` | `1.83` | Pillar 3: PDE4B Barrier Suppression | JAK1 (Inh), MITF (Act), PDE4A (Inh) |
+| **20** | 141 | **cabozantinib** | `0.955` | `3.05` | `1.96` | `1.81` | `1.74` | Pillar 3: PDE4B Barrier Suppression | JAK1 (Inh), MITF (Act), PDE4A (Inh) |

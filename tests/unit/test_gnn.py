@@ -85,10 +85,14 @@ def test_compute_causal_edge_weight() -> None:
     # Predicate-specific calibration
     assert (
         compute_causal_edge_weight("OBSERVED", "perturbation_in_human", 0.9, predicate="CHANGES")
-        == 0.30
+        == 0.20
     )
     assert compute_causal_edge_weight("ASSERTED", None, 0.88, predicate="TREATS") >= 0.75
     assert compute_causal_edge_weight("ASSERTED", None, 0.84, predicate="INHIBITS") >= 0.70
+    assert (
+        compute_causal_edge_weight("OBSERVED", "knowledge_base", 0.92, predicate="PARTICIPATES_IN")
+        == 0.90
+    )
 
 
 def test_dataset_conversions() -> None:
@@ -200,12 +204,16 @@ def test_screen_candidates(tmp_path) -> None:
 
 
 def test_evaluate_link_prediction_filtered() -> None:
-    from vitiligo.gnn.train import evaluate_link_prediction
+    from vitiligo.gnn.train import build_type_sampler, evaluate_link_prediction
 
     ds = _make_dummy_dataset()
     model = RelationalGNN(
         num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1
     )
+    sampler = build_type_sampler(ds, model.device)
+    assert "node_to_kind" in sampler
+    assert sampler["sorted_nodes"].shape == (ds.num_nodes,)
+
     eval_edges = {
         "edge_index": ds.edge_index,
         "edge_type": ds.edge_type,
@@ -215,9 +223,11 @@ def test_evaluate_link_prediction_filtered() -> None:
     assert metrics.sample_size == ds.num_edges
     assert 0.0 <= metrics.mrr <= 1.0
     assert 0.0 <= metrics.filtered_mrr <= 1.0
+    assert 0.0 <= metrics.type_constrained_mrr <= 1.0
     assert 0.0 <= metrics.therapeutic_mrr <= 1.0
     assert len(metrics.per_relation) > 0
     assert "TREATS" in metrics.per_relation
+    assert "type_constrained_mrr" in metrics.per_relation["TREATS"]
 
 
 def test_dense_curative_reranker() -> None:

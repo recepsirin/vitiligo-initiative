@@ -1,17 +1,21 @@
-"""Enrich the Vitiligo Knowledge Graph with human punch biopsy co-expression and canonical pathway hierarchies.
+"""Enrich the Vitiligo Knowledge Graph with human punch biopsy co-expression, pathway hierarchies, and drug-target bioactivities.
 
 Prepares the knowledge graph for publication and public release:
-1. Seeds canonical vitiligo biological pathways (GO / Reactome) and cell lineages.
-2. Interconnects target genes to pathways (PARTICIPATES_IN) and cell types (EXPRESSED_IN).
-3. Commits the 11,070 patient punch biopsy gene-gene co-expression edges (CO_EXPRESSED_WITH)
+1. Seeds canonical vitiligo biological pathways (GO / Reactome / WikiPathways) and 8 cutaneous cell lineages.
+2. Batch-enriches all 4,223 target genes via MyGene.info (WikiPathways CC0 + experimental GO:BP CC-BY-4.0 + UniProt IDs).
+3. Batch-enriches all 2,233 drug entities via MyChem.info (ChEMBL curated mechanisms + sub-micromolar human DrugCentral bioactivities + SMILES).
+4. Commits the patient punch biopsy gene-gene co-expression edges (CO_EXPRESSED_WITH)
    directly into SQLite with GEO:GSE311770 provenance and Pearson correlation coefficients.
 """
 
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 from typing import Any
 
+import httpx
 from sqlmodel import Session, select
 
 from vitiligo.graph.normalize import normalize_entity_key
@@ -23,6 +27,11 @@ from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntit
 logger = get_logger(__name__)
 
 COEXPRESSION_CACHE_PATH = Path("data/cache/gnn/coexpression_edges.pt")
+MYGENE_CACHE_PATH = Path("data/cache/graph/mygene_targets.json")
+MYCHEM_CACHE_PATH = Path("data/cache/graph/mychem_drugs.json")
+SMILES_CACHE_PATH = Path("data/cache/gnn/drug_smiles.json")
+
+EXPERIMENTAL_GO_EVIDENCE = frozenset({"IDA", "IMP", "IGI", "IPI", "IEP", "TAS", "IC"})
 
 CANONICAL_PATHWAYS: list[dict[str, Any]] = [
     {
@@ -149,27 +158,208 @@ CANONICAL_CELL_TYPES: list[dict[str, Any]] = [
         "name": "Epidermal Melanocyte",
         "external_ids": {"cell_ontology": "CL:0000148", "mesh": "D008544"},
         "description": "Specialized melanin-producing dendritic cells located in the epidermal basal layer.",
-        "markers": ["TYR", "DCT", "MLANA", "PMEL", "MITF", "OCA2"],
+        "markers": [
+            "TYR",
+            "DCT",
+            "TYRP1",
+            "MLANA",
+            "PMEL",
+            "MITF",
+            "OCA2",
+            "SLC45A2",
+            "SLC24A5",
+            "GPR143",
+            "MC1R",
+            "SOX10",
+            "KIT",
+            "EDNRB",
+            "TRPM1",
+            "CAPN3",
+            "PLP1",
+            "S100B",
+        ],
     },
     {
         "name": "Hair Follicle Melanocyte Stem Cell (McSC)",
         "external_ids": {"cell_ontology": "CL:0002092"},
         "description": "Quiescent reservoir cells in the hair follicle bulge responsible for follicular repigmentation in vitiligo.",
-        "markers": ["PAX3", "SOX10", "KIT", "EDNRB", "DCT", "CD34", "HTR1A"],
+        "markers": [
+            "PAX3",
+            "SOX10",
+            "KIT",
+            "EDNRB",
+            "DCT",
+            "CD34",
+            "HTR1A",
+            "WNT1",
+            "CTNNB1",
+            "LEF1",
+            "FZD4",
+            "LRP6",
+            "MITF",
+            "BCL2",
+            "NOTCH1",
+            "HES1",
+            "COL17A1",
+        ],
     },
     {
         "name": "CD8+ Tissue-Resident Memory T Cell (TRM)",
         "external_ids": {"cell_ontology": "CL:0000909", "mesh": "D000085442"},
         "description": "Pathogenic autoimmune T cells lodged in perilesional vitiligo epidermis responsible for local relapse.",
-        "markers": ["CD8A", "CD8B", "ITGAE", "CD69", "CXCR6", "IL15RA"],
+        "markers": [
+            "CD8A",
+            "CD8B",
+            "ITGAE",
+            "CD69",
+            "CXCR6",
+            "CXCR3",
+            "IL15RA",
+            "IL2RB",
+            "IFNG",
+            "GZMB",
+            "PRF1",
+            "FASLG",
+            "NKG7",
+            "ZNF683",
+            "PRDM1",
+            "RUNX3",
+            "PDCD1",
+            "LAG3",
+            "KLRK1",
+            "TBX21",
+            "EOMES",
+        ],
     },
     {
         "name": "Basal Keratinocyte",
         "external_ids": {"cell_ontology": "CL:0002187"},
         "description": "Epidermal partner cells forming the structural and trophic niche for melanocyte survival and melanosome transfer.",
-        "markers": ["KRT5", "KRT14", "KRT1", "KRT10", "FLG", "IVL"],
+        "markers": [
+            "KRT5",
+            "KRT14",
+            "KRT15",
+            "KRT1",
+            "KRT10",
+            "FLG",
+            "IVL",
+            "TP63",
+            "ITGA6",
+            "ITGB4",
+            "COL17A1",
+            "CXCL9",
+            "CXCL10",
+            "CXCL11",
+            "IL15",
+            "KITLG",
+            "EDN1",
+            "POMC",
+            "IFNGR1",
+            "IFNGR2",
+            "STAT1",
+            "JAK1",
+        ],
+    },
+    {
+        "name": "Dermal Fibroblast (IFN-Responsive)",
+        "external_ids": {"cell_ontology": "CL:0002620"},
+        "description": "Anatomically regionalized dermal fibroblasts orchestrating CXCL9/CXCL10 chemokine gradients in vitiligo skin.",
+        "markers": [
+            "COL1A1",
+            "COL1A2",
+            "COL3A1",
+            "DCN",
+            "LUM",
+            "PDGFRA",
+            "PDGFRB",
+            "FAP",
+            "VIM",
+            "CXCL9",
+            "CXCL10",
+            "CCL2",
+            "CCL19",
+            "IL6",
+            "STAT1",
+            "IFITM1",
+            "ISG15",
+        ],
+    },
+    {
+        "name": "Cutaneous Regulatory T Cell (Treg)",
+        "external_ids": {"cell_ontology": "CL:0000815"},
+        "description": "Immunosuppressive CD4+ FOXP3+ T cells maintaining peripheral tolerance and restraining autoreactive CD8+ T cells.",
+        "markers": [
+            "FOXP3",
+            "IL2RA",
+            "CTLA4",
+            "TIGIT",
+            "IKZF2",
+            "TNFRSF18",
+            "TNFRSF4",
+            "IL10",
+            "TGFB1",
+            "CCR4",
+            "CCR8",
+            "ICOS",
+            "ENTPD1",
+            "CD4",
+        ],
+    },
+    {
+        "name": "Epidermal Langerhans & cDC1 Dendritic Cell",
+        "external_ids": {"cell_ontology": "CL:0000453"},
+        "description": "Antigen-presenting myeloid cells cross-presenting melanocyte autoantigens and producing CXCL9/CXCL10.",
+        "markers": [
+            "CD207",
+            "CD1A",
+            "CLEC9A",
+            "XCR1",
+            "BATF3",
+            "IRF8",
+            "ITGAX",
+            "HLA-DRA",
+            "HLA-DRB1",
+            "CD80",
+            "CD86",
+            "CD40",
+            "IL12B",
+            "CXCL9",
+            "CXCL10",
+        ],
+    },
+    {
+        "name": "Cutaneous Natural Killer & ILC1 Cell",
+        "external_ids": {"cell_ontology": "CL:0000623"},
+        "description": "Innate cytotoxic lymphocytes sensing oxidative stress ligands and producing early IFN-gamma in vitiligo skin.",
+        "markers": [
+            "NCAM1",
+            "KLRD1",
+            "KLRK1",
+            "NCR1",
+            "NKG7",
+            "GNLY",
+            "GZMA",
+            "GZMB",
+            "PRF1",
+            "IFNG",
+            "FCGR3A",
+            "KLRC1",
+            "TBX21",
+        ],
     },
 ]
+
+
+def _clean_drug_query(name: str) -> str:
+    """Strip common salt, ester, and hydrate modifiers and Lucene special chars for chemical lookup."""
+    n = re.sub(
+        r"(?i)\b(tosylate|phosphate|hydrochloride|dihydrochloride|succinate|sodium|hydrate|anhydrous|acetate|fumarate|maleate|sulfate|tartrate|mesylate|potassium|citrate|calcium|monohydrate|dipropionate|butyrate|valerate|propionate|acetonide)\b",
+        "",
+        name,
+    )
+    # Remove characters that break comma-delimited or Lucene queries in MyChem.info
+    n = re.sub(r"[^a-zA-Z0-9\s\-]", " ", n).strip()
+    return re.sub(r"\s+", " ", n).strip()
 
 
 def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
@@ -202,13 +392,14 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
                 normalize_entity_key(g_sym)
             )
             if t_ent is not None:
+                src_id = (
+                    f"go:{p_info['external_ids']['go']}"
+                    if "go" in p_info["external_ids"]
+                    else f"reactome:{p_info['external_ids'].get('reactome', 'curated')}"
+                )
                 evidence = {
                     "source_type": "pathway_knowledge_base",
-                    "source_id": str(
-                        p_info["external_ids"].get("go")
-                        or p_info["external_ids"].get("reactome")
-                        or "pathway:curated"
-                    ),
+                    "source_id": src_id,
                     "relation": "participates_in",
                     "score": 1.0,
                     "section": "canonical_pathway_definition",
@@ -245,15 +436,14 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
                 normalize_entity_key(m_sym)
             )
             if t_ent is not None:
+                cl_id = c_info["external_ids"].get("cell_ontology", "CL:0000000")
                 evidence = {
                     "source_type": "cell_ontology",
-                    "source_id": str(
-                        c_info["external_ids"].get("cell_ontology") or "cell_type:curated"
-                    ),
+                    "source_id": f"cell_ontology:{cl_id}",
                     "relation": "expressed_in",
                     "score": 0.95,
                     "section": "canonical_marker",
-                    "snippet": f"{t_ent.name} is a canonical lineage marker and expressed in {c_info['name']}.",
+                    "snippet": f"{t_ent.name} is a canonical lineage marker and expressed in {c_info['name']} ({c_info.get('description', '')}).",
                 }
                 _, inserted = upsert_edge(
                     session,
@@ -279,6 +469,571 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
         "pathways": pathways_added,
         "cell_types": cell_types_added,
         "hierarchy_edges": edges_added,
+    }
+
+
+def _fetch_or_load_mygene(
+    target_names: list[str], cache_path: Path = MYGENE_CACHE_PATH
+) -> list[dict[str, Any]]:
+    """Fetch batch gene pathway & UniProt annotations from MyGene.info with disk caching."""
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    if cache_path.exists():
+        try:
+            with open(cache_path, encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list) and len(data) > 0:
+                logger.info("Loaded %d cached MyGene.info records from %s", len(data), cache_path)
+                return data
+        except Exception as exc:
+            logger.warning("Failed to read MyGene cache (%s); re-fetching...", exc)
+
+    if not target_names:
+        return []
+
+    logger.info("Querying MyGene.info for %d target genes...", len(target_names))
+    hits: list[dict[str, Any]] = []
+    with httpx.Client(timeout=45.0) as client:
+        for i in range(0, len(target_names), 500):
+            batch = target_names[i : i + 500]
+            try:
+                resp = client.post(
+                    "https://mygene.info/v3/query",
+                    data={
+                        "q": ",".join(batch),
+                        "scopes": "symbol,alias",
+                        "species": "human",
+                        "fields": "symbol,entrezgene,uniprot.Swiss-Prot,pathway.wikipathways,go.BP",
+                    },
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+                if isinstance(payload, list):
+                    hits.extend(payload)
+            except Exception as exc:
+                logger.warning("MyGene.info batch %d failed: %s", i, exc)
+
+    if hits:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(hits, f)
+        logger.info("Cached %d MyGene.info records to %s", len(hits), cache_path)
+    return hits
+
+
+def seed_mygene_pathways_and_processes(
+    session: Session,
+    *,
+    min_wp_genes: int = 8,
+    max_wp_genes: int = 120,
+    min_go_genes: int = 12,
+    max_go_genes: int = 100,
+    cache_path: Path = MYGENE_CACHE_PATH,
+) -> tuple[dict[str, int], dict[str, GraphEntity]]:
+    """Enrich target genes with WikiPathways (CC0) and experimental GO Biological Processes (CC-BY-4.0)."""
+    targets = list(
+        session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.TARGET)).all()
+    )
+    if len(targets) < 20 and not cache_path.exists():
+        return {"pathways_added": 0, "participates_in_edges": 0}, {}
+
+    target_by_query: dict[str, GraphEntity] = {}
+    for t in targets:
+        target_by_query[t.name.strip().upper()] = t
+        target_by_query[t.key.upper()] = t
+
+    hits = _fetch_or_load_mygene([t.name.strip() for t in targets], cache_path=cache_path)
+
+    uniprot_to_target: dict[str, GraphEntity] = {}
+    wp_to_targets: dict[str, tuple[str, dict[int, GraphEntity]]] = {}
+    go_to_targets: dict[str, tuple[str, dict[int, GraphEntity]]] = {}
+    seen_queries: set[str] = set()
+
+    for h in hits:
+        if not isinstance(h, dict) or h.get("notfound"):
+            continue
+        q = str(h.get("query") or "").strip().upper()
+        if not q or q in seen_queries:
+            continue
+        t_ent = target_by_query.get(q)
+        if t_ent is None or t_ent.id is None:
+            continue
+        seen_queries.add(q)
+
+        # Record UniProt & Entrez IDs
+        ext = dict(t_ent.external_ids or {})
+        changed_ext = False
+        entrez = h.get("entrezgene")
+        if entrez and "entrez" not in ext:
+            ext["entrez"] = str(entrez)
+            changed_ext = True
+
+        up = (h.get("uniprot") or {}).get("Swiss-Prot")
+        up_list = [up] if isinstance(up, str) else (up if isinstance(up, list) else [])
+        for u_id in up_list:
+            u_str = str(u_id).strip()
+            if u_str:
+                uniprot_to_target[u_str] = t_ent
+                if "uniprot" not in ext:
+                    ext["uniprot"] = u_str
+                    changed_ext = True
+        if changed_ext:
+            t_ent.external_ids = ext
+            session.add(t_ent)
+
+        # 1. WikiPathways (CC0 1.0)
+        wps = (h.get("pathway") or {}).get("wikipathways") or []
+        if isinstance(wps, dict):
+            wps = [wps]
+        for wp in wps:
+            if not isinstance(wp, dict):
+                continue
+            wp_id = str(wp.get("id") or "").strip()
+            wp_name = str(wp.get("name") or "").strip()
+            if wp_id and wp_name:
+                if wp_id not in wp_to_targets:
+                    wp_to_targets[wp_id] = (wp_name, {})
+                wp_to_targets[wp_id][1][t_ent.id] = t_ent
+
+        # 2. Experimental Gene Ontology Biological Processes (CC-BY-4.0)
+        gos = (h.get("go") or {}).get("BP") or []
+        if isinstance(gos, dict):
+            gos = [gos]
+        for g in gos:
+            if not isinstance(g, dict):
+                continue
+            ev = str(g.get("evidence") or "").upper()
+            if ev not in EXPERIMENTAL_GO_EVIDENCE:
+                continue
+            go_id = str(g.get("id") or "").strip()
+            go_term = str(g.get("term") or "").strip()
+            if go_id and go_term:
+                if go_id not in go_to_targets:
+                    go_to_targets[go_id] = (go_term, {})
+                go_to_targets[go_id][1][t_ent.id] = t_ent
+
+    # Index existing PARTICIPATES_IN edges to avoid duplicates
+    existing_part: set[tuple[int, int]] = set(
+        session.exec(
+            select(GraphEdge.subject_id, GraphEdge.object_id).where(
+                GraphEdge.predicate == RelationKind.PARTICIPATES_IN
+            )
+        ).all()
+    )
+
+    pathways_added = 0
+    edges_added = 0
+
+    # Insert qualifying WikiPathways
+    for wp_id, (wp_name, t_map) in wp_to_targets.items():
+        if not (min_wp_genes <= len(t_map) <= max_wp_genes):
+            continue
+        p_ent = upsert_entity(
+            session,
+            kind=EntityKind.PATHWAY,
+            name=wp_name,
+            aliases=[wp_name, wp_id],
+            external_ids={"wikipathways": wp_id},
+        )
+        if p_ent.id is None:
+            continue
+        pathways_added += 1
+        for t_id, t_ent in t_map.items():
+            if (t_id, p_ent.id) in existing_part:
+                continue
+            existing_part.add((t_id, p_ent.id))
+            evidence = {
+                "source_type": "wikipathways",
+                "source_id": f"wikipathways:{wp_id}",
+                "relation": "participates_in",
+                "score": 0.92,
+                "section": "wikipathways_curated",
+                "snippet": f"{t_ent.name} participates in human biological pathway '{wp_name}' (WikiPathways {wp_id}).",
+            }
+            session.add(
+                GraphEdge(
+                    subject_id=t_id,
+                    predicate=RelationKind.PARTICIPATES_IN,
+                    object_id=p_ent.id,
+                    confidence=0.92,
+                    claim=ClaimKind.OBSERVED,
+                    causal_level="knowledge_base",
+                    extraction_method="wikipathways",
+                    evidence=[evidence],
+                )
+            )
+            edges_added += 1
+
+    # Insert qualifying Experimental GO Biological Processes
+    for go_id, (go_term, t_map) in go_to_targets.items():
+        if not (min_go_genes <= len(t_map) <= max_go_genes):
+            continue
+        display_name = go_term[0].upper() + go_term[1:] if go_term else go_id
+        p_ent = upsert_entity(
+            session,
+            kind=EntityKind.PATHWAY,
+            name=display_name,
+            aliases=[go_term, go_id],
+            external_ids={"go": go_id},
+        )
+        if p_ent.id is None:
+            continue
+        pathways_added += 1
+        for t_id, t_ent in t_map.items():
+            if (t_id, p_ent.id) in existing_part:
+                continue
+            existing_part.add((t_id, p_ent.id))
+            evidence = {
+                "source_type": "go",
+                "source_id": f"go:{go_id}",
+                "relation": "participates_in",
+                "score": 0.90,
+                "section": "experimental_go_bp",
+                "snippet": f"{t_ent.name} is experimentally verified to participate in {go_term} ({go_id}).",
+            }
+            session.add(
+                GraphEdge(
+                    subject_id=t_id,
+                    predicate=RelationKind.PARTICIPATES_IN,
+                    object_id=p_ent.id,
+                    confidence=0.90,
+                    claim=ClaimKind.OBSERVED,
+                    causal_level="knowledge_base",
+                    extraction_method="gene_ontology_experimental",
+                    evidence=[evidence],
+                )
+            )
+            edges_added += 1
+
+    session.flush()
+    logger.info(
+        "MyGene.info enrichment: added %d pathways/processes and %d PARTICIPATES_IN edges (%d UniProt mappings)",
+        pathways_added,
+        edges_added,
+        len(uniprot_to_target),
+    )
+    return {
+        "pathways_added": pathways_added,
+        "participates_in_edges": edges_added,
+    }, uniprot_to_target
+
+
+def _fetch_or_load_mychem(
+    queries: list[str], cache_path: Path = MYCHEM_CACHE_PATH
+) -> list[dict[str, Any]]:
+    """Fetch batch drug mechanism & bioactivity annotations from MyChem.info with disk caching."""
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    if cache_path.exists():
+        try:
+            with open(cache_path, encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list) and len(data) > 0:
+                logger.info("Loaded %d cached MyChem.info records from %s", len(data), cache_path)
+                return data
+        except Exception as exc:
+            logger.warning("Failed to read MyChem cache (%s); re-fetching...", exc)
+
+    if not queries:
+        return []
+
+    logger.info("Querying MyChem.info for %d unique cleaned drug names...", len(queries))
+    hits: list[dict[str, Any]] = []
+    with httpx.Client(timeout=45.0) as client:
+        for i in range(0, len(queries), 250):
+            batch = queries[i : i + 250]
+            try:
+                resp = client.post(
+                    "https://mychem.info/v1/query",
+                    data={
+                        "q": ",".join(batch),
+                        "scopes": "chembl.pref_name,drugcentral.synonyms,unii.preferred_term,chebi.name",
+                        "fields": "chembl.molecule_chembl_id,chembl.pref_name,chembl.smiles,chembl.drug_mechanisms,drugcentral.bioactivity,drugcentral.structures.smiles",
+                    },
+                )
+                resp.raise_for_status()
+                payload = resp.json()
+                if isinstance(payload, list):
+                    hits.extend(payload)
+            except Exception as exc:
+                logger.warning("MyChem.info batch %d failed: %s", i, exc)
+
+    if hits:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(hits, f)
+        logger.info("Cached %d MyChem.info records to %s", len(hits), cache_path)
+    return hits
+
+
+def _action_to_relation(
+    action_type: str, act_type: str = "", act_value: float = 0.0
+) -> RelationKind | None:
+    """Map pharmacological action_type or high-potency assay type to directional RelationKind."""
+    act = action_type.upper().strip()
+    if any(
+        w in act
+        for w in (
+            "INHIBITOR",
+            "ANTAGONIST",
+            "BLOCKER",
+            "NEGATIVE",
+            "DEGRADER",
+            "SUPPRESSOR",
+            "INVERSE AGONIST",
+            "ANTISENSE",
+        )
+    ):
+        return RelationKind.INHIBITS
+    if any(
+        w in act for w in ("AGONIST", "ACTIVATOR", "STIMULATOR", "POSITIVE", "OPENER", "INDUCER")
+    ):
+        return RelationKind.ACTIVATES
+    if act in {"MODULATOR", "BINDING AGENT", "SUBSTRATE", "CHELATING AGENT", "STABILISER"}:
+        return RelationKind.TARGETS
+
+    # Fallback for potent quantitative assays (>= 100 nM, i.e. pChEMBL >= 7.0)
+    if act_value >= 7.0:
+        at_upper = act_type.upper()
+        if at_upper in {"IC50", "KI"}:
+            return RelationKind.INHIBITS
+        if at_upper == "EC50":
+            return RelationKind.ACTIVATES
+    return None
+
+
+def seed_mychem_drug_target_mechanisms(
+    session: Session,
+    uniprot_to_target: dict[str, GraphEntity],
+    *,
+    min_pchembl: float = 6.5,
+    cache_path: Path = MYCHEM_CACHE_PATH,
+) -> dict[str, int]:
+    """Enrich drugs with ChEMBL mechanisms and sub-micromolar human DrugCentral bioactivities."""
+    drugs = list(session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)).all())
+    if len(drugs) < 20 and not cache_path.exists():
+        return {"drugs_matched": 0, "mechanism_edges_added": 0, "smiles_added": 0}
+
+    targets = list(
+        session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.TARGET)).all()
+    )
+    symbol_to_target: dict[str, GraphEntity] = {}
+    for t in targets:
+        symbol_to_target[t.name.strip().upper()] = t
+        symbol_to_target[t.key.upper()] = t
+        up_id = (t.external_ids or {}).get("uniprot")
+        if up_id and up_id not in uniprot_to_target:
+            uniprot_to_target[str(up_id)] = t
+
+    cleaned_to_drugs: dict[str, list[GraphEntity]] = {}
+    for d in drugs:
+        c = _clean_drug_query(d.name).lower()
+        if 3 <= len(c) <= 45 and len(c.split()) <= 4 and not c.startswith("-"):
+            cleaned_to_drugs.setdefault(c, []).append(d)
+
+    hits = _fetch_or_load_mychem(list(cleaned_to_drugs.keys()), cache_path=cache_path)
+
+    # Load SMILES cache to enrich chemical coverage simultaneously
+    smiles_cache: dict[str, str | None] = {}
+    if SMILES_CACHE_PATH.exists():
+        try:
+            with open(SMILES_CACHE_PATH, encoding="utf-8") as f:
+                smiles_cache = json.load(f)
+        except Exception:
+            smiles_cache = {}
+
+    existing_triples: set[tuple[int, RelationKind, int]] = set(
+        session.exec(
+            select(GraphEdge.subject_id, GraphEdge.predicate, GraphEdge.object_id).where(
+                GraphEdge.predicate.in_(
+                    [RelationKind.INHIBITS, RelationKind.ACTIVATES, RelationKind.TARGETS]
+                )
+            )
+        ).all()
+    )
+
+    drugs_matched: set[int] = set()
+    edges_added = 0
+    smiles_added = 0
+
+    for h in hits:
+        if not isinstance(h, dict) or h.get("notfound"):
+            continue
+        q = str(h.get("query") or "").strip().lower()
+        matched_drug_entities = cleaned_to_drugs.get(q)
+        if not matched_drug_entities:
+            continue
+
+        chembl_raw = h.get("chembl")
+        chembl_list = (
+            chembl_raw
+            if isinstance(chembl_raw, list)
+            else ([chembl_raw] if isinstance(chembl_raw, dict) else [])
+        )
+        dc_raw = h.get("drugcentral")
+        dc_list = (
+            dc_raw if isinstance(dc_raw, list) else ([dc_raw] if isinstance(dc_raw, dict) else [])
+        )
+
+        # Extract ChEMBL ID & SMILES
+        chembl_id: str | None = None
+        smiles: str | None = None
+        for c_item in chembl_list:
+            if not chembl_id and c_item.get("molecule_chembl_id"):
+                chembl_id = str(c_item["molecule_chembl_id"]).strip()
+            if not smiles and c_item.get("smiles"):
+                smiles = str(c_item["smiles"]).strip()
+        for dc_item in dc_list:
+            if not smiles:
+                structs = dc_item.get("structures")
+                if isinstance(structs, dict) and structs.get("smiles"):
+                    smiles = str(structs["smiles"]).strip()
+
+        for d_ent in matched_drug_entities:
+            if d_ent.id is None:
+                continue
+            if chembl_id:
+                ext = dict(d_ent.external_ids or {})
+                if "chembl" not in ext:
+                    ext["chembl"] = chembl_id
+                    d_ent.external_ids = ext
+                    session.add(d_ent)
+                drugs_matched.add(d_ent.id)
+            if smiles and not smiles_cache.get(d_ent.name):
+                smiles_cache[d_ent.name] = smiles
+                smiles_added += 1
+
+        # 1. ChEMBL Curated Drug Mechanisms
+        for c_item in chembl_list:
+            mechs = c_item.get("drug_mechanisms") or []
+            if isinstance(mechs, dict):
+                mechs = [mechs]
+            c_mol_id = str(c_item.get("molecule_chembl_id") or chembl_id or "curated")
+            for m in mechs:
+                if not isinstance(m, dict):
+                    continue
+                action_type = str(m.get("action_type") or "")
+                pred = _action_to_relation(action_type)
+                if pred is None:
+                    continue
+                t_comps = m.get("target_components") or {}
+                if isinstance(t_comps, list):
+                    t_comps = t_comps[0] if t_comps else {}
+                up_ids = t_comps.get("uniprot") or []
+                if isinstance(up_ids, str):
+                    up_ids = [up_ids]
+                for u_id in up_ids:
+                    t_ent = uniprot_to_target.get(str(u_id).strip())
+                    if t_ent is None or t_ent.id is None:
+                        continue
+                    for d_ent in matched_drug_entities:
+                        if d_ent.id is None:
+                            continue
+                        triple = (d_ent.id, pred, t_ent.id)
+                        if triple in existing_triples:
+                            continue
+                        existing_triples.add(triple)
+                        drugs_matched.add(d_ent.id)
+                        mech_desc = str(m.get("target_name") or t_ent.name)
+                        evidence = {
+                            "source_type": "chembl",
+                            "source_id": f"chembl:{c_mol_id}",
+                            "relation": pred.value.lower(),
+                            "score": 0.92,
+                            "section": "curated_mechanism_of_action",
+                            "snippet": f"{d_ent.name} acts as a verified {action_type.lower()} of {t_ent.name} ({mech_desc}; ChEMBL {c_mol_id}).",
+                        }
+                        session.add(
+                            GraphEdge(
+                                subject_id=d_ent.id,
+                                predicate=pred,
+                                object_id=t_ent.id,
+                                confidence=0.92,
+                                claim=ClaimKind.OBSERVED,
+                                causal_level="perturbation_in_human",
+                                extraction_method="chembl_mechanism",
+                                evidence=[evidence],
+                            )
+                        )
+                        edges_added += 1
+
+        # 2. DrugCentral Quantitative Human Bioactivities (pChEMBL >= min_pchembl)
+        for dc_item in dc_list:
+            bios = dc_item.get("bioactivity") or []
+            if isinstance(bios, dict):
+                bios = [bios]
+            for b in bios:
+                if not isinstance(b, dict) or b.get("organism") != "Homo sapiens":
+                    continue
+                try:
+                    act_val = float(b.get("act_value") or 0.0)
+                except (TypeError, ValueError):
+                    act_val = 0.0
+                if act_val < min_pchembl:
+                    continue
+
+                action_type = str(b.get("action_type") or "")
+                act_type = str(b.get("act_type") or "")
+                pred = _action_to_relation(action_type, act_type=act_type, act_value=act_val)
+                if pred is None:
+                    continue
+
+                up_block = b.get("uniprot") or {}
+                if isinstance(up_block, list):
+                    up_block = up_block[0] if up_block else {}
+                gene_sym = str(up_block.get("gene_symbol") or "").strip().upper()
+                uniprot_id = str(up_block.get("uniprot_id") or "").strip()
+
+                t_ent = symbol_to_target.get(gene_sym) or uniprot_to_target.get(uniprot_id)
+                if t_ent is None or t_ent.id is None:
+                    continue
+
+                conf = round(min(0.95, 0.72 + 0.04 * (act_val - 6.0)), 2)
+                src_mol = chembl_id or "drugcentral"
+                for d_ent in matched_drug_entities:
+                    if d_ent.id is None:
+                        continue
+                    triple = (d_ent.id, pred, t_ent.id)
+                    if triple in existing_triples:
+                        continue
+                    existing_triples.add(triple)
+                    drugs_matched.add(d_ent.id)
+                    evidence = {
+                        "source_type": "chembl",
+                        "source_id": f"chembl:{src_mol}",
+                        "relation": pred.value.lower(),
+                        "score": conf,
+                        "section": "human_bioactivity_assay",
+                        "snippet": (
+                            f"{d_ent.name} exhibits potent human bioactivity against {t_ent.name} "
+                            f"({act_type} pAct={act_val:.2f}, action={action_type or pred.value})."
+                        ),
+                    }
+                    session.add(
+                        GraphEdge(
+                            subject_id=d_ent.id,
+                            predicate=pred,
+                            object_id=t_ent.id,
+                            confidence=conf,
+                            claim=ClaimKind.OBSERVED,
+                            causal_level="perturbation_in_vitro",
+                            extraction_method="drugcentral_bioactivity",
+                            evidence=[evidence],
+                        )
+                    )
+                    edges_added += 1
+
+    if smiles_added > 0 and SMILES_CACHE_PATH.parent.exists():
+        with open(SMILES_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(smiles_cache, f, indent=2)
+
+    session.flush()
+    logger.info(
+        "MyChem.info enrichment: matched %d drugs, added %d direct mechanism/bioactivity edges, %d new SMILES",
+        len(drugs_matched),
+        edges_added,
+        smiles_added,
+    )
+    return {
+        "drugs_matched": len(drugs_matched),
+        "mechanism_edges_added": edges_added,
+        "smiles_added": smiles_added,
     }
 
 
@@ -388,9 +1143,13 @@ def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
     """Execute full knowledge graph enrichment and commit to SQLite."""
     with session_scope() as session:
         hier_stats = seed_canonical_pathways_and_cell_types(session)
+        mygene_stats, uniprot_map = seed_mygene_pathways_and_processes(session)
+        mychem_stats = seed_mychem_drug_target_mechanisms(session, uniprot_map)
         coexp_inserted = seed_patient_coexpression_edges(session, min_abs_r=min_abs_r)
 
     return {
         "hierarchy": hier_stats,
+        "mygene_pathways": mygene_stats,
+        "mychem_mechanisms": mychem_stats,
         "coexpression_edges_inserted": coexp_inserted,
     }

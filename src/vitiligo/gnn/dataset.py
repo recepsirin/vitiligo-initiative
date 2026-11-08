@@ -31,12 +31,16 @@ PREDICATES = [
     "OCCURS_IN",
     "CAUSES",
     "COMBINED_WITH",
+    "PARTICIPATES_IN",
+    "CO_EXPRESSED_WITH",
 ]
 
 CAUSAL_LEVEL_WEIGHTS: dict[str, float] = {
     "perturbation_in_human": 1.0,
     "perturbation_in_animal": 0.85,
-    "perturbation_in_vitro": 0.70,
+    "perturbation_in_vitro": 0.80,
+    "knowledge_base": 0.90,
+    "correlation_in_human": 0.80,
     "human_genetics": 0.75,
     "association": 0.50,
 }
@@ -205,13 +209,20 @@ def compute_causal_edge_weight(
 
     # Moderate adverse event clinical trial listings (CHANGES) to prevent overpowering mechanism signals
     if predicate == "CHANGES":
-        return 0.30
+        return 0.20
 
-    # Boost verified pharmacological mechanisms (TREATS, INHIBITS, ACTIVATES, TARGETS)
-    if predicate in ("TREATS", "TARGETS", "INHIBITS", "ACTIVATES"):
+    # Boost verified pharmacological mechanisms & pathway hierarchies
+    if predicate in (
+        "TREATS",
+        "TARGETS",
+        "INHIBITS",
+        "ACTIVATES",
+        "PARTICIPATES_IN",
+        "EXPRESSED_IN",
+    ):
         if claim_upper == "OBSERVED":
-            return 1.0
-        return max(0.60, float(confidence) * 0.90)
+            return 1.0 if predicate in ("TREATS", "INHIBITS", "ACTIVATES") else 0.90
+        return max(0.65, float(confidence) * 0.90)
 
     if claim_upper == "OBSERVED":
         if causal_level and causal_level in CAUSAL_LEVEL_WEIGHTS:
@@ -319,13 +330,21 @@ def load_graph_dataset(
     edge_type = torch.tensor(rel_list, dtype=torch.long)
     edge_weight = torch.tensor(w_list, dtype=torch.float)
 
-    # 4. Attach multimodal node features if cached
+    # 4. Attach multimodal node features if cached and matching node count
     feature_cache = Path("data/cache/gnn/multimodal_node_features.pt")
     node_features: torch.Tensor | None = None
     if feature_cache.exists():
         try:
-            node_features = torch.load(feature_cache, weights_only=True)
-            logger.info("Loaded multimodal node features from %s", feature_cache)
+            cached_feats = torch.load(feature_cache, weights_only=True)
+            if cached_feats.size(0) == len(entities):
+                node_features = cached_feats
+                logger.info("Loaded multimodal node features from %s", feature_cache)
+            else:
+                logger.info(
+                    "Skipping stale multimodal feature cache (%d rows != %d entities)",
+                    cached_feats.size(0),
+                    len(entities),
+                )
         except Exception as e:
             logger.warning("Could not load multimodal feature cache: %s", e)
 

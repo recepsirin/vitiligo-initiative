@@ -87,6 +87,17 @@ CYTOTOXIC_CHEMO_KEYWORDS = {
     "niraparib",
     "bleomycin",
     "dacarbazine",
+    "pemetrexed",
+    "chlorambucil",
+    "melphalan",
+    "busulfan",
+    "temozolomide",
+    "carmustine",
+    "lomustine",
+    "daunorubicin",
+    "idarubicin",
+    "mitoxantrone",
+    "vinorelbine",
 }
 
 

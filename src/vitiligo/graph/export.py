@@ -89,6 +89,11 @@ _GOVERNMENT_TEXT = {
     "reporter": "NIH RePORTER (US government)",
     "ctgov": "ClinicalTrials.gov",
     "geo": "NCBI Gene Expression Omnibus (US government)",
+    "wikipathways": "WikiPathways (CC0 1.0)",
+    "go": "Gene Ontology Consortium (CC BY 4.0)",
+    "reactome": "Reactome Pathway Knowledgebase (CC BY 4.0)",
+    "cell_ontology": "Cell Ontology (CC BY 4.0)",
+    "chembl": "ChEMBL / DrugCentral Open Bioactivity (CC BY-SA / CC0)",
 }
 _MODEL = "biored-BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext"
 _COLUMNS = ("source_id", "source_type", "relation", "score", "section", "snippet")

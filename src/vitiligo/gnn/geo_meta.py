@@ -472,13 +472,7 @@ def build_enriched_graph_dataset(
     # 1. Extract / load 16-D consensus GEO transcriptomics
     geo_16d = extract_multi_cohort_expression_signatures(dataset, force_reload=force_reload)
 
-    # 2. Mine co-expression edges from GSE311770
-    coexp_data = extract_coexpression_edges(dataset, force_reload=force_reload)
-    new_edge_index = coexp_data["edge_index"]
-    new_edge_weight = coexp_data["edge_weight"]
-    num_new_edges = new_edge_index.size(1)
-
-    # 3. Add CO_EXPRESSED_WITH relation
+    # 2. Mine co-expression edges from GSE311770 (deduplicating against SQLite CO_EXPRESSED_WITH edges)
     rel_name = "CO_EXPRESSED_WITH"
     new_rel_to_idx = dict(dataset.relation_to_idx)
     new_idx_to_rel = list(dataset.idx_to_relation)
@@ -490,12 +484,25 @@ def build_enriched_graph_dataset(
     else:
         coexp_rel_idx = new_rel_to_idx[rel_name]
 
-    new_edge_types = torch.full((num_new_edges,), coexp_rel_idx, dtype=torch.long)
+    existing_coexp_mask = dataset.edge_type == coexp_rel_idx
+    if int(existing_coexp_mask.sum().item()) >= 5000:
+        logger.info(
+            "SQLite dataset already contains %d CO_EXPRESSED_WITH edges; using SQLite edges directly",
+            int(existing_coexp_mask.sum().item()),
+        )
+        combined_edge_index = dataset.edge_index
+        combined_edge_type = dataset.edge_type
+        combined_edge_weight = dataset.edge_weight
+    else:
+        coexp_data = extract_coexpression_edges(dataset, force_reload=force_reload)
+        new_edge_index = coexp_data["edge_index"]
+        new_edge_weight = coexp_data["edge_weight"]
+        num_new_edges = new_edge_index.size(1)
+        new_edge_types = torch.full((num_new_edges,), coexp_rel_idx, dtype=torch.long)
 
-    # Combine edge index, types, and weights
-    combined_edge_index = torch.cat([dataset.edge_index, new_edge_index], dim=1)
-    combined_edge_type = torch.cat([dataset.edge_type, new_edge_types], dim=0)
-    combined_edge_weight = torch.cat([dataset.edge_weight, new_edge_weight], dim=0)
+        combined_edge_index = torch.cat([dataset.edge_index, new_edge_index], dim=1)
+        combined_edge_type = torch.cat([dataset.edge_type, new_edge_types], dim=0)
+        combined_edge_weight = torch.cat([dataset.edge_weight, new_edge_weight], dim=0)
 
     # 4. Update node features: fuse BiomedBERT (768D) + Morgan Fingerprints (1024D) + HGNC (128D) + GEO (16D) = 1936D
     from vitiligo.gnn.chemicals import build_chemical_node_features
