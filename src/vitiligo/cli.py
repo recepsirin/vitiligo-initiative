@@ -1279,6 +1279,7 @@ def graph_seed_evidence_cmd() -> None:
     table.add_row("Genetic associations", f"{stats.genetic_edges:,} edges")
     table.add_row("Trial outcomes", f"{stats.outcome_edges:,} edges")
     table.add_row("Results read from trial papers", f"{stats.result_edges:,} edges")
+    table.add_row("Results posted to registries", f"{stats.posted_edges:,} edges")
     table.add_row("Mechanistic hypotheses", f"{stats.mechanism_edges:,} edges")
     table.add_row("[bold]Total new edges[/bold]", f"[bold]{stats.total_edges:,}[/bold]")
     console.print(table)

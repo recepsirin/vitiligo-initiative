@@ -38,14 +38,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
-from vitiligo.graph.store import upsert_edge, upsert_entity
+from vitiligo.graph.store import replace_evidence, upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.mechanisms.schema import CURATION_PATH, Mechanism
 from vitiligo.mechanisms.schema import load as load_mechanisms
-from vitiligo.storage import GeneticAssociation, init_db, session_scope
-from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
+from vitiligo.storage import GeneticAssociation, Trial, init_db, session_scope
+from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
 
 if TYPE_CHECKING:  # reports imports graph, so this one stays a type-only import
     from vitiligo.reports.jak_arms import ArmEndpointRow
@@ -69,12 +69,19 @@ class EvidenceSeedStats:
     genetic_edges: int = 0
     outcome_edges: int = 0
     result_edges: int = 0
+    posted_edges: int = 0
     mechanism_edges: int = 0
     entities: int = 0
 
     @property
     def total_edges(self) -> int:
-        return self.genetic_edges + self.outcome_edges + self.result_edges + self.mechanism_edges
+        return (
+            self.genetic_edges
+            + self.outcome_edges
+            + self.result_edges
+            + self.posted_edges
+            + self.mechanism_edges
+        )
 
 
 def split_genes(mapped_gene: str | None) -> list[str]:
@@ -363,42 +370,19 @@ def seed_trial_results(session: Session, results: Sequence[dict[str, Any]]) -> i
                 evidence["versus"] = versus[1] if versus else other["label"]
             outcome = outcomes[family]
             wanted.setdefault((subject.id, outcome.id), (subject, outcome, []))[2].append(evidence)
-    total = len(wanted)
-
-    removed = 0
-    for edge in session.exec(select(GraphEdge)).all():
-        held = list(edge.evidence or [])
-        others = [e for e in held if e.get("source_type") != "curated_result"]
-        key = (edge.subject_id, edge.object_id)
-        mine = wanted[key][2] if edge.predicate == RelationKind.CHANGES and key in wanted else []
-        if others + mine == held:
-            if mine:
-                del wanted[key]
-            continue
-        if others or mine:
-            edge.evidence = others  # what the curation says now is added back below
-            session.add(edge)
-        else:
-            session.delete(edge)
-            removed += 1
-    session.flush()
-
-    inserted = 0
-    for subject, outcome, rows in wanted.values():
-        for row in rows:
-            _, new = upsert_edge(
-                session,
-                subject=subject,
-                predicate=RelationKind.CHANGES,
-                obj=outcome,
-                confidence=0.9,
-                extraction_method="curated_result",
-                evidence=row,
-                claim=ClaimKind.OBSERVED,
-                causal_level="perturbation_in_human",
-            )
-            inserted += int(new)
-    logger.info("Curated results: %d edges, %d inserted, %d removed", total, inserted, removed)
+    inserted, removed = replace_evidence(
+        session,
+        "curated_result",
+        wanted,
+        predicate=RelationKind.CHANGES,
+        extraction_method="curated_result",
+        confidence=0.9,
+        claim=ClaimKind.OBSERVED,
+        causal_level="perturbation_in_human",
+    )
+    logger.info(
+        "Curated results: %d edges, %d inserted, %d removed", len(wanted), inserted, removed
+    )
     return inserted
 
 
@@ -431,6 +415,7 @@ def seed_graph_from_evidence(
 
         rows = harmonize_arms(build_jak_atlas())
     # Deferred like the reports above: curated_results reads reports.
+    from vitiligo.graph.posted_results import seed_posted_results
     from vitiligo.trials.curated_results import records
 
     mechanisms = load_mechanisms(mechanisms_path) if mechanisms_path.is_file() else []
@@ -440,6 +425,8 @@ def seed_graph_from_evidence(
         stats.genetic_edges, genetic_entities = seed_genetics(session, disease)
         stats.outcome_edges, outcome_entities = seed_trial_outcomes(session, rows)
         stats.result_edges = seed_trial_results(session, list(records()))
+        posted = session.exec(select(Trial).where(col(Trial.has_results))).all()
+        stats.posted_edges, _ = seed_posted_results(session, posted)
         stats.mechanism_edges, mechanism_entities = seed_mechanisms(session, disease, mechanisms)
         stats.entities = genetic_entities + outcome_entities + mechanism_entities
         session.commit()

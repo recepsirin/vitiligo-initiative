@@ -112,6 +112,65 @@ def upsert_edge(
     return existing, False
 
 
+def replace_evidence(
+    session: Session,
+    source_type: str,
+    wanted: dict[tuple[int | None, int | None], tuple[GraphEntity, GraphEntity, list[Any]]],
+    *,
+    predicate: RelationKind,
+    extraction_method: str,
+    confidence: float,
+    claim: ClaimKind,
+    causal_level: str | None,
+) -> tuple[int, int]:
+    """Bring one source's evidence in the graph to what it says now.
+
+    ``wanted`` maps a (subject, object) pair to the two entities and every
+    evidence row the source gives for that ``predicate`` edge. Other sources'
+    evidence stays; an edge left with none is deleted, so a corrected source
+    leaves nothing stale; an edge whose rows are unchanged is left as it is,
+    id and all. Returns the edges inserted and removed.
+    """
+    pending = dict(wanted)
+    removed = 0
+    for edge in session.exec(select(GraphEdge)).all():
+        held = list(edge.evidence or [])
+        others = [e for e in held if e.get("source_type") != source_type]
+        key = (edge.subject_id, edge.object_id)
+        mine = pending[key][2] if edge.predicate == predicate and key in pending else []
+        if others + mine == held:
+            if mine:
+                del pending[key]
+            continue
+        if others or mine:
+            edge.evidence = others  # the source's rows are written back below
+            session.add(edge)
+        else:
+            session.delete(edge)
+            removed += 1
+    session.flush()
+
+    inserted = 0
+    for subject, obj, rows in pending.values():
+        edge, new = upsert_edge(
+            session,
+            subject=subject,
+            predicate=predicate,
+            obj=obj,
+            confidence=confidence,
+            extraction_method=extraction_method,
+            evidence=rows[0],
+            claim=claim,
+            causal_level=causal_level,
+        )
+        kept = [e for e in edge.evidence or [] if e.get("source_type") != source_type]
+        edge.evidence = kept + rows
+        session.add(edge)
+        inserted += int(new)
+    session.flush()
+    return inserted, removed
+
+
 def _stronger_level(current: str | None, incoming: str) -> str:
     """The higher rung of the two, so better evidence raises an edge."""
     from vitiligo.mechanisms.schema import causal_rank
