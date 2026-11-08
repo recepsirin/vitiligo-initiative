@@ -85,7 +85,11 @@ def _edge_view_to_dict(view: GraphEdgeView, edge: GraphEdge) -> dict[str, Any]:
 # 4.0: an open-access paper licensed CC BY or CC0, or a US government record.
 # Any other sentence is published as a pointer to its paper and section.
 _OPEN_LICENCES = frozenset({"cc by", "cc0"})
-_GOVERNMENT_TEXT = {"reporter": "NIH RePORTER (US government)", "ctgov": "ClinicalTrials.gov"}
+_GOVERNMENT_TEXT = {
+    "reporter": "NIH RePORTER (US government)",
+    "ctgov": "ClinicalTrials.gov",
+    "geo": "NCBI Gene Expression Omnibus (US government)",
+}
 _MODEL = "biored-BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext"
 _COLUMNS = ("source_id", "source_type", "relation", "score", "section", "snippet")
 

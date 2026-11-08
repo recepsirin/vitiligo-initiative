@@ -1656,6 +1656,23 @@ def graph_release_cmd(
     console.print(f"Written to [cyan]{out}[/cyan]")
 
 
+@graph_app.command("enrich")
+def graph_enrich_cmd(
+    min_corr: float = typer.Option(0.70, "--min-corr", help="Minimum Pearson |r| for patient co-expression."),
+) -> None:
+    """Enrich the graph with patient biopsy co-expression and canonical pathway hierarchies."""
+    from vitiligo.graph.enrich_release import enrich_knowledge_graph
+
+    init_db()
+    results = enrich_knowledge_graph(min_abs_r=min_corr)
+    console.print(
+        f"Enriched graph with [bold green]{results['hierarchy']['pathways']}[/bold green] pathways, "
+        f"[bold green]{results['hierarchy']['cell_types']}[/bold green] cell types, "
+        f"[bold green]{results['hierarchy']['hierarchy_edges']}[/bold green] functional hierarchy edges, and "
+        f"[bold green]{results['coexpression_edges_inserted']:,}[/bold green] patient punch biopsy co-expression edges."
+    )
+
+
 @graph_app.command("export")
 def graph_export_cmd(
     output: str = typer.Option(

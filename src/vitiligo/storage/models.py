@@ -385,6 +385,10 @@ class RelationKind(StrEnum):
     # 5-fluorouracil, monobenzone with imiquimod. Undirected. PubTator's
     # Cotreatment, 13 of 15 sampled right; its Comparison, 6 of 15, is not loaded.
     COMBINED_WITH = "combined_with"
+    # Functional co-expression directly measured from human patient skin punch biopsies (|r| >= 0.70)
+    CO_EXPRESSED_WITH = "co_expressed_with"
+    # A target gene or protein participates in a canonical biological pathway
+    PARTICIPATES_IN = "participates_in"
 
 
 class ClaimKind(StrEnum):
