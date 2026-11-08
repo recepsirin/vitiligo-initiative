@@ -106,14 +106,26 @@ _ACTIVE_ACT = re.compile(
 )
 
 
+def _node_pattern(node: Node) -> re.Pattern[str]:
+    terms = sorted(
+        {t.strip() for t in (node.name, *node.aliases) if len(t.strip()) >= 3},
+        key=len,
+        reverse=True,
+    )
+    if not terms:
+        terms = [node.name]
+    joined = "|".join(re.escape(t) for t in terms)
+    return re.compile(rf"\b(?:{joined})\b", re.I)
+
+
 def resolve_snippet_direction(
     kind: str, a: Node, b: Node, snippet: str | None
 ) -> tuple[Node, RelationKind, Node] | None:
     """Resolve active-voice directional mechanism (INHIBITS / ACTIVATES) from sentence snippet."""
     if not snippet or kind not in _CORRELATION:
         return None
-    pat_a = re.compile(rf"\b{re.escape(a.name)}\b", re.I)
-    pat_b = re.compile(rf"\b{re.escape(b.name)}\b", re.I)
+    pat_a = _node_pattern(a)
+    pat_b = _node_pattern(b)
     matches_a = list(pat_a.finditer(snippet))
     matches_b = list(pat_b.finditer(snippet))
     if not matches_a or not matches_b:
@@ -167,6 +179,7 @@ class Node:
     kind: EntityKind
     name: str
     external_ids: tuple[tuple[str, str], ...] = ()
+    aliases: tuple[str, ...] = ()
 
 
 @dataclass
@@ -292,6 +305,9 @@ def _predicate(
             resolved = resolve_snippet_direction(kind, a, b, snippet)
             if resolved is not None:
                 return resolved
+        if kind == "Bind" and pair == {EntityKind.TARGET}:
+            first, second = sorted((a, b), key=lambda n: normalize_entity_key(n.name))
+            return first, RelationKind.TARGETS, second
         # BioRED does not annotate direction between two genes, so the edge
         # claims none; ordering by key keeps A-B and B-A one edge.
         first, second = sorted((a, b), key=lambda n: normalize_entity_key(n.name))

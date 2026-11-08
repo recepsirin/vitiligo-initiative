@@ -297,7 +297,50 @@ def extract_multi_cohort_expression_signatures(
         except Exception as exc:
             logger.debug("GSE344141 parse note: %s", exc)
 
-    # 7. Melanocyte Lineage Depletion & Autoreactive T-cell score
+    # 7. Single-Cell Lineage Specificity (GSE298871, 17,057 cells) + Multi-Cohort limma Differentials (GSE75819, GSE65127)
+    try:
+        from vitiligo.graph.enrich_release import compute_or_load_single_cell_lineage_profiles
+
+        sc_payload = compute_or_load_single_cell_lineage_profiles()
+        for g_sym, prof in sc_payload.get("genes", {}).items():
+            u_sym = str(g_sym).strip().upper()
+            if u_sym in sym_to_node:
+                n_idx = sym_to_node[u_sym]
+                features[n_idx, 13] = float(
+                    np.clip(float(prof.get("tcell_effector_z", 0.0)), -5.0, 5.0)
+                )
+                features[n_idx, 14] = float(
+                    np.clip(float(prof.get("mel_depletion_z", 0.0)), -5.0, 5.0)
+                )
+    except Exception as exc:
+        logger.debug("Single-cell lineage profile load note: %s", exc)
+
+    diff_jsonl_path = Path("data/geo/expression/differential.jsonl")
+    if diff_jsonl_path.exists():
+        try:
+            import json
+
+            cohort_lfcs: dict[str, list[float]] = {}
+            for line in diff_jsonl_path.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                g_sym = str(row.get("gene", "")).strip().upper()
+                if g_sym:
+                    cohort_lfcs.setdefault(g_sym, []).append(float(row.get("log2fc", 0.0)))
+            for g_sym, fcs in cohort_lfcs.items():
+                if g_sym in sym_to_node:
+                    n_idx = sym_to_node[g_sym]
+                    meta_fc = float(np.mean(fcs))
+                    if abs(features[n_idx, 0]) < 0.25:
+                        features[n_idx, 0] = float(np.clip(meta_fc, -6.0, 6.0))
+                    else:
+                        features[n_idx, 0] = float(
+                            np.clip(0.65 * features[n_idx, 0] + 0.35 * meta_fc, -6.0, 6.0)
+                        )
+        except Exception as exc:
+            logger.debug("differential.jsonl parse note: %s", exc)
+
     melanocyte_markers = {"TYR", "DCT", "MLANA", "PMEL", "MITF", "OCA2", "TYRP1"}
     trm_markers = {
         "CD8A",
@@ -314,10 +357,10 @@ def extract_multi_cohort_expression_signatures(
     }
     for m in melanocyte_markers:
         if m in sym_to_node:
-            features[sym_to_node[m], 14] = -2.5
+            features[sym_to_node[m], 14] = min(float(features[sym_to_node[m], 14]), -2.5)
     for m in trm_markers:
         if m in sym_to_node:
-            features[sym_to_node[m], 13] = 2.5
+            features[sym_to_node[m], 13] = max(float(features[sym_to_node[m], 13]), 2.5)
 
     # 8. Ingest GWAS Catalog Associations
     if GWAS_ASSOC_PATH.exists():

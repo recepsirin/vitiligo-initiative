@@ -1167,14 +1167,71 @@ _ANCHORED_CELL_EXPR = re.compile(
 )
 
 
+SC_LINEAGE_CACHE_PATH = Path("data/cache/gnn/sc_lineage_gse298871.json")
+GSE298871_TAR_PATH = Path("data/geo/GSE298871/GSE298871_RAW.tar")
+
+_SC_LINEAGE_MARKERS: dict[str, list[str]] = {
+    "Epidermal Melanocyte": ["DCT", "PMEL", "TYR", "MLANA", "MITF"],
+    "Hair Follicle Melanocyte Stem Cell (McSC)": ["PAX3", "SOX10", "KIT", "EDNRB"],
+    "Basal Keratinocyte": ["KRT14", "KRT5", "KRT1", "KRT10", "DSP"],
+    "Dermal Fibroblast (IFN-Responsive)": ["COL1A1", "COL1A2", "DCN", "LUM", "PDGFRA"],
+    "CD8+ Tissue-Resident Memory T Cell (TRM)": [
+        "CD8A",
+        "CD8B",
+        "GZMB",
+        "PRF1",
+        "IFNG",
+    ],
+    "Cutaneous Regulatory T Cell (Treg)": ["FOXP3", "IL2RA", "CTLA4", "TIGIT", "IKZF2"],
+    "Cutaneous Natural Killer & ILC1 Cell": ["GNLY", "NKG7", "KLRD1", "KLRB1", "NCR1"],
+    "Epidermal Langerhans & cDC1 Dendritic Cell": [
+        "CD207",
+        "CD1A",
+        "CLEC9A",
+        "CD1C",
+        "FCER1A",
+        "CD68",
+        "C1QA",
+    ],
+}
+
+
+def _extract_sentence(text: str, pos: int) -> str:
+    """Extract the single sentence around character position `pos`."""
+    start = 0
+    for sep in (". ", "; ", "\n"):
+        idx = text.rfind(sep, 0, pos)
+        if idx != -1:
+            start = max(start, idx + len(sep))
+    end = len(text)
+    for sep in (". ", ".\n", "\n"):
+        idx = text.find(sep, pos)
+        if idx != -1:
+            end = min(end, idx + 1)
+    return text[start:end].strip()
+
+
 def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
-    """Recover active-voice directional (INHIBITS, ACTIVATES, EXPRESSED_IN) edges from full-text snippets."""
-    from vitiligo.graph.literature_seed import Node, resolve_snippet_direction
+    """Recover active-voice directional (INHIBITS, ACTIVATES, EXPRESSED_IN) and physical Bind (TARGETS) edges."""
+    from sqlalchemy import text as sa_text
+
+    from vitiligo.graph.literature_seed import Node, _node_pattern, resolve_snippet_direction
 
     entities = {e.id: e for e in session.exec(select(GraphEntity)).all() if e.id is not None}
     cell_name_to_ent: dict[str, GraphEntity] = {
         e.name: e for e in entities.values() if e.kind == EntityKind.CELL_TYPE
     }
+
+    pubmed_texts: dict[str, str] = {}
+    rows = session.connection().execute(
+        sa_text(
+            "SELECT source_id, COALESCE(title, '') || '. ' || COALESCE(abstract, '') "
+            "FROM documents WHERE UPPER(source) = 'PUBMED'"
+        )
+    )
+    for sid, txt in rows:
+        if sid and txt:
+            pubmed_texts[f"pmid:{sid}"] = str(txt)
 
     existing_triples: set[tuple[int, RelationKind, int]] = set()
     all_edges = list(session.exec(select(GraphEdge)).all())
@@ -1183,6 +1240,7 @@ def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
 
     directional_added = 0
     expressed_in_added = 0
+    targets_bind_added = 0
 
     for edge in all_edges:
         s_ent = entities.get(edge.subject_id)
@@ -1190,17 +1248,50 @@ def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
         if s_ent is None or o_ent is None or s_ent.id is None or o_ent.id is None:
             continue
 
+        node_s = Node(s_ent.kind, s_ent.name, aliases=tuple(s_ent.aliases or ()))
+        node_o = Node(o_ent.kind, o_ent.name, aliases=tuple(o_ent.aliases or ()))
+
         evs = edge.evidence if isinstance(edge.evidence, list) else []
         for ev in evs:
             if not isinstance(ev, dict):
                 continue
-            snip = str(ev.get("snippet") or "")
             rel = str(ev.get("relation") or "")
             try:
                 score = float(ev.get("score") or 0.0)
             except (TypeError, ValueError):
                 score = 0.0
-            if not snip or score < 0.82:
+
+            # 0. Physical protein-protein / ligand-receptor Bind -> TARGETS
+            if (
+                edge.predicate == RelationKind.ASSOCIATED_WITH
+                and rel == "Bind"
+                and score >= 0.70
+                and s_ent.kind in (EntityKind.DRUG, EntityKind.TARGET)
+                and o_ent.kind == EntityKind.TARGET
+            ):
+                triple_bind = (s_ent.id, RelationKind.TARGETS, o_ent.id)
+                if triple_bind not in existing_triples:
+                    existing_triples.add(triple_bind)
+                    session.add(
+                        GraphEdge(
+                            subject_id=s_ent.id,
+                            predicate=RelationKind.TARGETS,
+                            object_id=o_ent.id,
+                            confidence=round(min(0.80, score * 0.80), 2),
+                            claim=ClaimKind.ASSERTED,
+                            causal_level="mechanism_assertion",
+                            extraction_method=edge.extraction_method,
+                            evidence=[dict(ev)],
+                        )
+                    )
+                    targets_bind_added += 1
+
+            raw_snip = str(ev.get("snippet") or "")
+            from_abstract = False
+            if not raw_snip:
+                raw_snip = pubmed_texts.get(str(ev.get("source_id") or ""), "")
+                from_abstract = True
+            if not raw_snip or score < 0.82:
                 continue
 
             # 1. Active-voice directional (DRUG/TARGET -> INHIBITS/ACTIVATES -> TARGET)
@@ -1209,9 +1300,7 @@ def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
                 and s_ent.kind in (EntityKind.DRUG, EntityKind.TARGET)
                 and o_ent.kind == EntityKind.TARGET
             ):
-                node_s = Node(s_ent.kind, s_ent.name)
-                node_o = Node(o_ent.kind, o_ent.name)
-                resolved = resolve_snippet_direction(rel, node_s, node_o, snip)
+                resolved = resolve_snippet_direction(rel, node_s, node_o, raw_snip)
                 if resolved is not None:
                     first_node, pred, _ = resolved
                     subj_id, obj_id = (
@@ -1222,6 +1311,11 @@ def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
                     triple = (subj_id, pred, obj_id)
                     if triple not in existing_triples:
                         existing_triples.add(triple)
+                        ev_copy = dict(ev)
+                        if from_abstract and not ev_copy.get("snippet"):
+                            m_first = _node_pattern(first_node).search(raw_snip)
+                            if m_first:
+                                ev_copy["snippet"] = _extract_sentence(raw_snip, m_first.start())
                         session.add(
                             GraphEdge(
                                 subject_id=subj_id,
@@ -1231,53 +1325,254 @@ def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
                                 claim=ClaimKind.ASSERTED,
                                 causal_level="mechanism_assertion",
                                 extraction_method=edge.extraction_method,
-                                evidence=[dict(ev)],
+                                evidence=[ev_copy],
                             )
                         )
                         directional_added += 1
 
             # 2. Anchored cell-type expression (TARGET -> EXPRESSED_IN -> CELL_TYPE)
-            for t_ent in (s_ent, o_ent):
+            for t_ent, t_node in ((s_ent, node_s), (o_ent, node_o)):
                 if t_ent.kind != EntityKind.TARGET or t_ent.id is None or len(t_ent.name) < 2:
                     continue
-                m_t = re.search(rf"\b{re.escape(t_ent.name)}\b", snip, re.I)
-                if not m_t:
-                    continue
-                for cell_name, c_pat in _CELL_MENTION_PATTERNS.items():
-                    c_ent = cell_name_to_ent.get(cell_name)
-                    if c_ent is None or c_ent.id is None:
-                        continue
-                    for m_c in c_pat.finditer(snip):
-                        if 0 < (m_c.start() - m_t.end()) <= 65:
-                            between = snip[m_t.end() : m_c.start()]
-                            if _ANCHORED_CELL_EXPR.match(between):
-                                triple = (t_ent.id, RelationKind.EXPRESSED_IN, c_ent.id)
-                                if triple not in existing_triples:
-                                    existing_triples.add(triple)
-                                    session.add(
-                                        GraphEdge(
-                                            subject_id=t_ent.id,
-                                            predicate=RelationKind.EXPRESSED_IN,
-                                            object_id=c_ent.id,
-                                            confidence=round(min(0.80, score * 0.80), 2),
-                                            claim=ClaimKind.ASSERTED,
-                                            causal_level="correlation_in_human",
-                                            extraction_method=edge.extraction_method,
-                                            evidence=[dict(ev)],
+                t_pat = _node_pattern(t_node)
+                for m_t in t_pat.finditer(raw_snip):
+                    for cell_name, c_pat in _CELL_MENTION_PATTERNS.items():
+                        c_ent = cell_name_to_ent.get(cell_name)
+                        if c_ent is None or c_ent.id is None:
+                            continue
+                        for m_c in c_pat.finditer(raw_snip):
+                            if 0 < (m_c.start() - m_t.end()) <= 65:
+                                between = raw_snip[m_t.end() : m_c.start()]
+                                if _ANCHORED_CELL_EXPR.match(between):
+                                    triple = (t_ent.id, RelationKind.EXPRESSED_IN, c_ent.id)
+                                    if triple not in existing_triples:
+                                        existing_triples.add(triple)
+                                        ev_copy = dict(ev)
+                                        if from_abstract and not ev_copy.get("snippet"):
+                                            ev_copy["snippet"] = _extract_sentence(
+                                                raw_snip, m_t.start()
+                                            )
+                                        session.add(
+                                            GraphEdge(
+                                                subject_id=t_ent.id,
+                                                predicate=RelationKind.EXPRESSED_IN,
+                                                object_id=c_ent.id,
+                                                confidence=round(min(0.80, score * 0.80), 2),
+                                                claim=ClaimKind.ASSERTED,
+                                                causal_level="correlation_in_human",
+                                                extraction_method=edge.extraction_method,
+                                                evidence=[ev_copy],
+                                            )
                                         )
-                                    )
-                                    expressed_in_added += 1
+                                        expressed_in_added += 1
 
     session.flush()
     logger.info(
-        "Full-text directional recovery: added %d INHIBITS/ACTIVATES edges and %d EXPRESSED_IN edges",
+        "Full-text directional recovery: added %d INHIBITS/ACTIVATES, %d EXPRESSED_IN, and %d Bind->TARGETS edges",
         directional_added,
         expressed_in_added,
+        targets_bind_added,
     )
     return {
         "directional_edges_added": directional_added,
         "expressed_in_edges_added": expressed_in_added,
+        "targets_bind_edges_added": targets_bind_added,
     }
+
+
+def compute_or_load_single_cell_lineage_profiles(
+    force_recompute: bool = False,
+) -> dict[str, Any]:
+    """Compute or load single-cell lineage expression profiles across 17 human skin scRNA-seq libraries (GSE298871)."""
+    if SC_LINEAGE_CACHE_PATH.exists() and not force_recompute:
+        return json.loads(SC_LINEAGE_CACHE_PATH.read_text(encoding="utf-8"))
+
+    if not GSE298871_TAR_PATH.exists():
+        logger.warning("GSE298871 tar not found at %s; skipping scRNA-seq lineage seeding", GSE298871_TAR_PATH)
+        return {"lineage_names": list(_SC_LINEAGE_MARKERS.keys()), "lineage_cells": {}, "genes": {}}
+
+    import gzip
+    import tarfile
+
+    import numpy as np
+    from scipy.io import mmread
+
+    lineage_names = list(_SC_LINEAGE_MARKERS.keys())
+    with tarfile.open(GSE298871_TAR_PATH) as tf:
+        names = sorted(tf.getnames())
+        samples = sorted({n.rsplit("_", 1)[0] for n in names})
+        feat_member = tf.extractfile(samples[0] + "_features.tsv.gz")
+        assert feat_member is not None
+        with gzip.open(feat_member, "rt") as gz:
+            genes = [line.strip().split("\t")[1] for line in gz]
+        gene_to_idx = {g: i for i, g in enumerate(genes)}
+
+        lineage_sum = np.zeros((len(genes), len(lineage_names)), dtype=np.float64)
+        lineage_detect = np.zeros((len(genes), len(lineage_names)), dtype=np.int64)
+        lineage_cells = np.zeros(len(lineage_names), dtype=np.int64)
+
+        for s in samples:
+            mtx_member = tf.extractfile(s + "_matrix.mtx.gz")
+            if mtx_member is None:
+                continue
+            with gzip.open(mtx_member, "rb") as gz:
+                mat = mmread(gz).tocsc()
+            lib_size = np.asarray(mat.sum(axis=0)).ravel()
+            valid = lib_size >= 500
+            mat = mat[:, valid]
+            lib_size = lib_size[valid]
+            scores = np.zeros((len(lineage_names), mat.shape[1]), dtype=np.float32)
+            for li, (_, markers) in enumerate(_SC_LINEAGE_MARKERS.items()):
+                idxs = [gene_to_idx[m] for m in markers if m in gene_to_idx]
+                sub = mat[idxs, :].toarray() / lib_size[None, :] * 1e4
+                scores[li] = np.log1p(sub).mean(axis=0)
+            best_l = scores.argmax(axis=0)
+            max_s = scores.max(axis=0)
+            for li in range(len(lineage_names)):
+                mask = (best_l == li) & (max_s >= 0.5)
+                if mask.sum() == 0:
+                    continue
+                sub_m = mat[:, mask]
+                lineage_cells[li] += int(mask.sum())
+                norm_m = sub_m.multiply(1e4 / lib_size[mask])
+                lineage_sum[:, li] += np.asarray(norm_m.sum(axis=1)).ravel()
+                lineage_detect[:, li] += np.asarray((sub_m > 0).sum(axis=1)).ravel()
+
+    mean_cp10k = lineage_sum / np.maximum(lineage_cells[None, :], 1)
+    pct_detect = lineage_detect / np.maximum(lineage_cells[None, :], 1)
+
+    mel_idxs = [0, 1]  # Epidermal Melanocyte + Hair Follicle Melanocyte Stem Cell (McSC)
+    non_mel_idxs = [i for i in range(len(lineage_names)) if i not in mel_idxs]
+    eff_idxs = [4, 6]  # CD8+ TRM + Cutaneous Natural Killer & ILC1 Cell
+    non_eff_idxs = [i for i in range(len(lineage_names)) if i not in eff_idxs]
+
+    gene_profiles: dict[str, dict[str, Any]] = {}
+    for gi, g in enumerate(genes):
+        row_cp = mean_cp10k[gi]
+        row_pct = pct_detect[gi]
+        if row_cp.max() < 0.25 and row_pct.max() < 0.03:
+            continue
+        mel_cp = float(row_cp[mel_idxs].max())
+        non_mel_cp = float(np.median(row_cp[non_mel_idxs]))
+        # Negative when enriched in melanocytes (since melanocytes are depleted in lesional vitiligo skin)
+        mel_depletion_z = float(-np.log2((mel_cp + 0.25) / (non_mel_cp + 0.25)))
+
+        eff_cp = float(row_cp[eff_idxs].max())
+        non_eff_cp = float(np.median(row_cp[non_eff_idxs]))
+        tcell_effector_z = float(np.log2((eff_cp + 0.25) / (non_eff_cp + 0.25)))
+
+        top_lineages: list[dict[str, Any]] = []
+        order = np.argsort(row_cp)[::-1]
+        for li in order[:2]:
+            others = np.delete(row_cp, li)
+            fc = float((row_cp[li] + 0.1) / (np.median(others) + 0.1))
+            if row_pct[li] >= 0.10 and row_cp[li] >= 1.5 and fc >= 2.2:
+                top_lineages.append(
+                    {
+                        "lineage": lineage_names[int(li)],
+                        "mean_cp10k": round(float(row_cp[li]), 2),
+                        "pct_detect": round(float(row_pct[li]), 3),
+                        "fold_enrichment": round(fc, 2),
+                    }
+                )
+        if abs(mel_depletion_z) >= 0.15 or abs(tcell_effector_z) >= 0.15 or top_lineages:
+            gene_profiles[g] = {
+                "mel_depletion_z": round(mel_depletion_z, 3),
+                "tcell_effector_z": round(tcell_effector_z, 3),
+                "top_lineages": top_lineages,
+            }
+
+    payload = {
+        "series": "GSE298871",
+        "lineage_names": lineage_names,
+        "lineage_cells": {
+            lineage_names[i]: int(lineage_cells[i]) for i in range(len(lineage_names))
+        },
+        "genes": gene_profiles,
+    }
+    SC_LINEAGE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SC_LINEAGE_CACHE_PATH.write_text(json.dumps(payload), encoding="utf-8")
+    return payload
+
+
+def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
+    """Seed empirically measured EXPRESSED_IN edges from GSE298871 human skin scRNA-seq."""
+    payload = compute_or_load_single_cell_lineage_profiles()
+    gene_profiles: dict[str, dict[str, Any]] = payload.get("genes", {})
+    lineage_cells: dict[str, int] = payload.get("lineage_cells", {})
+    if not gene_profiles:
+        return {"sc_expressed_in_added": 0}
+
+    targets: dict[str, GraphEntity] = {
+        e.name: e
+        for e in session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.TARGET)).all()
+    }
+    cells: dict[str, GraphEntity] = {
+        e.name: e
+        for e in session.exec(
+            select(GraphEntity).where(GraphEntity.kind == EntityKind.CELL_TYPE)
+        ).all()
+    }
+    existing_expressed: set[tuple[int, int]] = {
+        (e.subject_id, e.object_id)
+        for e in session.exec(
+            select(GraphEdge).where(GraphEdge.predicate == RelationKind.EXPRESSED_IN)
+        ).all()
+    }
+
+    added = 0
+    for gene_sym, prof in gene_profiles.items():
+        t_ent = targets.get(gene_sym)
+        if t_ent is None or t_ent.id is None:
+            continue
+        for item in prof.get("top_lineages", []):
+            lname = str(item["lineage"])
+            c_ent = cells.get(lname)
+            if c_ent is None or c_ent.id is None:
+                continue
+            pair = (t_ent.id, c_ent.id)
+            if pair in existing_expressed:
+                continue
+            existing_expressed.add(pair)
+            fc = float(item["fold_enrichment"])
+            pct = float(item["pct_detect"])
+            cp10k = float(item["mean_cp10k"])
+            n_cells = int(lineage_cells.get(lname, 0))
+            conf = round(min(0.92, 0.72 + min(0.20, fc / 40.0)), 2)
+            snippet = (
+                f"Single-cell RNA-seq of human vitiligo and control skin (GSE298871, n={n_cells} {lname} cells): "
+                f"{gene_sym} is expressed at {cp10k:.2f} CP10K across {pct * 100:.1f}% of {lname} cells "
+                f"({fc:.1f}-fold lineage enrichment)."
+            )
+            session.add(
+                GraphEdge(
+                    subject_id=t_ent.id,
+                    predicate=RelationKind.EXPRESSED_IN,
+                    object_id=c_ent.id,
+                    confidence=conf,
+                    claim=ClaimKind.OBSERVED,
+                    causal_level="correlation_in_human",
+                    extraction_method="sc_rnaseq_gse298871",
+                    evidence=[
+                        {
+                            "source_type": "geo_scrnaseq",
+                            "source_id": "geo:GSE298871",
+                            "relation": "EXPRESSED_IN",
+                            "score": conf,
+                            "mean_cp10k": cp10k,
+                            "pct_detect": pct,
+                            "fold_enrichment": fc,
+                            "n_lineage_cells": n_cells,
+                            "snippet": snippet,
+                        }
+                    ],
+                )
+            )
+            added += 1
+
+    session.flush()
+    logger.info("Single-cell RNA-seq (GSE298871): added %d EXPRESSED_IN edges", added)
+    return {"sc_expressed_in_added": added}
 
 
 def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
@@ -1288,6 +1583,7 @@ def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
         mychem_stats = seed_mychem_drug_target_mechanisms(session, uniprot_map)
         coexp_inserted = seed_patient_coexpression_edges(session, min_abs_r=min_abs_r)
         ft_stats = recover_directional_fulltext_relations(session)
+        sc_stats = seed_single_cell_lineage_expression(session)
 
     return {
         "hierarchy": hier_stats,
@@ -1295,4 +1591,5 @@ def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
         "mychem_mechanisms": mychem_stats,
         "coexpression_edges_inserted": coexp_inserted,
         "fulltext_directional_recovery": ft_stats,
+        "single_cell_lineage": sc_stats,
     }

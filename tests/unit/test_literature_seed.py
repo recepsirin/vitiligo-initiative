@@ -425,3 +425,32 @@ def test_active_voice_snippet_resolves_directional_gene_and_drug_mechanisms(
         ("MITF", RelationKind.ACTIVATES, "TYR"),
         ("DKK1", RelationKind.INHIBITS, "TYR"),
     }
+
+
+def test_target_bind_and_alias_directional_resolution(test_db_path: Path) -> None:
+    """Physical Bind between two targets resolves to TARGETS, and resolve_snippet_direction
+    matches entity aliases."""
+    from vitiligo.graph.literature_seed import Node, resolve_snippet_direction
+
+    _load(
+        _doc(
+            "1",
+            "CXCL10 binds CXCR3 on skin T cells.",
+            [
+                ("CXCL10", "Gene", "3627", "CXCL10"),
+                ("CXCR3", "Gene", "2833", "CXCR3"),
+            ],
+            [("Bind", 0.95, "3627", "2833")],
+        )
+    )
+    assert _edges() == {("CXCL10", RelationKind.TARGETS, "CXCR3")}
+
+    ifng = Node(EntityKind.TARGET, "IFNG", aliases=("interferon-gamma",))
+    cxcl10 = Node(EntityKind.TARGET, "CXCL10", aliases=("IP-10",))
+    resolved = resolve_snippet_direction(
+        "Positive_Correlation",
+        ifng,
+        cxcl10,
+        "In human keratinocytes, interferon-gamma potently induces IP-10 secretion.",
+    )
+    assert resolved == (ifng, RelationKind.ACTIVATES, cxcl10)
