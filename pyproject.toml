@@ -58,6 +58,11 @@ model = [
 papers = [
     "pypdf>=4.2",
 ]
+# Testing which genes vitiligo skin expresses differently; the graph reads
+# the results without it.
+expression = [
+    "scipy>=1.11",
+]
 # Training and running the local relation extractor. Optional because only
 # the corpus build uses it; the model runs on this machine and calls no API.
 train = [

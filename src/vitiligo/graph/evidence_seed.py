@@ -44,6 +44,8 @@ from vitiligo.graph.store import replace_evidence, upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.mechanisms.schema import CURATION_PATH, Mechanism
 from vitiligo.mechanisms.schema import load as load_mechanisms
+from vitiligo.models.expression import METHOD as EXPRESSION_METHOD
+from vitiligo.models.expression import read_results as read_expression
 from vitiligo.storage import GeneticAssociation, Trial, init_db, session_scope
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
 
@@ -70,6 +72,7 @@ class EvidenceSeedStats:
     outcome_edges: int = 0
     result_edges: int = 0
     posted_edges: int = 0
+    expression_edges: int = 0
     mechanism_edges: int = 0
     entities: int = 0
 
@@ -80,6 +83,7 @@ class EvidenceSeedStats:
             + self.outcome_edges
             + self.result_edges
             + self.posted_edges
+            + self.expression_edges
             + self.mechanism_edges
         )
 
@@ -203,6 +207,49 @@ def seed_trial_outcomes(session: Session, rows: Sequence[ArmEndpointRow]) -> tup
         )
         edges += int(inserted)
     return edges, entities
+
+
+def seed_expression(session: Session, disease: GraphEntity, rows: Sequence[dict[str, Any]]) -> int:
+    """Gene-disease edges from genes vitiligo skin expresses differently.
+
+    ``rows`` are the passing genes of each usable comparison
+    (``models/expression.py``). A difference in skin is an association, and
+    the edge says no more. Each row carries how many independent cohorts saw
+    the gene move the same way, and an edge two cohorts agree on ranks above
+    one seen once. Returns the edges inserted.
+    """
+    agree: dict[tuple[str, bool], set[str]] = {}
+    for row in rows:
+        agree.setdefault((row["gene"], row["log2fc"] > 0), set()).add(row["series"])
+    wanted: dict[tuple[int | None, int | None], tuple[GraphEntity, GraphEntity, list[Any]]] = {}
+    genes: dict[str, GraphEntity] = {}
+    for row in rows:
+        if row["gene"] not in genes:
+            genes[row["gene"]] = upsert_entity(session, kind=EntityKind.TARGET, name=row["gene"])
+        gene = genes[row["gene"]]
+        evidence = {
+            "source_type": "expression",
+            "source_id": f"geo:{row['series']}",
+            "contrast": row["contrast"],
+            "tissue": "skin",
+            "direction": "higher" if row["log2fc"] > 0 else "lower",
+            **{k: row[k] for k in ("log2fc", "p", "fdr", "n_case", "n_control", "paired")},
+            "method": EXPRESSION_METHOD,
+            "cohorts_agreeing": len(agree[(row["gene"], row["log2fc"] > 0)]),
+        }
+        wanted.setdefault((gene.id, disease.id), (gene, disease, []))[2].append(evidence)
+    inserted, removed = replace_evidence(
+        session,
+        "expression",
+        wanted,
+        predicate=RelationKind.ASSOCIATED_WITH,
+        extraction_method="expression",
+        confidence=lambda rows: 0.85 if max(r["cohorts_agreeing"] for r in rows) > 1 else 0.65,
+        claim=ClaimKind.OBSERVED,
+        causal_level="association",
+    )
+    logger.info("Expression: %d genes, %d inserted, %d removed", len(wanted), inserted, removed)
+    return inserted
 
 
 def seed_mechanisms(
@@ -427,6 +474,7 @@ def seed_graph_from_evidence(
         stats.result_edges = seed_trial_results(session, list(records()))
         posted = session.exec(select(Trial).where(col(Trial.has_results))).all()
         stats.posted_edges, _ = seed_posted_results(session, posted)
+        stats.expression_edges = seed_expression(session, disease, read_expression())
         stats.mechanism_edges, mechanism_entities = seed_mechanisms(session, disease, mechanisms)
         stats.entities = genetic_entities + outcome_entities + mechanism_entities
         session.commit()

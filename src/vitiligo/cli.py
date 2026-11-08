@@ -1280,6 +1280,7 @@ def graph_seed_evidence_cmd() -> None:
     table.add_row("Trial outcomes", f"{stats.outcome_edges:,} edges")
     table.add_row("Results read from trial papers", f"{stats.result_edges:,} edges")
     table.add_row("Results posted to registries", f"{stats.posted_edges:,} edges")
+    table.add_row("Genes expressed differently", f"{stats.expression_edges:,} edges")
     table.add_row("Mechanistic hypotheses", f"{stats.mechanism_edges:,} edges")
     table.add_row("[bold]Total new edges[/bold]", f"[bold]{stats.total_edges:,}[/bold]")
     console.print(table)
@@ -2288,6 +2289,52 @@ def geo_data_labels(
         f"{relevant} are about vitiligo; {labelled - relevant} matched the search on something "
         f"else. {no_matrix} series have no matrix file."
     )
+
+
+@geo_data_app.command("expression")
+def geo_data_expression_cmd(
+    cache: str = typer.Option("data/geo", "--cache", help="Where files are stored."),
+) -> None:
+    """Which genes vitiligo skin expresses differently, comparison by comparison.
+
+    Fetches each series matrix and platform annotation it lacks, tests every
+    comparison the series' labels define, and writes the genes that pass for
+    ``vitiligo graph seed-evidence`` to load. Needs the ``expression`` extra.
+    """
+    from pathlib import Path
+
+    from vitiligo.models.expression import CONTRASTS, compare, load, write_results
+    from vitiligo.sources.geo_expression import fetch_inputs
+
+    root = Path(cache)
+    arrays = [c for c in CONTRASTS if c.platform]
+    fetch_inputs(
+        sorted({c.series for c in arrays}), sorted({str(c.platform) for c in arrays}), root
+    )
+    results = [compare(c, load(c, root)) for c in CONTRASTS]
+
+    table = Table()
+    table.add_column("Series", style="cyan")
+    table.add_column("Comparison")
+    table.add_column("n", justify="right")
+    table.add_column("Genes", justify="right")
+    table.add_column("Higher", justify="right")
+    table.add_column("Lower", justify="right")
+    table.add_column("Sees melanocyte loss")
+    for r in results:
+        passing = r.passing()
+        table.add_row(
+            r.contrast.series,
+            r.contrast.label,
+            f"{r.n_case} v {r.n_control}",
+            f"{len(r.genes):,}",
+            str(sum(r.log2fc[i] > 0 for i in passing)),
+            str(sum(r.log2fc[i] < 0 for i in passing)),
+            "[green]yes[/green]" if r.sees_melanocyte_loss else "[red]no: not used[/red]",
+        )
+    console.print(table)
+    path = write_results(results, root)
+    console.print(f"Written to {path}. Load with: vitiligo graph seed-evidence")
 
 
 @geo_data_app.command("status")

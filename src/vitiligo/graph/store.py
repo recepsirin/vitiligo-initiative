@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -119,7 +120,7 @@ def replace_evidence(
     *,
     predicate: RelationKind,
     extraction_method: str,
-    confidence: float,
+    confidence: float | Callable[[list[Any]], float],
     claim: ClaimKind,
     causal_level: str | None,
 ) -> tuple[int, int]:
@@ -129,7 +130,8 @@ def replace_evidence(
     evidence row the source gives for that ``predicate`` edge. Other sources'
     evidence stays; an edge left with none is deleted, so a corrected source
     leaves nothing stale; an edge whose rows are unchanged is left as it is,
-    id and all. Returns the edges inserted and removed.
+    id and all. ``confidence`` may be worked out from an edge's rows. Returns
+    the edges inserted and removed.
     """
     pending = dict(wanted)
     removed = 0
@@ -157,7 +159,7 @@ def replace_evidence(
             subject=subject,
             predicate=predicate,
             obj=obj,
-            confidence=confidence,
+            confidence=confidence(rows) if callable(confidence) else confidence,
             extraction_method=extraction_method,
             evidence=rows[0],
             claim=claim,
