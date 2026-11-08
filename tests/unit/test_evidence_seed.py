@@ -339,8 +339,8 @@ def _results(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def test_a_trial_paper_result_joins_its_regimen_to_what_it_measured(graph_db: None) -> None:
     """A combination is its own regimen, a comparison names the other arm, and a pooled
     value or a placebo arm names no regimen, and an arm with no value leaves no node. A
-    rerun after a value is corrected away leaves nothing of it, and inserts nothing for a
-    result already held.
+    rerun after a value is corrected away leaves nothing of it, not even the nodes it alone
+    joined, and inserts nothing for a result already held.
     """
     responders = {
         "arm": "A",
@@ -397,3 +397,6 @@ def test_a_trial_paper_result_joins_its_regimen_to_what_it_measured(graph_db: No
     with session_scope() as session:
         assert seed_trial_results(session, _results([responders])) == 0
     assert set(observed()) == {("NB-UVB + tacrolimus", "Repigmentation")}
+    with session_scope() as session:
+        left = {e.name for e in session.exec(select(GraphEntity)).all()}
+    assert left == {"NB-UVB + tacrolimus", "Repigmentation"}

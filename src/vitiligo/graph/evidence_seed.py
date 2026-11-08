@@ -463,6 +463,7 @@ def seed_graph_from_evidence(
         rows = harmonize_arms(build_jak_atlas())
     # Deferred like the reports above: curated_results reads reports.
     from vitiligo.graph.posted_results import seed_posted_results
+    from vitiligo.sources.mesh import load_index
     from vitiligo.trials.curated_results import records
 
     mechanisms = load_mechanisms(mechanisms_path) if mechanisms_path.is_file() else []
@@ -473,7 +474,7 @@ def seed_graph_from_evidence(
         stats.outcome_edges, outcome_entities = seed_trial_outcomes(session, rows)
         stats.result_edges = seed_trial_results(session, list(records()))
         posted = session.exec(select(Trial).where(col(Trial.has_results))).all()
-        stats.posted_edges, _ = seed_posted_results(session, posted)
+        stats.posted_edges, _ = seed_posted_results(session, posted, mesh=load_index)
         stats.expression_edges = seed_expression(session, disease, read_expression())
         stats.mechanism_edges, mechanism_entities = seed_mechanisms(session, disease, mechanisms)
         stats.entities = genetic_entities + outcome_entities + mechanism_entities

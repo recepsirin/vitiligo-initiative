@@ -12,6 +12,8 @@ from sqlmodel import select
 import vitiligo.config as cfg
 import vitiligo.storage.db as dbmod
 from vitiligo.graph.posted_results import Group, Vocabulary, resolve_groups, seed_posted_results
+from vitiligo.graph.store import upsert_entity
+from vitiligo.sources.mesh import MeshRecord
 from vitiligo.storage import Trial, init_db, session_scope
 from vitiligo.storage.models import EntityKind, GraphEdge, GraphEntity, TrialSourceKind
 
@@ -30,7 +32,7 @@ def graph_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 def test_a_results_group_is_what_it_received_or_is_left_out() -> None:
     """A development code is its drug, a drug's vehicle is the vehicle, a description
     that names a placebo decides nothing, a drug withheld is not given, and a group
-    switched from placebo to drug is neither.
+    switched from placebo to drug, or from one drug to another, is neither.
     """
     study = {
         "protocolSection": {
@@ -39,6 +41,7 @@ def test_a_results_group_is_what_it_received_or_is_left_out() -> None:
                     {"type": "DRUG", "name": "CP-690,550"},
                     {"type": "DRUG", "name": "Placebo"},
                     {"type": "DRUG", "name": "Withhold MTX", "otherNames": ["methotrexate"]},
+                    {"type": "DRUG", "name": "Methotrexate"},
                 ]
             }
         }
@@ -49,6 +52,7 @@ def test_a_results_group_is_what_it_received_or_is_left_out() -> None:
         {"id": "C", "title": "Placebo / CP-690,550 5 mg"},
         {"id": "D", "title": "Group D", "description": "Placebo matching CP-690,550"},
         {"id": "E", "title": "Withhold MTX"},
+        {"id": "F", "title": "Methotrexate -> Tofacitinib 5 mg"},
     ]
     vocabulary = Vocabulary({"tofacitinib": {"CP-690,550"}, "methotrexate": {"MTX"}})
 
@@ -59,6 +63,26 @@ def test_a_results_group_is_what_it_received_or_is_left_out() -> None:
     assert "C" not in got
     assert got["D"] == Group("Group D")
     assert got["E"].control
+    assert "F" not in got
+
+
+def test_mesh_names_a_substance_once_and_never_a_class_or_an_alternative(graph_db: None) -> None:
+    """MeSH's entry terms join a development code to its drug, but a class's terms
+    ("acid" for Acids) name nothing, and "etanercept or adalimumab" is neither.
+    """
+    with session_scope() as session:
+        for name, mesh in (("secukinumab", "C555450"), ("Acids", "D000143"), ("Esters", "D004952")):
+            upsert_entity(session, kind=EntityKind.DRUG, name=name, external_ids={"mesh": mesh})
+        records = {
+            "C555450": MeshRecord("C555450", "secukinumab", frozenset({"ain 457", "cosentyx"})),
+            "D000143": MeshRecord("D000143", "Acids", frozenset({"acid", "acids"})),
+            "D004952": MeshRecord("D004952", "Esters", frozenset({"ester", "esters"})),
+        }
+        vocabulary = Vocabulary.load(session, lambda ids: {i: records[i] for i in ids})
+
+    assert vocabulary.read("AIN457 150 mg") == ["secukinumab"]
+    assert vocabulary.read("Fumaric Acid Esters") == []
+    assert vocabulary.read("Cosentyx or AIN457") == []
 
 
 def _trial(source_id: str, condition: str, outcome: str) -> Trial:

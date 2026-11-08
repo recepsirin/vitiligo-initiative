@@ -20,7 +20,7 @@ rate is never read without what the comparator showed.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -31,11 +31,15 @@ from vitiligo.graph.seed import CONTROL
 from vitiligo.graph.store import replace_evidence, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.reports.jak import JAK_AGENTS
+from vitiligo.sources.mesh import MeshRecord
 from vitiligo.storage import Trial
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
 from vitiligo.trials.relevance import is_vitiligo_trial
 
 logger = get_logger(__name__)
+
+# Reads the MeSH records of the identifiers asked for (``sources.mesh.load_index``).
+MeshLoader = Callable[[set[str]], Mapping[str, MeshRecord]]
 
 SOURCE = "posted_result"
 _TYPE = re.compile(
@@ -44,6 +48,7 @@ _TYPE = re.compile(
     re.IGNORECASE,
 )
 _JOINS = frozenset({"and", "or", "with", "plus", "in", "of"})
+_EITHER = re.compile(r"\bor\b", re.IGNORECASE)
 _SWITCH = re.compile(r"\bto\b|->|→|\bthen\b|switch|re-?randomi", re.IGNORECASE)
 _POOLED = re.compile(
     r"^(?:all|total|overall|pooled|combined|entire)\b"
@@ -116,12 +121,27 @@ class Vocabulary:
         self.aliases = names
 
     @classmethod
-    def load(cls, session: Session) -> Vocabulary:
+    def load(cls, session: Session, mesh: MeshLoader | None = None) -> Vocabulary:
+        """The curated drug nodes and their names, with MeSH's entry terms when
+        ``mesh`` reads them: AIN457 and Cosentyx are secukinumab, CNTO 1275 and
+        Stelara ustekinumab.
+        """
+        drugs = [
+            entity
+            for entity in session.exec(
+                select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)
+            )
+            if (entity.external_ids or {}).get("mesh")
+            or (entity.external_ids or {}).get("opentargets")
+        ]
+        records = mesh({str((d.external_ids or {}).get("mesh")) for d in drugs}) if mesh else {}
         names: dict[str, set[str]] = {}
-        for entity in session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)):
-            ids = entity.external_ids or {}
-            if ids.get("mesh") or ids.get("opentargets"):
-                names.setdefault(entity.name, set()).update(entity.aliases or [])
+        for entity in drugs:
+            names.setdefault(entity.name, set()).update(entity.aliases or [])
+            record = records.get(str((entity.external_ids or {}).get("mesh")))
+            # A substance's names, not a class's: MeSH's "Acids" lists "acid".
+            if record is not None and (record.ui.startswith("C") or record.pharmacological_actions):
+                names[entity.name].update(record.terms)
         held = {name.lower(): name for name in names}
         for agent in JAK_AGENTS:
             names.setdefault(held.get(agent.name.lower(), agent.name), set()).update(agent.aliases)
@@ -135,6 +155,8 @@ class Vocabulary:
         dose" is not lead: the names found must cover two thirds of its
         words, dose, form and salt aside.
         """
+        if _EITHER.search(text):  # "etanercept or adalimumab" is neither
+            return []
         rest = _DOSE.sub(" ", text)
         words = len([w for w in re.findall(r"[a-z0-9]+", rest.lower()) if w not in _JOINS])
         nodes: list[str] = []
@@ -233,8 +255,8 @@ def resolve_groups(
                 continue  # one after the other, side by side, or two arms as one
             if not _JOINED.search(title):
                 active = set()  # "LEO 29102 Cream Vehicle" is the vehicle
-        if len(active) > 1 and _APART.search(title):
-            continue
+        if len(active) > 1 and (_APART.search(title) or _SWITCH.search(title)):
+            continue  # "Etanercept -> Ustekinumab": one after the other
         if control and not active and _EXTENSION.search(title):
             continue  # placebo, then the drug open label: no comparator
         if not active and not control and _POOLED.search(title) and len(actives) == 1:
@@ -382,12 +404,14 @@ def _denoms(denoms: list[dict[str, Any]] | None) -> dict[str, Any]:
     return {}
 
 
-def seed_posted_results(session: Session, trials: Iterable[Trial]) -> tuple[int, int]:
+def seed_posted_results(
+    session: Session, trials: Iterable[Trial], mesh: MeshLoader | None = None
+) -> tuple[int, int]:
     """Regimen-outcome and regimen-adverse-event edges from posted results.
 
     Returns the edges inserted and the evidence rows written.
     """
-    vocabulary = Vocabulary.load(session)
+    vocabulary = Vocabulary.load(session, mesh)
     nodes = _Nodes(session)
     wanted: Wanted = {}
     rows = 0

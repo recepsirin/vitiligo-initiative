@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, or_, select
 
 from vitiligo.graph.normalize import normalize_entity_key
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
@@ -129,12 +129,13 @@ def replace_evidence(
     ``wanted`` maps a (subject, object) pair to the two entities and every
     evidence row the source gives for that ``predicate`` edge. Other sources'
     evidence stays; an edge left with none is deleted, so a corrected source
-    leaves nothing stale; an edge whose rows are unchanged is left as it is,
-    id and all. ``confidence`` may be worked out from an edge's rows. Returns
+    leaves nothing stale, and an entity that edge was the last link of goes
+    with it; an edge whose rows are unchanged is left as it is, id and all. ``confidence`` may be worked out from an edge's rows. Returns
     the edges inserted and removed.
     """
     pending = dict(wanted)
     removed = 0
+    orphaned: set[int] = set()
     for edge in session.exec(select(GraphEdge)).all():
         held = list(edge.evidence or [])
         others = [e for e in held if e.get("source_type") != source_type]
@@ -149,6 +150,7 @@ def replace_evidence(
             session.add(edge)
         else:
             session.delete(edge)
+            orphaned |= {edge.subject_id, edge.object_id}
             removed += 1
     session.flush()
 
@@ -169,6 +171,13 @@ def replace_evidence(
         edge.evidence = kept + rows
         session.add(edge)
         inserted += int(new)
+    session.flush()
+    for entity_id in orphaned:
+        touching = or_(GraphEdge.subject_id == entity_id, GraphEdge.object_id == entity_id)
+        if session.exec(select(GraphEdge.id).where(touching)).first() is None:
+            entity = session.get(GraphEntity, entity_id)
+            if entity is not None:
+                session.delete(entity)
     session.flush()
     return inserted, removed
 
