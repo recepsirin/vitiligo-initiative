@@ -2,14 +2,26 @@
 
 from __future__ import annotations
 
-import torch
+import pytest
 
-from vitiligo.gnn.dataset import (
-    EntityMeta,
-    GraphDataset,
-    compute_causal_edge_weight,
+try:
+    import torch
+    import torch_geometric  # noqa: F401
+
+    from vitiligo.gnn.dataset import (
+        EntityMeta,
+        GraphDataset,
+        compute_causal_edge_weight,
+    )
+    from vitiligo.gnn.model import RelationalGNN
+
+    HAS_GNN_DEPS = True
+except ImportError:
+    HAS_GNN_DEPS = False
+
+pytestmark = pytest.mark.skipif(
+    not HAS_GNN_DEPS, reason="torch and torch_geometric are required for GNN tests"
 )
-from vitiligo.gnn.model import RelationalGNN
 
 
 def _make_dummy_dataset() -> GraphDataset:
