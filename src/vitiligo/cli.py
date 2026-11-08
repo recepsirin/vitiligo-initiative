@@ -141,6 +141,11 @@ relations_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(relations_app, name="relations")
+gnn_app = typer.Typer(
+    help="Relational Graph Neural Network for candidate discovery (needs: pip install -e '.[gnn]').",
+    no_args_is_help=True,
+)
+app.add_typer(gnn_app, name="gnn")
 MODEL_HELP = (
     "A model saved by `vitiligo relations train`: its directory, or its Hugging Face id"
     " (id@revision pins one version)."
@@ -450,6 +455,171 @@ def relations_evaluate(
             str(result.predicted),
             str(result.gold),
         )
+    console.print(table)
+
+
+@gnn_app.command("export")
+def gnn_export(
+    force_reload: bool = typer.Option(False, "--force", help="Force rebuild from SQLite database."),
+    triples_tsv: Path | None = typer.Option(  # noqa: B008
+        None, "--tsv", help="Optional path to export TSV triples for PyKEEN."
+    ),
+) -> None:
+    """Build and cache the GNN tensor dataset from SQLite."""
+    from vitiligo.gnn.dataset import load_graph_dataset
+
+    console.rule("[bold]GNN Dataset Construction[/bold]")
+    dataset = load_graph_dataset(force_reload=force_reload)
+    console.print(f"Entities: [bold green]{dataset.num_nodes:,}[/bold green]")
+    console.print(f"Edges: [bold green]{dataset.num_edges:,}[/bold green]")
+    console.print(f"Relations: [bold green]{dataset.num_relations}[/bold green]")
+
+    table = Table(title="Node Breakdown by Kind")
+    table.add_column("Kind", style="cyan")
+    table.add_column("Count", justify="right")
+    for kind, indices in sorted(dataset.kind_to_indices.items(), key=lambda x: len(x[1]), reverse=True):
+        table.add_row(kind, f"{len(indices):,}")
+    console.print(table)
+
+    if triples_tsv is not None:
+        dataset.export_triples_tsv(triples_tsv)
+        console.print(f"Exported triples TSV to [cyan]{triples_tsv}[/cyan]")
+
+
+@gnn_app.command("baseline")
+def gnn_baseline(
+    model: str = typer.Option("ComplEx", "--model", help="ComplEx, RotatE, or TransE."),
+    epochs: int = typer.Option(20, "--epochs", help="Training epochs."),
+    dim: int = typer.Option(64, "--dim", help="Embedding dimension."),
+    batch_size: int = typer.Option(512, "--batch-size", help="Batch size."),
+) -> None:
+    """Run a standard PyKEEN Knowledge Graph Embedding baseline benchmark."""
+    from vitiligo.gnn.baseline import run_kge_baseline
+
+    console.rule(f"[bold]KGE Baseline: {model}[/bold]")
+    metrics = run_kge_baseline(model_name=model, num_epochs=epochs, embedding_dim=dim, batch_size=batch_size)
+
+    table = Table(title=f"Baseline Results ({model})")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", justify="right", style="bold")
+    table.add_row("MRR", f"{metrics.mean_reciprocal_rank:.4f}")
+    table.add_row("Hits@10", f"{metrics.hits_at_10:.4f}")
+    table.add_row("Hits@5", f"{metrics.hits_at_5:.4f}")
+    table.add_row("Hits@1", f"{metrics.hits_at_1:.4f}")
+    table.add_row("Mean Rank", f"{metrics.mean_rank:.1f}")
+    console.print(table)
+
+
+@gnn_app.command("train")
+def gnn_train(
+    epochs: int = typer.Option(25, "--epochs", help="Number of training epochs."),
+    lr: float = typer.Option(0.005, "--lr", help="Learning rate."),
+    dim: int = typer.Option(128, "--dim", help="Hidden dimension."),
+    layers: int = typer.Option(2, "--layers", help="Number of Relational GNN layers."),
+    batch_size: int = typer.Option(4096, "--batch-size", help="Batch size."),
+) -> None:
+    """Train the Relational GNN on knowledge graph edge prediction."""
+    from vitiligo.gnn.train import train_relational_gnn
+
+    console.rule("[bold]Relational GNN Training[/bold]")
+    _model, report = train_relational_gnn(
+        num_epochs=epochs,
+        lr=lr,
+        hidden_dim=dim,
+        num_layers=layers,
+        batch_size=batch_size,
+    )
+    test_metrics = report["test_metrics"]
+    console.print(f"Training completed in [bold]{report['training_time_seconds']}s[/bold]")
+    console.print(f"Best Val MRR: [bold green]{report['best_val_mrr']:.4f}[/bold green]")
+    console.print(f"Test Hits@10: [bold green]{test_metrics['hits_at_10']:.4f}[/bold green]")
+    console.print(f"Test MRR: [bold green]{test_metrics['mrr']:.4f}[/bold green]")
+
+
+@gnn_app.command("screen")
+def gnn_screen(
+    top_k: int = typer.Option(15, "--top-k", help="Number of top candidates per category to display."),
+) -> None:
+    """Run candidate screening across durability, stem-cell regeneration, and combinations."""
+    from vitiligo.gnn.screen import screen_candidates
+
+    console.rule("[bold]Curative Triad Discovery Screen[/bold]")
+    results = screen_candidates(top_k=top_k)
+
+    # Durability table
+    table_dur = Table(title="Top Durability Candidates (T_RM Disarmament)")
+    table_dur.add_column("Rank", justify="right", style="cyan")
+    table_dur.add_column("Drug", style="bold")
+    table_dur.add_column("Score", justify="right")
+    table_dur.add_column("Probability", justify="right")
+    table_dur.add_column("Safety Profile", style="dim")
+    table_dur.add_column("Matched Targets")
+    for r in results["durability_top_k"][:10]:
+        targets = ", ".join(r["target_matches"]) if r["target_matches"] else "Pathway modulation"
+        safety = r.get("safety_tier", "Standard")
+        table_dur.add_row(str(r["rank"]), r["drug_name"], f"{r['affinity_score']:.3f}", f"{r['probability']:.1%}", safety, targets)
+    console.print(table_dur)
+
+    # Regeneration table
+    table_reg = Table(title="Top Regeneration Candidates (Stem Cell Awakening & PDE4B Reversal)")
+    table_reg.add_column("Rank", justify="right", style="cyan")
+    table_reg.add_column("Drug", style="bold")
+    table_reg.add_column("Score", justify="right")
+    table_reg.add_column("Probability", justify="right")
+    table_reg.add_column("Safety Profile", style="dim")
+    table_reg.add_column("Matched Targets")
+    for r in results["regeneration_top_k"][:10]:
+        targets = ", ".join(r["target_matches"]) if r["target_matches"] else "Pathway modulation"
+        safety = r.get("safety_tier", "Standard")
+        table_reg.add_row(str(r["rank"]), r["drug_name"], f"{r['affinity_score']:.3f}", f"{r['probability']:.1%}", safety, targets)
+    console.print(table_reg)
+
+    # Combination table
+    table_comb = Table(title="Top Synergistic 2-Drug Cocktails")
+    table_comb.add_column("Rank", justify="right", style="cyan")
+    table_comb.add_column("Immune Reset", style="bold green")
+    table_comb.add_column("Regenerative Adjuvant", style="bold magenta")
+    table_comb.add_column("Score", justify="right")
+    table_comb.add_column("Target Coverage")
+    for c in results["synergistic_combinations_top_k"][:8]:
+        imm_t = ", ".join(c["immune_targets"])
+        reg_t = ", ".join(c["regenerative_targets"])
+        table_comb.add_row(str(c["rank"]), c["immune_drug"], c["regenerative_drug"], f"{c['combined_score']:.3f}", f"{imm_t} + {reg_t}")
+    console.print(table_comb)
+    console.print("Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]docs/gnn-discovery-report.md[/cyan]")
+
+
+@gnn_app.command("predict")
+def gnn_predict(
+    head: str = typer.Argument(..., help="Head entity name (e.g. 'vitiligo' or drug name)."),
+    relation: str = typer.Argument(..., help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."),
+    top_k: int = typer.Option(10, "--top-k", help="Number of predictions."),
+    kind: str | None = typer.Option(None, "--kind", help="Filter target entity kind (e.g. DRUG, TARGET, DISEASE)."),
+    canonical: bool = typer.Option(True, "--canonical/--all", help="Restrict DRUG predictions to canonical molecules."),
+) -> None:
+    """Predict top tail entities for a query triple (head, relation, ?)."""
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.gnn.train import load_trained_gnn
+
+    dataset = load_graph_dataset()
+    model = load_trained_gnn()
+    results = model.predict_top_k(
+        head,
+        relation,
+        dataset,
+        top_k=top_k,
+        target_kind=kind,
+        canonical_only=canonical,
+    )
+
+    table = Table(title=f"Predictions: ({head}, {relation}, ?)")
+    table.add_column("Rank", justify="right", style="cyan")
+    table.add_column("Entity", style="bold")
+    table.add_column("Kind", style="dim")
+    table.add_column("Score", justify="right")
+    table.add_column("Probability", justify="right")
+    for r in results:
+        table.add_row(str(r["rank"]), str(r["name"]), str(r["kind"]), f"{r['score']:.3f}", f"{r['probability']:.1%}")
     console.print(table)
 
 
