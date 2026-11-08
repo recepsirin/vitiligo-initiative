@@ -149,6 +149,9 @@ class RankedCandidate:
     trial_refs: list[TrialRef]
     literature_refs: list[LiteratureRef]
     caveats: list[str]
+    gnn_curative_probability: float | None = None
+    curative_triad_alignment: str | None = None
+    gnn_verified_targets: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -476,6 +479,27 @@ def _literature_for_drug(token: str, hits: list[SearchHit]) -> list[LiteratureRe
     return refs[:5]
 
 
+def _load_gnn_curative_overlay() -> dict[str, dict[str, Any]]:
+    """Load Stage-2 DenseCurativeReranker probabilities and triad tags if exported."""
+    overlay: dict[str, dict[str, Any]] = {}
+    rerank_path = Path("exports/gnn_reranked_candidates.json")
+    if not rerank_path.is_file():
+        return overlay
+    try:
+        data = json.loads(rerank_path.read_text(encoding="utf-8"))
+        for item in data.get("candidates", []):
+            tok = normalize_drug_token(str(item.get("drug_name", "")))
+            if tok and tok not in overlay:
+                overlay[tok] = {
+                    "probability": float(item.get("probability", 0.0)),
+                    "triad": str(item.get("curative_triad_alignment", "")),
+                    "targets": list(item.get("matched_targets", [])),
+                }
+    except Exception:
+        pass
+    return overlay
+
+
 def _rank_candidates_for_intent(
     bundles: dict[str, _DrugBundle],
     intent: IntentSpec,
@@ -485,6 +509,7 @@ def _rank_candidates_for_intent(
     ranked: list[RankedCandidate] = []
     # One retrieval per intent; each drug filters the same ranked hits.
     intent_hits = semantic_search(query=intent.query, top_k=_LITERATURE_TOP_K)
+    gnn_overlay = _load_gnn_curative_overlay()
 
     for token, bundle in bundles.items():
         stage = (
@@ -514,6 +539,8 @@ def _rank_candidates_for_intent(
             caveats.append("No intent-matched papers in top semantic retrieval.")
         if stage in (None, "UNKNOWN"):
             caveats.append("Clinical stage unknown in priors.")
+
+        gnn_info = gnn_overlay.get(token, {})
 
         ranked.append(
             RankedCandidate(
@@ -548,6 +575,9 @@ def _rank_candidates_for_intent(
                 ],
                 literature_refs=lit_refs,
                 caveats=caveats,
+                gnn_curative_probability=gnn_info.get("probability"),
+                curative_triad_alignment=gnn_info.get("triad"),
+                gnn_verified_targets=gnn_info.get("targets", []),
             )
         )
 

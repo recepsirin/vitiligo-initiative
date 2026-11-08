@@ -167,3 +167,16 @@ def test_licensed_filters_keep_redistributable_sources() -> None:
     assert public_evidence(
         [{"source_id": "drugbank:DB08877"}, {"source_id": "opentargets:EFO_0004208"}]
     ) == [{"source_id": "opentargets:EFO_0004208"}]
+
+
+def test_gnn_discovery_endpoint(api_client) -> None:
+    """GET /api/gnn/discovery validates top_k and returns structured GNN + Stage-2 reranker payload."""
+    bad = api_client.get("/api/gnn/discovery?top_k=0")
+    assert bad.status_code == 400
+
+    resp = api_client.get("/api/gnn/discovery?top_k=5")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "benchmark_metrics" in body
+    assert "stage2_reranker" in body
+    assert "functional_screen" in body

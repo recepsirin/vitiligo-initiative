@@ -84,6 +84,66 @@ _GIVEN_TYPES = frozenset({"DRUG", "BIOLOGICAL", "DIETARY_SUPPLEMENT", "COMBINATI
 
 _CORRELATION = frozenset({"Association", "Positive_Correlation", "Negative_Correlation"})
 
+_PERTURB_PREFIX = re.compile(
+    r"(?:knockdown|down[- ]?regulation|loss|deficiency|depletion|deletion|silencing|inhibition|blockade|absence|sh-|si-|anti-)\s*(?:of\s+)?$",
+    re.I,
+)
+_PASSIVE_CUE = re.compile(
+    r"\b(?:by|upon|from|after|following|were\s+up[- ]?regulated\s+in|was\s+up[- ]?regulated\s+in)\b",
+    re.I,
+)
+_ACTIVE_INH = re.compile(
+    r"\b(?:directly\s+|significantly\s+|potently\s+|selectively\s+|markedly\s+)?"
+    r"(?:inhibit(?:s|ed|ing)|block(?:s|ed|ing)|suppress(?:es|ed|ing)|down[- ]?regulat(?:es|ed|ing)|"
+    r"attenuat(?:es|ed|ing)|abrogat(?:es|ed|ing)|repress(?:es|ed|ing)|antagoniz(?:es|ed|ing))\b",
+    re.I,
+)
+_ACTIVE_ACT = re.compile(
+    r"\b(?:directly\s+|significantly\s+|potently\s+|selectively\s+|markedly\s+|robustly\s+)?"
+    r"(?:activat(?:es|ed|ing)|induc(?:es|ed|ing)|up[- ]?regulat(?:es|ed|ing)|stimulat(?:es|ed|ing)|"
+    r"promot(?:es|ed|ing)|enhanc(?:es|ed|ing)|phosphorylat(?:es|ed|ing)|trigger(?:s|ed|ing))\b",
+    re.I,
+)
+
+
+def resolve_snippet_direction(
+    kind: str, a: Node, b: Node, snippet: str | None
+) -> tuple[Node, RelationKind, Node] | None:
+    """Resolve active-voice directional mechanism (INHIBITS / ACTIVATES) from sentence snippet."""
+    if not snippet or kind not in _CORRELATION:
+        return None
+    pat_a = re.compile(rf"\b{re.escape(a.name)}\b", re.I)
+    pat_b = re.compile(rf"\b{re.escape(b.name)}\b", re.I)
+    matches_a = list(pat_a.finditer(snippet))
+    matches_b = list(pat_b.finditer(snippet))
+    if not matches_a or not matches_b:
+        return None
+
+    pairs = sorted(
+        ((ma, mb) for ma in matches_a for mb in matches_b if abs(ma.start() - mb.start()) >= 3),
+        key=lambda p: abs(p[0].start() - p[1].start()),
+    )
+    for ma, mb in pairs:
+        first, second = (a, b) if ma.start() < mb.start() else (b, a)
+        m_first, m_second = (ma, mb) if ma.start() < mb.start() else (mb, ma)
+        if EntityKind.DRUG in {a.kind, b.kind} and first.kind != EntityKind.DRUG:
+            continue
+        between = snippet[m_first.end() : m_second.start()]
+        if len(between) > 95 or ";" in between or "." in between:
+            continue
+        prefix = snippet[max(0, m_first.start() - 35) : m_first.start()]
+        if _PERTURB_PREFIX.search(prefix) or _PERTURB_PREFIX.search(between):
+            continue
+        if _PASSIVE_CUE.search(between):
+            continue
+        has_inh = bool(_ACTIVE_INH.search(between))
+        has_act = bool(_ACTIVE_ACT.search(between))
+        if has_inh and not has_act and kind in ("Negative_Correlation", "Association"):
+            return first, RelationKind.INHIBITS, second
+        if has_act and not has_inh and kind in ("Positive_Correlation", "Association"):
+            return first, RelationKind.ACTIVATES, second
+    return None
+
 
 def _stem(word: str) -> str:
     if len(word) > 4 and word.endswith("s") and not word.endswith(("ss", "is", "us")):
@@ -183,7 +243,9 @@ class LiteratureReader:
         return f"{concept.type.lower()} is not a graph node"
 
 
-def _predicate(kind: str, a: Node, b: Node) -> tuple[Node, RelationKind, Node] | None:
+def _predicate(
+    kind: str, a: Node, b: Node, snippet: str | None = None
+) -> tuple[Node, RelationKind, Node] | None:
     """Subject, predicate and object for a relation, or None if none fits."""
     agents = {EntityKind.DRUG, EntityKind.INTERVENTION}
     pair = {a.kind, b.kind}
@@ -207,6 +269,10 @@ def _predicate(kind: str, a: Node, b: Node) -> tuple[Node, RelationKind, Node] |
         return (agent, verb, disease) if verb else None
     if EntityKind.DRUG in pair and EntityKind.TARGET in pair:
         drug, target = (a, b) if a.kind == EntityKind.DRUG else (b, a)
+        if kind == "Association" and snippet:
+            resolved = resolve_snippet_direction(kind, drug, target, snippet)
+            if resolved is not None:
+                return resolved
         verb = {
             "Negative_Correlation": RelationKind.INHIBITS,
             "Positive_Correlation": RelationKind.ACTIVATES,
@@ -222,6 +288,10 @@ def _predicate(kind: str, a: Node, b: Node) -> tuple[Node, RelationKind, Node] |
             return None
         return other, RelationKind.ASSOCIATED_WITH, disease
     if pair <= {EntityKind.TARGET, EntityKind.BIOMARKER, EntityKind.INTERVENTION}:
+        if a.kind == EntityKind.TARGET and b.kind == EntityKind.TARGET and snippet:
+            resolved = resolve_snippet_direction(kind, a, b, snippet)
+            if resolved is not None:
+                return resolved
         # BioRED does not annotate direction between two genes, so the edge
         # claims none; ordering by key keeps A-B and B-A one edge.
         first, second = sorted((a, b), key=lambda n: normalize_entity_key(n.name))
@@ -303,7 +373,7 @@ def load_literature(
             if isinstance(a, str) or isinstance(b, str):
                 stats.dropped[a if isinstance(a, str) else str(b)] += 1
                 continue
-            triple = _predicate(relation.type, a, b)
+            triple = _predicate(relation.type, a, b, relation.snippet)
             if triple is None:
                 stats.dropped[f"no predicate for {relation.type}"] += 1
                 continue

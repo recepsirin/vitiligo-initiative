@@ -16,6 +16,7 @@ For public deployment (Docker / Render / VPS), configure:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import threading
 from contextlib import asynccontextmanager
@@ -423,6 +424,41 @@ def create_app() -> FastAPI:
         for entity in snapshot.get("entities", []):
             entity["external_ids"] = public_external_ids(entity.get("external_ids"))
         return snapshot
+
+    @app.get("/api/gnn/discovery")
+    def gnn_discovery(top_k: int = 20) -> dict[str, Any]:
+        """Serve precomputed RGAT-4H + ComplEx GNN link prediction metrics, Stage-1 functional screen, and Stage-2 curative reranker results."""
+        if top_k < 1 or top_k > 50:
+            raise HTTPException(status_code=400, detail="top_k must be between 1 and 50.")
+
+        def _read_json(path: Path) -> dict[str, Any]:
+            if not path.is_file():
+                return {}
+            try:
+                return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                return {}
+
+        train_res = _read_json(Path("exports/gnn_train_results.json"))
+        rerank_res = _read_json(Path("exports/gnn_reranked_candidates.json"))
+        screen_res = _read_json(Path("exports/gnn_candidate_report.json"))
+
+        return {
+            "benchmark_metrics": train_res.get("test_metrics", {}),
+            "stage2_reranker": {
+                "architecture": rerank_res.get("architecture", ""),
+                "cv_oof_auroc": rerank_res.get("cv_oof_auroc", 0.0),
+                "cv_oof_accuracy": rerank_res.get("cv_oof_accuracy", 0.0),
+                "candidates": rerank_res.get("candidates", [])[:top_k],
+            },
+            "functional_screen": {
+                "durability_top_k": screen_res.get("durability_top_k", [])[:top_k],
+                "regeneration_top_k": screen_res.get("regeneration_top_k", [])[:top_k],
+                "synergistic_combinations_top_k": screen_res.get(
+                    "synergistic_combinations_top_k", []
+                )[:top_k],
+            },
+        }
 
     app.mount(
         "/static",

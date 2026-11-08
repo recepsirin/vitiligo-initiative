@@ -1139,6 +1139,147 @@ def seed_patient_coexpression_edges(
     return inserted_count
 
 
+_CELL_MENTION_PATTERNS: dict[str, re.Pattern[str]] = {
+    "Epidermal Melanocyte": re.compile(r"\bmelanocytes?\b", re.I),
+    "Basal Keratinocyte": re.compile(r"\bkeratinocytes?\b", re.I),
+    "Dermal Fibroblast (IFN-Responsive)": re.compile(r"\bfibroblasts?\b", re.I),
+    "CD8+ Tissue-Resident Memory T Cell (TRM)": re.compile(
+        r"\b(?:cd8\s*\+?\s*(?:t|trm)\s*cells?|cytotoxic\s+t\s+lymphocytes?)\b", re.I
+    ),
+    "Cutaneous Regulatory T Cell (Treg)": re.compile(
+        r"\b(?:tregs?|regulatory\s+t\s+cells?|foxp3\s*\+\s*t\s+cells?)\b", re.I
+    ),
+    "Epidermal Langerhans & cDC1 Dendritic Cell": re.compile(
+        r"\b(?:dendritic\s+cells?|plasmacytoid\s+dcs?|langerhans\s+cells?)\b", re.I
+    ),
+    "Cutaneous Natural Killer & ILC1 Cell": re.compile(
+        r"\b(?:natural\s+killer\s+cells?|nk\s+cells?)\b", re.I
+    ),
+}
+
+_ANCHORED_CELL_EXPR = re.compile(
+    r"^\s*\)?\s*(?:-[a-z0-9]+\s*)?(?:\([^)]{1,25}\)\s*)?(?:,\s*a\s+[a-z0-9 -]{3,25},\s*|\s*gene\s*,?\s*)?"
+    r"(?:is\s+|was\s+|were\s+|are\s+|has\s+been\s+(?:shown|found|reported)\s+to\s+be\s+|shown\s+to\s+be\s+)?"
+    r"(?:normally\s+|strongly\s+|highly\s+|predominantly\s+|primarily\s+|widely\s+|notably\s+|mainly\s+)?"
+    r"(?:express(?:ed|es|ing|ion)\s+(?:in|by|on)|secret(?:ed|es|ing)\s+by|produc(?:ed|es|ing)\s+by|releas(?:ed|es|ing)\s+by)"
+    r"(?:\s+(?:the|human|mouse|epidermal|dermal|cutaneous|skin|stressed|primary|immature|mature|normal|lesional|perilesional|activated|infiltrating|resident|autoreactive))*\s*$",
+    re.I,
+)
+
+
+def recover_directional_fulltext_relations(session: Session) -> dict[str, int]:
+    """Recover active-voice directional (INHIBITS, ACTIVATES, EXPRESSED_IN) edges from full-text snippets."""
+    from vitiligo.graph.literature_seed import Node, resolve_snippet_direction
+
+    entities = {e.id: e for e in session.exec(select(GraphEntity)).all() if e.id is not None}
+    cell_name_to_ent: dict[str, GraphEntity] = {
+        e.name: e for e in entities.values() if e.kind == EntityKind.CELL_TYPE
+    }
+
+    existing_triples: set[tuple[int, RelationKind, int]] = set()
+    all_edges = list(session.exec(select(GraphEdge)).all())
+    for edge in all_edges:
+        existing_triples.add((edge.subject_id, edge.predicate, edge.object_id))
+
+    directional_added = 0
+    expressed_in_added = 0
+
+    for edge in all_edges:
+        s_ent = entities.get(edge.subject_id)
+        o_ent = entities.get(edge.object_id)
+        if s_ent is None or o_ent is None or s_ent.id is None or o_ent.id is None:
+            continue
+
+        evs = edge.evidence if isinstance(edge.evidence, list) else []
+        for ev in evs:
+            if not isinstance(ev, dict):
+                continue
+            snip = str(ev.get("snippet") or "")
+            rel = str(ev.get("relation") or "")
+            try:
+                score = float(ev.get("score") or 0.0)
+            except (TypeError, ValueError):
+                score = 0.0
+            if not snip or score < 0.82:
+                continue
+
+            # 1. Active-voice directional (DRUG/TARGET -> INHIBITS/ACTIVATES -> TARGET)
+            if (
+                edge.predicate == RelationKind.ASSOCIATED_WITH
+                and s_ent.kind in (EntityKind.DRUG, EntityKind.TARGET)
+                and o_ent.kind == EntityKind.TARGET
+            ):
+                node_s = Node(s_ent.kind, s_ent.name)
+                node_o = Node(o_ent.kind, o_ent.name)
+                resolved = resolve_snippet_direction(rel, node_s, node_o, snip)
+                if resolved is not None:
+                    first_node, pred, _ = resolved
+                    subj_id, obj_id = (
+                        (s_ent.id, o_ent.id)
+                        if first_node.name == s_ent.name
+                        else (o_ent.id, s_ent.id)
+                    )
+                    triple = (subj_id, pred, obj_id)
+                    if triple not in existing_triples:
+                        existing_triples.add(triple)
+                        session.add(
+                            GraphEdge(
+                                subject_id=subj_id,
+                                predicate=pred,
+                                object_id=obj_id,
+                                confidence=round(min(0.75, score * 0.75), 2),
+                                claim=ClaimKind.ASSERTED,
+                                causal_level="mechanism_assertion",
+                                extraction_method=edge.extraction_method,
+                                evidence=[dict(ev)],
+                            )
+                        )
+                        directional_added += 1
+
+            # 2. Anchored cell-type expression (TARGET -> EXPRESSED_IN -> CELL_TYPE)
+            for t_ent in (s_ent, o_ent):
+                if t_ent.kind != EntityKind.TARGET or t_ent.id is None or len(t_ent.name) < 2:
+                    continue
+                m_t = re.search(rf"\b{re.escape(t_ent.name)}\b", snip, re.I)
+                if not m_t:
+                    continue
+                for cell_name, c_pat in _CELL_MENTION_PATTERNS.items():
+                    c_ent = cell_name_to_ent.get(cell_name)
+                    if c_ent is None or c_ent.id is None:
+                        continue
+                    for m_c in c_pat.finditer(snip):
+                        if 0 < (m_c.start() - m_t.end()) <= 65:
+                            between = snip[m_t.end() : m_c.start()]
+                            if _ANCHORED_CELL_EXPR.match(between):
+                                triple = (t_ent.id, RelationKind.EXPRESSED_IN, c_ent.id)
+                                if triple not in existing_triples:
+                                    existing_triples.add(triple)
+                                    session.add(
+                                        GraphEdge(
+                                            subject_id=t_ent.id,
+                                            predicate=RelationKind.EXPRESSED_IN,
+                                            object_id=c_ent.id,
+                                            confidence=round(min(0.80, score * 0.80), 2),
+                                            claim=ClaimKind.ASSERTED,
+                                            causal_level="correlation_in_human",
+                                            extraction_method=edge.extraction_method,
+                                            evidence=[dict(ev)],
+                                        )
+                                    )
+                                    expressed_in_added += 1
+
+    session.flush()
+    logger.info(
+        "Full-text directional recovery: added %d INHIBITS/ACTIVATES edges and %d EXPRESSED_IN edges",
+        directional_added,
+        expressed_in_added,
+    )
+    return {
+        "directional_edges_added": directional_added,
+        "expressed_in_edges_added": expressed_in_added,
+    }
+
+
 def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
     """Execute full knowledge graph enrichment and commit to SQLite."""
     with session_scope() as session:
@@ -1146,10 +1287,12 @@ def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:
         mygene_stats, uniprot_map = seed_mygene_pathways_and_processes(session)
         mychem_stats = seed_mychem_drug_target_mechanisms(session, uniprot_map)
         coexp_inserted = seed_patient_coexpression_edges(session, min_abs_r=min_abs_r)
+        ft_stats = recover_directional_fulltext_relations(session)
 
     return {
         "hierarchy": hier_stats,
         "mygene_pathways": mygene_stats,
         "mychem_mechanisms": mychem_stats,
         "coexpression_edges_inserted": coexp_inserted,
+        "fulltext_directional_recovery": ft_stats,
     }

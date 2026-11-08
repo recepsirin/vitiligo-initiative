@@ -381,3 +381,47 @@ def test_the_model_is_trusted_only_with_what_it_was_measured_to_get_right(
     with session_scope() as session:
         [edge] = session.exec(select(GraphEdge)).all()
     assert edge.confidence == CONFIDENCE < 0.5
+
+
+def test_active_voice_snippet_resolves_directional_gene_and_drug_mechanisms(
+    test_db_path: Path,
+) -> None:
+    """When a full-text snippet carries an unambiguous active-voice verb between
+    two targets or a drug and a target, _predicate resolves ACTIVATES or INHIBITS."""
+    quote = "MITF directly upregulates TYR, whereas DKK1 suppresses TYR."
+    [doc] = parse_export(
+        json.dumps(
+            {
+                "PubTator3": [
+                    _doc(
+                        "1",
+                        quote,
+                        [
+                            ("MITF", "Gene", "4286", "MITF"),
+                            ("TYR", "Gene", "7299", "TYR"),
+                            ("DKK1", "Gene", "22943", "DKK1"),
+                        ],
+                        [
+                            ("Positive_Correlation", 0.92, "4286", "7299"),
+                            ("Negative_Correlation", 0.91, "22943", "7299"),
+                        ],
+                    )
+                ]
+            }
+        ).encode()
+    )
+    read = replace(
+        doc,
+        relations=tuple(replace(r, section="RESULTS", snippet=quote) for r in doc.relations),
+    )
+    with session_scope() as session:
+        load_literature(
+            session,
+            [read],
+            LiteratureReader(MESH, (), gene_symbols([read])),
+            method="biored-test",
+        )
+    assert _edges() == {
+        ("MITF", RelationKind.ACTIVATES, "TYR"),
+        ("DKK1", RelationKind.INHIBITS, "TYR"),
+    }
