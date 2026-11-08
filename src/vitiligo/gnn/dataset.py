@@ -226,7 +226,11 @@ def load_graph_dataset(
     """Load graph entities and edges from SQLite, constructing a GraphDataset."""
     db_path = Path(db_path)
     if cache_path is None:
-        cache_path = DEFAULT_CACHE_DIR / "vitiligo_gnn_dataset.pt"
+        enriched_candidate = DEFAULT_CACHE_DIR / "vitiligo_gnn_dataset_enriched.pt"
+        if enriched_candidate.exists():
+            cache_path = enriched_candidate
+        else:
+            cache_path = DEFAULT_CACHE_DIR / "vitiligo_gnn_dataset.pt"
     cache_path = Path(cache_path)
 
     if not force_reload and cache_path.exists():

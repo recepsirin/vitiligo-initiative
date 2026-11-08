@@ -209,4 +209,30 @@ def test_dense_curative_reranker() -> None:
     assert ((probs >= 0.0) & (probs <= 1.0)).all()
 
 
+def test_rgat_forward_and_loss() -> None:
+    ds = _make_dummy_dataset()
+    node_features = torch.randn(ds.num_nodes, 16)
+    ds.node_features = node_features
+    model = RelationalGNN(
+        num_nodes=ds.num_nodes,
+        num_relations=ds.num_relations,
+        hidden_dim=32,
+        num_layers=2,
+        encoder_type="rgat",
+        heads=2,
+        feature_dim=16,
+    )
+    h = model.encode(ds.edge_index, ds.edge_type, node_features=ds.node_features)
+    assert h.shape == (ds.num_nodes, 32)
+    loss = model.compute_loss(
+        h,
+        ds.edge_index[0],
+        ds.edge_type,
+        ds.edge_index[1],
+        edge_weights=ds.edge_weight,
+    )
+    assert loss.item() > 0.0
+
+
+
 

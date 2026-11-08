@@ -69,7 +69,12 @@ def evaluate_link_prediction(
 
     edge_index = dataset.edge_index.to(device)
     edge_type = dataset.edge_type.to(device)
-    h_enc = model.encode(edge_index, edge_type, node_features=dataset.node_features)
+    h_enc = model.encode(
+        edge_index,
+        edge_type,
+        node_features=dataset.node_features,
+        edge_weight=dataset.edge_weight,
+    )
 
     eval_src = eval_edges["edge_index"][0]
     eval_dst = eval_edges["edge_index"][1]
@@ -214,6 +219,8 @@ def train_relational_gnn(
     num_layers: int = 2,
     batch_size: int = 4096,
     weight_decay: float = 1e-4,
+    encoder_type: str = "rgat",
+    heads: int = 4,
     decoder_type: str = "complex",
     num_neg_samples: int = 4,
     adversarial_temperature: float = 1.0,
@@ -234,7 +241,7 @@ def train_relational_gnn(
     else:
         device_obj = torch.device(device)
 
-    logger.info("Initializing Relational GNN on device: %s (decoder: %s)", device_obj, decoder_type)
+    logger.info("Initializing Relational GNN on device: %s (encoder: %s, decoder: %s)", device_obj, encoder_type, decoder_type)
     train_ds, val_edges, test_edges = dataset.split_edges(val_ratio=0.1, test_ratio=0.1, seed=random_seed)
 
     feature_dim = dataset.node_features.size(1) if dataset.node_features is not None else None
@@ -244,6 +251,8 @@ def train_relational_gnn(
         hidden_dim=hidden_dim,
         num_layers=num_layers,
         feature_dim=feature_dim,
+        encoder_type=encoder_type,
+        heads=heads,
         decoder_type=decoder_type,
     ).to(device_obj)
 
@@ -286,8 +295,13 @@ def train_relational_gnn(
         epoch_losses: list[float] = []
 
         optimizer.zero_grad()
-        # Encode full graph once per epoch using multimodal features
-        h = model.encode(train_edge_index, train_edge_type, node_features=train_ds.node_features)
+        # Encode full graph once per epoch using multimodal features and causal weights
+        h = model.encode(
+            train_edge_index,
+            train_edge_type,
+            node_features=train_ds.node_features,
+            edge_weight=train_edge_weight,
+        )
         total_epoch_loss = torch.tensor(0.0, device=device_obj)
 
         for i in range(0, num_train_edges, batch_size):

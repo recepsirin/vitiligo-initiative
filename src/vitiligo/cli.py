@@ -517,19 +517,23 @@ def gnn_train(
     dim: int = typer.Option(128, "--dim", help="Hidden dimension."),
     layers: int = typer.Option(2, "--layers", help="Number of Relational GNN layers."),
     batch_size: int = typer.Option(4096, "--batch-size", help="Batch size."),
+    encoder: str = typer.Option("rgat", "--encoder", help="Encoder type: 'rgat' or 'rgcn'."),
+    heads: int = typer.Option(4, "--heads", help="Number of attention heads (for RGAT)."),
     decoder: str = typer.Option("complex", "--decoder", help="Link decoder: 'complex' or 'distmult'."),
     neg_samples: int = typer.Option(4, "--neg-samples", help="Negative candidates per edge."),
 ) -> None:
     """Train the Relational GNN on knowledge graph edge prediction."""
     from vitiligo.gnn.train import train_relational_gnn
 
-    console.rule(f"[bold]Relational GNN Training ({decoder.upper()})[/bold]")
+    console.rule(f"[bold]Relational GNN Training ({encoder.upper()} + {decoder.upper()})[/bold]")
     _model, report = train_relational_gnn(
         num_epochs=epochs,
         lr=lr,
         hidden_dim=dim,
         num_layers=layers,
         batch_size=batch_size,
+        encoder_type=encoder,
+        heads=heads,
         decoder_type=decoder,
         num_neg_samples=neg_samples,
     )
