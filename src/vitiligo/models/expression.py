@@ -16,8 +16,17 @@ because the cells are missing, so most of the strongest results are a
 consequence of the disease, not a cause of it. And a difference measured in
 skin is an association: the graph records it as one.
 
-Blood series were tested too (GSE90880, 8 against 6; GSE80009, 8 against 4)
-and nothing in either passed, so neither is listed.
+Four series were tested and are not listed. In blood (GSE90880, 8 against
+6; GSE80009, 8 against 4) nothing passed. GSE298871 is single-cell: its
+samples' cells, summed, compare what each library happened to capture rather
+than the skin. Melanocyte genes are absent from three of its five
+non-lesional samples and a healthy one, and dermal collagen ranges 170-fold,
+so its lesions cannot be told from their controls (pigment genes 20-fold
+lower, FDR 0.8). GSE256271 sets four lesions that repigmented under NB-UVB
+beside four of the same patients' that did not; a gene reading a hundred in
+some samples reads nought in others, random splits of its eight samples turn
+up as many such genes as the split by response does, and nothing passes, DCT
+125-fold lower in unresponsive lesions at FDR 0.86 among them.
 """
 
 from __future__ import annotations
