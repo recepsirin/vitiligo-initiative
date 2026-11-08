@@ -19,8 +19,9 @@ Research and education software, not medical advice.
 | **Scenario model** | Bayesian model of responder rates by drug, dose and week, judged only on trials it has not seen. Its forecasts of unreported trials are sealed and scored weekly as results post. | [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) · [`forecasts/`](forecasts/README.md) |
 | **Discovery loop** | Tests claims on held-out trials and controls the false discovery rate at 10% across an open-ended stream; every test is recorded. | [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
 | **Mechanisms** | Falsifiable hypotheses from biology to clinical outcome, each with its evidence on a causal ladder, the strongest rival explanation, and the test that separates them. | `vitiligo mechanism list` · [`docs/mechanisms/`](docs/mechanisms/README.md) |
-| **Knowledge graph** | 16,122 drugs, genes, diseases, adverse events, trials and interventions linked by 59,540 relations, each with its evidence: the paper, trial record or database entry, and the sentence where its licence allows. Half the relations are measurements: what trials posted to ClinicalTrials.gov or printed in their papers, each beside its comparator, and the genes lesional skin expresses differently in three GEO cohorts. Released openly on Hugging Face (CC BY 4.0; ICTRP-derived relations under WHO's terms). | [Dataset card](https://huggingface.co/datasets/re-cep/vitiligo-knowledge-graph) · `vitiligo graph release` |
+| **Knowledge graph** | 17,685 drugs, genes, diseases, adverse events, trials and interventions linked by 62,006 relations, each with its evidence: the paper, trial record or database entry, and the sentence where its licence allows. Half the relations are measurements: what trials posted to ClinicalTrials.gov or printed in their papers, each beside its comparator, and the genes lesional skin expresses differently in three GEO cohorts. Released openly on Hugging Face (CC BY 4.0; ICTRP-derived relations under WHO's terms). | [Dataset card](https://huggingface.co/datasets/re-cep/vitiligo-knowledge-graph) · `vitiligo graph release` |
 | **Relation extractor** | A BiomedBERT model fine-tuned to read which drugs, diseases and genes a paper relates, and how. It fills the knowledge graph from the full texts PubTator does not read, and every edge it adds cites its sentence. BioRED test F1 0.687 for the related pair, 0.540 with its type; 75% of the relations it loads were correct when checked by hand. | [Model card](https://huggingface.co/re-cep/vitiligo-relation-extractor) · `vitiligo relations evaluate` |
+| **Relational GNN & Reranker** | A 1,924-D multimodal Relational GNN (`FastRGCN` + asymmetric `ComplEx` Hermitian decoder) and Stage-2 Dense Cross-Encoder (94% accuracy). Screens 893 canonical molecules across the Curative Triad: $T_{\text{RM}}$ disarmament, stem cell regeneration, and GSE256271 `PDE4B` non-responder barrier suppression. | [Model card](https://huggingface.co/re-cep/vitiligo-relational-gnn) · `vitiligo gnn rerank` · [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) |
 
 **Nothing on the served page is generated.** Every figure it shows is one a trial
 posted to a public registry, reproduced with its denominator and a link to its
@@ -75,12 +76,15 @@ The corpus (`data/vitiligo.db`) is built locally and never committed. `./scripts
 vitiligo search "JAK inhibitor repigmentation in non-segmental vitiligo"
 vitiligo report jak-arms --csv exports/jak-arms.csv
 vitiligo model predict --agent ritlecitinib --dose 50 --unit mg --week 52 --threshold 75
+vitiligo gnn rerank --top-stage1 60 --top-final 20
 ```
 
 ## Documentation
 
 | Doc | Contents |
 |---|---|
+| [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) | **Stage-2 Dense Cross-Encoder Curative Discovery Screen:** Reranked candidates with 90%+ confidence |
+| [`docs/gnn-discovery-report.md`](docs/gnn-discovery-report.md) | **Curative Triad Discovery Screen:** Durability ($T_{\text{RM}}$), Regeneration (McSC), and Combination Synergies |
 | [`docs/success.md`](docs/success.md) | **What we are trying to solve:** the outcomes that define success, and the current focus (durability) |
 | [`docs/findings.md`](docs/findings.md) | **Start here:** what the JAK work found, and what we need experts to check |
 | [`docs/mechanisms/README.md`](docs/mechanisms/README.md) | Mechanistic hypotheses: the claim, its evidence, the rival explanation, and the test |
