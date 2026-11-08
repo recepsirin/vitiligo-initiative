@@ -121,6 +121,12 @@ def test_relational_gnn_forward_and_loss() -> None:
     assert "score" in predictions[0]
     assert "name" in predictions[0]
 
+    # Test decode_all_heads and decode_all_tails consistency
+    heads_scores = model.decode_all_heads(h, torch.tensor([0]), torch.tensor([2]))
+    assert heads_scores.shape == (1, ds.num_nodes)
+    tails_scores = model.decode_all_tails(h, torch.tensor([0]), torch.tensor([0]))
+    assert tails_scores.shape == (1, ds.num_nodes)
+
 
 def test_multimodal_gnn_features_and_sampling() -> None:
     ds = _make_dummy_dataset()
@@ -189,5 +195,18 @@ def test_evaluate_link_prediction_filtered() -> None:
     assert 0.0 <= metrics.therapeutic_mrr <= 1.0
     assert len(metrics.per_relation) > 0
     assert "TREATS" in metrics.per_relation
+
+
+def test_dense_curative_reranker() -> None:
+    from vitiligo.gnn.rerank import RERANKER_FEATURE_DIM, DenseCurativeReranker
+
+    reranker = DenseCurativeReranker(in_dim=RERANKER_FEATURE_DIM, hidden_dim=64)
+    dummy_x = torch.randn(4, RERANKER_FEATURE_DIM)
+    logits = reranker(dummy_x)
+    assert logits.shape == (4,)
+    probs = reranker.predict_score(dummy_x)
+    assert probs.shape == (4,)
+    assert ((probs >= 0.0) & (probs <= 1.0)).all()
+
 
 

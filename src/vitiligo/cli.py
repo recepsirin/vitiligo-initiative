@@ -620,6 +620,41 @@ def gnn_screen(
     console.print("Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]docs/gnn-discovery-report.md[/cyan]")
 
 
+@gnn_app.command("rerank")
+def gnn_rerank(
+    top_stage1: int = typer.Option(60, "--top-stage1", help="Number of Stage-1 candidates to retrieve."),
+    top_final: int = typer.Option(20, "--top-final", help="Number of final Stage-2 candidates to report."),
+) -> None:
+    """Run two-stage candidate retrieval and dense cross-encoder reranking."""
+    from vitiligo.gnn.rerank import rerank_curative_candidates
+
+    console.rule("[bold]Stage-2 Dense Cross-Encoder Reranker[/bold]")
+    results = rerank_curative_candidates(top_stage1=top_stage1, top_final=top_final)
+
+    table = Table(title="Stage-2 Reranked Curative Candidates")
+    table.add_column("Rank", justify="right", style="cyan")
+    table.add_column("Drug", style="bold")
+    table.add_column("Rerank Score", justify="right")
+    table.add_column("Confidence", justify="right")
+    table.add_column("GNN S1", justify="right", style="dim")
+    table.add_column("Safety Tier", style="dim")
+    table.add_column("Curative Triad Alignment")
+    for c in results["top_candidates"]:
+        table.add_row(
+            str(c.stage2_rank),
+            c.drug_name,
+            f"{c.reranker_score:.3f}",
+            f"{c.probability:.1%}",
+            f"{c.gnn_affinity_score:.3f}",
+            c.safety_tier,
+            c.curative_triad_alignment,
+        )
+    console.print(table)
+    console.print(
+        f"Saved reranked reports to [cyan]{results['export_json']}[/cyan] and [cyan]{results['export_markdown']}[/cyan]"
+    )
+
+
 @gnn_app.command("predict")
 def gnn_predict(
     head: str = typer.Argument(..., help="Head entity name (e.g. 'vitiligo' or drug name)."),

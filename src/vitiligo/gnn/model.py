@@ -154,6 +154,35 @@ class RelationalGNN(nn.Module):
 
         return torch.matmul(q_re, t_re.t()) + torch.matmul(q_im, t_im.t())
 
+    def decode_all_heads(
+        self,
+        h: torch.Tensor,
+        rel_indices: torch.Tensor,
+        tail_indices: torch.Tensor,
+    ) -> torch.Tensor:
+        """Compute link scores for all possible heads h against batch queries (?, r, t).
+
+        Returns tensor of shape [batch_size, num_nodes].
+        """
+        r_emb = self.rel_emb(rel_indices)
+        t_emb = h[tail_indices]
+
+        if self.decoder_type == "distmult":
+            query = r_emb * t_emb
+            return torch.matmul(query, h.t())
+
+        # ComplEx: Re(<h, r, conj(t)>) = a(ce + df) + b(cf - de)
+        # where h = a + ib, r = c + id, t = e + if
+        r_re, r_im = r_emb[:, : self.half_dim], r_emb[:, self.half_dim :]
+        t_re, t_im = t_emb[:, : self.half_dim], t_emb[:, self.half_dim :]
+        all_h_re = h[:, : self.half_dim]
+        all_h_im = h[:, self.half_dim :]
+
+        w_re = r_re * t_re + r_im * t_im
+        w_im = r_re * t_im - r_im * t_re
+
+        return torch.matmul(w_re, all_h_re.t()) + torch.matmul(w_im, all_h_im.t())
+
     def compute_loss(
         self,
         h: torch.Tensor,
@@ -165,7 +194,7 @@ class RelationalGNN(nn.Module):
         num_neg_samples: int = 4,
         adversarial_temperature: float = 1.0,
     ) -> torch.Tensor:
-        """Compute causal-weighted BCE loss with self-adversarial negative sampling."""
+        """Compute causal-weighted BCE loss with bidirectional self-adversarial negative sampling."""
         batch_size = pos_heads.size(0)
 
         # Positive scores
@@ -178,15 +207,20 @@ class RelationalGNN(nn.Module):
             pos_loss = pos_loss * edge_weights
         mean_pos_loss = pos_loss.mean()
 
-        # Draw negative candidates
+        # Draw negative candidates with bidirectional corruption (50% head, 50% tail)
         total_negs = batch_size * num_neg_samples
         if sampling_weights is not None:
-            neg_tails = torch.multinomial(sampling_weights, num_samples=total_negs, replacement=True).to(self.device)
+            corrupt_nodes = torch.multinomial(sampling_weights, num_samples=total_negs, replacement=True).to(self.device)
         else:
-            neg_tails = torch.randint(0, self.num_nodes, (total_negs,), device=self.device)
+            corrupt_nodes = torch.randint(0, self.num_nodes, (total_negs,), device=self.device)
 
         neg_heads = pos_heads.repeat_interleave(num_neg_samples)
+        neg_tails = pos_tails.repeat_interleave(num_neg_samples)
         neg_rels = pos_rels.repeat_interleave(num_neg_samples)
+
+        corrupt_head_mask = torch.rand(total_negs, device=self.device) < 0.5
+        neg_heads = torch.where(corrupt_head_mask, corrupt_nodes, neg_heads)
+        neg_tails = torch.where(~corrupt_head_mask, corrupt_nodes, neg_tails)
 
         neg_scores = self.decode_triples(h, neg_heads, neg_rels, neg_tails)
         neg_scores_matrix = neg_scores.view(batch_size, num_neg_samples)

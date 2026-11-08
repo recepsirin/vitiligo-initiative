@@ -6,6 +6,7 @@ import csv
 import gzip
 import math
 import sqlite3
+from collections import Counter
 from pathlib import Path
 
 import numpy as np
@@ -213,6 +214,48 @@ def extract_biomedbert_node_embeddings(
     return embeddings
 
 
+def extract_target_family_features(
+    dataset: GraphDataset,
+    hgnc_path: Path = DEFAULT_HGNC_PATH,
+    dim: int = 128,
+) -> torch.Tensor:
+    """Extract 128-D multi-hot protein family / domain feature vector for TARGET entities."""
+    logger.info("Extracting target functional family embeddings from %s...", hgnc_path)
+    hgnc_map: dict[str, list[str]] = {}
+    if hgnc_path.exists():
+        with open(hgnc_path, encoding="utf-8") as f:
+            for row in csv.DictReader(f, delimiter="\t"):
+                s = row.get("symbol")
+                g = row.get("gene_group")
+                if s and g:
+                    hgnc_map[s.strip().upper()] = [x.strip() for x in g.split("|") if x.strip()]
+
+    target_indices = dataset.kind_to_indices.get("TARGET", [])
+    group_counts: Counter[str] = Counter()
+    for idx in target_indices:
+        t_name = dataset.entities[idx].name.strip().upper()
+        if t_name in hgnc_map:
+            for grp in hgnc_map[t_name]:
+                group_counts[grp] += 1
+
+    top_groups = [g for g, _ in group_counts.most_common(dim)]
+    group_to_idx = {g: i for i, g in enumerate(top_groups)}
+
+    tensor = torch.zeros((dataset.num_nodes, dim), dtype=torch.float32)
+    for idx in target_indices:
+        t_name = dataset.entities[idx].name.strip().upper()
+        if t_name in hgnc_map:
+            for grp in hgnc_map[t_name]:
+                if grp in group_to_idx:
+                    tensor[idx, group_to_idx[grp]] = 1.0
+            norm = tensor[idx].norm()
+            if norm > 0:
+                tensor[idx] /= norm
+
+    logger.info("Target family features built: shape %s", list(tensor.shape))
+    return tensor
+
+
 def build_multimodal_node_features(
     dataset: GraphDataset,
     *,
@@ -221,33 +264,54 @@ def build_multimodal_node_features(
     force_rebuild: bool = False,
     device: str | None = None,
 ) -> torch.Tensor:
-    """Fuse fine-tuned BiomedBERT (768D) with GEO transcriptomics & GWAS (4D) into 772D feature tensor."""
+    """Fuse fine-tuned BiomedBERT (768D), GEO transcriptomics (4D), Morgan fingerprints (1024D), and target families (128D) into a 1924D feature tensor."""
     cache_path = Path(cache_path)
     if not force_rebuild and cache_path.exists():
         try:
-            logger.info("Loading cached multimodal node features from %s", cache_path)
-            return torch.load(cache_path, weights_only=True)
+            feats = torch.load(cache_path, weights_only=True)
+            if feats.shape[0] == dataset.num_nodes and feats.shape[1] == 1924:
+                logger.info("Loading cached 1924-D multimodal node features from %s", cache_path)
+                return feats
         except Exception as e:
             logger.warning("Failed to load feature cache (%s); rebuilding...", e)
 
-    # 1. BiomedBERT text features (N, 768)
-    bert_features = extract_biomedbert_node_embeddings(dataset, biomedbert_dir=biomedbert_dir, device=device)
+    # 1. BiomedBERT text features (N, 768) + GEO transcriptomics (N, 4)
+    # Check if we have existing 772-D cache to save re-running BERT tokenization
+    bert_geo_cached = False
+    if cache_path.exists():
+        try:
+            cached_data = torch.load(cache_path, weights_only=True)
+            if cached_data.shape[0] == dataset.num_nodes and cached_data.shape[1] in (772, 1924):
+                bert_features = cached_data[:, :768]
+                geo_tensor = cached_data[:, 768:772]
+                bert_geo_cached = True
+                logger.info("Reusing cached BiomedBERT and GEO features (772D)")
+        except Exception:
+            pass
 
-    # 2. GEO transcriptomic & GWAS features (N, 4)
-    geo_features = extract_geo_target_features()
-    geo_tensor = torch.zeros((dataset.num_nodes, 4), dtype=torch.float32)
+    if not bert_geo_cached:
+        bert_features = extract_biomedbert_node_embeddings(dataset, biomedbert_dir=biomedbert_dir, device=device)
+        geo_features = extract_geo_target_features()
+        geo_tensor = torch.zeros((dataset.num_nodes, 4), dtype=torch.float32)
 
-    for entity in dataset.entities:
-        name_key = entity.name.upper()
-        if name_key in geo_features:
-            geo_tensor[entity.idx] = torch.tensor(geo_features[name_key], dtype=torch.float32)
-        elif entity.key.upper() in geo_features:
-            geo_tensor[entity.idx] = torch.tensor(geo_features[entity.key.upper()], dtype=torch.float32)
+        for entity in dataset.entities:
+            name_key = entity.name.upper()
+            if name_key in geo_features:
+                geo_tensor[entity.idx] = torch.tensor(geo_features[name_key], dtype=torch.float32)
+            elif entity.key.upper() in geo_features:
+                geo_tensor[entity.idx] = torch.tensor(geo_features[entity.key.upper()], dtype=torch.float32)
 
-    # 3. Concatenate into multimodal node feature matrix (N, 772)
-    multimodal_x = torch.cat([bert_features, geo_tensor], dim=1)
+    # 2. Chemical structure Morgan fingerprints (N, 1024)
+    from vitiligo.gnn.chemicals import build_chemical_node_features
+    chem_tensor = build_chemical_node_features(dataset)
+
+    # 3. Target functional family & domain features (N, 128)
+    target_family_tensor = extract_target_family_features(dataset)
+
+    # 4. Concatenate into unified 1924-D representation
+    multimodal_x = torch.cat([bert_features, geo_tensor, chem_tensor, target_family_tensor], dim=1)
 
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(multimodal_x, cache_path)
-    logger.info("Saved multimodal node features (shape %s) to %s", list(multimodal_x.shape), cache_path)
+    logger.info("Saved 1924-D multimodal node features (shape %s) to %s", list(multimodal_x.shape), cache_path)
     return multimodal_x
