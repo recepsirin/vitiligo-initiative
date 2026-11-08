@@ -335,13 +335,15 @@ def seed_trial_results(session: Session, results: Sequence[dict[str, Any]]) -> i
         if str(record.get("trial", "")).startswith("pooled:"):
             continue
         arms = {a["id"]: a for a in record.get("arms") or []}
-        regimens = {i: _regimen(session, a) for i, a in arms.items()}
+        regimens = {i: _regimen(a) for i, a in arms.items()}
         for index, value in enumerate(record.get("values") or []):
             first, _, second = str(value.get("arm", "")).partition(" vs ")
-            subject = regimens.get(first.strip())
+            regimen = regimens.get(first.strip())
             other = arms.get(second.strip()) if second else None
-            if subject is None or (second and other is None):
+            if regimen is None or (second and other is None):
                 continue
+            # Made only now, so an arm none of whose values lands leaves no node.
+            subject = upsert_entity(session, kind=regimen[0], name=regimen[1])
             family = outcome_family(value)
             if family not in outcomes:
                 outcomes[family] = upsert_entity(session, kind=EntityKind.OUTCOME, name=family)
@@ -358,7 +360,7 @@ def seed_trial_results(session: Session, results: Sequence[dict[str, Any]]) -> i
             if other is not None:
                 # A placebo or untreated arm is no regimen, but it is what was compared.
                 versus = regimens[other["id"]]
-                evidence["versus"] = versus.name if versus else other["label"]
+                evidence["versus"] = versus[1] if versus else other["label"]
             outcome = outcomes[family]
             wanted.setdefault((subject.id, outcome.id), (subject, outcome, []))[2].append(evidence)
     total = len(wanted)
@@ -400,7 +402,7 @@ def seed_trial_results(session: Session, results: Sequence[dict[str, Any]]) -> i
     return inserted
 
 
-def _regimen(session: Session, arm: dict[str, Any]) -> GraphEntity | None:
+def _regimen(arm: dict[str, Any]) -> tuple[EntityKind, str] | None:
     from vitiligo.graph.seed import CONTROL, arm_treatments  # seed reads reports, as above
 
     # Placebo changes nothing: "NB-UVB + placebo" is NB-UVB, and placebo alone no regimen.
@@ -410,8 +412,8 @@ def _regimen(session: Session, arm: dict[str, Any]) -> GraphEntity | None:
         return None
     if len(names) == 1:
         kind = EntityKind.DRUG if treatments[0]["type"] == "DRUG" else EntityKind.INTERVENTION
-        return upsert_entity(session, kind=kind, name=names[0])
-    return upsert_entity(session, kind=EntityKind.INTERVENTION, name=" + ".join(names))
+        return kind, names[0]
+    return EntityKind.INTERVENTION, " + ".join(names)
 
 
 def seed_graph_from_evidence(

@@ -331,14 +331,16 @@ def _results(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
         {"id": "A", "components": [{"agent": "tacrolimus"}], "phototherapy": "NBUVB twice weekly"},
         {"id": "B", "components": [], "phototherapy": "NB-UVB 2-3 times weekly"},
         {"id": "C", "label": "placebo cream", "components": [{"agent": "placebo"}]},
+        {"id": "D", "label": "no value of its own", "components": [{"agent": "minocycline"}]},
     ]
     return [{"trial": "pmid:1", "arms": arms, "values": values}]
 
 
 def test_a_trial_paper_result_joins_its_regimen_to_what_it_measured(graph_db: None) -> None:
     """A combination is its own regimen, a comparison names the other arm, and a pooled
-    value or a placebo arm names no regimen. A rerun after a value is corrected away
-    leaves nothing of it, and inserts nothing for a result already held.
+    value or a placebo arm names no regimen, and an arm with no value leaves no node. A
+    rerun after a value is corrected away leaves nothing of it, and inserts nothing for a
+    result already held.
     """
     responders = {
         "arm": "A",
@@ -389,6 +391,8 @@ def test_a_trial_paper_result_joins_its_regimen_to_what_it_measured(graph_db: No
         "NB-UVB",
         "placebo cream",
     ]
+    with session_scope() as session:
+        assert not session.exec(select(GraphEntity).where(GraphEntity.name == "minocycline")).all()
 
     with session_scope() as session:
         assert seed_trial_results(session, _results([responders])) == 0
