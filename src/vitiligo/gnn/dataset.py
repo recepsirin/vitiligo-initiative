@@ -194,9 +194,21 @@ def compute_causal_edge_weight(
     claim: str | None,
     causal_level: str | None,
     confidence: float,
+    predicate: str | None = None,
 ) -> float:
-    """Compute continuous scalar edge weight incorporating causal ladder and confidence."""
+    """Compute continuous scalar edge weight incorporating causal ladder, predicate semantics, and confidence."""
     claim_upper = (claim or "ASSERTED").upper()
+
+    # Moderate adverse event clinical trial listings (CHANGES) to prevent overpowering mechanism signals
+    if predicate == "CHANGES":
+        return 0.30
+
+    # Boost verified pharmacological mechanisms (TREATS, INHIBITS, ACTIVATES, TARGETS)
+    if predicate in ("TREATS", "TARGETS", "INHIBITS", "ACTIVATES"):
+        if claim_upper == "OBSERVED":
+            return 1.0
+        return max(0.60, float(confidence) * 0.90)
+
     if claim_upper == "OBSERVED":
         if causal_level and causal_level in CAUSAL_LEVEL_WEIGHTS:
             return float(CAUSAL_LEVEL_WEIGHTS[causal_level])
@@ -287,7 +299,7 @@ def load_graph_dataset(
         u = id_to_idx[s_id]
         v = id_to_idx[o_id]
         r = rel_to_idx[pred]
-        w = compute_causal_edge_weight(claim, causal, conf or 0.5)
+        w = compute_causal_edge_weight(claim, causal, conf or 0.5, predicate=pred)
 
         src_list.append(u)
         dst_list.append(v)

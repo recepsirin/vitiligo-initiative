@@ -10,14 +10,15 @@ from vitiligo.gnn.dataset import GraphDataset
 
 
 class RelationalGNN(nn.Module):
-    """Multi-layer Relational GNN encoder with a DistMult / Bilinear link prediction decoder.
+    """Multi-layer Relational GNN encoder with a ComplEx / DistMult link prediction decoder.
 
     Incorporates:
     - Multimodal projection fusing fine-tuned BiomedBERT (768D) and GEO transcriptomics (4D).
-    - Basis-decomposed multi-relational message passing.
+    - Basis-decomposed multi-relational message passing with LayerNorm and GeLU activations.
+    - Asymmetric ComplEx Hermitian link decoder in C^d (or symmetric DistMult).
+    - Self-adversarial negative sampling concentrating loss on hard biological negatives.
     - Causal-weight-aware loss modulation.
-    - Degree-weighted negative sampling to eliminate hub bias.
-    - Fast all-candidate scoring for ranking and discovery.
+    - Fast all-candidate parallel scoring for ranking and discovery.
     """
 
     def __init__(
@@ -28,13 +29,16 @@ class RelationalGNN(nn.Module):
         num_layers: int = 2,
         num_bases: int | None = 30,
         feature_dim: int | None = 772,
+        decoder_type: str = "complex",
         dropout: float = 0.2,
     ) -> None:
         super().__init__()
         self.num_nodes = num_nodes
         self.num_relations = num_relations
         self.hidden_dim = hidden_dim
+        self.half_dim = hidden_dim // 2
         self.feature_dim = feature_dim
+        self.decoder_type = decoder_type.lower()
 
         # Initial node representations & multimodal projection
         self.node_emb = nn.Embedding(num_nodes, hidden_dim)
@@ -102,11 +106,25 @@ class RelationalGNN(nn.Module):
         rel_indices: torch.Tensor,
         tail_indices: torch.Tensor,
     ) -> torch.Tensor:
-        """Compute link scores for specific (h, r, t) triples via DistMult dot product."""
+        """Compute link scores for specific (h, r, t) triples via ComplEx Hermitian or DistMult dot product."""
         h_emb = h[head_indices]
         r_emb = self.rel_emb(rel_indices)
         t_emb = h[tail_indices]
-        return torch.sum(h_emb * r_emb * t_emb, dim=-1)
+
+        if self.decoder_type == "distmult":
+            return torch.sum(h_emb * r_emb * t_emb, dim=-1)
+
+        # ComplEx Hermitian product: Re <h, r, conj(t)>
+        h_re, h_im = h_emb[:, : self.half_dim], h_emb[:, self.half_dim :]
+        r_re, r_im = r_emb[:, : self.half_dim], r_emb[:, self.half_dim :]
+        t_re, t_im = t_emb[:, : self.half_dim], t_emb[:, self.half_dim :]
+
+        return (
+            torch.sum(r_re * h_re * t_re, dim=-1)
+            + torch.sum(r_re * h_im * t_im, dim=-1)
+            + torch.sum(r_im * h_re * t_im, dim=-1)
+            - torch.sum(r_im * h_im * t_re, dim=-1)
+        )
 
     def decode_all_tails(
         self,
@@ -117,9 +135,24 @@ class RelationalGNN(nn.Module):
         """Compute link prediction scores for all possible tail entities (shape: [batch_size, num_nodes])."""
         h_emb = h[head_indices]
         r_emb = self.rel_emb(rel_indices)
-        query = h_emb * r_emb  # [B, hidden_dim]
-        # query @ h.T -> [B, num_nodes]
-        return torch.matmul(query, h.t())
+
+        if self.decoder_type == "distmult":
+            query = h_emb * r_emb  # [B, hidden_dim]
+            return torch.matmul(query, h.t())
+
+        # ComplEx parallel tail scoring:
+        # q_re = h_re * r_re - h_im * r_im
+        # q_im = h_re * r_im + h_im * r_re
+        # scores = q_re @ t_re.T + q_im @ t_im.T
+        h_re, h_im = h_emb[:, : self.half_dim], h_emb[:, self.half_dim :]
+        r_re, r_im = r_emb[:, : self.half_dim], r_emb[:, self.half_dim :]
+        t_re = h[:, : self.half_dim]
+        t_im = h[:, self.half_dim :]
+
+        q_re = h_re * r_re - h_im * r_im
+        q_im = h_re * r_im + h_im * r_re
+
+        return torch.matmul(q_re, t_re.t()) + torch.matmul(q_im, t_im.t())
 
     def compute_loss(
         self,
@@ -129,9 +162,10 @@ class RelationalGNN(nn.Module):
         pos_tails: torch.Tensor,
         edge_weights: torch.Tensor | None = None,
         sampling_weights: torch.Tensor | None = None,
-        num_neg_samples: int = 1,
+        num_neg_samples: int = 4,
+        adversarial_temperature: float = 1.0,
     ) -> torch.Tensor:
-        """Compute causal-weighted binary cross-entropy loss with degree-weighted negative sampling."""
+        """Compute causal-weighted BCE loss with self-adversarial negative sampling."""
         batch_size = pos_heads.size(0)
 
         # Positive scores
@@ -144,7 +178,7 @@ class RelationalGNN(nn.Module):
             pos_loss = pos_loss * edge_weights
         mean_pos_loss = pos_loss.mean()
 
-        # Degree-weighted negative sampling to penalize hub shortcuts
+        # Draw negative candidates
         total_negs = batch_size * num_neg_samples
         if sampling_weights is not None:
             neg_tails = torch.multinomial(sampling_weights, num_samples=total_negs, replacement=True).to(self.device)
@@ -155,8 +189,17 @@ class RelationalGNN(nn.Module):
         neg_rels = pos_rels.repeat_interleave(num_neg_samples)
 
         neg_scores = self.decode_triples(h, neg_heads, neg_rels, neg_tails)
-        neg_targets = torch.zeros_like(neg_scores)
-        mean_neg_loss = self.bce_loss(neg_scores, neg_targets).mean()
+        neg_scores_matrix = neg_scores.view(batch_size, num_neg_samples)
+        neg_targets = torch.zeros_like(neg_scores_matrix)
+
+        neg_losses = self.bce_loss(neg_scores_matrix, neg_targets)
+
+        # Self-adversarial weighting: penalize hard negative candidates proportionally
+        if adversarial_temperature > 0.0 and num_neg_samples > 1:
+            adv_weights = torch.softmax(adversarial_temperature * neg_scores_matrix, dim=-1).detach()
+            mean_neg_loss = (adv_weights * neg_losses).sum(dim=-1).mean()
+        else:
+            mean_neg_loss = neg_losses.mean()
 
         return mean_pos_loss + mean_neg_loss
 

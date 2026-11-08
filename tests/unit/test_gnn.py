@@ -71,6 +71,10 @@ def test_compute_causal_edge_weight() -> None:
     assert compute_causal_edge_weight("ASSERTED", None, 0.8) == 0.40
     # Floor weight for low confidence assertion
     assert compute_causal_edge_weight("ASSERTED", None, 0.1) == 0.20
+    # Predicate-specific calibration
+    assert compute_causal_edge_weight("OBSERVED", "perturbation_in_human", 0.9, predicate="CHANGES") == 0.30
+    assert compute_causal_edge_weight("ASSERTED", None, 0.88, predicate="TREATS") >= 0.75
+    assert compute_causal_edge_weight("ASSERTED", None, 0.84, predicate="INHIBITS") >= 0.70
 
 
 def test_dataset_conversions() -> None:
@@ -166,4 +170,24 @@ def test_screen_candidates(tmp_path) -> None:
     assert "regeneration_top_k" in results
     assert json_path.exists()
     assert md_path.exists()
+
+
+def test_evaluate_link_prediction_filtered() -> None:
+    from vitiligo.gnn.train import evaluate_link_prediction
+
+    ds = _make_dummy_dataset()
+    model = RelationalGNN(num_nodes=ds.num_nodes, num_relations=ds.num_relations, hidden_dim=16, num_layers=1)
+    eval_edges = {
+        "edge_index": ds.edge_index,
+        "edge_type": ds.edge_type,
+    }
+    metrics = evaluate_link_prediction(model, ds, eval_edges, max_eval_samples=None)
+
+    assert metrics.sample_size == ds.num_edges
+    assert 0.0 <= metrics.mrr <= 1.0
+    assert 0.0 <= metrics.filtered_mrr <= 1.0
+    assert 0.0 <= metrics.therapeutic_mrr <= 1.0
+    assert len(metrics.per_relation) > 0
+    assert "TREATS" in metrics.per_relation
+
 

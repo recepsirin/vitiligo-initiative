@@ -10,21 +10,21 @@ Molecules with high predicted affinity to disarm skin CD8+ $T_{RM}$ anchoring an
 
 | Rank | Drug | Score | Probability | Safety Profile | Matched Targets |
 |:---:|:---|:---:|:---:|:---|:---|
-| 1 | **sacubitril and valsartan sodium hydrate drug combination** | 2.028 | 88.4% | Repurposed Non-Oncology (Favorable systemic safety profile) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 2 | **itacitinib** | 2.012 | 88.2% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 3 | **ruxolitinib** | 2.011 | 88.2% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 4 | **clobetasone butyrate** | 2.007 | 88.1% | Corticosteroid (Well-established dermatologic rescue) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 5 | **lorlatinib** | 1.991 | 88.0% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 6 | **ritlecitinib** | 1.991 | 88.0% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 7 | **fluticasone propionate** | 1.990 | 88.0% | Corticosteroid (Well-established dermatologic rescue) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 8 | **IVARMACITINIB SULFATE** | 1.984 | 87.9% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 9 | **Amifostine** | 1.982 | 87.9% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 10 | **Lenalidomide** | 1.976 | 87.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 11 | **fostamatinib** | 1.976 | 87.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 12 | **Sunitinib** | 1.976 | 87.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 13 | **betamethasone dipropionate, betamethasone sodium phosphate drug combination** | 1.974 | 87.8% | Corticosteroid (Well-established dermatologic rescue) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 14 | **Ondansetron** | 1.973 | 87.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
-| 15 | **Formoterol Fumarate** | 1.973 | 87.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 1 | **cabozantinib** | 2.102 | 89.1% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 2 | **Sunitinib** | 2.086 | 88.9% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 3 | **pazopanib** | 2.083 | 88.9% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 4 | **tildrakizumab** | 2.079 | 88.9% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 5 | **ocrelizumab** | 2.078 | 88.9% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 6 | **IVARMACITINIB SULFATE** | 2.077 | 88.9% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 7 | **itacitinib** | 2.074 | 88.8% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 8 | **lebrikizumab** | 2.068 | 88.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 9 | **tislelizumab** | 2.067 | 88.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 10 | **vedolizumab** | 2.066 | 88.8% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 11 | **dabrafenib** | 2.059 | 88.7% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 12 | **mirikizumab** | 2.057 | 88.7% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 13 | **ruxolitinib** | 2.054 | 88.6% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 14 | **tocilizumab** | 2.048 | 88.6% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
+| 15 | **Omalizumab** | 2.045 | 88.5% | Standard Molecular Entity | IL15, JAK1, JAK3, STAT1, STAT3, CD8A, ITGAE, CD69, CGAS |
 
 ## 2. Top Regeneration & Non-Response Overcomers (Stem Cell Awakening / PDE4B Reversal)
 
@@ -32,21 +32,21 @@ Molecules mobilizing melanocyte stem cells (`CTNNB1`, `HTR1A`, `MITF`) and rever
 
 | Rank | Drug | Score | Probability | Safety Profile | Matched Targets |
 |:---:|:---|:---:|:---:|:---|:---|
-| 1 | **sacubitril and valsartan sodium hydrate drug combination** | 2.072 | 88.8% | Repurposed Non-Oncology (Favorable systemic safety profile) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 2 | **clobetasone butyrate** | 2.061 | 88.7% | Corticosteroid (Well-established dermatologic rescue) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 3 | **betamethasone dipropionate, betamethasone sodium phosphate drug combination** | 2.027 | 88.4% | Corticosteroid (Well-established dermatologic rescue) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 4 | **lorlatinib** | 2.025 | 88.3% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 5 | **Fluticasone** | 2.023 | 88.3% | Corticosteroid (Well-established dermatologic rescue) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 6 | **ruxolitinib** | 2.023 | 88.3% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 7 | **itacitinib** | 2.023 | 88.3% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 8 | **fluticasone propionate** | 2.022 | 88.3% | Corticosteroid (Well-established dermatologic rescue) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 9 | **IVARMACITINIB SULFATE** | 2.013 | 88.2% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 10 | **ritlecitinib** | 2.009 | 88.2% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 11 | **Vilazodone Hydrochloride** | 2.009 | 88.2% | Repurposed Non-Oncology (Favorable systemic safety profile) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 12 | **Sunitinib** | 2.007 | 88.1% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 13 | **temsirolimus** | 2.007 | 88.1% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 14 | **Telmisartan** | 2.006 | 88.1% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
-| 15 | **flumequine** | 2.005 | 88.1% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 1 | **itacitinib** | 2.610 | 93.2% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 2 | **ruxolitinib** | 2.604 | 93.1% | Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 3 | **sacubitril and valsartan sodium hydrate drug combination** | 2.548 | 92.7% | Repurposed Non-Oncology (Favorable systemic safety profile) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 4 | **cobimetinib** | 2.542 | 92.7% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 5 | **fludarabine** | 2.538 | 92.7% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 6 | **tildrakizumab** | 2.535 | 92.7% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 7 | **fostamatinib** | 2.534 | 92.7% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 8 | **bicalutamide** | 2.533 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 9 | **temsirolimus** | 2.531 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 10 | **cabozantinib** | 2.530 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 11 | **tislelizumab** | 2.529 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 12 | **Flutamide** | 2.528 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 13 | **Leflunomide** | 2.527 | 92.6% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 14 | **fluticasone propionate** | 2.521 | 92.6% | Corticosteroid (Well-established dermatologic rescue) | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
+| 15 | **Sunitinib** | 2.518 | 92.5% | Standard Molecular Entity | CTNNB1 (Act), MITF (Act), EDNRB (Act), KIT (Act), HTR1A (Act), TYR (Act), DCT (Act), PDE4B (Inh), PDE4A (Inh), PDE4D (Inh) |
 
 ## 3. Synergistic Combination Cocktails (Pulsed Curative Regimens)
 
@@ -54,13 +54,13 @@ Rationally paired 2-drug combinations pairing an **Immune Reset** agent with a *
 
 | Rank | Immune Reset (Memory Disarmer) | Regenerative Adjuvant | Score | Mechanism Synergy | Safety & Delivery Rationale |
 |:---:|:---|:---|:---:|:---|:---|
-| 1 | **sacubitril and valsartan sodium hydrate drug combination** | **clobetasone butyrate** | 2.045 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 2 | **itacitinib** | **sacubitril and valsartan sodium hydrate drug combination** | 2.042 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 3 | **ruxolitinib** | **sacubitril and valsartan sodium hydrate drug combination** | 2.042 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 4 | **clobetasone butyrate** | **sacubitril and valsartan sodium hydrate drug combination** | 2.039 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 5 | **itacitinib** | **clobetasone butyrate** | 2.037 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 6 | **ruxolitinib** | **clobetasone butyrate** | 2.036 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 7 | **lorlatinib** | **sacubitril and valsartan sodium hydrate drug combination** | 2.031 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 8 | **ritlecitinib** | **sacubitril and valsartan sodium hydrate drug combination** | 2.031 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 9 | **fluticasone propionate** | **sacubitril and valsartan sodium hydrate drug combination** | 2.031 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
-| 10 | **IVARMACITINIB SULFATE** | **sacubitril and valsartan sodium hydrate drug combination** | 2.028 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 1 | **cabozantinib** | **itacitinib** | 2.356 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 2 | **cabozantinib** | **ruxolitinib** | 2.353 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 3 | **Sunitinib** | **itacitinib** | 2.348 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 4 | **pazopanib** | **itacitinib** | 2.346 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 5 | **Sunitinib** | **ruxolitinib** | 2.345 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 6 | **tildrakizumab** | **itacitinib** | 2.345 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 7 | **ocrelizumab** | **itacitinib** | 2.344 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 8 | **pazopanib** | **ruxolitinib** | 2.343 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 9 | **IVARMACITINIB SULFATE** | **itacitinib** | 2.343 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |
+| 10 | **tildrakizumab** | **ruxolitinib** | 2.341 | IL15, JAK1, JAK3 + CTNNB1 (Act), MITF (Act), EDNRB (Act) | Dual Oral / Non-Oncology: Complementary mechanisms; non-overlapping organ tox. |

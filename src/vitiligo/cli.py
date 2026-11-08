@@ -517,23 +517,54 @@ def gnn_train(
     dim: int = typer.Option(128, "--dim", help="Hidden dimension."),
     layers: int = typer.Option(2, "--layers", help="Number of Relational GNN layers."),
     batch_size: int = typer.Option(4096, "--batch-size", help="Batch size."),
+    decoder: str = typer.Option("complex", "--decoder", help="Link decoder: 'complex' or 'distmult'."),
+    neg_samples: int = typer.Option(4, "--neg-samples", help="Negative candidates per edge."),
 ) -> None:
     """Train the Relational GNN on knowledge graph edge prediction."""
     from vitiligo.gnn.train import train_relational_gnn
 
-    console.rule("[bold]Relational GNN Training[/bold]")
+    console.rule(f"[bold]Relational GNN Training ({decoder.upper()})[/bold]")
     _model, report = train_relational_gnn(
         num_epochs=epochs,
         lr=lr,
         hidden_dim=dim,
         num_layers=layers,
         batch_size=batch_size,
+        decoder_type=decoder,
+        num_neg_samples=neg_samples,
     )
     test_metrics = report["test_metrics"]
     console.print(f"Training completed in [bold]{report['training_time_seconds']}s[/bold]")
-    console.print(f"Best Val MRR: [bold green]{report['best_val_mrr']:.4f}[/bold green]")
-    console.print(f"Test Hits@10: [bold green]{test_metrics['hits_at_10']:.4f}[/bold green]")
-    console.print(f"Test MRR: [bold green]{test_metrics['mrr']:.4f}[/bold green]")
+    console.print(f"Best Val Filtered MRR:    [bold green]{report['best_val_mrr']:.4f}[/bold green]")
+    console.print(f"Test Filtered MRR:        [bold green]{test_metrics.get('filtered_mrr', test_metrics['mrr']):.4f}[/bold green]")
+    console.print(f"Test Filtered Hits@10:    [bold green]{test_metrics.get('filtered_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold green]")
+    console.print(f"Therapeutic Subset MRR:   [bold cyan]{test_metrics.get('therapeutic_mrr', test_metrics['mrr']):.4f}[/bold cyan]")
+    console.print(f"Therapeutic Hits@10:      [bold cyan]{test_metrics.get('therapeutic_hits_at_10', test_metrics['hits_at_10']) * 100:.2f}%[/bold cyan]")
+    console.print(f"Raw Test MRR:             [bold yellow]{test_metrics['mrr']:.4f}[/bold yellow]")
+
+    # Per-relation breakdown table
+    per_rel = test_metrics.get("per_relation", {})
+    if per_rel:
+        table = Table(title="Test Set Performance by Relation Type")
+        table.add_column("Relation", style="bold")
+        table.add_column("Edges", justify="right")
+        table.add_column("Filt MRR", justify="right", style="green")
+        table.add_column("Filt Hits@1", justify="right")
+        table.add_column("Filt Hits@10", justify="right", style="cyan")
+        table.add_column("Filt Med Rank", justify="right")
+        table.add_column("Raw MRR", justify="right", style="yellow")
+
+        for r_name, m in sorted(per_rel.items(), key=lambda x: -x[1]["count"]):
+            table.add_row(
+                r_name,
+                str(m["count"]),
+                f"{m['filtered_mrr']:.4f}",
+                f"{m.get('filtered_hits_at_1', 0.0) * 100:.1f}%",
+                f"{m['filtered_hits_at_10'] * 100:.1f}%",
+                f"{m.get('filtered_median_rank', 0.0):.0f}",
+                f"{m['raw_mrr']:.4f}",
+            )
+        console.print(table)
 
 
 @gnn_app.command("screen")
