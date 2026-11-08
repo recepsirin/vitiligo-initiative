@@ -83,6 +83,7 @@ vitiligo gnn rerank --top-stage1 60 --top-final 20
 
 | Doc | Contents |
 |---|---|
+| [`docs/clinical-validation-and-formulation.md`](docs/clinical-validation-and-formulation.md) | **Clinical Validation & Dual-Action Curative Regimens:** Real-world trial evidence, Tacrolimus + PDE4i formulation, and preclinical testing protocol |
 | [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) | **Stage-2 Dense Cross-Encoder Curative Discovery Screen:** Reranked candidates with 90%+ confidence |
 | [`docs/gnn-discovery-report.md`](docs/gnn-discovery-report.md) | **Curative Triad Discovery Screen:** Durability ($T_{\text{RM}}$), Regeneration (McSC), and Combination Synergies |
 | [`docs/success.md`](docs/success.md) | **What we are trying to solve:** the outcomes that define success, and the current focus (durability) |
