@@ -116,6 +116,17 @@ def full_text(doc: AnnotatedDocument) -> str:
 def build(documents: Iterable[AnnotatedDocument]) -> Lexicon:
     """The lexicon of PubTator's surface forms in these documents, filtered."""
     documents = list(documents)
+    gene_sym_counts: dict[str, Counter[tuple[str, str]]] = defaultdict(Counter)
+    for doc in documents:
+        for mention in doc.mentions:
+            c = mention.concept
+            if c.type == "Gene" and ";" not in c.identifier and c.name:
+                weight = 10 if c.name.isupper() else 1
+                gene_sym_counts[c.name.upper()][(c.identifier, c.name)] += weight
+    canon_gene: dict[str, tuple[str, str]] = {
+        sym: cnt.most_common(1)[0][0] for sym, cnt in gene_sym_counts.items()
+    }
+
     concepts: dict[str, Counter[tuple[str, str]]] = defaultdict(Counter)
     names: dict[tuple[str, str], str] = {}
     for doc in documents:
@@ -124,12 +135,23 @@ def build(documents: Iterable[AnnotatedDocument]) -> Lexicon:
             # A mention naming several genes ("7306;1638") is no one form's meaning.
             if concept.type not in TYPES or ";" in concept.identifier:
                 continue
-            concepts[_key(mention.text.strip())][(concept.type, concept.identifier)] += 1
-            names.setdefault((concept.type, concept.identifier), concept.name)
+            cid, cname = concept.identifier, concept.name
+            if concept.type == "Gene" and cname and cname.upper() in canon_gene:
+                cid, cname = canon_gene[cname.upper()]
+            concepts[_key(mention.text.strip())][(concept.type, cid)] += 1
+            names.setdefault((concept.type, cid), cname)
     entries: dict[str, Entry] = {}
     for form, counts in concepts.items():
         (kind, identifier), n = counts.most_common(1)[0]
         total = sum(counts.values())
-        if len(form) >= 3 and n >= 2 and n / total >= MIN_SHARE:
+        canonical_gene_symbol = (
+            kind == "Gene"
+            and n == 1
+            and total == 1
+            and len(form) >= 4
+            and form.isupper()
+            and form == names[(kind, identifier)]
+        )
+        if len(form) >= 3 and (n >= 2 or canonical_gene_symbol) and n / total >= MIN_SHARE:
             entries[form] = Entry(Concept(kind, identifier, names[(kind, identifier)]), total)
     return Lexicon(entries).without_rare(full_text(d) for d in documents)

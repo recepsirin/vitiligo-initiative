@@ -1388,7 +1388,9 @@ def compute_or_load_single_cell_lineage_profiles(
         return json.loads(SC_LINEAGE_CACHE_PATH.read_text(encoding="utf-8"))
 
     if not GSE298871_TAR_PATH.exists():
-        logger.warning("GSE298871 tar not found at %s; skipping scRNA-seq lineage seeding", GSE298871_TAR_PATH)
+        logger.warning(
+            "GSE298871 tar not found at %s; skipping scRNA-seq lineage seeding", GSE298871_TAR_PATH
+        )
         return {"lineage_names": list(_SC_LINEAGE_MARKERS.keys()), "lineage_cells": {}, "genes": {}}
 
     import gzip
@@ -1505,7 +1507,9 @@ def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
 
     targets: dict[str, GraphEntity] = {
         e.name: e
-        for e in session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.TARGET)).all()
+        for e in session.exec(
+            select(GraphEntity).where(GraphEntity.kind == EntityKind.TARGET)
+        ).all()
     }
     cells: dict[str, GraphEntity] = {
         e.name: e

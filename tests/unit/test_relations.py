@@ -259,3 +259,52 @@ def test_a_lexicon_mention_carries_the_words_after_it() -> None:
     [mention] = doc.mentions
     assert mention.text == "CO2"
     assert mention.after.startswith(" laser")
+
+
+def test_lexicon_unifies_homologous_gene_ids_across_species() -> None:
+    """Human TYR (7299) and mouse Tyr (22173) share 'tyrosinase'; without
+    homolog unification, mouse papers split the count below MIN_SHARE."""
+    from vitiligo.relations.lexicon import build
+
+    human = AnnotatedDocument(
+        pmid="1",
+        pmcid=None,
+        passages=(Passage("abstract", 0, "Human tyrosinase is lost in vitiligo."),),
+        mentions=(Mention(Concept("Gene", "7299", "TYR"), "tyrosinase", "abstract", 6),),
+        relations=(),
+    )
+    mouse = AnnotatedDocument(
+        pmid="2",
+        pmcid=None,
+        passages=(Passage("abstract", 0, "Mouse tyrosinase in B16 cells."),),
+        mentions=(Mention(Concept("Gene", "22173", "Tyr"), "tyrosinase", "abstract", 6),),
+        relations=(),
+    )
+    lex = build([human, mouse])
+    ann = lex.annotate("3", [("abstract", "Inhibition of tyrosinase activity.")])
+    assert len(ann.mentions) == 1
+    assert ann.mentions[0].concept.identifier == "7299"
+    assert ann.mentions[0].concept.name == "TYR"
+
+
+def test_encoded_tracks_closing_markers_and_pair_context_features() -> None:
+    unit = Unit(
+        "1",
+        "RESULTS",
+        "IFNG potently induces CXCL10 in keratinocytes.",
+        [
+            Span(0, 4, ("3458",), "Gene"),
+            Span(22, 28, ("3627",), "Gene"),
+        ],
+    )
+    encoded = encode(unit, _whitespace)
+    assert encoded is not None
+    marker = VOCABULARY["*"]
+    assert all(
+        encoded.input_ids[t] == marker for tokens in encoded.mention_end_tokens for t in tokens
+    )
+    assert len(encoded.pair_features) == 1
+    b_start, b_end, dist_bucket, co_sent = encoded.pair_features[0]
+    assert b_end > b_start
+    assert dist_bucket == 1  # two words ("potently", "induces") between the markers
+    assert co_sent == 2  # same sentence, first precedes second

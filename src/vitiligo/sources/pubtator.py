@@ -116,6 +116,7 @@ class AnnotatedDocument:
     mentions: tuple[Mention, ...]
     relations: tuple[Relation, ...]
     passages: tuple[Passage, ...] = ()
+    target_type_pairs: frozenset[tuple[str, str]] | None = None
 
 
 def _concept(infons: dict[str, object]) -> Concept | None:

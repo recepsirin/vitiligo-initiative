@@ -49,11 +49,25 @@ def pubtator_split(kind: str) -> list[Any]:
 
     biored = {d.pmid for split in SPLITS for d in load_split(split)}
     held_out = kind == "held-out"
-    return [
-        replace(d, relations=tuple(r for r in d.relations if r.score >= 0.5))
-        for d in cached_documents(kind="abstracts")
-        if d.pmid not in biored and pubtator_held_out(d.pmid) == held_out
-    ]
+    if held_out:
+        return [
+            replace(d, relations=tuple(r for r in d.relations if r.score >= 0.5))
+            for d in cached_documents(kind="abstracts")
+            if d.pmid not in biored and pubtator_held_out(d.pmid)
+        ]
+    out: list[Any] = []
+    for d in cached_documents(kind="abstracts"):
+        if d.pmid in biored or pubtator_held_out(d.pmid):
+            continue
+        if not any(r.score >= 0.5 for r in d.relations):
+            continue
+        rels = tuple(
+            r if r.score >= 0.5 else replace(r, score=1.0, type="Ignore")
+            for r in d.relations
+            if r.score > 0
+        )
+        out.append(replace(d, relations=rels))
+    return out
 
 
 def device() -> torch.device:
@@ -96,12 +110,41 @@ def tune_bias(
 ) -> tuple[float, Score]:
     """The shift on "no relation" that gives the best F1 on these documents."""
     best = (0.0, score(gold, predicted_keys(encoded, logits, 0.0)))
-    for step in range(-30, 31):
-        bias = step / 5
+    for step in range(-45, 46):
+        bias = round(step / 10, 2)
         result = score(gold, predicted_keys(encoded, logits, bias))
         if result.f1 > best[1].f1:
             best = (bias, result)
     return best
+
+
+def _at_loss(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """Adaptive thresholding loss (Zhou et al., 2021) where class 0 ('None') is the threshold TH."""
+    valid = labels >= 0
+    if not valid.any():
+        return logits.new_tensor(0.0)
+    logits = logits[valid]
+    labels = labels[valid]
+    pos_mask = labels > 0
+    loss = logits.new_tensor(0.0)
+    if pos_mask.any():
+        pos_logits = logits[pos_mask]
+        pos_labels = labels[pos_mask]
+        th_logit = pos_logits[:, 0]
+        target_logit = pos_logits.gather(1, pos_labels.unsqueeze(1)).squeeze(1)
+        # Positive class must exceed TH
+        p_loss = torch.nn.functional.softplus(th_logit - target_logit).mean()
+        # Other classes (including TH) must be dominated by TH
+        other_mask = torch.ones_like(pos_logits, dtype=torch.bool)
+        other_mask.scatter_(1, pos_labels.unsqueeze(1), False)
+        neg_part = pos_logits.masked_fill(~other_mask, -1e4)
+        n_loss = (torch.logsumexp(neg_part, dim=-1) - th_logit).mean()
+        loss = loss + 0.5 * (p_loss + n_loss)
+    neg_mask = ~pos_mask
+    if neg_mask.any():
+        neg_logits = logits[neg_mask]
+        loss = loss + (torch.logsumexp(neg_logits, dim=-1) - neg_logits[:, 0]).mean()
+    return loss
 
 
 def fit(
@@ -139,10 +182,16 @@ def fit(
         return max(0.0, (steps - step) / max(1, steps - warm))
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, schedule)
-    loss_fn = nn.CrossEntropyLoss()
+    class_weights = torch.tensor(
+        [1.0, 1.0, 1.05, 1.05, 2.8, 1.8, 1.3, 1.5, 1.0],
+        device=model.device,
+        dtype=torch.float32,
+    )
+    loss_fn = nn.CrossEntropyLoss(weight=class_weights, ignore_index=-100)
     history: list[dict[str, Any]] = []
     best_state: dict[str, torch.Tensor] = {}
     best_bias, best_f1 = 0.0, -1.0
+    top_states: list[tuple[float, dict[str, torch.Tensor]]] = []
     order = list(range(len(train)))
     step = 0
     for epoch in range(1, epochs + 1):
@@ -154,14 +203,15 @@ def fit(
             labels = torch.tensor(
                 [label for item in batch for label in item.labels], device=model.device
             )
-            loss = loss_fn(model(batch), labels)
+            pred_logits = model(batch)
+            loss = 0.70 * loss_fn(pred_logits, labels) + 0.30 * _at_loss(pred_logits, labels)
             optimizer.zero_grad()
             loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             scheduler.step()
             step += 1
-            running += float(loss)
+            running += float(loss.detach())
             if step % log_every == 0:
                 logger.info(
                     "epoch %d step %d/%d loss %.4f", epoch, step, steps, running / log_every
@@ -185,9 +235,35 @@ def fit(
             bias,
             time.time() - started,
         )
+        cur_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        top_states.append((result.f1, cur_state))
+        top_states.sort(key=lambda x: x[0], reverse=True)
+        del top_states[3:]
         if result.f1 > best_f1:
             best_f1, best_bias = result.f1, bias
-            best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_state = cur_state
+
+    for k_soup in (2, 3):
+        if len(top_states) >= k_soup:
+            soup_state = {
+                key: torch.stack([s[key].float() for _, s in top_states[:k_soup]])
+                .mean(dim=0)
+                .to(top_states[0][1][key].dtype)
+                for key in top_states[0][1]
+            }
+            model.load_state_dict(soup_state)
+            soup_bias, soup_res = tune_bias(dev, logits_for(model, dev), dev_gold)
+            logger.info(
+                "checkpoint soup (top-%d): dev P %.3f R %.3f F1 %.3f (bias %.1f)",
+                k_soup,
+                soup_res.precision,
+                soup_res.recall,
+                soup_res.f1,
+                soup_bias,
+            )
+            if soup_res.f1 > best_f1:
+                best_f1, best_bias = soup_res.f1, soup_bias
+                best_state = soup_state
     return best_state, best_bias, history
 
 
@@ -243,7 +319,7 @@ def load(source: str | Path) -> tuple[RelationModel, float, dict[str, Any]]:
         raise ValueError(f"{source} was trained on other labels: {settings['labels']}")
     cls_id, sep_id, pad_id = settings["special"]
     model = RelationModel(str(path), cls_id=cls_id, sep_id=sep_id, pad_id=pad_id, pretrained=False)
-    model.load_state_dict(load_file(str(path / WEIGHTS)))
+    model.load_state_dict(load_file(str(path / WEIGHTS)), strict=False)
     model.encoder_name = settings["base_model"]
     return model.to(device()), float(settings["bias"]), {**settings, "encoder": str(path)}
 
@@ -261,15 +337,17 @@ def train_model(
     epochs: int,
     encoder_lr: float,
     silver: bool = False,
+    augmented: bool = False,
     init: Path | None = None,
 ) -> dict[str, Any]:
     """Train on BioRED's training split, or first on PubTator's reading of this corpus.
 
     ``silver`` trains on the abstracts PubTator annotated here instead, leaving
     out any BioRED abstract, so that its test split stays unseen, and one in
-    twenty of the rest, where agreement with PubTator is measured; ``init`` starts
-    from earlier weights, so silver training can be followed by gold. Either
-    way the development split chooses the epoch and the bias.
+    twenty of the rest, where agreement with PubTator is measured; ``augmented``
+    trains on BioRED Train combined with external gold datasets (BC5CDR, ChemProt);
+    ``init`` starts from earlier weights, so silver training can be followed by gold.
+    Either way the development split chooses the epoch and the bias.
     """
     from transformers import AutoTokenizer
 
@@ -280,10 +358,17 @@ def train_model(
     dev = _encoded(dev_documents, tokenizer)
     if silver:
         train = _encoded(pubtator_split("training"), tokenizer)
+    elif augmented:
+        from vitiligo.sources.external_gold import load_augmented_training
+
+        train = _encoded(load_augmented_training(), tokenizer)
     else:
         train = _encoded(load_split("Train"), tokenizer)
     logger.info(
-        "Training %s on %d inputs (%s)", encoder, len(train), "silver" if silver else "gold"
+        "Training %s on %d inputs (%s)",
+        encoder,
+        len(train),
+        "silver" if silver else ("augmented gold" if augmented else "gold"),
     )
     model = RelationModel(
         encoder,
@@ -292,9 +377,14 @@ def train_model(
         pad_id=tokenizer.pad_token_id,
     )
     if init is not None:
-        from safetensors.torch import load_file
+        if Path(init).is_file():
+            ckpt = torch.load(Path(init), map_location="cpu", weights_only=False)
+            state_to_load = ckpt["state"] if isinstance(ckpt, dict) and "state" in ckpt else ckpt
+            model.load_state_dict(state_to_load, strict=False)
+        else:
+            from safetensors.torch import load_file
 
-        model.load_state_dict(load_file(str(resolve(init) / WEIGHTS)))
+            model.load_state_dict(load_file(str(resolve(init) / WEIGHTS)), strict=False)
     model.to(device())
     state, bias, history = fit(
         model, train, dev, gold_keys(dev_documents), epochs=epochs, encoder_lr=encoder_lr
