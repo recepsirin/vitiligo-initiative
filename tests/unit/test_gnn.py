@@ -145,12 +145,16 @@ def test_relational_gnn_forward_and_loss() -> None:
     assert "name" in predictions[0]
 
     # Test reverse prediction: (?, TREATS, vitiligo)
-    rev_predictions = model.predict_top_k(tail_name="vitiligo", rel_name="TREATS", dataset=ds, top_k=3)
+    rev_predictions = model.predict_top_k(
+        tail_name="vitiligo", rel_name="TREATS", dataset=ds, top_k=3
+    )
     assert len(rev_predictions) > 0
     assert "score" in rev_predictions[0]
 
     # Test triple scoring: (tofacitinib, TREATS, vitiligo)
-    triple_score = model.predict_top_k(head_name="tofacitinib", tail_name="vitiligo", rel_name="TREATS", dataset=ds)
+    triple_score = model.predict_top_k(
+        head_name="tofacitinib", tail_name="vitiligo", rel_name="TREATS", dataset=ds
+    )
     assert len(triple_score) == 1
     assert triple_score[0]["head"] == "tofacitinib"
     assert triple_score[0]["tail"] == "vitiligo"
@@ -281,7 +285,9 @@ def test_rgat_forward_and_loss() -> None:
 
 def test_synergy_metrics_and_screening(tmp_path) -> None:
     import json
+
     import numpy as np
+
     from vitiligo.gnn.synergy import (
         compute_tanimoto,
         compute_target_orthogonality,
@@ -396,5 +402,3 @@ def test_reverse_target_screening(tmp_path) -> None:
     jak1_hits = results["INHIBITS_JAK1"].hits
     assert len(jak1_hits) > 0
     assert jak1_hits[0].drug_name in ["tofacitinib", "ritlecitinib"]
-
-

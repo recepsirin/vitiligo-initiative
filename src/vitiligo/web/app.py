@@ -501,7 +501,9 @@ def create_app() -> FastAPI:
                 "head": clean_head,
                 "tail": clean_tail,
                 "relation": clean_rel,
-                "query_mode": "triple" if (clean_head and clean_tail) else ("forward" if clean_head else "reverse"),
+                "query_mode": "triple"
+                if (clean_head and clean_tail)
+                else ("forward" if clean_head else "reverse"),
                 "predictions": results,
             }
         except Exception as exc:

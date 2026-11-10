@@ -14,7 +14,6 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
 
 from vitiligo.gnn.dataset import GraphDataset, load_graph_dataset
 from vitiligo.gnn.model import RelationalGNN
@@ -214,9 +213,7 @@ def run_reverse_target_screening(
     return results
 
 
-def _render_reverse_screen_md(
-    results: dict[str, TargetScreenResult], path: Path
-) -> None:
+def _render_reverse_screen_md(results: dict[str, TargetScreenResult], path: Path) -> None:
     """Render comprehensive Markdown discovery report."""
     lines: list[str] = [
         "# Reverse Target Screening: Curative Triad Discovery Ledger",
@@ -240,15 +237,17 @@ def _render_reverse_screen_md(
         "",
     ]
 
-    for key, res in results.items():
-        lines.extend([
-            f"## {res.pillar}: `{res.relation}` {res.target_name}",
-            "",
-            f"**Biological Function:** {res.biological_function}",
-            "",
-            "| Rank | Candidate Drug | ComplEx Score | Probability | Mechanism Class | Route & Safety |",
-            "|:---:|---|---:|---:|---|---|",
-        ])
+    for _key, res in results.items():
+        lines.extend(
+            [
+                f"## {res.pillar}: `{res.relation}` {res.target_name}",
+                "",
+                f"**Biological Function:** {res.biological_function}",
+                "",
+                "| Rank | Candidate Drug | ComplEx Score | Probability | Mechanism Class | Route & Safety |",
+                "|:---:|---|---:|---:|---|---|",
+            ]
+        )
 
         for hit in res.hits:
             lines.append(
@@ -257,21 +256,23 @@ def _render_reverse_screen_md(
 
         lines.extend(["", "---", ""])
 
-    lines.extend([
-        "## Translational Recommendations for Investigator Protocols",
-        "",
-        "1. **Dual Topical Synergistic Regimen (Zero Systemic Exposure):**",
-        "   - Combine topical **Ruxolitinib 1.5% cream** (Pillar 1) with topical **Roflumilast 0.3% cream** (Pillar 3) and topical **Piperine / Bimatoprost** (Pillar 2).",
-        "   - Simultaneously disarms $T_{\\text{RM}}$ IFN-$\\gamma$ signaling, reverses the $+9.09 \\log_2\\text{FC}$ `PDE4B` cAMP block, and recruits follicular McSCs without oral immunosuppression.",
-        "",
-        "2. **Precision Oral Systemic Triad:**",
-        "   - Oral allosteric TYK2 inhibitor (**Zasocitinib** or **Deucravacitinib**, `90-92% prob`) + oral **Pioglitazone** (`88.3% prob`, MITF/EDNRB activator) + NB-UVB phototherapy.",
-        "   - Avoids the hematologic cytopenias of JAK2 inhibition while driving rapid repigmentation of refractory body lesions.",
-        "",
-        "---",
-        "",
-        "*Report generated automatically by `vitiligo gnn reverse-screen`.*",
-    ])
+    lines.extend(
+        [
+            "## Translational Recommendations for Investigator Protocols",
+            "",
+            "1. **Dual Topical Synergistic Regimen (Zero Systemic Exposure):**",
+            "   - Combine topical **Ruxolitinib 1.5% cream** (Pillar 1) with topical **Roflumilast 0.3% cream** (Pillar 3) and topical **Piperine / Bimatoprost** (Pillar 2).",
+            "   - Simultaneously disarms $T_{\\text{RM}}$ IFN-$\\gamma$ signaling, reverses the $+9.09 \\log_2\\text{FC}$ `PDE4B` cAMP block, and recruits follicular McSCs without oral immunosuppression.",
+            "",
+            "2. **Precision Oral Systemic Triad:**",
+            "   - Oral allosteric TYK2 inhibitor (**Zasocitinib** or **Deucravacitinib**, `90-92% prob`) + oral **Pioglitazone** (`88.3% prob`, MITF/EDNRB activator) + NB-UVB phototherapy.",
+            "   - Avoids the hematologic cytopenias of JAK2 inhibition while driving rapid repigmentation of refractory body lesions.",
+            "",
+            "---",
+            "",
+            "*Report generated automatically by `vitiligo gnn reverse-screen`.*",
+        ]
+    )
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

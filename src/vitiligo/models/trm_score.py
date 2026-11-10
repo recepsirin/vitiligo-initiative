@@ -28,35 +28,36 @@ logger = get_logger(__name__)
 
 # Core gene panels defining the human/mouse conserved skin T_RM survival and effector axis
 TRM_CORE_GENES: tuple[str, ...] = (
-    "CD8A",    # Cytotoxic T cell lineage alpha chain
-    "CD8B",    # Cytotoxic T cell lineage beta chain
-    "ITGAE",   # CD103 alpha-E integrin, anchors to E-cadherin on basal keratinocytes
-    "CD69",    # S1PR1 functional antagonist, blocks epidermal egress
-    "CXCR6",   # Chemokine receptor for epidermal CXCL16
-    "IL2RB",   # CD122, beta chain of the IL-15/IL-2 receptor (therapeutic antibody target)
+    "CD8A",  # Cytotoxic T cell lineage alpha chain
+    "CD8B",  # Cytotoxic T cell lineage beta chain
+    "ITGAE",  # CD103 alpha-E integrin, anchors to E-cadherin on basal keratinocytes
+    "CD69",  # S1PR1 functional antagonist, blocks epidermal egress
+    "CXCR6",  # Chemokine receptor for epidermal CXCL16
+    "IL2RB",  # CD122, beta chain of the IL-15/IL-2 receptor (therapeutic antibody target)
     "IL15RA",  # IL-15 receptor alpha, required for IL-15 trans-presentation by keratinocytes
-    "GZMB",    # Granzyme B cytolytic serine protease
-    "PRF1",    # Perforin membrane pore-forming protein
-    "CXCL9",   # IFN-gamma inducible T-cell recruiting chemokine
+    "GZMB",  # Granzyme B cytolytic serine protease
+    "PRF1",  # Perforin membrane pore-forming protein
+    "CXCL9",  # IFN-gamma inducible T-cell recruiting chemokine
     "CXCL10",  # IFN-gamma inducible CXCR3 ligand
 )
 
 CIRCULATING_EGRESS_GENES: tuple[str, ...] = (
-    "CCR7",    # CC-chemokine receptor 7, directs homing to lymph node T zones
-    "SELL",    # CD62L / L-selectin, peripheral lymph node homing receptor
-    "S1PR1",   # Sphingosine-1-phosphate receptor 1, required for tissue egress
+    "CCR7",  # CC-chemokine receptor 7, directs homing to lymph node T zones
+    "SELL",  # CD62L / L-selectin, peripheral lymph node homing receptor
+    "S1PR1",  # Sphingosine-1-phosphate receptor 1, required for tissue egress
 )
 
 HOUSEKEEPING_GENES: tuple[str, ...] = (
-    "ACTB",    # Beta-actin
-    "GAPDH",   # Glyceraldehyde-3-phosphate dehydrogenase
-    "RPLP0",   # Ribosomal protein lateral stalk subunit P0
+    "ACTB",  # Beta-actin
+    "GAPDH",  # Glyceraldehyde-3-phosphate dehydrogenase
+    "RPLP0",  # Ribosomal protein lateral stalk subunit P0
 )
 
 
 @dataclass(frozen=True)
 class TRMScoreResult:
     """Quantitative evaluation of a skin biopsy or pseudobulk sample."""
+
     sample_id: str
     trm_core_mean: float
     circulating_mean: float
@@ -147,12 +148,15 @@ def resolve_gse203262_barcodes(tar_path: Path) -> dict[str, str]:
 def score_patient_archive(tar_path: Path) -> dict[str, Any]:
     """Score paired lesional vs non-lesional pseudobulk samples from a patient archive."""
     with tarfile.open(tar_path, "r:gz") as tar:
-        bc_mem = [m for m in tar.getmembers() if "barcodes.tsv" in m.name][0]
-        gn_mem = [m for m in tar.getmembers() if "genes.tsv" in m.name][0]
-        mtx_mem = [m for m in tar.getmembers() if "matrix.mtx" in m.name][0]
+        bc_mem = next(m for m in tar.getmembers() if "barcodes.tsv" in m.name)
+        gn_mem = next(m for m in tar.getmembers() if "genes.tsv" in m.name)
+        mtx_mem = next(m for m in tar.getmembers() if "matrix.mtx" in m.name)
 
         bcs = tar.extractfile(bc_mem).read().decode("utf-8").strip().split("\n")  # type: ignore[union-attr]
-        genes = [line.split("\t") for line in tar.extractfile(gn_mem).read().decode("utf-8").strip().split("\n")]  # type: ignore[union-attr]
+        genes = [
+            line.split("\t")
+            for line in tar.extractfile(gn_mem).read().decode("utf-8").strip().split("\n")
+        ]  # type: ignore[union-attr]
         gene_symbols = [g[1] if len(g) > 1 else g[0] for g in genes]
         sym_to_idx = {s.upper(): i for i, s in enumerate(gene_symbols)}
 
@@ -184,5 +188,7 @@ def score_patient_archive(tar_path: Path) -> dict[str, Any]:
             "nl_score": res_nl.normalized_score,
             "ls_score": res_ls.normalized_score,
             "delta_score": res_ls.normalized_score - res_nl.normalized_score,
-            "direction": "LS > NL" if res_ls.normalized_score > res_nl.normalized_score else "NL > LS",
+            "direction": "LS > NL"
+            if res_ls.normalized_score > res_nl.normalized_score
+            else "NL > LS",
         }

@@ -6,14 +6,10 @@ import io
 import tarfile
 from pathlib import Path
 
-import pytest
 from scipy.io import mmwrite
 from scipy.sparse import csc_matrix
 
 from vitiligo.models.trm_score import (
-    CIRCULATING_EGRESS_GENES,
-    HOUSEKEEPING_GENES,
-    TRM_CORE_GENES,
     compute_trm_score,
     resolve_gse203262_barcodes,
     score_patient_archive,
@@ -68,12 +64,14 @@ def _create_synthetic_patient_tar(tar_path: Path) -> None:
     # 4 genes x 4 cells matrix
     # Cells 0,1 are NL (-1): low CD8A/CD69
     # Cells 2,3 are LS (-2): high CD8A/CD69
-    data = csc_matrix([
-        [0.0, 0.0, 5.0, 6.0],  # CD8A
-        [0.0, 1.0, 4.0, 5.0],  # CD69
-        [10.0, 10.0, 10.0, 10.0],  # ACTB
-        [1.0, 2.0, 0.0, 0.0],  # CCR7
-    ])
+    data = csc_matrix(
+        [
+            [0.0, 0.0, 5.0, 6.0],  # CD8A
+            [0.0, 1.0, 4.0, 5.0],  # CD69
+            [10.0, 10.0, 10.0, 10.0],  # ACTB
+            [1.0, 2.0, 0.0, 0.0],  # CCR7
+        ]
+    )
 
     with tarfile.open(tar_path, "w:gz") as tar:
         # barcodes

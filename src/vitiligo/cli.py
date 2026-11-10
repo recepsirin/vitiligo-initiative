@@ -705,14 +705,21 @@ def gnn_rerank(
 
 @gnn_app.command("predict")
 def gnn_predict(
-    head: str | None = typer.Argument(None, help="Head entity name (e.g. 'baricitinib' or drug name)."),
+    head: str | None = typer.Argument(
+        None, help="Head entity name (e.g. 'baricitinib' or drug name)."
+    ),
     relation: str | None = typer.Argument(
         None, help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."
     ),
     tail: str | None = typer.Option(
-        None, "--tail", "-t", help="Tail entity name for reverse or triple query (e.g. 'PDE4B', 'MITF', 'vitiligo')."
+        None,
+        "--tail",
+        "-t",
+        help="Tail entity name for reverse or triple query (e.g. 'PDE4B', 'MITF', 'vitiligo').",
     ),
-    rel_opt: str | None = typer.Option(None, "--relation", "-r", help="Relation predicate override."),
+    rel_opt: str | None = typer.Option(
+        None, "--relation", "-r", help="Relation predicate override."
+    ),
     top_k: int = typer.Option(10, "--top-k", help="Number of predictions."),
     kind: str | None = typer.Option(
         None, "--kind", help="Filter target entity kind (e.g. DRUG, TARGET, DISEASE)."
@@ -856,6 +863,7 @@ def gnn_reverse_screen(
 ) -> None:
     """Reverse target screening across the Curative Triad (? -> Target)."""
     from pathlib import Path
+
     from vitiligo.gnn.reverse_screen import run_reverse_target_screening
 
     results = run_reverse_target_screening(
@@ -865,7 +873,7 @@ def gnn_reverse_screen(
         out_md=Path(out_md),
     )
 
-    for key, res in results.items():
+    for _key, res in results.items():
         table = Table(title=f"{res.pillar}: ({res.relation} {res.target_name})")
         table.add_column("Rank", justify="right", style="cyan")
         table.add_column("Candidate Drug", style="bold")

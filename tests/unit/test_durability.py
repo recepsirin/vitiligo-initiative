@@ -74,7 +74,9 @@ def test_maintenance_cost_calculation() -> None:
 
     from scripts.durability.maintenance_cost import compute_costs
 
-    costs = compute_costs("Facial-only responder", daily_rux_grams=1.0, twice_weekly_grams_per_application=0.5)
+    costs = compute_costs(
+        "Facial-only responder", daily_rux_grams=1.0, twice_weekly_grams_per_application=0.5
+    )
     assert len(costs) == 4
     cont_rux = costs[0]
     tac_2w = costs[2]

@@ -16,26 +16,16 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import torch
 
-from vitiligo.gnn.chemicals import clean_drug_name
-from vitiligo.gnn.dataset import GraphDataset, load_graph_dataset
+from vitiligo.gnn.dataset import GraphDataset
 from vitiligo.gnn.model import RelationalGNN
 from vitiligo.gnn.rerank import (
-    CORE_BARRIER_GENES,
-    CORE_REGEN_GENES,
-    CORE_TRM_GENES,
     DEFAULT_RERANK_REPORT_JSON,
 )
 from vitiligo.gnn.screen import (
-    BRAND_TO_GENERIC,
-    CYTOTOXIC_CHEMO_KEYWORDS,
-    NON_CURATIVE_COMORBIDITIES,
     canonicalize_drug_name,
     get_mechanism_class,
-    get_safety_profile,
 )
-from vitiligo.gnn.train import DEFAULT_MODEL_PATH, load_trained_gnn
 from vitiligo.logging import get_logger
 
 logger = get_logger(__name__)
@@ -189,26 +179,30 @@ def screen_pairwise_synergy(
                 regen_drug = name_a if sc_a >= sc_b else name_b
                 rationale_parts.append(f"Follicular McSC stem-cell mobilization via {regen_drug}")
 
-            rationale = "; ".join(rationale_parts) if rationale_parts else "Multimodal triad synergy"
+            rationale = (
+                "; ".join(rationale_parts) if rationale_parts else "Multimodal triad synergy"
+            )
 
-            pairs.append((
-                syn_score,
-                {
-                    "drug_a": name_a,
-                    "drug_b": name_b,
-                    "drug_a_pillar": cand_a.get("curative_triad_alignment", "Pillar 1"),
-                    "drug_b_pillar": cand_b.get("curative_triad_alignment", "Pillar 2/3"),
-                    "synergy_score": round(syn_score, 4),
-                    "bliss_excess": round(bliss_excess, 4),
-                    "virtual_ci": round(virtual_ci, 3),
-                    "target_orthogonality": round(ortho, 3),
-                    "route_compatibility": route,
-                    "safety_tier": f"{tier_a} + {tier_b}",
-                    "drug_a_targets": targets_a[:4],
-                    "drug_b_targets": targets_b[:4],
-                    "mechanistic_rationale": rationale,
-                },
-            ))
+            pairs.append(
+                (
+                    syn_score,
+                    {
+                        "drug_a": name_a,
+                        "drug_b": name_b,
+                        "drug_a_pillar": cand_a.get("curative_triad_alignment", "Pillar 1"),
+                        "drug_b_pillar": cand_b.get("curative_triad_alignment", "Pillar 2/3"),
+                        "synergy_score": round(syn_score, 4),
+                        "bliss_excess": round(bliss_excess, 4),
+                        "virtual_ci": round(virtual_ci, 3),
+                        "target_orthogonality": round(ortho, 3),
+                        "route_compatibility": route,
+                        "safety_tier": f"{tier_a} + {tier_b}",
+                        "drug_a_targets": targets_a[:4],
+                        "drug_b_targets": targets_b[:4],
+                        "mechanistic_rationale": rationale,
+                    },
+                )
+            )
 
     pairs.sort(key=lambda x: x[0], reverse=True)
 
@@ -283,7 +277,9 @@ def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> No
 
     for r in results:
         pair_str = f"**{r.drug_a.capitalize()}** + **{r.drug_b.capitalize()}**"
-        ci_str = f"**{r.virtual_ci:.2f}** (Synergistic)" if r.virtual_ci < 0.7 else f"{r.virtual_ci:.2f}"
+        ci_str = (
+            f"**{r.virtual_ci:.2f}** (Synergistic)" if r.virtual_ci < 0.7 else f"{r.virtual_ci:.2f}"
+        )
         if abs(r.bliss_excess) < 1e-4:
             bliss_str = "0.000"
         elif r.bliss_excess > 0:
@@ -294,13 +290,15 @@ def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> No
             f"| {r.rank} | {pair_str} | {ci_str} | {bliss_str} | {r.synergy_score:.2f} | {r.route_compatibility.split('(')[0].strip()} | {r.mechanistic_rationale} |"
         )
 
-    lines.extend([
-        "",
-        "---",
-        "",
-        "## Detailed Top Pair Profiles",
-        "",
-    ])
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## Detailed Top Pair Profiles",
+            "",
+        ]
+    )
 
     for r in results[:5]:
         if abs(r.bliss_excess) < 1e-4:
@@ -309,15 +307,17 @@ def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> No
             bliss_str = f"+{r.bliss_excess:.3f}"
         else:
             bliss_str = f"{r.bliss_excess:.3f}"
-        lines.extend([
-            f"### #{r.rank}. {r.drug_a.capitalize()} + {r.drug_b.capitalize()}",
-            f"- **Synergy Score:** `{r.synergy_score:.3f}` · **Virtual CI:** `{r.virtual_ci:.2f}` (Chou-Talalay: $<0.70$ indicates strong synergy) · **Bliss Excess:** `{bliss_str}`",
-            f"- **Target Orthogonality:** `{r.target_orthogonality:.2f}` (Jaccard distance: non-redundant target mechanisms)",
-            f"- **Route Compatibility:** {r.route_compatibility}",
-            f"- **{r.drug_a.capitalize()} Targets:** {', '.join(r.drug_a_targets) or 'Immune modulation'}",
-            f"- **{r.drug_b.capitalize()} Targets:** {', '.join(r.drug_b_targets) or 'Regenerative/Barrier modulation'}",
-            f"- **Mechanistic Rationale:** {r.mechanistic_rationale}",
-            "",
-        ])
+        lines.extend(
+            [
+                f"### #{r.rank}. {r.drug_a.capitalize()} + {r.drug_b.capitalize()}",
+                f"- **Synergy Score:** `{r.synergy_score:.3f}` · **Virtual CI:** `{r.virtual_ci:.2f}` (Chou-Talalay: $<0.70$ indicates strong synergy) · **Bliss Excess:** `{bliss_str}`",
+                f"- **Target Orthogonality:** `{r.target_orthogonality:.2f}` (Jaccard distance: non-redundant target mechanisms)",
+                f"- **Route Compatibility:** {r.route_compatibility}",
+                f"- **{r.drug_a.capitalize()} Targets:** {', '.join(r.drug_a_targets) or 'Immune modulation'}",
+                f"- **{r.drug_b.capitalize()} Targets:** {', '.join(r.drug_b_targets) or 'Regenerative/Barrier modulation'}",
+                f"- **Mechanistic Rationale:** {r.mechanistic_rationale}",
+                "",
+            ]
+        )
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

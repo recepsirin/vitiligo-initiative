@@ -411,9 +411,7 @@ class RelationalGNN(nn.Module):
         edge_index = dataset.edge_index.to(self.device)
         edge_type = dataset.edge_type.to(self.device)
         node_feat = (
-            dataset.node_features.to(self.device)
-            if dataset.node_features is not None
-            else None
+            dataset.node_features.to(self.device) if dataset.node_features is not None else None
         )
 
         h = self.encode(edge_index, edge_type, node_features=node_feat)

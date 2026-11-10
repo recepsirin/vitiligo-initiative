@@ -213,4 +213,3 @@ def test_geo_search_and_summary() -> None:
     assert hits[0].url == "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE311770"
     assert hits[1].title == "GSE256271: Vitiligo non-responding lesions with PDE4B elevation"
     assert len(calls) == 2
-
