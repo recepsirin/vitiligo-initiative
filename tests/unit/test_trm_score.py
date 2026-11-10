@@ -6,6 +6,9 @@ import io
 import tarfile
 from pathlib import Path
 
+import pytest
+
+pytest.importorskip("scipy")
 from scipy.io import mmwrite
 from scipy.sparse import csc_matrix
 

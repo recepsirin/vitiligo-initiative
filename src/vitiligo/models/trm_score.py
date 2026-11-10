@@ -20,7 +20,11 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-from scipy.io import mmread
+
+try:
+    from scipy.io import mmread
+except ImportError:
+    mmread = None  # type: ignore[assignment]
 
 from vitiligo.logging import get_logger
 
@@ -162,6 +166,11 @@ def score_patient_archive(tar_path: Path) -> dict[str, Any]:
 
         is_nl = np.array([bc.endswith("-1") for bc in bcs])
         is_ls = np.array([bc.endswith("-2") for bc in bcs])
+
+        if mmread is None:
+            raise ImportError(
+                "scipy is required for reading matrix market archives. Install with `pip install scipy`."
+            )
 
         mtx = mmread(tar.extractfile(mtx_mem)).tocsr()  # type: ignore[union-attr]
         if mtx.shape[0] != len(gene_symbols):
