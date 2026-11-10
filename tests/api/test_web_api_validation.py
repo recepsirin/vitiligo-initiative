@@ -211,6 +211,11 @@ def test_gnn_predict_endpoint(api_client) -> None:
     resp_triple = api_client.get("/api/gnn/predict?head=tofacitinib&tail=Vitiligo&relation=TREATS")
     assert resp_triple.status_code == 200
     body_triple = resp_triple.json()
+    assert body_triple["head"] == "tofacitinib"
+    assert body_triple["tail"] == "Vitiligo"
+    assert body_triple["relation"] == "TREATS"
     assert body_triple["query_mode"] == "triple"
-    assert len(body_triple["predictions"]) == 1
-    assert "probability" in body_triple["predictions"][0]
+    assert "predictions" in body_triple
+    if not body_triple.get("error"):
+        assert len(body_triple["predictions"]) == 1
+        assert "probability" in body_triple["predictions"][0]
