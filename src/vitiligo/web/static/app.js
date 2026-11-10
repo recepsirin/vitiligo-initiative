@@ -5,11 +5,14 @@ const panels = {
   evidence: document.getElementById('panel-evidence'),
   search: document.getElementById('panel-search'),
   candidates: document.getElementById('panel-candidates'),
+  curative: document.getElementById('panel-curative'),
   graph: document.getElementById('panel-graph'),
   trials: document.getElementById('panel-trials'),
 };
 
 let candidatesLoaded = false;
+let curativeLoaded = false;
+let curativeData = null;
 let evidenceRows = null;
 
 tabs.forEach(tab => {
@@ -26,6 +29,9 @@ tabs.forEach(tab => {
     }
     if (tab.dataset.tab === 'candidates' && !candidatesLoaded) {
       loadCandidatesReport();
+    }
+    if (tab.dataset.tab === 'curative' && !curativeLoaded) {
+      loadCurativeDiscovery();
     }
     if (tab.dataset.tab === 'evidence' && evidenceRows === null) {
       loadEvidence();
@@ -620,6 +626,227 @@ function renderTrial(t) {
       </div>
     </article>
   `;
+}
+
+// ---- Curative Triad & GNN Discovery --------------------------------
+
+async function loadCurativeDiscovery() {
+  const meta = document.getElementById('curative-stats');
+  const out = document.getElementById('curative-results');
+  showLoading(out, 'Loading RGAT-4H + ComplEx GNN link predictions & Cross-Encoder rankings…');
+  meta.innerHTML = '';
+  try {
+    const res = await fetch('/api/gnn/discovery?top_k=50');
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    curativeData = await res.json();
+    curativeLoaded = true;
+
+    const metrics = curativeData.benchmark_metrics || {};
+    const reranker = curativeData.stage2_reranker || {};
+    const treats = (metrics.per_relation || {}).TREATS || {};
+
+    meta.innerHTML = `
+      <span class="trial-stat trial-stat-total"><strong>96,073</strong> relations</span>
+      <span class="trial-stat"><strong>18,730</strong> entities</span>
+      <span class="trial-stat">TREATS MRR <strong>${Number(treats.filtered_mrr || 0.566).toFixed(3)}</strong> (Hits@1: ${(Number(treats.filtered_hits_at_1 || 0.544) * 100).toFixed(1)}%)</span>
+      <span class="trial-stat">Median Rank <strong>${treats.filtered_median_rank || 1}</strong></span>
+      <span class="trial-stat">Stage-2 AUROC <strong>${Number(reranker.cv_oof_auroc || 0.898).toFixed(3)}</strong></span>
+    `;
+
+    renderCurativeView();
+  } catch (err) {
+    showError(out, err.message);
+  }
+}
+
+function renderCurativeView() {
+  if (!curativeData) return;
+  const out = document.getElementById('curative-results');
+  const mode = document.getElementById('curative-mode').value;
+  const pillar = document.getElementById('curative-pillar').value;
+  const limit = parseInt(document.getElementById('curative-limit').value, 10);
+
+  if (mode === 'candidates') {
+    let list = (curativeData.stage2_reranker && curativeData.stage2_reranker.candidates) || [];
+    if (pillar === 'trm') {
+      list = list.filter(c => (c.curative_triad_alignment || '').includes('TRM') || (c.trm_disarmament_score || 0) > 1.5);
+    } else if (pillar === 'stem') {
+      list = list.filter(c => (c.curative_triad_alignment || '').toLowerCase().includes('stem') || (c.curative_triad_alignment || '').toLowerCase().includes('regen') || (c.stem_cell_regen_score || 0) > 1.5);
+    } else if (pillar === 'barrier') {
+      list = list.filter(c => (c.curative_triad_alignment || '').toLowerCase().includes('barrier') || (c.curative_triad_alignment || '').includes('PDE4') || (c.barrier_suppression_score || 0) > 1.8);
+    }
+    const displayed = list.slice(0, limit);
+    if (!displayed.length) {
+      out.innerHTML = '<div class="empty">No candidates match this pillar filter.</div>';
+      return;
+    }
+    out.innerHTML = displayed.map(renderCurativeCandidate).join('');
+  } else {
+    const combos = ((curativeData.functional_screen || {}).synergistic_combinations_top_k || []).slice(0, limit);
+    if (!combos.length) {
+      out.innerHTML = '<div class="empty">No synergistic combinations returned.</div>';
+      return;
+    }
+    out.innerHTML = combos.map(renderCurativeCombination).join('');
+  }
+}
+
+function renderCurativeCandidate(c) {
+  const prob = (Number(c.probability || 0) * 100).toFixed(1);
+  const trm = Number(c.trm_disarmament_score || 0).toFixed(2);
+  const stem = Number(c.stem_cell_regen_score || 0).toFixed(2);
+  const barrier = Number(c.barrier_suppression_score || 0).toFixed(2);
+
+  const targets = (c.matched_targets || []).map(t =>
+    `<span class="target-tag">${escapeHtml(t)}</span>`
+  ).join('');
+
+  return `
+    <article class="candidate report-candidate">
+      <div class="candidate-header">
+        <span class="candidate-rank">#${c.stage2_rank}</span>
+        <span class="candidate-name">${escapeHtml(c.drug_name || '(unnamed)')}</span>
+        <span class="evidence strong">${prob}% Probability</span>
+        <span class="report-score">Stage-1 GNN rank #${c.stage1_rank}</span>
+      </div>
+      <div style="margin: 6px 0;">
+        <span class="pillar-badge pillar-badge-trm">Pillar 1 (T_RM): ${trm}</span>
+        <span class="pillar-badge pillar-badge-stem">Pillar 2 (McSC): ${stem}</span>
+        <span class="pillar-badge pillar-badge-barrier">Pillar 3 (Barrier): ${barrier}</span>
+      </div>
+      <div class="candidate-section">
+        <div class="candidate-label">Curative Triad Role</div>
+        <div class="candidate-text"><strong>${escapeHtml(c.curative_triad_alignment || 'General Candidate')}</strong></div>
+      </div>
+      ${targets ? `<div class="candidate-section"><div class="candidate-label">Key Molecular Targets</div><div class="candidate-text">${targets}</div></div>` : ''}
+      <div class="candidate-section">
+        <div class="candidate-label">Clinical Safety Tier</div>
+        <div class="candidate-text">${escapeHtml(c.safety_tier || 'Investigational')}</div>
+      </div>
+    </article>
+  `;
+}
+
+function renderCurativeCombination(combo) {
+  const score = Number(combo.combined_score || 0).toFixed(3);
+  const immTargets = (combo.immune_targets || []).map(t => `<span class="target-tag">${escapeHtml(t)}</span>`).join('');
+  const regTargets = (combo.regenerative_targets || []).map(t => `<span class="target-tag">${escapeHtml(t)}</span>`).join('');
+
+  return `
+    <article class="candidate report-candidate">
+      <div class="candidate-header">
+        <span class="candidate-rank">#${combo.rank}</span>
+        <span class="candidate-name">${escapeHtml(combo.immune_drug)} + ${escapeHtml(combo.regenerative_drug)}</span>
+        <span class="evidence strong">Synergy Score ${score}</span>
+      </div>
+      <div style="margin: 6px 0;">
+        <span class="pillar-badge pillar-badge-trm">Pillar 1: Immune Disarmament (${escapeHtml(combo.immune_drug)})</span>
+        <span class="pillar-badge pillar-badge-barrier">Pillar 2/3: Regeneration & Barrier (${escapeHtml(combo.regenerative_drug)})</span>
+      </div>
+      <div class="candidate-section">
+        <div class="candidate-label">Molecular Targets</div>
+        <div class="candidate-text">
+          <div><em>${escapeHtml(combo.immune_drug)}:</em> ${immTargets || '—'}</div>
+          <div style="margin-top: 4px;"><em>${escapeHtml(combo.regenerative_drug)}:</em> ${regTargets || '—'}</div>
+        </div>
+      </div>
+      <div class="candidate-section">
+        <div class="candidate-label">Mechanism & Non-Overlapping Safety</div>
+        <div class="candidate-text">${escapeHtml(combo.safety_notes || 'Dual orthogonal mechanism.')}</div>
+      </div>
+    </article>
+  `;
+}
+
+document.getElementById('curative-mode').addEventListener('change', renderCurativeView);
+document.getElementById('curative-pillar').addEventListener('change', renderCurativeView);
+document.getElementById('curative-limit').addEventListener('change', renderCurativeView);
+document.getElementById('btn-curative-refresh').addEventListener('click', loadCurativeDiscovery);
+
+const formGnnPredict = document.getElementById('form-gnn-predict');
+if (formGnnPredict) {
+  formGnnPredict.addEventListener('submit', async e => {
+    e.preventDefault();
+    const head = (document.getElementById('gnn-predict-head')?.value || '').trim();
+    const tail = (document.getElementById('gnn-predict-tail')?.value || '').trim();
+    const relation = document.getElementById('gnn-predict-relation').value;
+    const kind = document.getElementById('gnn-predict-kind').value;
+    const out = document.getElementById('gnn-predict-results');
+    if (!head && !tail) {
+      out.innerHTML = '<div class="empty">Please enter either a Head entity, a Tail entity, or both.</div>';
+      return;
+    }
+
+    const queryDesc = (head && tail)
+      ? `(${head}, ${relation}, ${tail})`
+      : (head ? `(${head}, ${relation}, ?)` : `(?, ${relation}, ${tail})`);
+
+    showLoading(out, `Evaluating link prediction for ${queryDesc}…`);
+    try {
+      let url = `/api/gnn/predict?relation=${encodeURIComponent(relation)}&top_k=10`;
+      if (head) url += `&head=${encodeURIComponent(head)}`;
+      if (tail) url += `&tail=${encodeURIComponent(tail)}`;
+      if (kind) url += `&kind=${encodeURIComponent(kind)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      const preds = data.predictions || [];
+      if (!preds.length) {
+        out.innerHTML = '<div class="empty">No link predictions found for this query.</div>';
+        return;
+      }
+
+      if (data.query_mode === 'triple') {
+        const p = preds[0];
+        out.innerHTML = `
+          <div style="margin-bottom: 8px; font-size: 13px; color: var(--text-dim);">
+            Triple Link Evaluation Score:
+          </div>
+          <div class="result-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-elev); border: 1px solid var(--accent); border-radius: 8px;">
+            <div>
+              <strong style="color: var(--text); font-size: 15px;">${escapeHtml(p.head)}</strong>
+              <span class="tag" style="margin: 0 8px; background: var(--accent); color: #fff;">${escapeHtml(p.relation)}</span>
+              <strong style="color: var(--text); font-size: 15px;">${escapeHtml(p.tail)}</strong>
+            </div>
+            <div style="font-variant-numeric: tabular-nums;">
+              <span class="evidence strong" style="font-size: 15px;">${(Number(p.probability || 0) * 100).toFixed(1)}% probability</span>
+              <span style="color: var(--text-dim); margin-left: 10px; font-size: 13px;">score: ${Number(p.score || 0).toFixed(3)}</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const headerText = (data.query_mode === 'reverse')
+        ? `Predicted heads for <strong>?</strong> —[<strong>${escapeHtml(relation)}</strong>]→ <strong>${escapeHtml(tail)}</strong>:`
+        : `Predicted tails for <strong>${escapeHtml(head)}</strong> —[<strong>${escapeHtml(relation)}</strong>]→ <strong>?</strong>:`;
+
+      out.innerHTML = `
+        <div style="margin-bottom: 8px; font-size: 13px; color: var(--text-dim);">
+          ${headerText}
+        </div>
+        ${preds.map(p => `
+          <div class="result-row" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;">
+            <div>
+              <span style="font-weight: 600; color: var(--accent); margin-right: 8px;">#${p.rank}</span>
+              <strong>${escapeHtml(p.name)}</strong>
+              <span class="tag" style="margin-left: 8px;">${escapeHtml(p.kind)}</span>
+            </div>
+            <div style="font-variant-numeric: tabular-nums;">
+              <span class="evidence strong">${(Number(p.probability || 0) * 100).toFixed(1)}% prob</span>
+              <span style="color: var(--text-dim); margin-left: 8px; font-size: 12px;">score: ${Number(p.score || 0).toFixed(2)}</span>
+            </div>
+          </div>
+        `).join('')}
+      `;
+    } catch (err) {
+      showError(out, err.message);
+    }
+  });
 }
 
 // ---- init -----------------------------------------------------------

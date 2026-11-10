@@ -957,3 +957,51 @@ button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
   font-size: 0.68rem;
   color: var(--text-dim);
 }
+
+/* Curative Triad & GNN Discovery */
+.curative-controls {
+  margin: 12px 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.pillar-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+.pillar-badge-trm {
+  color: #6cb4f0;
+  background: rgba(108, 180, 240, 0.12);
+  border: 1px solid rgba(108, 180, 240, 0.3);
+}
+
+.pillar-badge-stem {
+  color: #58a675;
+  background: rgba(88, 166, 117, 0.12);
+  border: 1px solid rgba(88, 166, 117, 0.3);
+}
+
+.pillar-badge-barrier {
+  color: #d8a36a;
+  background: rgba(216, 163, 106, 0.12);
+  border: 1px solid rgba(216, 163, 106, 0.3);
+}
+
+.target-tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  margin: 2px 4px 2px 0;
+}

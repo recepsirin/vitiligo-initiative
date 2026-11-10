@@ -41,6 +41,8 @@ USER_AGENT = "vitiligo-initiative/1.0 (+https://github.com/recepsirin/vitiligo-i
 EUROPE_PMC_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 CTGOV_URL = "https://clinicaltrials.gov/api/v2/studies"
 SEC_SEARCH_URL = "https://efts.sec.gov/LATEST/search-index"
+NCBI_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+NCBI_ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 
 # Arm sizes (active, control) where the registry's equal split is wrong or the
 # analysis size is known. Everything else: registered enrolment / number of arms.
@@ -256,6 +258,45 @@ def ctgov(since: date, get: Get = http_get) -> list[Hit]:
         if not token:
             return hits
         params = {**params, "pageToken": token}
+
+
+def geo(since: date, get: Get = http_get, *, limit: int = 50) -> list[Hit]:
+    """Vitiligo series deposited in NCBI GEO on or after ``since``."""
+    d_str = since.strftime("%Y/%m/%d")
+    query = f"vitiligo[All Fields] AND gse[Entry Type] AND ({d_str}[PDAT] : 3000[PDAT])"
+    search_data = get(
+        NCBI_ESEARCH_URL,
+        {"db": "gds", "term": query, "retmode": "json", "retmax": limit},
+        {},
+    )
+    id_list = (search_data.get("esearchresult") or {}).get("idlist") or []
+    if not id_list:
+        return []
+
+    sum_data = get(
+        NCBI_ESUMMARY_URL,
+        {"db": "gds", "id": ",".join(id_list), "retmode": "json"},
+        {},
+    )
+    results = sum_data.get("result") or {}
+    hits: list[Hit] = []
+    for uid in id_list:
+        rec = results.get(str(uid)) or {}
+        gse = rec.get("gse")
+        title = _plain(rec.get("title", ""))
+        pdat = rec.get("pdat", "").replace("/", "-")
+        n_samples = rec.get("n_samples", 0)
+        hits.append(
+            Hit(
+                source="GEO",
+                date=pdat[:10] if pdat else "",
+                title=f"GSE{gse}: {title}" if gse else title,
+                url=f"https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE{gse}" if gse else "",
+                agents=match_agents(title),
+                note=f"{n_samples} samples; {rec.get('gpl', '')}".strip("; "),
+            )
+        )
+    return hits
 
 
 def sec_filings(

@@ -170,3 +170,47 @@ def test_durability_trials_come_from_sealed_records(tmp_path: Path) -> None:
     (tmp_path / "a.json").write_text(json.dumps({"trial": "NCT06163326"}))
     (tmp_path / "b.json").write_text(json.dumps({"other": 1}))
     assert watch.durability_trials(tmp_path) == {"NCT06163326"}
+
+
+def test_geo_search_and_summary() -> None:
+    calls: list[str] = []
+
+    def fake_get(url: str, params: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
+        calls.append(url)
+        if "esearch.fcgi" in url:
+            assert params["db"] == "gds"
+            assert "vitiligo[All Fields]" in params["term"]
+            return {"esearchresult": {"idlist": ["200311770", "200256271"]}}
+        if "esummary.fcgi" in url:
+            assert params["db"] == "gds"
+            assert params["id"] == "200311770,200256271"
+            return {
+                "result": {
+                    "200311770": {
+                        "gse": 311770,
+                        "title": "Minimally invasive 1 mm biopsies",
+                        "pdat": "2026/06/03",
+                        "n_samples": 105,
+                        "gpl": "GPL24676",
+                    },
+                    "200256271": {
+                        "gse": 256271,
+                        "title": "Vitiligo non-responding lesions with PDE4B elevation",
+                        "pdat": "2024/02/27",
+                        "n_samples": 8,
+                        "gpl": "GPL20795",
+                    },
+                }
+            }
+        return {}
+
+    hits = watch.geo(date(2024, 1, 1), get=fake_get)
+    assert len(hits) == 2
+    assert hits[0].source == "GEO"
+    assert hits[0].title == "GSE311770: Minimally invasive 1 mm biopsies"
+    assert hits[0].date == "2026-06-03"
+    assert "105 samples" in hits[0].note
+    assert hits[0].url == "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE311770"
+    assert hits[1].title == "GSE256271: Vitiligo non-responding lesions with PDE4B elevation"
+    assert len(calls) == 2
+

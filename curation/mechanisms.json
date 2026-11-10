@@ -57,7 +57,7 @@
      "ref": "trial:NCT04530344",
      "stance": "bounds",
      "causal_level": "perturbation_in_human",
-     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17–0.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18–0.99). It establishes that response erodes after stopping, without identifying what drives the loss."
+     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17\u20130.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18\u20130.99). It establishes that response erodes after stopping, without identifying what drives the loss."
     },
     {
      "ref": "gwas:GCST004785",
@@ -163,6 +163,87 @@
    "uncertainty": "GSE150954 has 24 samples and GSE256271 only 8, both from NB-UVB-treated patients, so a score derived from them may not transfer to JAK-inhibitor treatment. Responding and non-responding lesions also differ in ways the reservoir does not explain, including prior trauma and site. Follicle density is a crude proxy for a working reservoir.",
    "last_reviewed": "2026-10-23",
    "note": "Roadmap item 2.1 will map outcome 2's evidence; this record is the mechanistic hypothesis that map should test. Both the score and the map are still to be built."
+  },
+  {
+   "id": "pde4b-barrier-non-responder",
+   "title": "Elevated PDE4B blunts cAMP-mediated melanogenesis in phototherapy-refractory vitiligo lesions",
+   "status": "draft",
+   "outcome": 2,
+   "biological_state": "In vitiligo lesions that fail to repigment under phototherapy, lesional tissue exhibits extreme selective upregulation of Phosphodiesterase-4B (PDE4B), depleting intracellular cAMP.",
+   "mechanistic_claim": "Hydrolysis of cAMP by elevated PDE4B uncouples PKA-CREB-MITF signaling, preventing melanocyte precursor differentiation and tyrosinase transcription even after the autoimmune attack is halted.",
+   "intervention": "Apply a selective PDE4 inhibitor (topical roflumilast 0.3% or crisaborole 2%) to refractory lesions concurrently with phototherapy or kinase inhibition.",
+   "experimental_outcome": "Intracellular cAMP rises, CREB phosphorylation and MITF expression are restored, and melanin synthesis resumes in previously non-responsive lesions.",
+   "clinical_outcome": "Repigmentation (>= F-VASI75 or T-VASI50) in previously phototherapy-refractory body lesions.",
+   "context": {
+    "subtype": "non-segmental",
+    "tissue": "refractory lesional body skin",
+    "cell_type": "melanocytes, melanoblasts, and keratinocytes",
+    "disease_stage": "chronic stable or refractory disease under phototherapy or topical treatment"
+   },
+   "upstream": [
+    "Intrinsic lesional cellular stress",
+    "Upregulation of PDE4B mRNA and protein",
+    "Depletion of intracellular cyclic AMP (cAMP)"
+   ],
+   "downstream": [
+    "Failure of PKA activation and CREB phosphorylation",
+    "Suppression of MITF, TYR, and DCT expression",
+    "Arrest of melanogenesis and refractory amelanotic state"
+   ],
+   "evidence": [
+    {
+     "ref": "geo:GSE256271",
+     "stance": "supports",
+     "causal_level": "association",
+     "shows": "RNA sequencing of paired responding and non-responding vitiligo lesions from the same patients undergoing NB-UVB revealed selective +9.09 log2FC upregulation of PDE4B in refractory lesions."
+    },
+    {
+     "ref": "pubmed:39182565",
+     "stance": "supports",
+     "causal_level": "perturbation_in_vitro",
+     "shows": "In human pigment cells, PDE4 inhibitors (apremilast, roflumilast) increase intracellular cAMP, activate PKA-CREB signaling, upregulate MITF and tyrosinase, and promote melanogenesis."
+    },
+    {
+     "ref": "pubmed:37069030",
+     "stance": "supports",
+     "causal_level": "perturbation_in_vitro",
+     "shows": "Roflumilast directly enhances melanogenesis in human melanocytes and protects against oxidative stress-induced cellular damage via cAMP upregulation."
+    },
+    {
+     "ref": "pubmed:42406351",
+     "stance": "bounds",
+     "causal_level": "association",
+     "shows": "Case observation of successful repigmentation of treatment-recalcitrant vitiligo lesions using topical roflumilast cream 0.3%."
+    },
+    {
+     "ref": "trial:NCT04052425",
+     "stance": "bounds",
+     "causal_level": "perturbation_in_human",
+     "shows": "Ruxolitinib cream plus NB-UVB phototherapy achieved superior total body repigmentation over monotherapy (T-VASI50 >50% vs ~20%), demonstrating that combining immune suppression with pro-melanogenic stimuli overcomes monotherapy ceilings."
+    }
+   ],
+   "competing": [
+    {
+     "explanation": "Non-responding lesions fail to repigment solely because follicular melanocyte stem cells (McSCs) are anatomically absent or leukotrichic, rather than due to an intracellular enzymatic cAMP block.",
+     "distinguished_by": "Measure follicular McSC presence (DCT/KIT/SOX10 staining) in paired biopsies. If refractory lesions retain viable follicular McSCs and topical PDE4 inhibition rescues pigmentation under NB-UVB, the enzymatic PDE4B barrier is confirmed."
+    },
+    {
+     "explanation": "PDE4B upregulation is merely a passive reactive marker of persistent subclinical CD8 T cell inflammation rather than a cell-intrinsic melanogenic barrier.",
+     "distinguished_by": "In lesions treated with potent JAK inhibition (ruxolitinib) that completely clear IFN-gamma and CXCL10, assess whether PDE4B remains elevated and whether adding a PDE4 inhibitor accelerates repigmentation beyond JAK monotherapy."
+    }
+   ],
+   "test": {
+    "question": "In vitiligo lesions refractory to NB-UVB monotherapy with confirmed follicular reservoir, does adding topical roflumilast 0.3% restore repigmentation and induce MITF transcription within 24 weeks?",
+    "data": "A randomized, intra-patient bilateral controlled trial comparing topical roflumilast 0.3% cream vs. vehicle on contralateral refractory body lesions receiving ongoing NB-UVB phototherapy (or ruxolitinib), with 1 mm punch biopsies at baseline and week 12 evaluating PDE4B, cAMP, p-CREB, and MITF expression.",
+    "if_correct": "Lesions receiving roflumilast show significantly higher repigmentation rates (>= 50% lesion area repigmentation) with biopsy-confirmed p-CREB phosphorylation and MITF upregulation compared to vehicle-treated contralateral lesions.",
+    "if_incorrect": "No difference in repigmentation or melanocyte differentiation between roflumilast and vehicle-treated lesions despite confirmed PDE4 inhibition.",
+    "decides": "A significant benefit with intracellular signaling rescue confirms PDE4B as a causal therapeutic barrier (Pillar 3). A null result with confirmed drug penetration rejects the PDE4B barrier hypothesis in favor of stem-cell depletion.",
+    "needs_new_data": true,
+    "new_data": "Intra-patient paired biopsy samples from refractory lesions under targeted PDE4 inhibition vs vehicle. GSE256271 establishes the association in 8 samples, but interventional perturbation in human refractory vitiligo lesions requires an active investigator-initiated trial."
+   },
+   "uncertainty": "GSE256271 has a small sample size (8 paired biopsies); whether PDE4B is universally upregulated across all refractory anatomical sites (especially acral glabrous skin vs trunk) remains to be confirmed across larger cohorts.",
+   "last_reviewed": "2026-11-10",
+   "note": "Curative Triad Pillar 3 mechanism. Directly addresses Outcome 2 of docs/success.md and links to docs/repigmentation/README.md."
   }
  ]
 }

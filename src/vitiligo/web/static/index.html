@@ -20,6 +20,7 @@
         <button class="tab active" data-tab="evidence">Trial results</button>
         <button class="tab" data-tab="search">Search</button>
         <button class="tab" data-tab="candidates">Candidates</button>
+        <button class="tab" data-tab="curative">Curative Triad (GNN)</button>
         <button class="tab" data-tab="graph">Graph</button>
         <button class="tab" data-tab="trials">Trials</button>
       </nav>
@@ -139,6 +140,66 @@
       </div>
       <div id="candidates-meta" class="trial-stats"></div>
       <div id="candidates-results" class="results"></div>
+    </section>
+
+    <!-- CURATIVE TRIAD (GNN DISCOVERY) -->
+    <section class="panel hidden" id="panel-curative">
+      <h2>Curative Triad: Multimodal GNN Link Prediction & Cross-Encoder Reranker</h2>
+      <p class="hint">
+        Multi-relational Graph Neural Network (<code>RGAT-4H + ComplEx</code> on 96k edges) and Stage-2 Wide-and-Deep cross-encoder screening 964 drug candidates across the Curative Triad: <strong>T_RM Immune Disarmament</strong>, <strong>Follicular McSC Mobilization</strong>, and <strong>PDE4B (+9.09 log2FC) Non-Responder Barrier Suppression</strong>.
+      </p>
+      <div id="curative-stats" class="trial-stats"></div>
+      <div class="row curative-controls">
+        <label class="ev-label">View mode
+          <select id="curative-mode">
+            <option value="candidates" selected>Stage-2 Reranked Single Agents</option>
+            <option value="combinations">Orthogonal Synergistic Combinations</option>
+          </select>
+        </label>
+        <label class="ev-label">Filter by Pillar
+          <select id="curative-pillar">
+            <option value="all" selected>All Pillars</option>
+            <option value="trm">Pillar 1: T_RM Disarmament</option>
+            <option value="stem">Pillar 2: McSC Regeneration</option>
+            <option value="barrier">Pillar 3: PDE4B Barrier Suppression</option>
+          </select>
+        </label>
+        <label class="ev-label">Limit
+          <select id="curative-limit">
+            <option value="10">Top 10</option>
+            <option value="20" selected>Top 20</option>
+            <option value="50">Top 50</option>
+          </select>
+        </label>
+        <button type="button" id="btn-curative-refresh">Refresh</button>
+      </div>
+      <div id="curative-results" class="results"></div>
+
+      <div class="disclaimer-box" style="margin-top: 24px;">
+        <h3 style="font-size: 14px; margin-top: 0; margin-bottom: 8px;">Interactive GNN Link Predictor</h3>
+        <p class="hint" style="margin-bottom: 12px;">Query forward <code>(head, relation, ?)</code>, reverse <code>(?, relation, tail)</code>, or direct triple <code>(head, relation, tail)</code> links using the trained RGAT-4H + ComplEx model.</p>
+        <form id="form-gnn-predict" class="row">
+          <input type="text" id="gnn-predict-head" placeholder="Head entity (e.g. baricitinib, optional if tail provided)" style="flex: 2;" />
+          <select id="gnn-predict-relation" style="flex: 1;">
+            <option value="TREATS" selected>TREATS</option>
+            <option value="INHIBITS">INHIBITS</option>
+            <option value="ACTIVATES">ACTIVATES</option>
+            <option value="EXPRESSED_IN">EXPRESSED_IN</option>
+            <option value="ASSOCIATED_WITH">ASSOCIATED_WITH</option>
+            <option value="CO_EXPRESSED_WITH">CO_EXPRESSED_WITH</option>
+          </select>
+          <input type="text" id="gnn-predict-tail" placeholder="Tail entity (e.g. PDE4B, MITF, Vitiligo, optional if head provided)" style="flex: 2;" />
+          <select id="gnn-predict-kind" style="flex: 1;">
+            <option value="">Any Kind</option>
+            <option value="DISEASE">DISEASE</option>
+            <option value="TARGET">TARGET</option>
+            <option value="DRUG">DRUG</option>
+            <option value="CELL_TYPE">CELL_TYPE</option>
+          </select>
+          <button type="submit">Predict Link</button>
+        </form>
+        <div id="gnn-predict-results" class="results" style="margin-top: 12px;"></div>
+      </div>
     </section>
 
     <!-- GRAPH -->

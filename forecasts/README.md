@@ -43,7 +43,7 @@ Povorcitinib 30 mg vs placebo at week 52, active arm then placebo.
 
 | Target | Sealed | v0.2 (default) | v0.4 | v0.5 |
 |---|---|---|---|---|
-| T-VASI50, STOP-V1 and STOP-V2 ([details](povorcitinib-phase3/README.md)) | 2026-10-21, direction already public | 16.7% (3–52) / 15.7% | 21.5% (5–54) / 6.3% | 19.8% (4–50) / 5.1% |
+| T-VASI50, STOP-V1 and STOP-V2 ([details](povorcitinib-phase3/README.md)) | 2026-10-21; **resolved 2026-11-02** (v0.5 wins by +4.19 nats) | 16.7% (3–52) / 15.7% [log: −19.00] | 21.5% (5–54) / 6.3% [log: −15.04] | **19.8% (4–50) / 5.1% [log: −14.81]** |
 | F-VASI75, China phase 3 (NCT07865312) | 2026-10-22, before recruitment | 46.6% (9–88) / 9.4% | 29.6% (7–66) / 5.5% | 25.9% (6–59) / 4.0% |
 | T-VASI50, China phase 3 (NCT07865312) | 2026-10-22, before recruitment | 16.7% (3–52) / 15.7% | 21.5% (5–54) / 6.3% | 19.8% (4–50) / 5.1% |
 

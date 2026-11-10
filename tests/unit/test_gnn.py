@@ -144,6 +144,18 @@ def test_relational_gnn_forward_and_loss() -> None:
     assert "score" in predictions[0]
     assert "name" in predictions[0]
 
+    # Test reverse prediction: (?, TREATS, vitiligo)
+    rev_predictions = model.predict_top_k(tail_name="vitiligo", rel_name="TREATS", dataset=ds, top_k=3)
+    assert len(rev_predictions) > 0
+    assert "score" in rev_predictions[0]
+
+    # Test triple scoring: (tofacitinib, TREATS, vitiligo)
+    triple_score = model.predict_top_k(head_name="tofacitinib", tail_name="vitiligo", rel_name="TREATS", dataset=ds)
+    assert len(triple_score) == 1
+    assert triple_score[0]["head"] == "tofacitinib"
+    assert triple_score[0]["tail"] == "vitiligo"
+    assert "probability" in triple_score[0]
+
     # Test decode_all_heads and decode_all_tails consistency
     heads_scores = model.decode_all_heads(h, torch.tensor([0]), torch.tensor([2]))
     assert heads_scores.shape == (1, ds.num_nodes)
@@ -265,3 +277,124 @@ def test_rgat_forward_and_loss() -> None:
         edge_weights=ds.edge_weight,
     )
     assert loss.item() > 0.0
+
+
+def test_synergy_metrics_and_screening(tmp_path) -> None:
+    import json
+    import numpy as np
+    from vitiligo.gnn.synergy import (
+        compute_tanimoto,
+        compute_target_orthogonality,
+        screen_pairwise_synergy,
+    )
+
+    # Test compute_tanimoto
+    fp1 = np.array([1, 0, 1, 1, 0], dtype=bool)
+    fp2 = np.array([1, 0, 0, 1, 1], dtype=bool)
+    assert compute_tanimoto(fp1, fp2) == pytest.approx(0.5)
+    assert compute_tanimoto(np.zeros(5), np.zeros(5)) == 0.0
+
+    # Test compute_target_orthogonality
+    targets_a = ["JAK1 (Act)", "JAK3 (Act)"]
+    targets_b = ["TYR (Act)", "MITF (Act)"]
+    assert compute_target_orthogonality(targets_a, targets_b) == pytest.approx(1.0)
+
+    targets_c = ["JAK1 (Act)", "TYR (Act)"]
+    assert compute_target_orthogonality(targets_a, targets_c) == pytest.approx(2.0 / 3.0)
+
+    assert compute_target_orthogonality([], []) == 1.0
+
+    # Test screen_pairwise_synergy with dummy candidates json
+    candidates_data = {
+        "candidates": [
+            {
+                "drug_name": "Tofacitinib",
+                "curative_triad_alignment": "Pillar 1",
+                "probability": 0.85,
+                "trm_disarmament_score": 2.5,
+                "stem_cell_regen_score": 0.2,
+                "barrier_suppression_score": 0.1,
+                "matched_targets": ["JAK1", "JAK3"],
+                "safety_tier": "Oral Systemic",
+            },
+            {
+                "drug_name": "Afamelanotide",
+                "curative_triad_alignment": "Pillar 2",
+                "probability": 0.80,
+                "trm_disarmament_score": 0.1,
+                "stem_cell_regen_score": 2.8,
+                "barrier_suppression_score": 0.2,
+                "matched_targets": ["MC1R", "MITF"],
+                "safety_tier": "Subcutaneous Implant",
+            },
+            {
+                "drug_name": "Roflumilast",
+                "curative_triad_alignment": "Pillar 3",
+                "probability": 0.78,
+                "trm_disarmament_score": 0.3,
+                "stem_cell_regen_score": 0.4,
+                "barrier_suppression_score": 2.6,
+                "matched_targets": ["PDE4B", "PDE4D"],
+                "safety_tier": "Topical",
+            },
+        ]
+    }
+    cand_file = tmp_path / "candidates.json"
+    with open(cand_file, "w") as f:
+        json.dump(candidates_data, f)
+
+    out_json = tmp_path / "synergy.json"
+    out_md = tmp_path / "synergy.md"
+
+    results = screen_pairwise_synergy(
+        top_candidates_path=cand_file,
+        top_n_candidates=10,
+        top_k_pairs=5,
+        out_json=out_json,
+        out_md=out_md,
+    )
+
+    assert len(results) > 0
+    assert out_json.exists()
+    assert out_md.exists()
+    top = results[0]
+    assert top.rank == 1
+    assert top.synergy_score > 0
+    assert 0.0 <= top.virtual_ci <= 1.0
+    assert 0.0 <= top.target_orthogonality <= 1.0
+
+
+def test_reverse_target_screening(tmp_path) -> None:
+    from vitiligo.gnn.reverse_screen import run_reverse_target_screening
+
+    dataset = _make_dummy_dataset()
+    model = RelationalGNN(
+        num_nodes=dataset.num_nodes,
+        num_relations=dataset.num_relations,
+        hidden_dim=16,
+        num_layers=1,
+    )
+
+    out_json = tmp_path / "reverse_screen.json"
+    out_md = tmp_path / "reverse_screen.md"
+
+    results = run_reverse_target_screening(
+        dataset=dataset,
+        gnn_model=model,
+        top_per_target=5,
+        filter_cytotoxic=True,
+        out_json=out_json,
+        out_md=out_md,
+    )
+
+    assert out_json.exists()
+    assert out_md.exists()
+    assert len(results) > 0
+    assert "INHIBITS_JAK1" in results
+    assert "INHIBITS_IL15" in results
+    assert "TREATS_Vitiligo" in results
+    jak1_hits = results["INHIBITS_JAK1"].hits
+    assert len(jak1_hits) > 0
+    assert jak1_hits[0].drug_name in ["tofacitinib", "ritlecitinib"]
+
+

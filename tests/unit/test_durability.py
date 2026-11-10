@@ -62,3 +62,28 @@ def test_sealed_durability_forecasts_verify() -> None:
         assert hashlib.sha256(draws).hexdigest() == record["draws_sha256"], path
         # Kept out of the weekly binomial scoring, which reads "prediction".
         assert "prediction" not in record and "target" not in record
+
+
+def test_maintenance_cost_calculation() -> None:
+    import sys
+    from pathlib import Path
+
+    repo_root = str(Path(__file__).resolve().parents[2])
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+
+    from scripts.durability.maintenance_cost import compute_costs
+
+    costs = compute_costs("Facial-only responder", daily_rux_grams=1.0, twice_weekly_grams_per_application=0.5)
+    assert len(costs) == 4
+    cont_rux = costs[0]
+    tac_2w = costs[2]
+
+    assert cont_rux.regimen == "Continuous Ruxolitinib 1.5% Cream"
+    assert cont_rux.annual_grams == 365.0
+    assert cont_rux.cost_usd > 10000.0
+
+    assert tac_2w.regimen == "Twice-Weekly Tacrolimus 0.1% Ointment"
+    assert tac_2w.annual_grams == 52.0
+    assert tac_2w.cost_usd < 100.0
+    assert tac_2w.pct_savings_vs_cont_rux > 99.0

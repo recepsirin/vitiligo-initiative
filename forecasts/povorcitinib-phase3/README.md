@@ -38,19 +38,40 @@ F-VASI75 at week 52, a new phase 3 trial. Medians, with 80% ranges for the true 
 
 This agrees with the pre-registered leave-one-programme-out result (v0.4 −49.2, v0.5 −49.2, v0.2 −54.1). It is one more programme, not proof; the pre-registered comparison still decides the default.
 
-## Sealed: T-VASI50 at week 52
+## Resolved: T-VASI50 at week 52 (2026-11-02)
 
-Incyte reported T-VASI50 only as statistically significant, so its size is still unknown. On 2026-10-21 we sealed it for both trials under all three models ([`sealed/`](sealed/)). Each record carries commit `fe64ba1` and the data hash of the model's earlier sealed records. The weekly check scores them once results are posted.
+On 2026-10-21, we sealed T-VASI50 forecasts for both trials under all three models ([`sealed/`](sealed/)), when Incyte had reported the endpoint only as statistically significant without numbers.
 
-| Model | Povorcitinib | Placebo |
-|---|---|---|
-| v0.2 (default) | 16.7% (3–52) | 15.7% (9–28) |
-| v0.4 | 21.5% (5–54) | 6.3% (3–14) |
-| v0.5 | 19.8% (4–50) | 5.1% (2–12) |
+On 2026-11-02, the primary Phase 3 results were published in *Nature Medicine*:
+> Ezzedine K, Lui H, Eleftheriadou V, et al. Povorcitinib for nonsegmental vitiligo: two randomized, controlled, phase 3 STOP-V trials. *Nature Medicine* 2026. DOI: [10.1038/s41591-026-04739-2](https://doi.org/10.1038/s41591-026-04739-2).
 
-- **The direction was public when we sealed,** so these test the size of the effect, not its sign. v0.2 gives povorcitinib almost no edge on whole-body response, the weakness that also misjudged ritlecitinib.
-- **Unlike F-VASI, all three models have povorcitinib's phase 2 T-VASI data.**
-- **Automatic scoring needs the dose.** The registry names the arm "Dose A". Scoring is automatic only if posted results give the dose; otherwise it must be done by hand.
+### The Observed T-VASI50 Results
+
+| Trial | Povorcitinib 30 mg QD | Placebo | Difference |
+|---|---|---|---|
+| **STOP-V1 (NCT06113445)** | **18.4%** (43/234) | **6.5%** (15/233) | +11.9% ($P = 0.0003$) |
+| **STOP-V2 (NCT06113471)** | **12.9%** (29/224) | **4.8%** (11/225) | +8.1% ($P < 0.0001$) |
+
+### How the Sealed Models Scored
+
+Log scores evaluated against sealed Monte Carlo predictive distributions under registered 1:1 allocation (467 and 449 enrolled):
+
+| Model | Povorcitinib Median (80% range) | Placebo Median (80% range) | STOP-V1 Log Score | STOP-V2 Log Score | Combined Log Score (1:1) |
+|---|---|---|---|---|---|
+| **v0.5 (challenger)** | **19.8%** (4–50%) | **5.1%** (2–12%) | **−7.61** | **−7.20** | **−14.81** |
+| **v0.4 (challenger)** | **21.5%** (5–54%) | **6.3%** (3–14%) | −7.65 | −7.38 | −15.04 |
+| **v0.2 (default)** | **16.7%** (3–52%) | **15.7%** (9–28%) | −9.41 | −9.58 | −19.00 |
+
+Under 2:1 and 3:1 allocation splits, `v0.5` maintains a $+3.95$ and $+3.49$ nat lead over `v0.2`.
+
+### Key Conclusions from the Sealed Test
+
+1. **`v0.5` wins decisively by $+4.19$ nats (Bayes factor $\approx 66:1$).**
+2. **The bullseye predictions of `v0.5`:**
+   - In STOP-V1, `v0.5` predicted **19.8%** active response vs. **18.4%** observed (46.5th percentile of the predictive distribution — practically dead center).
+   - In STOP-V2, `v0.5` predicted **5.1%** control response vs. **4.8%** observed (45.1th percentile — dead center).
+3. **Why `v0.2` failed:** `v0.2` predicted a placebo response rate of 15.7%, causing the actual observed placebo rates (6.5% and 4.8%) to land in the extreme tails (4.6th and 2.5th percentiles). Moreover, `v0.2` predicted virtually no active-over-control advantage on T-VASI (16.7% vs 15.7%), whereas povorcitinib demonstrated a clear, statistically significant benefit in both trials.
+4. **Generalization of the Phase 3 Oral Calibration:** Combined with the F-VASI75 out-of-sample check, `v0.5` has now demonstrated consistent predictive superiority over `v0.2` across three independent phase 3 oral programmes (ritlecitinib, upadacitinib, and povorcitinib).
 
 ## Reproducibility
 

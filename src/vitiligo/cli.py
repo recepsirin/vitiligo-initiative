@@ -705,10 +705,14 @@ def gnn_rerank(
 
 @gnn_app.command("predict")
 def gnn_predict(
-    head: str = typer.Argument(..., help="Head entity name (e.g. 'vitiligo' or drug name)."),
-    relation: str = typer.Argument(
-        ..., help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."
+    head: str | None = typer.Argument(None, help="Head entity name (e.g. 'baricitinib' or drug name)."),
+    relation: str | None = typer.Argument(
+        None, help="Relation predicate (e.g. 'TREATS', 'INHIBITS', 'ACTIVATES')."
     ),
+    tail: str | None = typer.Option(
+        None, "--tail", "-t", help="Tail entity name for reverse or triple query (e.g. 'PDE4B', 'MITF', 'vitiligo')."
+    ),
+    rel_opt: str | None = typer.Option(None, "--relation", "-r", help="Relation predicate override."),
     top_k: int = typer.Option(10, "--top-k", help="Number of predictions."),
     kind: str | None = typer.Option(
         None, "--kind", help="Filter target entity kind (e.g. DRUG, TARGET, DISEASE)."
@@ -717,22 +721,52 @@ def gnn_predict(
         True, "--canonical/--all", help="Restrict DRUG predictions to canonical molecules."
     ),
 ) -> None:
-    """Predict top tail entities for a query triple (head, relation, ?)."""
+    """Predict top candidate entities or score a link across forward, reverse, or triple queries:
+    1. Forward: vitiligo gnn predict baricitinib INHIBITS --kind TARGET
+    2. Reverse: vitiligo gnn predict --tail PDE4B -r INHIBITS --kind DRUG
+    3. Triple: vitiligo gnn predict baricitinib TREATS --tail vitiligo
+    """
+    rel = rel_opt or relation or "TREATS"
+    if not head and not tail:
+        console.print("[red]Error: Either head or --tail must be provided.[/red]")
+        raise typer.Exit(code=1)
+
     from vitiligo.gnn.dataset import load_graph_dataset
     from vitiligo.gnn.train import load_trained_gnn
 
     dataset = load_graph_dataset()
     model = load_trained_gnn()
     results = model.predict_top_k(
-        head,
-        relation,
-        dataset,
+        head_name=head,
+        tail_name=tail,
+        rel_name=rel,
+        dataset=dataset,
         top_k=top_k,
         target_kind=kind,
         canonical_only=canonical,
     )
 
-    table = Table(title=f"Predictions: ({head}, {relation}, ?)")
+    if head and tail:
+        title = f"Triple Link Score: ({head}, {rel}, {tail})"
+        table = Table(title=title)
+        table.add_column("Head", style="bold")
+        table.add_column("Relation", style="cyan")
+        table.add_column("Tail", style="bold")
+        table.add_column("Score", justify="right")
+        table.add_column("Probability", justify="right")
+        for r in results:
+            table.add_row(
+                str(r.get("head", head)),
+                str(r.get("relation", rel)),
+                str(r.get("tail", tail)),
+                f"{r['score']:.3f}",
+                f"{r['probability']:.1%}",
+            )
+        console.print(table)
+        return
+
+    query_str = f"({head}, {rel}, ?)" if head else f"(?, {rel}, {tail})"
+    table = Table(title=f"Predictions: {query_str}")
     table.add_column("Rank", justify="right", style="cyan")
     table.add_column("Entity", style="bold")
     table.add_column("Kind", style="dim")
@@ -747,6 +781,111 @@ def gnn_predict(
             f"{r['probability']:.1%}",
         )
     console.print(table)
+
+
+@gnn_app.command("synergy")
+def gnn_synergy(
+    top_candidates: int = typer.Option(
+        30, "--candidates", help="Number of top single agents to evaluate."
+    ),
+    top_k: int = typer.Option(20, "--top-k", help="Number of synergistic pairs to display."),
+    out_json: str = typer.Option(
+        "exports/gnn_pairwise_synergy_matrix.json", "--out-json", help="Path to JSON output."
+    ),
+    out_md: str = typer.Option(
+        "docs/pairwise-synergy-matrix.md", "--out-md", help="Path to Markdown report."
+    ),
+) -> None:
+    """Screen pairwise drug synergy across target orthogonality, Bliss excess, and virtual CI."""
+    from pathlib import Path
+
+    from vitiligo.gnn.synergy import screen_pairwise_synergy
+
+    results = screen_pairwise_synergy(
+        top_n_candidates=top_candidates,
+        top_k_pairs=top_k,
+        out_json=Path(out_json),
+        out_md=Path(out_md),
+    )
+
+    table = Table(title="Top Synergistic Drug Combinations (Curative Triad)")
+    table.add_column("Rank", justify="right", style="cyan")
+    table.add_column("Combination", style="bold")
+    table.add_column("Virtual CI", justify="right")
+    table.add_column("Bliss Excess", justify="right")
+    table.add_column("Synergy", justify="right")
+    table.add_column("Mechanistic Rationale")
+
+    for r in results[:top_k]:
+        ci_str = (
+            f"[bold green]{r.virtual_ci:.2f}[/bold green]"
+            if r.virtual_ci < 0.7
+            else f"{r.virtual_ci:.2f}"
+        )
+        bliss_val = r.bliss_excess
+        if abs(bliss_val) < 1e-4:
+            bliss_str = "0.000"
+        elif bliss_val > 0:
+            bliss_str = f"+{bliss_val:.3f}"
+        else:
+            bliss_str = f"{bliss_val:.3f}"
+        table.add_row(
+            str(r.rank),
+            f"{r.drug_a.capitalize()} + {r.drug_b.capitalize()}",
+            ci_str,
+            bliss_str,
+            f"{r.synergy_score:.2f}",
+            r.mechanistic_rationale,
+        )
+    console.print(table)
+    console.print(f"Detailed report written to [cyan]{out_md}[/cyan]")
+
+
+@gnn_app.command("reverse-screen")
+def gnn_reverse_screen(
+    top_k: int = typer.Option(10, "--top-k", help="Top candidates per bottleneck target."),
+    filter_cytotoxic: bool = typer.Option(
+        True, "--filter-cytotoxic/--all", help="Exclude cytotoxic chemotherapy agents."
+    ),
+    out_json: str = typer.Option(
+        "exports/reverse_target_screening.json", "--out-json", help="Path to JSON output."
+    ),
+    out_md: str = typer.Option(
+        "docs/reverse-target-screening.md", "--out-md", help="Path to Markdown report."
+    ),
+) -> None:
+    """Reverse target screening across the Curative Triad (? -> Target)."""
+    from pathlib import Path
+    from vitiligo.gnn.reverse_screen import run_reverse_target_screening
+
+    results = run_reverse_target_screening(
+        top_per_target=top_k,
+        filter_cytotoxic=filter_cytotoxic,
+        out_json=Path(out_json),
+        out_md=Path(out_md),
+    )
+
+    for key, res in results.items():
+        table = Table(title=f"{res.pillar}: ({res.relation} {res.target_name})")
+        table.add_column("Rank", justify="right", style="cyan")
+        table.add_column("Candidate Drug", style="bold")
+        table.add_column("Score", justify="right")
+        table.add_column("Probability", justify="right")
+        table.add_column("Mechanism Class", style="dim")
+        table.add_column("Route & Safety")
+        for h in res.hits:
+            table.add_row(
+                str(h.rank),
+                h.drug_name,
+                f"{h.score:.3f}",
+                f"{h.probability:.1%}",
+                h.mechanism_class,
+                h.route,
+            )
+        console.print(table)
+        console.print()
+
+    console.print(f"Detailed discovery report written to [cyan]{out_md}[/cyan]")
 
 
 @ingest_app.command("vitiligo-as-outcome")
@@ -3376,7 +3515,7 @@ def discover_watch_cmd(
     """Rank pending results by what they would tell us, and list what is new.
 
     New: Europe PMC papers and preprints, JAK vitiligo trials registered or updated
-    on ClinicalTrials.gov, and SEC filings mentioning vitiligo (needs SEC_USER_AGENT).
+    on ClinicalTrials.gov, NCBI GEO expression series, and SEC filings mentioning vitiligo (needs SEC_USER_AGENT).
     """
     from datetime import date, timedelta
 
@@ -3426,6 +3565,7 @@ def discover_watch_cmd(
     sources: list[tuple[str, Any]] = [
         ("Europe PMC", lambda: watch.europe_pmc(start)),
         ("ClinicalTrials.gov", lambda: watch.ctgov(start)),
+        ("NCBI GEO", lambda: watch.geo(start)),
         ("SEC filings", lambda: watch.sec_filings(start, get_settings().sec_user_agent)),
     ]
     report: dict[str, Any] = {"since": start.isoformat(), "ranked": [asdict(t) for t in ranked]}

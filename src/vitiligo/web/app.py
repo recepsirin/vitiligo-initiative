@@ -460,6 +460,60 @@ def create_app() -> FastAPI:
             },
         }
 
+    @app.get("/api/gnn/predict")
+    def gnn_predict_endpoint(
+        head: str | None = None,
+        tail: str | None = None,
+        relation: str = "TREATS",
+        top_k: int = 10,
+        kind: str | None = None,
+        canonical: bool = True,
+    ) -> dict[str, Any]:
+        """Predict top entities or score a link across forward, reverse, or triple queries:
+        1. Forward: (head, rel, ?) -> predicts top tails.
+        2. Reverse: (?, rel, tail) -> predicts top heads.
+        3. Triple: (head, rel, tail) -> scores the exact edge.
+        """
+        clean_head = head.strip() if head and head.strip() else None
+        clean_tail = tail.strip() if tail and tail.strip() else None
+        clean_rel = relation.strip() if relation and relation.strip() else "TREATS"
+
+        if not clean_head and not clean_tail:
+            raise HTTPException(status_code=400, detail="Either head or tail must be provided.")
+        if top_k < 1 or top_k > 50:
+            raise HTTPException(status_code=400, detail="top_k must be between 1 and 50.")
+        try:
+            from vitiligo.gnn.dataset import load_graph_dataset
+            from vitiligo.gnn.train import load_trained_gnn
+
+            dataset = load_graph_dataset()
+            model = load_trained_gnn()
+            results = model.predict_top_k(
+                head_name=clean_head,
+                tail_name=clean_tail,
+                rel_name=clean_rel,
+                dataset=dataset,
+                top_k=top_k,
+                target_kind=kind.strip() if kind else None,
+                canonical_only=canonical,
+            )
+            return {
+                "head": clean_head,
+                "tail": clean_tail,
+                "relation": clean_rel,
+                "query_mode": "triple" if (clean_head and clean_tail) else ("forward" if clean_head else "reverse"),
+                "predictions": results,
+            }
+        except Exception as exc:
+            logger.warning("GNN predict endpoint warning: %s", exc)
+            return {
+                "head": clean_head,
+                "tail": clean_tail,
+                "relation": clean_rel,
+                "predictions": [],
+                "error": str(exc),
+            }
+
     app.mount(
         "/static",
         StaticFiles(directory=str(STATIC_DIR)),

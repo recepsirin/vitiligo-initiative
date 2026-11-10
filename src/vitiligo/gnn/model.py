@@ -372,40 +372,84 @@ class RelationalGNN(nn.Module):
     @torch.no_grad()
     def predict_top_k(
         self,
-        head_name: str,
-        rel_name: str,
-        dataset: GraphDataset,
+        head_name: str | None = None,
+        rel_name: str = "TREATS",
+        dataset: GraphDataset | None = None,
+        tail_name: str | None = None,
         top_k: int = 15,
         target_kind: str | None = None,
         canonical_only: bool = True,
     ) -> list[dict[str, object]]:
-        """Predict top-k candidate entities for (head_name, rel_name, ?)."""
+        """Predict candidate entities or score links across three query modes:
+        1. Forward: (head, rel, ?) -> predicts top tails.
+        2. Reverse: (?, rel, tail) -> predicts top heads.
+        3. Triple: (head, rel, tail) -> scores the exact edge.
+        """
         self.eval()
-        if head_name.lower() in dataset.name_to_idx:
-            head_idx = dataset.name_to_idx[head_name.lower()]
-        elif head_name in dataset.name_to_idx:
-            head_idx = dataset.name_to_idx[head_name]
-        elif head_name in dataset.key_to_idx:
-            head_idx = dataset.key_to_idx[head_name]
-        else:
-            raise KeyError(f"Head entity '{head_name}' not found in dataset.")
+        if dataset is None:
+            raise ValueError("GraphDataset is required for link prediction.")
+
+        if not head_name and not tail_name:
+            raise ValueError("Either head_name or tail_name must be provided.")
 
         if rel_name not in dataset.relation_to_idx:
             raise KeyError(f"Relation '{rel_name}' not in {dataset.idx_to_relation}")
         rel_idx = dataset.relation_to_idx[rel_name]
 
+        def _lookup(name: str) -> int:
+            clean = name.strip()
+            if clean.lower() in dataset.name_to_idx:
+                return dataset.name_to_idx[clean.lower()]
+            if clean in dataset.name_to_idx:
+                return dataset.name_to_idx[clean]
+            if clean.upper() in dataset.name_to_idx:
+                return dataset.name_to_idx[clean.upper()]
+            if clean in dataset.key_to_idx:
+                return dataset.key_to_idx[clean]
+            raise KeyError(f"Entity '{name}' not found in dataset.")
+
         edge_index = dataset.edge_index.to(self.device)
         edge_type = dataset.edge_type.to(self.device)
+        node_feat = (
+            dataset.node_features.to(self.device)
+            if dataset.node_features is not None
+            else None
+        )
 
-        h = self.encode(edge_index, edge_type, node_features=dataset.node_features)
-
-        head_t = torch.tensor([head_idx], dtype=torch.long, device=self.device)
+        h = self.encode(edge_index, edge_type, node_features=node_feat)
         rel_t = torch.tensor([rel_idx], dtype=torch.long, device=self.device)
 
-        scores = self.decode_all_tails(h, head_t, rel_t).squeeze(0)  # [num_nodes]
+        # Mode 3: Specific triple score (head, rel, tail)
+        if head_name and tail_name:
+            head_idx = _lookup(head_name)
+            tail_idx = _lookup(tail_name)
+            head_t = torch.tensor([head_idx], dtype=torch.long, device=self.device)
+            tail_t = torch.tensor([tail_idx], dtype=torch.long, device=self.device)
+            score_val = float(self.decode_triples(h, head_t, rel_t, tail_t).item())
+            prob_val = float(torch.sigmoid(torch.tensor(score_val)).item())
+            return [
+                {
+                    "rank": 1,
+                    "score": round(score_val, 4),
+                    "probability": round(prob_val, 4),
+                    "head": dataset.entities[head_idx].name,
+                    "relation": rel_name,
+                    "tail": dataset.entities[tail_idx].name,
+                }
+            ]
 
-        # Mask out self
-        scores[head_idx] = -1e9
+        # Mode 1: Forward query (head, rel, ?)
+        if head_name:
+            query_idx = _lookup(head_name)
+            query_t = torch.tensor([query_idx], dtype=torch.long, device=self.device)
+            scores = self.decode_all_tails(h, query_t, rel_t).squeeze(0)
+            scores[query_idx] = -1e9
+        else:
+            # Mode 2: Reverse query (?, rel, tail)
+            query_idx = _lookup(tail_name)  # type: ignore[arg-type]
+            query_t = torch.tensor([query_idx], dtype=torch.long, device=self.device)
+            scores = self.decode_all_heads(h, rel_t, query_t).squeeze(0)
+            scores[query_idx] = -1e9
 
         # Filter by target kind if requested
         if target_kind:
@@ -424,11 +468,12 @@ class RelationalGNN(nn.Module):
             if score <= -1e8:
                 continue
             entity = dataset.entities[idx]
+            prob = float(torch.sigmoid(torch.tensor(score)).item())
             results.append(
                 {
                     "rank": len(results) + 1,
                     "score": round(float(score), 4),
-                    "probability": round(float(torch.sigmoid(torch.tensor(score)).item()), 4),
+                    "probability": round(prob, 4),
                     "name": entity.name,
                     "kind": entity.kind,
                     "key": entity.key,

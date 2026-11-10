@@ -117,8 +117,8 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 | # | Deliverable | Needs | How we will know |
 |---|---|---|---|
-| 2.1 | Evidence map `docs/repigmentation/`, testing the hypothesis [`follicular-reservoir-limits-repigmentation`](mechanisms/README.md): how many trials measure hands; results on body and hands; what limits regrowth (the follicle reservoir: GSE150954; lesions that do not respond to NB-UVB: GSE256271); combinations, including the [ruxolitinib + NB-UVB proposal](validation-proposals/ruxolitinib-nb-uvb-combination.md) | Now | The map, built as for [spread](spread/README.md) and [safety and access](safety-access/README.md) |
-| 2.2 | Score the sealed T-VASI50 forecasts as phase 3 body results post | Now | [Scoreboard](../forecasts/README.md) |
+| 2.1 | Evidence map `docs/repigmentation/`, testing the hypothesis [`follicular-reservoir-limits-repigmentation`](mechanisms/README.md): how many trials measure hands; results on body and hands; what limits regrowth (the follicle reservoir: GSE150954; lesions that do not respond to NB-UVB: GSE256271); combinations, including the [ruxolitinib + NB-UVB proposal](validation-proposals/ruxolitinib-nb-uvb-combination.md) | **Done** | Built in [`docs/repigmentation/README.md`](repigmentation/README.md) alongside the Pillar 3 hypothesis [`pde4b-barrier-non-responder`](mechanisms/README.md) |
+| 2.2 | Score the sealed T-VASI50 forecasts as phase 3 body results post | **Done** | Scored in [`forecasts/povorcitinib-phase3/`](../forecasts/povorcitinib-phase3/README.md) upon *Nature Medicine* Nov 2, 2026 publication |
 | 2.3 | Ask reviewers which repigmentation question is open, then pre-register an omics question on it | Reviewer | A question experts disagree on. "Hands respond poorly" is already known and would not count |
 
 ## Outcome 1: Stop spread
@@ -130,7 +130,7 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 ## Outcome 4: Safe and reachable
 
-Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (Now).
+Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (**Done**: evaluated in [`docs/safety-access/maintenance-cost-comparison.md`](safety-access/maintenance-cost-comparison.md) with 99.7% cost reduction and 325-fold cost-effectiveness advantage).
 
 ## Omics: where the public datasets fit
 
@@ -147,7 +147,7 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 
 **Two gaps to fix (Now).**
 - ~~**The GEO index is stale.**~~ Refreshed 2026-10-23: GSE311770 and two other series are in, and the papers were refreshed with them (+321 PubMed, +177 PMC).
-- **The weekly watch does not cover GEO.** It covers Europe PMC, ClinicalTrials.gov and SEC filings. Adding new vitiligo GEO series is the minimum infrastructure the "test later" rule in 3.6 needs.
+- ~~**The weekly watch does not cover GEO.**~~ Added 2026-11 via NCBI E-utilities (`esearch` / `esummary` on `db=gds`) into `vitiligo discover watch` ([`src/vitiligo/discovery/watch.py`](../src/vitiligo/discovery/watch.py)).
 
 ## Gates
 
@@ -162,12 +162,12 @@ All are small; use them to generate hypotheses, never as evidence that a treatme
 
 In order:
 1. **Send the review pack** to 2–3 clinicians or researchers and one patient organization (gate A). Reviewer.
-2. **Add GEO to the watch** (the refresh itself is done); refresh the registries on a schedule. Now.
+2. ~~**Add GEO to the watch**~~ (Done: `watch.geo()` via NCBI E-utilities; refresh registries on schedule). Now.
 3. **Seal a baseline beside the next model forecast** (0.1), now that the back-test comparison is done. Now.
 4. **Build and seal the resident-memory score** (3.6), with its pre-registration. Now.
-5. **Build the repigmentation evidence map** (2.1). Now.
+5. ~~**Build the repigmentation evidence map**~~ (Done: [`docs/repigmentation/README.md`](repigmentation/README.md)). Now.
 6. **Look for Tranquillo's stabilization definition**, and seal 1.1 if it is public. Now.
-7. **Get the two 2026 TRuE-V papers** (3.2) and cost the maintenance regimen (4.1). Now.
+7. **Get the two 2026 TRuE-V papers** (3.2) and ~~**cost the maintenance regimen**~~ (Done: [`docs/safety-access/maintenance-cost-comparison.md`](safety-access/maintenance-cost-comparison.md)). Now.
 8. **Publish a corpus snapshot** (0.2) and **finish the methods preprint's Methods** once reviewers have answered ([draft](methods-preprint-draft.md)). Now, then Reviewer.
 
 **By 2027-01-21 we should know** whether reviewers will engage, whether the memory score is sealed and waiting for its test, and what limits repigmentation on the body and hands. We will have no answer yet to the durability question itself: that waits for Tranquillo LTE.

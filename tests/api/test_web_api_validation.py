@@ -180,3 +180,37 @@ def test_gnn_discovery_endpoint(api_client) -> None:
     assert "benchmark_metrics" in body
     assert "stage2_reranker" in body
     assert "functional_screen" in body
+
+
+def test_gnn_predict_endpoint(api_client) -> None:
+    """GET /api/gnn/predict validates parameters and handles predictions."""
+    bad_head = api_client.get("/api/gnn/predict?relation=TREATS")
+    assert bad_head.status_code == 400
+
+    bad_k = api_client.get("/api/gnn/predict?head=tofacitinib&relation=TREATS&top_k=0")
+    assert bad_k.status_code == 400
+
+    # 1. Forward query: (tofacitinib, TREATS, ?)
+    resp = api_client.get("/api/gnn/predict?head=tofacitinib&relation=TREATS&top_k=3&kind=DISEASE")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["head"] == "tofacitinib"
+    assert body["relation"] == "TREATS"
+    assert body["query_mode"] == "forward"
+    assert "predictions" in body
+
+    # 2. Reverse query: (?, INHIBITS, PDE4B)
+    resp_rev = api_client.get("/api/gnn/predict?tail=PDE4B&relation=INHIBITS&top_k=3&kind=DRUG")
+    assert resp_rev.status_code == 200
+    body_rev = resp_rev.json()
+    assert body_rev["tail"] == "PDE4B"
+    assert body_rev["query_mode"] == "reverse"
+    assert "predictions" in body_rev
+
+    # 3. Triple query: (tofacitinib, TREATS, Vitiligo)
+    resp_triple = api_client.get("/api/gnn/predict?head=tofacitinib&tail=Vitiligo&relation=TREATS")
+    assert resp_triple.status_code == 200
+    body_triple = resp_triple.json()
+    assert body_triple["query_mode"] == "triple"
+    assert len(body_triple["predictions"]) == 1
+    assert "probability" in body_triple["predictions"][0]

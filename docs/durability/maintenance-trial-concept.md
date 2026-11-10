@@ -23,7 +23,7 @@ After repigmentation on ruxolitinib cream, does a **light maintenance regimen** 
 | **Analysis** | Log-rank test and Cox model, pre-registered before enrolment. The result is forecast and sealed beforehand by our models, as a prospective test |
 
 **Choices made, with the alternatives:**
-- **Tacrolimus as the maintenance agent.** It is generic and cheap, has one maintenance trial, and its blinding is simple. The alternative, twice-weekly ruxolitinib cream, tests a step-down of the same drug, but costs more. A third arm would cover both, at about 1.5 times the size.
+- **Tacrolimus as the maintenance agent.** It is generic and cheap, has one maintenance trial, and its blinding is simple. Full pharmacoeconomic modeling ([`docs/safety-access/maintenance-cost-comparison.md`](../safety-access/maintenance-cost-comparison.md)) shows twice-weekly tacrolimus ($45/year) delivers a 99.7% cost reduction compared to continuous ruxolitinib ($14,658/year), reducing cost per relapse prevented from $86,224 to $265. The alternative, twice-weekly ruxolitinib cream, tests a step-down of the same drug, but costs $2,094/year. A third arm would cover both, at about 1.5 times the size.
 - **Facial F-VASI75 as the primary endpoint.** The face matters most to patients and is the most comparable with TRuE-V. Body response is secondary because it fades more and starts lower.
 - **Ruxolitinib cream responders, not oral ones.** The cream is approved and in clinical use, so responders can be found in clinics. Oral JAK inhibitors are not yet approved for vitiligo.
 

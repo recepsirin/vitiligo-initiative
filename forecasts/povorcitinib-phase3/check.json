@@ -168,6 +168,80 @@
      "median": 0.01140095121033309,
      "hi80": 0.29774706120818717,
      "hi90": 0.405822912886392
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.5363333333333333,
+       "control": 0.04633333333333333,
+       "difference": 0.7218333333333333
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 234,
+         "responders_control": 15,
+         "n_control": 233
+        },
+        "log_score": -9.413933586134029
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 311,
+         "responders_control": 10,
+         "n_control": 156
+        },
+        "log_score": -9.197871693825544
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -8.833773527080167
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.39966666666666667,
+       "control": 0.024833333333333332,
+       "difference": 0.6603333333333333
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 29,
+         "n_active": 224,
+         "responders_control": 11,
+         "n_control": 225
+        },
+        "log_score": -9.583702744919972
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 39,
+         "n_active": 299,
+         "responders_control": 7,
+         "n_control": 150
+        },
+        "log_score": -9.384592671027738
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 337,
+         "responders_control": 5,
+         "n_control": 112
+        },
+        "log_score": -9.12705499988974
+       }
+      }
+     }
     }
    }
   },
@@ -312,6 +386,80 @@
      "median": 0.1448017359907793,
      "hi80": 0.4156249099368753,
      "hi90": 0.5167821891318196
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.42866666666666664,
+       "control": 0.5176666666666667,
+       "difference": 0.4295
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 234,
+         "responders_control": 15,
+         "n_control": 233
+        },
+        "log_score": -7.651738058248097
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 311,
+         "responders_control": 10,
+         "n_control": 156
+        },
+        "log_score": -7.576457914863366
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -7.512260162188416
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.28983333333333333,
+       "control": 0.33516666666666667,
+       "difference": 0.32133333333333336
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 29,
+         "n_active": 224,
+         "responders_control": 11,
+         "n_control": 225
+        },
+        "log_score": -7.384539938945259
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 39,
+         "n_active": 299,
+         "responders_control": 7,
+         "n_control": 150
+        },
+        "log_score": -7.312090110719349
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 337,
+         "responders_control": 5,
+         "n_control": 112
+        },
+        "log_score": -7.176754753601433
+       }
+      }
+     }
     }
    }
   },
@@ -456,8 +604,95 @@
      "median": 0.13888157655539202,
      "hi80": 0.4040520535841044,
      "hi90": 0.5166473635474373
+    },
+    "trials": {
+     "NCT06113445 (STOP-V1)": {
+      "quantile_of_observed": {
+       "active": 0.465,
+       "control": 0.6586666666666666,
+       "difference": 0.44116666666666665
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 234,
+         "responders_control": 15,
+         "n_control": 233
+        },
+        "log_score": -7.613823458527205
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 57,
+         "n_active": 311,
+         "responders_control": 10,
+         "n_control": 156
+        },
+        "log_score": -7.5282798774130875
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 64,
+         "n_active": 350,
+         "responders_control": 8,
+         "n_control": 117
+        },
+        "log_score": -7.4986242100379075
+       }
+      }
+     },
+     "NCT06113471 (STOP-V2)": {
+      "quantile_of_observed": {
+       "active": 0.3145,
+       "control": 0.45116666666666666,
+       "difference": 0.32033333333333336
+      },
+      "log_score_by_allocation": {
+       "1:1": {
+        "counts": {
+         "responders_active": 29,
+         "n_active": 224,
+         "responders_control": 11,
+         "n_control": 225
+        },
+        "log_score": -7.1980211851692
+       },
+       "2:1": {
+        "counts": {
+         "responders_active": 39,
+         "n_active": 299,
+         "responders_control": 7,
+         "n_control": 150
+        },
+        "log_score": -7.106340188971738
+       },
+       "3:1": {
+        "counts": {
+         "responders_active": 43,
+         "n_active": 337,
+         "responders_control": 5,
+         "n_control": 112
+        },
+        "log_score": -6.9681887399186015
+       }
+      }
+     }
     }
    }
+  }
+ },
+ "t_vasi50_source": "Ezzedine K, Lui H, Eleftheriadou V, et al. Povorcitinib for nonsegmental vitiligo: two randomized, controlled, phase 3 STOP-V trials. Nature Medicine (2026-11-02). DOI: 10.1038/s41591-026-04739-2",
+ "observed_t_vasi50": {
+  "NCT06113445 (STOP-V1)": {
+   "active": 0.184,
+   "control": 0.065,
+   "enrolled": 467
+  },
+  "NCT06113471 (STOP-V2)": {
+   "active": 0.129,
+   "control": 0.048,
+   "enrolled": 449
   }
  }
 }

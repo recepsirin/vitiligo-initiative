@@ -1,0 +1,176 @@
+{
+  "title": "Vitiligo Maintenance Therapy Pharmacoeconomic Model",
+  "assumptions": {
+    "us_rux_60g_wac_usd": 2094.0,
+    "us_tac_60g_retail_usd": 45.0,
+    "uk_rux_100g_nice_gbp": 657.0,
+    "uk_tac_60g_tariff_gbp": 31.5,
+    "one_year_relapse_rate_stopped": 0.42,
+    "one_year_relapse_rate_maintained": 0.25,
+    "nnt_per_relapse_prevented": 5.88
+  },
+  "profiles": {
+    "facial_only": [
+      {
+        "profile": "Facial-only responder",
+        "regimen": "Continuous Ruxolitinib 1.5% Cream",
+        "frequency": "Twice daily (365 days)",
+        "annual_grams": 365.0,
+        "tubes_needed": 7,
+        "cost_usd": 14658.0,
+        "cost_gbp": 2628.0,
+        "usd_savings_vs_cont_rux": 0.0,
+        "pct_savings_vs_cont_rux": 0.0,
+        "cost_per_relapse_prevented_usd": 86223.53,
+        "cost_per_relapse_prevented_gbp": 15458.82
+      },
+      {
+        "profile": "Facial-only responder",
+        "regimen": "Twice-Weekly Ruxolitinib 1.5% Cream",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 52.0,
+        "tubes_needed": 1,
+        "cost_usd": 2094.0,
+        "cost_gbp": 657.0,
+        "usd_savings_vs_cont_rux": 12564.0,
+        "pct_savings_vs_cont_rux": 85.7,
+        "cost_per_relapse_prevented_usd": 12317.65,
+        "cost_per_relapse_prevented_gbp": 3864.71
+      },
+      {
+        "profile": "Facial-only responder",
+        "regimen": "Twice-Weekly Tacrolimus 0.1% Ointment",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 52.0,
+        "tubes_needed": 1,
+        "cost_usd": 45.0,
+        "cost_gbp": 31.5,
+        "usd_savings_vs_cont_rux": 14613.0,
+        "pct_savings_vs_cont_rux": 99.7,
+        "cost_per_relapse_prevented_usd": 264.71,
+        "cost_per_relapse_prevented_gbp": 185.29
+      },
+      {
+        "profile": "Facial-only responder",
+        "regimen": "Complete Cessation (Stop)",
+        "frequency": "None (Observation)",
+        "annual_grams": 0.0,
+        "tubes_needed": 0,
+        "cost_usd": 0.0,
+        "cost_gbp": 0.0,
+        "usd_savings_vs_cont_rux": 14658.0,
+        "pct_savings_vs_cont_rux": 100.0,
+        "cost_per_relapse_prevented_usd": 0.0,
+        "cost_per_relapse_prevented_gbp": 0.0
+      }
+    ],
+    "face_and_limited_body": [
+      {
+        "profile": "Face + limited body responder",
+        "regimen": "Continuous Ruxolitinib 1.5% Cream",
+        "frequency": "Twice daily (365 days)",
+        "annual_grams": 730.0,
+        "tubes_needed": 13,
+        "cost_usd": 27222.0,
+        "cost_gbp": 5256.0,
+        "usd_savings_vs_cont_rux": 0.0,
+        "pct_savings_vs_cont_rux": 0.0,
+        "cost_per_relapse_prevented_usd": 160129.41,
+        "cost_per_relapse_prevented_gbp": 30917.65
+      },
+      {
+        "profile": "Face + limited body responder",
+        "regimen": "Twice-Weekly Ruxolitinib 1.5% Cream",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 104.0,
+        "tubes_needed": 2,
+        "cost_usd": 4188.0,
+        "cost_gbp": 1314.0,
+        "usd_savings_vs_cont_rux": 23034.0,
+        "pct_savings_vs_cont_rux": 84.6,
+        "cost_per_relapse_prevented_usd": 24635.29,
+        "cost_per_relapse_prevented_gbp": 7729.41
+      },
+      {
+        "profile": "Face + limited body responder",
+        "regimen": "Twice-Weekly Tacrolimus 0.1% Ointment",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 104.0,
+        "tubes_needed": 2,
+        "cost_usd": 90.0,
+        "cost_gbp": 63.0,
+        "usd_savings_vs_cont_rux": 27132.0,
+        "pct_savings_vs_cont_rux": 99.7,
+        "cost_per_relapse_prevented_usd": 529.41,
+        "cost_per_relapse_prevented_gbp": 370.59
+      },
+      {
+        "profile": "Face + limited body responder",
+        "regimen": "Complete Cessation (Stop)",
+        "frequency": "None (Observation)",
+        "annual_grams": 0.0,
+        "tubes_needed": 0,
+        "cost_usd": 0.0,
+        "cost_gbp": 0.0,
+        "usd_savings_vs_cont_rux": 27222.0,
+        "pct_savings_vs_cont_rux": 100.0,
+        "cost_per_relapse_prevented_usd": 0.0,
+        "cost_per_relapse_prevented_gbp": 0.0
+      }
+    ],
+    "moderate_body": [
+      {
+        "profile": "Moderate body responder",
+        "regimen": "Continuous Ruxolitinib 1.5% Cream",
+        "frequency": "Twice daily (365 days)",
+        "annual_grams": 1460.0,
+        "tubes_needed": 25,
+        "cost_usd": 52350.0,
+        "cost_gbp": 9855.0,
+        "usd_savings_vs_cont_rux": 0.0,
+        "pct_savings_vs_cont_rux": 0.0,
+        "cost_per_relapse_prevented_usd": 307941.18,
+        "cost_per_relapse_prevented_gbp": 57970.59
+      },
+      {
+        "profile": "Moderate body responder",
+        "regimen": "Twice-Weekly Ruxolitinib 1.5% Cream",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 208.0,
+        "tubes_needed": 4,
+        "cost_usd": 8376.0,
+        "cost_gbp": 1971.0,
+        "usd_savings_vs_cont_rux": 43974.0,
+        "pct_savings_vs_cont_rux": 84.0,
+        "cost_per_relapse_prevented_usd": 49270.59,
+        "cost_per_relapse_prevented_gbp": 11594.12
+      },
+      {
+        "profile": "Moderate body responder",
+        "regimen": "Twice-Weekly Tacrolimus 0.1% Ointment",
+        "frequency": "Twice weekly (104 days)",
+        "annual_grams": 208.0,
+        "tubes_needed": 4,
+        "cost_usd": 180.0,
+        "cost_gbp": 126.0,
+        "usd_savings_vs_cont_rux": 52170.0,
+        "pct_savings_vs_cont_rux": 99.7,
+        "cost_per_relapse_prevented_usd": 1058.82,
+        "cost_per_relapse_prevented_gbp": 741.18
+      },
+      {
+        "profile": "Moderate body responder",
+        "regimen": "Complete Cessation (Stop)",
+        "frequency": "None (Observation)",
+        "annual_grams": 0.0,
+        "tubes_needed": 0,
+        "cost_usd": 0.0,
+        "cost_gbp": 0.0,
+        "usd_savings_vs_cont_rux": 52350.0,
+        "pct_savings_vs_cont_rux": 100.0,
+        "cost_per_relapse_prevented_usd": 0.0,
+        "cost_per_relapse_prevented_gbp": 0.0
+      }
+    ]
+  }
+}
