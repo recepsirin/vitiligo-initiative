@@ -482,6 +482,10 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=400, detail="Either head or tail must be provided.")
         if top_k < 1 or top_k > 50:
             raise HTTPException(status_code=400, detail="top_k must be between 1 and 50.")
+        query_mode = (
+            "triple" if (clean_head and clean_tail) else ("forward" if clean_head else "reverse")
+        )
+
         try:
             from vitiligo.gnn.dataset import load_graph_dataset
             from vitiligo.gnn.train import load_trained_gnn
@@ -501,9 +505,7 @@ def create_app() -> FastAPI:
                 "head": clean_head,
                 "tail": clean_tail,
                 "relation": clean_rel,
-                "query_mode": "triple"
-                if (clean_head and clean_tail)
-                else ("forward" if clean_head else "reverse"),
+                "query_mode": query_mode,
                 "predictions": results,
             }
         except Exception as exc:
@@ -512,6 +514,7 @@ def create_app() -> FastAPI:
                 "head": clean_head,
                 "tail": clean_tail,
                 "relation": clean_rel,
+                "query_mode": query_mode,
                 "predictions": [],
                 "error": str(exc),
             }
