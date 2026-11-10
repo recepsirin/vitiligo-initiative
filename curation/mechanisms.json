@@ -5,7 +5,7 @@
   {
    "id": "trm-il15-relapse",
    "title": "IL-15-dependent resident memory T cells bring vitiligo back after treatment stops",
-   "status": "draft",
+   "status": "sealed",
    "outcome": 3,
    "biological_state": "Melanocyte-reactive CD8 T cells with a resident-memory phenotype stay in skin that has repigmented, kept alive by IL-15 signalling from surrounding cells.",
    "mechanistic_claim": "Survival of those resident memory T cells is necessary for depigmentation to restart: without them, stopping treatment would not bring the disease back in that skin.",
@@ -57,7 +57,7 @@
      "ref": "trial:NCT04530344",
      "stance": "bounds",
      "causal_level": "perturbation_in_human",
-     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17\u20130.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18\u20130.99). It establishes that response erodes after stopping, without identifying what drives the loss."
+     "shows": "Randomized withdrawal of ruxolitinib cream in near-complete facial responders: near-complete response (F-VASI90) was lost after a median of 195 days off treatment, and continuing protected it (hazard ratio 0.32, 95% CI 0.17–0.61). Relapse below F-VASI75 was also less likely on continued treatment (hazard ratio 0.42, 0.18–0.99). It establishes that response erodes after stopping, without identifying what drives the loss."
     },
     {
      "ref": "gwas:GCST004785",
@@ -78,7 +78,7 @@
    ],
    "test": {
     "question": "In skin that has repigmented, does a resident-memory score measured when treatment stops predict loss of response within 52 weeks?",
-    "data": "A score derived from GSE203262, using GSE169238 to define the resident-memory programs, sealed before any outcome data are seen. Applied either to a public series deposited after sealing that samples skin after treatment stops, or to 1 mm punch biopsies taken at randomization in the stop-or-step-down trial concept (docs/durability/maintenance-trial-concept.md). GSE203262 is not usable as deposited: its processed files merge each patient's lesional and non-lesional samples into one matrix, and which barcode suffix is which is documented nowhere, so the labels must be resolved first (docs/roadmap.md, item 3.6).",
+    "data": "A score derived from GSE203262, using GSE169238 to define the resident-memory programs, sealed before any outcome data are seen. Applied either to a public series deposited after sealing that samples skin after treatment stops, or to 1 mm punch biopsies taken at randomization in the stop-or-step-down trial concept (docs/durability/maintenance-trial-concept.md). GSE203262 labels are resolved: !Sample_description maps '-1' to non-lesional and '-2' to lesional tissue, confirmed by 50x CXCL9/10 and 6.7x CD69 enrichment. The score is computed as S_TRM defined in docs/durability/trm-signature-preregistration.md.",
     "if_correct": "A higher score when treatment stops goes with a shorter time to loss of response: hazard ratio per standard deviation above 1, with the direction fixed before the outcome data are seen.",
     "if_incorrect": "No association, or a hazard ratio per standard deviation at or below 1.",
     "decides": "A hazard ratio above 1 leaves the memory hypothesis standing and sends the recruitment explanation to its own test. No association, with melanocyte density in the same biopsy predicting relapse instead, favours the melanocyte explanation and the hypothesis is dropped.",
@@ -87,7 +87,11 @@
    },
    "uncertainty": "The score would be derived from untreated lesional skin in stable disease, and applied to repigmented skin after treatment, where the same cells may look different. Any first test will be small, so a null result would not settle it alone. IL-15 blockade has one human trial, and it tested induction rather than relapse, so the intervention arm of this chain is untested in people. Human genetics gives the claim no support: no IL-15 axis gene is associated with vitiligo, though the same is true of the JAK genes that today's effective drugs target, so this is weak evidence either way. Absence here is also limited by what the Catalog annotates: a fifth of the significant variants carry no gene mapping at all.",
    "last_reviewed": "2026-10-23",
-   "note": "Roadmap item 3.6. Sealed once the score's definition is written, not before: a test whose instrument can still be tuned is not a test."
+   "note": "Roadmap item 3.6. Score derived in src/vitiligo/models/trm_score.py and pre-registered in docs/durability/trm-signature-preregistration.md.",
+   "seal": {
+    "sha256": "2c1028041242a2a0ffec7ae5debfb69710cfd2404c3b637505db2dfd42578f62",
+    "sealed_at": "2026-11-10T19:14:19.035697+00:00"
+   }
   },
   {
    "id": "follicular-reservoir-limits-repigmentation",

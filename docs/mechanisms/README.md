@@ -83,19 +83,19 @@ A seal is a SHA-256 over the **falsifiable core**: the claim, the context and th
 
 Sealing is refused while the gate fails, and re-sealing an already sealed record is refused.
 
-A hypothesis is sealed when its test names an instrument that can no longer be tuned. Neither record below is sealed yet, for that reason: both tests rest on a score that is still to be defined.
+A hypothesis is sealed when its test names an instrument that can no longer be tuned. `trm-il15-relapse` is sealed with its mathematical formulation and pre-registered falsification rules in [`docs/durability/trm-signature-preregistration.md`](../durability/trm-signature-preregistration.md).
 
 ## The records
 
 | ID | Outcome | Claim | Support reaches | Status |
 |---|---|---|---|---|
-| `trm-il15-relapse` | 3. Last | IL-15-dependent resident memory T cells are necessary for depigmentation to restart after treatment stops | Perturbation in animals | draft |
+| `trm-il15-relapse` | 3. Last | IL-15-dependent resident memory T cells are necessary for depigmentation to restart after treatment stops | Perturbation in animals | **sealed** (`2c102804`) |
 | `follicular-reservoir-limits-repigmentation` | 2. Restore pigment | Where the follicular melanocyte reservoir is absent or unresponsive, suppressing the attack is not enough to repigment | Association | draft |
 | `pde4b-barrier-non-responder` | 2. Restore pigment | Elevated PDE4B hydrolyzes cAMP, uncoupling PKA-CREB-MITF signaling and freezing melanogenesis in refractory lesions | Perturbation in vitro | draft |
 
 All three sit at the honest state of the field: the first rests on a mouse perturbation ([Richmond 2018](https://pubmed.ncbi.nlm.nih.gov/30021889/)) and human data that only bound it; the second rests on association alone; the third rests on paired human lesional RNA-seq (`GSE256271`) and in vitro human melanocyte cAMP perturbations ([PMID 39182565](https://pubmed.ncbi.nlm.nih.gov/39182565/)). The gate makes the evidence tier visible rather than letting a confident sentence hide it.
 
-`trm-il15-relapse` is roadmap item 3.6. Its test is the first use of this layer: derive a resident-memory score, seal it, then test it on skin sampled after treatment stops.
+`trm-il15-relapse` is roadmap item 3.6. Its test is the first use of this layer: the resident-memory score $S_{\text{TRM}}$ is derived from matched lesional/non-lesional scRNA-seq (`GSE203262`, resolved via `!Sample_description`) and mouse vitiligo reference (`GSE169238`), sealed before testing, waiting for skin sampled after treatment stops.
 
 ## What this is not
 
