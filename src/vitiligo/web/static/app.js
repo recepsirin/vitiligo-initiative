@@ -717,7 +717,7 @@ function renderCurativeCandidate(c) {
         <span class="pillar-badge pillar-badge-barrier">Pillar 3 (Barrier): ${barrier}</span>
       </div>
       <div class="candidate-section">
-        <div class="candidate-label">Curative Triad Role</div>
+        <div class="candidate-label">Translational Pathway</div>
         <div class="candidate-text"><strong>${escapeHtml(c.curative_triad_alignment || 'General Candidate')}</strong></div>
       </div>
       ${targets ? `<div class="candidate-section"><div class="candidate-label">Key Molecular Targets</div><div class="candidate-text">${targets}</div></div>` : ''}

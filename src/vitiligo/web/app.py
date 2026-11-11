@@ -427,7 +427,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/gnn/discovery")
     def gnn_discovery(top_k: int = 20) -> dict[str, Any]:
-        """Serve precomputed RGAT-4H + ComplEx GNN link prediction metrics, Stage-1 functional screen, and Stage-2 curative reranker results."""
+        """Serve precomputed RGAT-4H + ComplEx GNN link prediction metrics, Stage-1 functional screen, and Stage-2 translational reranker results."""
         if top_k < 1 or top_k > 50:
             raise HTTPException(status_code=400, detail="top_k must be between 1 and 50.")
 
