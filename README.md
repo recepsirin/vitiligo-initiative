@@ -21,8 +21,8 @@ Research and education software, not medical advice.
 | **Mechanisms** | Falsifiable hypotheses from biology to clinical outcome, each with its evidence on a causal ladder, the strongest rival explanation, and the test that separates them. | `vitiligo mechanism list` · [`docs/mechanisms/`](docs/mechanisms/README.md) |
 | **Knowledge graph** | 17,685 drugs, genes, diseases, adverse events, trials and interventions linked by 62,006 relations, each with its evidence: the paper, trial record or database entry, and the sentence where its licence allows. Half the relations are measurements: what trials posted to ClinicalTrials.gov or printed in their papers, each beside its comparator, and the genes lesional skin expresses differently in three GEO cohorts. Released openly on Hugging Face (CC BY 4.0; ICTRP-derived relations under WHO's terms). | [Dataset card](https://huggingface.co/datasets/re-cep/vitiligo-knowledge-graph) · `vitiligo graph release` |
 | **Relation extractor** | A BiomedBERT model fine-tuned to read which drugs, diseases and genes a paper relates, and how. It fills the knowledge graph from the full texts PubTator does not read, and every edge it adds cites its sentence. BioRED test F1 0.687 for the related pair, 0.540 with its type; 75% of the relations it loads were correct when checked by hand. | [Model card](https://huggingface.co/re-cep/vitiligo-relation-extractor) · `vitiligo relations evaluate` |
-| **Relational GNN & Reranker** | A 1,924-D multimodal Relational GNN (`FastRGCN` + asymmetric `ComplEx` Hermitian decoder) and Stage-2 Dense Cross-Encoder (94% accuracy). Screens 893 canonical molecules across the Curative Triad: $T_{\text{RM}}$ disarmament, stem cell regeneration, and GSE256271 `PDE4B` non-responder barrier suppression. | [Model card](https://huggingface.co/re-cep/vitiligo-relational-gnn) · `vitiligo gnn rerank` · [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) |
-| **Curative Discovery Suite** | Interactive public web application on Hugging Face Spaces: explores Curative Triad synergies, the 2,257-trial clinical pipeline explorer, head-to-head outcomes benchmarks, the pre-registered $T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$), stop-vs-step-down pharmacoeconomics, and open data downloads with Python quickstarts. | [Live Space](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · [`docs/curative-triad-investigator-brief.md`](docs/curative-triad-investigator-brief.md) |
+| **Relational GNN & Reranker** | A 1,924-D multimodal Relational GNN (`FastRGCN` + asymmetric `ComplEx` Hermitian decoder) and Stage-2 Dense Cross-Encoder (94% accuracy). Screens 893 canonical molecules across multi-target pathways: $T_{\text{RM}}$ disarmament, stem cell regeneration, and GSE256271 `PDE4B` non-responder barrier suppression. | [Model card](https://huggingface.co/re-cep/vitiligo-relational-gnn) · `vitiligo gnn rerank` · [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) |
+| **Translational Discovery Suite** | Interactive public web application on Hugging Face Spaces: explores in silico multi-target synergies, the 2,257-trial clinical pipeline explorer, head-to-head outcomes benchmarks, the pre-registered $T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$), maintenance pharmacoeconomics, and open research data downloads. | [Live Space](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · [`docs/curative-triad-investigator-brief.md`](docs/curative-triad-investigator-brief.md) |
 
 **Nothing on the served page is generated.** Every figure it shows is one a trial
 posted to a public registry, reproduced with its denominator and a link to its
@@ -82,23 +82,17 @@ vitiligo gnn rerank --top-stage1 60 --top-final 20
 
 ## Documentation
 
-| Doc | Contents |
-|---|---|
-| [`docs/clinical-validation-and-formulation.md`](docs/clinical-validation-and-formulation.md) | **Clinical Validation & Dual-Action Curative Regimens:** Real-world trial evidence, Tacrolimus + PDE4i formulation, and preclinical testing protocol |
-| [`docs/gnn-reranked-report.md`](docs/gnn-reranked-report.md) | **Stage-2 Dense Cross-Encoder Curative Discovery Screen:** Reranked candidates with 90%+ confidence |
-| [`docs/gnn-discovery-report.md`](docs/gnn-discovery-report.md) | **Curative Triad Discovery Screen:** Durability ($T_{\text{RM}}$), Regeneration (McSC), and Combination Synergies |
-| [`docs/success.md`](docs/success.md) | **What we are trying to solve:** the outcomes that define success, and the current focus (durability) |
-| [`docs/findings.md`](docs/findings.md) | **Start here:** what the JAK work found, and what we need experts to check |
-| [`docs/mechanisms/README.md`](docs/mechanisms/README.md) | Mechanistic hypotheses: the claim, its evidence, the rival explanation, and the test |
-| [`docs/engine.md`](docs/engine.md) | Setup, every CLI command, adding a source |
-| [`docs/architecture.md`](docs/architecture.md) | Modules, data flow, web API |
-| [`docs/jak-scenario-model.md`](docs/jak-scenario-model.md) | Scenario model, back-tests, forecasting policy |
-| [`docs/discovery-loop-plan.md`](docs/discovery-loop-plan.md) | Discovery loop: guarantees, claim families, phases |
-| [`docs/deploy.md`](docs/deploy.md) | Docker, what a host needs, environment variables |
-| [`docs/roadmap.md`](docs/roadmap.md) | **What comes next:** the order of work, what each step needs, and the gates |
-| [`docs/strategic-plan.md`](docs/strategic-plan.md) | Mission, phases, non-goals |
-| [`docs/scientific-brief.md`](docs/scientific-brief.md) | Disease biology, treatments, evidence gaps |
-| [`docs/candidate-report-v1.md`](docs/candidate-report-v1.md) | Evidence-scored therapeutic candidates |
+Comprehensive guides, specifications, and *in silico* research dossiers are organized in **[`docs/`](docs/README.md)**:
+
+| Category | Description | Key Documents |
+|---|---|---|
+| **Architecture & Systems** | Engineering specifications, CLI commands, ingest pipeline, Docker, and FastAPI backend. | [`architecture.md`](docs/architecture.md) · [`engine.md`](docs/engine.md) · [`deploy.md`](docs/deploy.md) · [`discovery-loop-plan.md`](docs/discovery-loop-plan.md) |
+| **Translational Hypotheses** | *In silico* multi-target synergy screening, GNN link prediction, and preclinical assay protocols. | [`curative-triad-investigator-brief.md`](docs/curative-triad-investigator-brief.md) · [`gnn-reranked-report.md`](docs/gnn-reranked-report.md) · [`pairwise-synergy-matrix.md`](docs/pairwise-synergy-matrix.md) |
+| **Pre-registrations & Seals** | Frozen prior distributions and cryptographic hashes sealing models before outcome unblinding. | [`durability/trm-signature-preregistration.md`](docs/durability/trm-signature-preregistration.md) (Seal `2c102804`) · [`model-v0.5-preregistration.md`](docs/model-v0.5-preregistration.md) |
+| **Clinical Concepts & Health Econ** | Resident memory T-cell ($T_{\text{RM}}$) durability models, mechanisms causal ladders, and HEOR maintenance cost comparisons. | [`durability/`](docs/durability/README.md) · [`mechanisms/`](docs/mechanisms/README.md) · [`safety-access/`](docs/safety-access/README.md) |
+| **Working Manuscripts** | Internal drafts detailing data ingest methodology and sealed prospective Bayesian forecasting. | [`methods-preprint-draft.md`](docs/methods-preprint-draft.md) · [`forecasting-preprint-draft.md`](docs/forecasting-preprint-draft.md) |
+
+See the complete index and table of contents in **[`docs/README.md`](docs/README.md)**.
 
 [CONTRIBUTING](CONTRIBUTING.md) · [SECURITY](SECURITY.md) (no public issues for vulnerabilities) · [CHANGELOG](CHANGELOG.md)
 
