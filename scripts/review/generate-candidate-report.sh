@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/../deploy/common.sh"
 
 JSON_OUT="${JSON_OUT:-exports/candidate-report.json}"
-MD_OUT="${MD_OUT:-docs/candidate-report-v1.md}"
+MD_OUT="${MD_OUT:-exports/candidate-report-v1.md}"
 
 vitiligo_cd_root
 

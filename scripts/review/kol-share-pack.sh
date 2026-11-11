@@ -36,9 +36,12 @@ vitiligo_run report candidates \
   --markdown "$OUT/candidate-report-v1.md"
 cp src/vitiligo/reports/candidate-intents.json "$OUT/"
 
-vitiligo_info "Copy briefs"
+vitiligo_info "Copy briefs and dossiers"
 cp docs/scientific-brief.md docs/eval-queries.json "$OUT/"
-if [[ -d docs/validation-proposals ]]; then
+if [[ -d exports/hf_space/dossiers ]]; then
+  mkdir -p "$OUT/dossiers"
+  cp exports/hf_space/dossiers/*.md "$OUT/dossiers/"
+elif [[ -d docs/validation-proposals ]]; then
   mkdir -p "$OUT/validation-proposals"
   cp docs/validation-proposals/*.md "$OUT/validation-proposals/"
 fi
@@ -69,7 +72,7 @@ Contents:
   candidate-report-v1.md    — evidence-scored therapeutic candidate rankings
   candidate-report.json     — machine-readable candidate report
   candidate-intents.json    — research intents used for per-intent rankings
-  validation-proposals/     — lab outreach one-pagers (top 3 candidates)
+  dossiers/                 — translational dossiers (cascade, formulation, protocol bridges)
   jak/docs/findings.md      — START HERE for the JAK work: what we found, what we need checked
   jak/jak-atlas.*           — every registered JAK-inhibitor vitiligo trial, with posted results
   jak/jak-arms.*            — harmonized arm x endpoint x week table (+ curated paper rows)

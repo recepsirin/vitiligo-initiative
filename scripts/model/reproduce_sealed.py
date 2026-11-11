@@ -62,4 +62,5 @@ for model, (directory, settings) in MODELS.items():
                 "sealed_control": q(s_c), "now_control": q(p_c),
             }  # fmt: skip
             print(key[:70], out[key], flush=True)
-Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
+if len(sys.argv) > 1:
+    Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
