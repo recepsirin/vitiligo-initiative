@@ -660,7 +660,7 @@ def gnn_screen(
         )
     console.print(table_comb)
     console.print(
-        "Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]docs/gnn-discovery-report.md[/cyan]"
+        "Saved detailed reports to [cyan]exports/gnn_candidate_report.json[/cyan] and [cyan]exports/gnn-discovery-report.md[/cyan]"
     )
 
 
@@ -800,7 +800,7 @@ def gnn_synergy(
         "exports/gnn_pairwise_synergy_matrix.json", "--out-json", help="Path to JSON output."
     ),
     out_md: str = typer.Option(
-        "docs/pairwise-synergy-matrix.md", "--out-md", help="Path to Markdown report."
+        "exports/pairwise-synergy-matrix.md", "--out-md", help="Path to Markdown report."
     ),
 ) -> None:
     """Screen pairwise drug synergy across target orthogonality, Bliss excess, and virtual CI."""
@@ -858,7 +858,7 @@ def gnn_reverse_screen(
         "exports/reverse_target_screening.json", "--out-json", help="Path to JSON output."
     ),
     out_md: str = typer.Option(
-        "docs/reverse-target-screening.md", "--out-md", help="Path to Markdown report."
+        "exports/reverse-target-screening.md", "--out-md", help="Path to Markdown report."
     ),
 ) -> None:
     """Reverse target screening across the Curative Triad (? -> Target)."""
@@ -2223,7 +2223,7 @@ def report_candidates_cmd(
     markdown_out: str | None = typer.Option(
         None,
         "--markdown",
-        help="Write human-readable Markdown (e.g. docs/candidate-report-v1.md).",
+        help="Write human-readable Markdown (e.g. exports/candidate-report.md).",
     ),
     intents: str | None = typer.Option(
         None,
@@ -2278,7 +2278,7 @@ def report_candidates_cmd(
     if not json_out and not markdown_out:
         console.print(
             "\n[dim]Tip: pass --json exports/candidate-report.json "
-            "--markdown docs/candidate-report-v1.md[/dim]"
+            "--markdown exports/candidate-report.md[/dim]"
         )
 
 

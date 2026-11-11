@@ -39,18 +39,19 @@ Core technical documentation for developers, bioinformaticians, and system admin
 
 ### 2. In Silico Translational Research Dossiers
 
-Computational pharmacology and graph neural network (GNN) dossiers prioritizing multi-target combination hypotheses for preclinical wet-lab assay validation:
+To keep the repository clean and developer-focused, the computational pharmacology dossiers and dynamic GNN screening datasets have been migrated into the **[Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)** on Hugging Face Spaces. Researchers can explore them interactively and download the full Markdown dossiers and raw CSV tables:
 
-| Dossier | Key Focus | Output Assets |
+| Dossier / Asset | Key Focus | Live Space Location & Downloads |
 |---|---|---|
-| [`curative-triad-investigator-brief.md`](curative-triad-investigator-brief.md) | **Multi-Target Translational Rationale:** Overcoming the oral kinase plateau (~15% clearance) via concurrent immune shielding, McSC mobilization, and PDE4B barrier suppression. | Executive Dossier |
-| [`gnn-reranked-report.md`](gnn-reranked-report.md) | **Stage-2 Dense Cross-Encoder Rankings:** 5-fold cross-validated candidate screening across 893 small molecules (AUROC 0.8980). | `exports/gnn_reranked_candidates.json` |
-| [`gnn-discovery-report.md`](gnn-discovery-report.md) | **Relational Knowledge Graph Screen:** 96,073-edge graph embedding results via RGAT-4H + ComplEx Hermitian decoder. | `exports/gnn_candidate_report.json` |
-| [`pairwise-synergy-matrix.md`](pairwise-synergy-matrix.md) | **Pairwise Virtual Synergies:** Chou-Talalay Combination Index (CI < 0.70) and Bliss excess matrix across dermatologic compounds. | `exports/gnn_pairwise_synergy_matrix.json` |
-| [`reverse-target-screening.md`](reverse-target-screening.md) | **Reverse Bottleneck Screen:** ComplEx decoder link prediction identifying candidates targeting PDE4B, EDNRB, MITF, and IL-15. | `exports/reverse_target_screening.json` |
-| [`clinical-validation-and-formulation.md`](clinical-validation-and-formulation.md) | **Translational Synthesis:** Registry trial evidence, topical delivery formulation notes, and 3-stage human tissue assay cascade. | Protocol VAL-DOSSIER-2026-V1 |
-| [`scientific-brief.md`](scientific-brief.md) | Disease biology, auto-antigen pathogenesis, and structural evidence gaps in non-segmental vitiligo. | Background Brief |
-| [`candidate-report-v1.md`](candidate-report-v1.md) | Initial evidence-scored single-molecule candidates based on PubTator and trial literature. | Historical Baseline |
+| **Multi-Target Investigator Brief** | Overcoming the oral kinase plateau (~15% clearance) via concurrent immune shielding, McSC mobilization, and PDE4B barrier suppression. | [Space Tab 6: Executive Dossiers](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
+| **Preclinical Assay Cascade (VAL-DOSSIER-2026-V1)** | Three-stage experimental assay pipeline: in vitro HEM rescue, ex vivo organotypic skin explants, and suction blister roof flow cytometry. | [Space Tab 6: Executive Dossiers](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
+| **Dual-Action Formulation & Delivery Guide** | Physicochemical logP matching, Franz cell diffusion testing, vehicle bases, and follicular reservoir accumulation. | [Space Tab 6: Open Data Downloads](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
+| **Clinical Protocol Bridges & Trial Concepts** | Synchronized NB-UVB phototherapy, overcoming the +9.09 log2FC PDE4B block, and step-down maintenance design. | [Space Tab 6: Open Data Downloads](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
+| **Stage-2 Reranked Candidate Ledger** | 5-fold cross-validated candidate screening across 893 small molecules (AUROC 0.8980). | [Space Tab 1: View 2](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
+| **Pairwise Virtual Synergies Matrix** | Chou-Talalay Combination Index (CI < 0.70) and Bliss excess matrix across dermatologic compounds. | [Space Tab 1: View 1](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
+| **Reverse Target Screening Ledger** | ComplEx decoder link prediction identifying candidates targeting PDE4B, EDNRB, MITF, and IL-15. | [Space Tab 1: View 3](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
+| [`scientific-brief.md`](scientific-brief.md) | Disease biology, auto-antigen pathogenesis, and structural evidence gaps in non-segmental vitiligo. | In-repo background brief |
+| [`governance-ethics-brief.md`](governance-ethics-brief.md) | Governance principles, patient safety guardrails, transparency, and data privacy framework. | In-repo policy document |
 
 ---
 
@@ -70,19 +71,15 @@ To eliminate post-hoc data fitting, all model priors and forecast evaluation rul
 
 ---
 
-### 4. Domain Subdirectories & Clinical Protocols
+### 4. Domain Subdirectories
 
-Specialized submodules containing domain-specific concept notes, trial bridges, and health-economics analyses:
+Specialized submodules containing domain-specific concept notes and health-economics analyses:
 
-* **[`validation-proposals/`](validation-proposals/):**
-  * `curative-triad-preclinical-dossier.md` — Experimental protocol for validating 3-pillar synergy in human organotypic skin models.
-  * `ruxolitinib-nb-uvb-combination.md` — Protocol concept for topical JAK + targeted phototherapy synchronization.
-  * `povorcitinib-phase3-bridge.md` — Mechanistic bridging analysis for oral JAK1 non-responder phenotypes.
-  * `upadacitinib-extensive-nsv.md` — Strategic trial design for extensive non-segmental vitiligo.
 * **[`durability/`](durability/README.md):** Resident memory T-cell ($T_{\text{RM}}$) biology, suction blister RNA-seq protocols, and low-dose maintenance trial concepts.
 * **[`mechanisms/`](mechanisms/README.md):** Falsifiable mechanistic claims structured on a causal ladder with testable hypotheses.
 * **[`safety-access/`](safety-access/README.md):** Pharmacoeconomic models evaluating continuous biologics ($27k/yr) versus step-down maintenance regimens.
 * **[`repigmentation/`](repigmentation/README.md):** Follicular melanocyte stem-cell (McSC) activation biology and anatomical response kinetics.
+* **[`spread/`](spread/README.md):** Active lesion boundary dynamics and depigmentation spreading rates.
 * **[`spread/`](spread/README.md):** Active lesion boundary dynamics and depigmentation spreading rates.
 
 ---

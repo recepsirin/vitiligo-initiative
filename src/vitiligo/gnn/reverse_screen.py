@@ -29,7 +29,7 @@ from vitiligo.logging import get_logger
 logger = get_logger(__name__)
 
 DEFAULT_REVERSE_SCREEN_JSON = Path("exports/reverse_target_screening.json")
-DEFAULT_REVERSE_SCREEN_MD = Path("docs/reverse-target-screening.md")
+DEFAULT_REVERSE_SCREEN_MD = Path("exports/reverse-target-screening.md")
 
 TARGET_SPECIFICATIONS: list[dict[str, str]] = [
     {

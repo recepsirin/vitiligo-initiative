@@ -31,7 +31,7 @@ from vitiligo.logging import get_logger
 logger = get_logger(__name__)
 
 DEFAULT_SYNERGY_REPORT_JSON = Path("exports/gnn_pairwise_synergy_matrix.json")
-DEFAULT_SYNERGY_REPORT_MD = Path("docs/pairwise-synergy-matrix.md")
+DEFAULT_SYNERGY_REPORT_MD = Path("exports/pairwise-synergy-matrix.md")
 
 
 @dataclass

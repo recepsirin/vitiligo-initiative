@@ -39,7 +39,7 @@ logger = get_logger(__name__)
 
 DEFAULT_RERANKER_PATH = Path("data/models/gnn/dense_reranker.pt")
 DEFAULT_RERANK_REPORT_JSON = Path("exports/gnn_reranked_candidates.json")
-DEFAULT_RERANK_REPORT_MD = Path("docs/gnn-reranked-report.md")
+DEFAULT_RERANK_REPORT_MD = Path("exports/gnn-reranked-report.md")
 
 GSE256271_PATH = Path("data/geo/GSE256271/GSE256271_deseq_table_Normalized_all_IE_Final.csv.gz")
 

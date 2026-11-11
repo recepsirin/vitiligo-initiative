@@ -31,7 +31,11 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 
 def _high_relevance_hits(run: dict[str, Any], *, min_relevance: int) -> list[dict[str, Any]]:
-    hits = [row for row in run.get("results", []) if int(row.get("advisor_relevance") or 0) >= min_relevance]
+    hits = [
+        row
+        for row in run.get("results", [])
+        if int(row.get("advisor_relevance") or 0) >= min_relevance
+    ]
     if hits:
         return hits
     if int(run.get("advisor_relevance") or 0) >= min_relevance:

@@ -723,7 +723,7 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
             *[f"- {note}" for note in report.notes],
             "",
             "Reproduce: `vitiligo report candidates --json exports/candidate-report.json "
-            "--markdown docs/candidate-report-v1.md`",
+            "--markdown exports/candidate-report.md`",
             "",
         ]
     )

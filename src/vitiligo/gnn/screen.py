@@ -19,7 +19,7 @@ from vitiligo.logging import get_logger
 logger = get_logger(__name__)
 
 DEFAULT_SCREEN_REPORT = Path("exports/gnn_candidate_report.json")
-DEFAULT_MARKDOWN_REPORT = Path("docs/gnn-discovery-report.md")
+DEFAULT_MARKDOWN_REPORT = Path("exports/gnn-discovery-report.md")
 
 # Core targets for Durability / Resident Memory Disarmament
 TRM_DURABILITY_TARGETS = [

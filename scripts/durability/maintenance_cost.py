@@ -143,8 +143,8 @@ def compute_costs(
             frequency="None (Observation)",
             annual_grams=0.0,
             tubes_needed=0,
-            cost_usd=0.0,
-            cost_gbp=0.0,
+            cost_usd=cost_stop_us,
+            cost_gbp=cost_stop_uk,
             usd_savings_vs_cont_rux=round(cost_rux_cont_us, 2),
             pct_savings_vs_cont_rux=100.0,
             cost_per_relapse_prevented_usd=0.0,
@@ -155,13 +155,19 @@ def compute_costs(
 
 def main() -> None:
     # Profile 1: Facial-only repigmentation (~1.0 g cream/day daily, 0.5 g/app twice weekly)
-    facial = compute_costs("Facial-only responder", daily_rux_grams=1.0, twice_weekly_grams_per_application=0.5)
+    facial = compute_costs(
+        "Facial-only responder", daily_rux_grams=1.0, twice_weekly_grams_per_application=0.5
+    )
 
     # Profile 2: Face + limited neck/hand patches (~2.0 g/day daily, 1.0 g/app twice weekly)
-    face_body = compute_costs("Face + limited body responder", daily_rux_grams=2.0, twice_weekly_grams_per_application=1.0)
+    face_body = compute_costs(
+        "Face + limited body responder", daily_rux_grams=2.0, twice_weekly_grams_per_application=1.0
+    )
 
     # Profile 3: Moderate body responder (~4.0 g/day daily, 2.0 g/app twice weekly)
-    extensive = compute_costs("Moderate body responder", daily_rux_grams=4.0, twice_weekly_grams_per_application=2.0)
+    extensive = compute_costs(
+        "Moderate body responder", daily_rux_grams=4.0, twice_weekly_grams_per_application=2.0
+    )
 
     all_results = {
         "title": "Vitiligo Maintenance Therapy Pharmacoeconomic Model",
