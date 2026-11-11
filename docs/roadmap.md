@@ -28,7 +28,7 @@ An outside review of the public repository (2026-10-23) asked whether these part
 
 | Concern | What we found | Status |
 |---|---|---|
-| The candidate score double-counts sources | **True, in two ways.** Every graph edge is seeded from the same priors and trials the score already counts, so the graph component (up to 40 points) counted them again. A paper held in both PubMed and PMC also counted twice under literature. The global top 10 kept its order; totals fell by 20–26 points, and three of the five per-intent tables reordered below the leaders | Fixed: only edges extracted from papers count (none yet, so the graph scores 0 for every drug), and each paper counts once. [Report](candidate-report-v1.md) regenerated |
+| The candidate score double-counts sources | **True, in two ways.** Every graph edge is seeded from the same priors and trials the score already counts, so the graph component (up to 40 points) counted them again. A paper held in both PubMed and PMC also counted twice under literature. The global top 10 kept its order; totals fell by 20–26 points, and three of the five per-intent tables reordered below the leaders | Fixed: only edges extracted from papers count (none yet, so the graph scores 0 for every drug), and each paper counts once. [Candidate ranking](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) regenerated |
 | The score reads as therapeutic potential | It measures **evidence maturity**: an approved drug ranks first because it is well studied. A promising, little-studied target scores low by construction | Stated in the report. Candidates aimed at the gaps ([`success.md`](success.md), contribution 2) will come from hypothesis records (3.6), not from this score |
 | Model choice leaked into the held-out tests | **True for the back-tests:** v0.1 was changed to fix v0's back-test failures. The sealed forecasts are clean | Disclosed in the [model doc](jak-scenario-model.md) |
 | No comparison with simpler models | **It was true.** Now done for the back-tests: the model clearly beats both baselines on the face, and is slightly worse than the crudest one on the body ([model doc](jak-scenario-model.md#compared-with-simple-baselines)) | Post hoc. The prospective half is 0.1 below |
@@ -73,7 +73,7 @@ Most items that would move an outcome now wait for a person:
 | [TRuE-V patient-level data request](durability/data-request-draft.md): who keeps their response | Biostatistician |
 | [Stop vs step-down trial concept](durability/maintenance-trial-concept.md) | Clinic |
 | [Expert questions on the JAK findings](findings.md#what-we-need-from-experts) | Reviewer |
-| [Lab validation proposals](validation-proposals/) | Reviewer, then Lab |
+| [Validation protocols](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) | Reviewer, then Lab |
 
 **So outside review comes first.** The review pack exists (`./scripts/review/kol-share-pack.sh`); it has not been sent.
 
@@ -117,7 +117,7 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 | # | Deliverable | Needs | How we will know |
 |---|---|---|---|
-| 2.1 | Evidence map `docs/repigmentation/`, testing the hypothesis [`follicular-reservoir-limits-repigmentation`](mechanisms/README.md): how many trials measure hands; results on body and hands; what limits regrowth (the follicle reservoir: GSE150954; lesions that do not respond to NB-UVB: GSE256271); combinations, including the [ruxolitinib + NB-UVB proposal](validation-proposals/ruxolitinib-nb-uvb-combination.md) | **Done** | Built in [`docs/repigmentation/README.md`](repigmentation/README.md) alongside the Pillar 3 hypothesis [`pde4b-barrier-non-responder`](mechanisms/README.md) |
+| 2.1 | Evidence map `docs/repigmentation/`, testing the hypothesis [`follicular-reservoir-limits-repigmentation`](mechanisms/README.md): how many trials measure hands; results on body and hands; what limits regrowth (the follicle reservoir: GSE150954; lesions that do not respond to NB-UVB: GSE256271); combinations, including the [ruxolitinib + NB-UVB protocol](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) | **Done** | Built in [`docs/repigmentation/README.md`](repigmentation/README.md) alongside the Pillar 3 hypothesis [`pde4b-barrier-non-responder`](mechanisms/README.md) |
 | 2.2 | Score the sealed T-VASI50 forecasts as phase 3 body results post | **Done** | Scored in [`forecasts/povorcitinib-phase3/`](../forecasts/povorcitinib-phase3/README.md) upon *Nature Medicine* Nov 2, 2026 publication |
 | 2.3 | Ask reviewers which repigmentation question is open, then pre-register an omics question on it | Reviewer | A question experts disagree on. "Hands respond poorly" is already known and would not count |
 
@@ -130,7 +130,7 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 ## Outcome 4: Safe and reachable
 
-Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (**Done**: evaluated in [`docs/safety-access/maintenance-cost-comparison.md`](safety-access/maintenance-cost-comparison.md) with 99.7% cost reduction and 325-fold cost-effectiveness advantage).
+Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (**Done**: evaluated in the [Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) with 99.7% cost reduction and 325-fold cost-effectiveness advantage).
 
 ## Omics: where the public datasets fit
 
@@ -167,7 +167,7 @@ In order:
 4. ~~**Build and seal the resident-memory score**~~ (Done: [`docs/durability/trm-signature-preregistration.md`](durability/trm-signature-preregistration.md), sealed `2c102804`). Now.
 5. ~~**Build the repigmentation evidence map**~~ (Done: [`docs/repigmentation/README.md`](repigmentation/README.md)). Now.
 6. **Look for Tranquillo's stabilization definition**, and seal 1.1 if it is public. Now.
-7. **Get the two 2026 TRuE-V papers** (3.2) and ~~**cost the maintenance regimen**~~ (Done: [`docs/safety-access/maintenance-cost-comparison.md`](safety-access/maintenance-cost-comparison.md)). Now.
+7. **Get the two 2026 TRuE-V papers** (3.2) and ~~**cost the maintenance regimen**~~ (Done: evaluated in the [Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)). Now.
 8. **Publish a corpus snapshot** (0.2) and **finish the methods preprint's Methods** once reviewers have answered ([draft](methods-preprint-draft.md)). Now, then Reviewer.
 
 **By 2027-01-21 we should know** whether reviewers will engage, whether the memory score is sealed and waiting for its test, and what limits repigmentation on the body and hands. We will have no answer yet to the durability question itself: that waits for Tranquillo LTE.

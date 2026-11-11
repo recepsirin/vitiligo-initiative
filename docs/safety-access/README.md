@@ -25,5 +25,5 @@ Outcome 4 of [what success means](../success.md): acceptable for years of use, a
 ## Gaps
 
 - **Multi-year safety of oral JAK inhibitors** in vitiligo's younger, healthier population.
-- **Cost-effectiveness of maintenance strategies**: evaluated in [`maintenance-cost-comparison.md`](maintenance-cost-comparison.md) (twice-weekly tacrolimus at $45/yr vs continuous ruxolitinib at $14,658/yr saves 99.7% with a 325-fold lower cost per relapse prevented; serves the [trial concept](../durability/maintenance-trial-concept.md)).
+- **Cost-effectiveness of maintenance strategies**: evaluated in the [Translational Discovery Suite (Pharmacoeconomics)](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) (twice-weekly tacrolimus at $45/yr vs continuous ruxolitinib at $14,658/yr saves 99.7% with a 325-fold lower cost per relapse prevented; serves the [trial concept](../durability/maintenance-trial-concept.md)).
 - **Access outside the US and Europe:** not yet mapped.

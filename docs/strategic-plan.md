@@ -58,7 +58,7 @@ The loop is the point: each cycle makes the next one cheaper. AI shortens the bu
 | Scenario model | v0.2 default, back-tested on held-out trials; two pre-registered challengers ([`jak-scenario-model.md`](jak-scenario-model.md)) |
 | Sealed forecasts | Scored weekly as results post ([scoreboard](../forecasts/README.md)) |
 | Discovery loop | v1: three claim families, online false-discovery-rate control, ledger ([`discovery-loop-plan.md`](discovery-loop-plan.md)) |
-| Candidate report and lab proposals | [`candidate-report-v1.md`](candidate-report-v1.md), [`validation-proposals/`](validation-proposals/) |
+| Candidate ranking and discovery suite | Live interactive platform and open data ([Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)) |
 | Briefs | [`scientific-brief.md`](scientific-brief.md), [`governance-ethics-brief.md`](governance-ethics-brief.md), [`methods-preprint-draft.md`](methods-preprint-draft.md) |
 
 ## Phases

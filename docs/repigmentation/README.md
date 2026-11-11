@@ -75,10 +75,10 @@ Repigmentation is not simply the mirror image of depigmentation. Halting the $CD
 - **Clinical Proof:** In the randomized phase 2 study of topical ruxolitinib 1.5% cream with or without narrow-band UVB ([NCT04052425](https://clinicaltrials.gov/study/NCT04052425), Rosmarin et al., J Allergy Clin Immunol 2023):
   - Ruxolitinib + NB-UVB achieved **T-VASI50 in >50%** of patients at week 36, compared to only ~20% for ruxolitinib monotherapy.
   - Facial F-VASI75 accelerated to 32 weeks earlier than monotherapy.
-- **Biological Rationale:** The kinase inhibitor suppresses $T_{\text{RM}}$ interferon-$\gamma$ release, while NB-UVB provides the physical mitogenic stimulus mobilizing the follicular McSC reservoir ([ruxolitinib + NB-UVB validation proposal](../validation-proposals/ruxolitinib-nb-uvb-combination.md)).
+- **Biological Rationale:** The kinase inhibitor suppresses $T_{\text{RM}}$ interferon-$\gamma$ release, while NB-UVB provides the physical mitogenic stimulus mobilizing the follicular McSC reservoir (see [Translational Discovery Suite: Protocol Bridges](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)).
 
 ### Strategy 2: Multi-Target Curative Triad (PDE4B Barrier Reversal)
-- **Computational Synergy Matrix:** In our relational GNN and Stage-2 cross-encoder screening, pairing a kinase disarmer (Ruxolitinib, Tofacitinib, Baricitinib) with a selective PDE4 inhibitor (Roflumilast, Crisaborole, Apremilast) yielded a virtual Chou-Talalay Combination Index **$CI = 0.35$** and Bliss excess of **$+14.8\%$** ([`docs/pairwise-synergy-matrix.md`](../pairwise-synergy-matrix.md)).
+- **Computational Synergy Matrix:** In our relational GNN and Stage-2 cross-encoder screening, pairing a kinase disarmer (Ruxolitinib, Tofacitinib, Baricitinib) with a selective PDE4 inhibitor (Roflumilast, Crisaborole, Apremilast) yielded a virtual Chou-Talalay Combination Index **$CI = 0.35$** and Bliss excess of **$+14.8\%$** (see [Translational Discovery Suite: Synergy Matrix](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)).
 - **Mechanism:** Dual topical application of ruxolitinib cream + roflumilast cream simultaneously disarms local IFN-$\gamma$ signaling and restores intracellular cAMP in the non-responder tissue microenvironment.
 
 ### Strategy 3: Stem-Cell Mobilizers & Prostaglandin Analogs
