@@ -65,7 +65,7 @@ To eliminate post-hoc data fitting, all model priors and forecast evaluation rul
 | [`model-v0.4-preregistration.md`](model-v0.4-preregistration.md) | Prior updates incorporating week 24 to week 52 extension trials and background phototherapy. | Sealed v0.4 |
 | [`model-v0.5-preregistration.md`](model-v0.5-preregistration.md) | Integration of pediatric cohorts and topical formulation bioavailability adjustments. | Sealed v0.5 |
 | [`durability-forecast-preregistration.md`](durability-forecast-preregistration.md) | Prospective relapse hazard evaluation rules following treatment cessation. | Sealed Durability |
-| [`durability/trm-signature-preregistration.md`](durability/trm-signature-preregistration.md) | **$T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$):** 10-gene blister roof RNA-seq scoring coefficients (HR > 1.0). | **Seal `2c102804`** |
+| [`durability/trm-signature-preregistration.md`](durability/trm-signature-preregistration.md) | **$T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$):** gene panels and formula of the relapse score (17 genes), with its falsification rule (hazard ratio per SD > 1). Amended 2026-11-12. | **Seal `2c102804`** (hypothesis record) |
 | [`voi-preregistration.md`](voi-preregistration.md) | Value-of-Information (VoI) acquisition function for prioritizing evidence collection. | Sealed VoI |
 | [`voi-ranking-preregistration.md`](voi-ranking-preregistration.md) | Frozen trial ranking criteria based on expected epistemic uncertainty reduction. | Sealed Ranking |
 
