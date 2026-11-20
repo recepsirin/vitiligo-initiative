@@ -13,11 +13,13 @@ is a wrong number on a public page. Three checks; any one failing exits non-zero
 - **No data file has drifted from the pipeline output it is a copy of.** `--sync`
   copies the pipeline outputs over the Space's copies first.
 - **Each gzipped twin says what its plain file says.** The page reads
-  `trials.json.gz`; a twin left behind by a re-export would show stale trials.
+  `trials.json.gz` and `data_pipeline.json.gz`; a twin left behind by a re-export
+  would show stale rows.
 
-`trials.json` is written into the Space by `scripts/export_space_trials.py`.
-`data_pipeline.json` (exported from the corpus database) and `anatomical_model.json`
-(specified by hand) have no pipeline output to compare against.
+`trials.json` and `data_pipeline.json` are written into the Space by
+`scripts/export_space_trials.py` and `scripts/export_space_pipeline.py`.
+`anatomical_model.json` is specified by hand, so it has no pipeline output to
+compare against.
 """
 
 from __future__ import annotations
