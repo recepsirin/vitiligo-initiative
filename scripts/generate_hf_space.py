@@ -6,13 +6,16 @@
 
 The Space is a static page: `index.html`, `style.css` and `app.js` draw every table
 from the JSON files beside them. A missing file is a broken view, and a stale file
-is a wrong number on a public page. Two checks; either one failing exits non-zero:
+is a wrong number on a public page. Three checks; any one failing exits non-zero:
 
 - **Every file the page loads is there and parses**: the JSON files `app.js` names,
   and every local file `index.html` links to.
 - **No data file has drifted from the pipeline output it is a copy of.** `--sync`
   copies the pipeline outputs over the Space's copies first.
+- **Each gzipped twin says what its plain file says.** The page reads
+  `trials.json.gz`; a twin left behind by a re-export would show stale trials.
 
+`trials.json` is written into the Space by `scripts/export_space_trials.py`.
 `data_pipeline.json` (exported from the corpus database) and `anatomical_model.json`
 (specified by hand) have no pipeline output to compare against.
 """
@@ -20,6 +23,7 @@ is a wrong number on a public page. Two checks; either one failing exits non-zer
 from __future__ import annotations
 
 import argparse
+import gzip
 import json
 import re
 import shutil
@@ -85,6 +89,9 @@ def main() -> None:
                 json.loads(path.read_text(encoding="utf-8"))
             except ValueError as error:
                 problems.append(f"{name} is not valid JSON: {error}")
+            twin = path.with_name(path.name + ".gz")
+            if twin.is_file() and gzip.decompress(twin.read_bytes()) != path.read_bytes():
+                problems.append(f"{twin.name} does not match {name} (re-run the export)")
 
     if problems:
         sys.exit("\n".join(f"exports/hf_space: {p}" for p in problems))
