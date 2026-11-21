@@ -130,7 +130,7 @@ Estimated dates are the sponsors' registry estimates; results usually post month
 
 ## Outcome 4: Safe and reachable
 
-Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (**Done**: evaluated in the [Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) with 99.7% cost reduction and 325-fold cost-effectiveness advantage).
+Keep the [map](safety-access/README.md) current, at minimum effort. One item serves durability directly: **4.1**, the cost of a twice-weekly tacrolimus maintenance regimen against continuous ruxolitinib cream, for the trial synopsis in 3.5 (**Done**: evaluated in the [Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#economics): 99.7% lower drug cost, and $166–$340 against $47,747–$100,271 per relapse prevented, the tacrolimus effect resting on one small trial).
 
 ## Omics: where the public datasets fit
 

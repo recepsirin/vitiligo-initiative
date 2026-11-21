@@ -214,28 +214,32 @@ def run_reverse_target_screening(
 
 
 def _render_reverse_screen_md(results: dict[str, TargetScreenResult], path: Path) -> None:
-    """Render comprehensive Markdown discovery report."""
+    """Write the screen as Markdown: what each target's query returned, and nothing more.
+
+    The summary is built from the hits. The renderer used to print a fixed summary and
+    fixed "translational recommendations" naming drugs and probabilities whatever the
+    screen returned: on the November 2026 run, 7 of the 11 drugs it named were among no
+    target's hits.
+    """
     lines: list[str] = [
         "# Reverse Target Screening: Curative Triad Discovery Ledger",
         "",
         "**The Vitiligo Initiative | In-Silico Chemical Screening & Reverse Link Prediction**  ",
-        "**Model Basis:** `relational_gnn.pt` (RGAT-4H + asymmetric `ComplEx` Hermitian link decoder in $\\mathbb{C}^{64}$ on 96,073 relations across 18,730 entities).  ",
-        "**Query Formulation:** Reverse link prediction evaluates the conditional probability $\\mathbb{P}(\\text{Drug} \\mid \\text{Relation}, \\text{Target})$ across all 1,100+ canonical small molecules in the chemical graph.",
+        "**Model Basis:** `relational_gnn.pt` (RGAT-4H with an asymmetric `ComplEx` Hermitian link decoder in $\\mathbb{C}^{64}$).  ",
+        "**Query Formulation:** Reverse link prediction ranks the graph's drugs by $\\mathbb{P}(\\text{Drug} \\mid \\text{Relation}, \\text{Target})$; each target lists its top hits.",
         "",
         "---",
         "",
-        "## Executive Summary",
+        "## Summary",
         "",
-        "Standard therapeutic discovery in vitiligo evaluates known compounds forward against the disease. Here, we invert the question: **for each rate-limiting molecular bottleneck identified in human biopsy transcriptomics and clinical trials, which small molecules in the chemical universe are most strongly predicted to hit that specific target?**",
-        "",
-        "- **Pillar 3 (Barrier Reversal):** Reverse screening for `PDE4B` and `PDE4D` inhibitors surfaces selective PDE4 inhibitors (**Roflumilast**, **Crisaborole**, **Apremilast**) alongside kinase/cAMP-coupling agents.",
-        "- **Pillar 2 (Stem-Cell Mobilization):** Reverse screening for `MITF` and `EDNRB` activators identifies potent, non-immunosuppressive regenerative adjuvants: **Piperine** (the black pepper alkaloid shown to stimulate follicular McSC proliferation), **Pioglitazone** (PPAR$\\gamma$ agonist), and the antioxidant flavonoids **Quercetin** and **EGCG**.",
-        "- **Pillar 1 ($T_{\\text{RM}}$ Disarmament):** Reverse screening for `IL15` and `CD8A` disarmers confirms calcineurin inhibitors (**Tacrolimus**, **Cyclosporine**) and selective JAKs as key oral/topical shields that shut down the resident memory survival niche.",
-        "- **Global Alignment:** Allosteric TYK2 inhibitors (**Deucravacitinib**, **Zasocitinib**) outscore non-selective pan-JAKs, indicating that precision TYK2 blockade provides cleaner disease-modifying link alignment.",
-        "",
-        "---",
+        "The three highest-scoring drugs for each target. These are model predictions to "
+        "test in the laboratory, not evidence that a drug acts on the target in vitiligo.",
         "",
     ]
+    for res in results.values():
+        top = ", ".join(f"**{h.drug_name}** ({h.probability:.1%})" for h in res.hits[:3])
+        lines.append(f"- **{res.pillar}**, `{res.relation}` {res.target_name}: {top or 'no hits'}")
+    lines.extend(["", "---", ""])
 
     for _key, res in results.items():
         lines.extend(
@@ -256,23 +260,7 @@ def _render_reverse_screen_md(results: dict[str, TargetScreenResult], path: Path
 
         lines.extend(["", "---", ""])
 
-    lines.extend(
-        [
-            "## Translational Recommendations for Investigator Protocols",
-            "",
-            "1. **Dual Topical Synergistic Regimen (Zero Systemic Exposure):**",
-            "   - Combine topical **Ruxolitinib 1.5% cream** (Pillar 1) with topical **Roflumilast 0.3% cream** (Pillar 3) and topical **Piperine / Bimatoprost** (Pillar 2).",
-            "   - Simultaneously disarms $T_{\\text{RM}}$ IFN-$\\gamma$ signaling, reverses the $+9.09 \\log_2\\text{FC}$ `PDE4B` cAMP block, and recruits follicular McSCs without oral immunosuppression.",
-            "",
-            "2. **Precision Oral Systemic Triad:**",
-            "   - Oral allosteric TYK2 inhibitor (**Zasocitinib** or **Deucravacitinib**, `90-92% prob`) + oral **Pioglitazone** (`88.3% prob`, MITF/EDNRB activator) + NB-UVB phototherapy.",
-            "   - Avoids the hematologic cytopenias of JAK2 inhibition while driving rapid repigmentation of refractory body lesions.",
-            "",
-            "---",
-            "",
-            "*Report generated automatically by `vitiligo gnn reverse-screen`.*",
-        ]
-    )
+    lines.append("*Report generated automatically by `vitiligo gnn reverse-screen`.*")
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

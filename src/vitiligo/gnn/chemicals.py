@@ -79,8 +79,14 @@ def resolve_all_drug_smiles(
     dataset: GraphDataset,
     cache_path: Path | str = DEFAULT_SMILES_CACHE,
     max_workers: int = 4,
+    refresh_unresolved: bool = False,
 ) -> dict[str, str]:
-    """Resolve SMILES for all canonical drug entities in dataset with persistent disk caching."""
+    """Resolve SMILES for all canonical drug entities in dataset with persistent disk caching.
+
+    A name PubChem did not resolve before is asked again only with
+    ``refresh_unresolved``: re-asking on every build (124 names, 2026-11-21) made
+    a rebuild depend on the network and on what PubChem answered that day.
+    """
     cache_path = Path(cache_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -96,8 +102,11 @@ def resolve_all_drug_smiles(
     drug_indices = dataset.canonical_drug_indices or dataset.kind_to_indices.get("DRUG", [])
     drug_names = [dataset.entities[idx].name for idx in drug_indices]
 
-    # Re-try names that were previously null or missing
-    missing = [name for name in drug_names if name not in cache or cache[name] is None]
+    missing = [
+        name
+        for name in drug_names
+        if name not in cache or (refresh_unresolved and cache[name] is None)
+    ]
     if missing:
         logger.info("Resolving SMILES from PubChem for %d drugs...", len(missing))
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -141,6 +150,8 @@ def build_chemical_node_features(
     dataset: GraphDataset,
     cache_path: Path | str = DEFAULT_CHEMICAL_CACHE,
     force_reload: bool = False,
+    smiles_cache_path: Path | str | None = None,
+    refresh_unresolved: bool = False,
 ) -> torch.Tensor:
     """Build a [num_nodes, FINGERPRINT_BITS] tensor containing Morgan fingerprints for drugs."""
     cache_path = Path(cache_path)
@@ -159,7 +170,11 @@ def build_chemical_node_features(
         except Exception as e:
             logger.warning("Could not load chemical cache (%s); regenerating...", e)
 
-    smiles_dict = resolve_all_drug_smiles(dataset)
+    smiles_dict = resolve_all_drug_smiles(
+        dataset,
+        cache_path=smiles_cache_path or DEFAULT_SMILES_CACHE,
+        refresh_unresolved=refresh_unresolved,
+    )
     num_nodes = dataset.num_nodes
     chem_matrix = np.zeros((num_nodes, FINGERPRINT_BITS), dtype=np.float32)
 

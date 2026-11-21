@@ -5,9 +5,37 @@
     "us_tac_60g_retail_usd": 45.0,
     "uk_rux_100g_nice_gbp": 657.0,
     "uk_tac_60g_tariff_gbp": 31.5,
-    "one_year_relapse_rate_stopped": 0.42,
-    "one_year_relapse_rate_maintained": 0.25,
-    "nnt_per_relapse_prevented": 5.88
+    "stop_loss_scenarios": [
+      {
+        "value": 0.27,
+        "basis": "TRuE-V randomized withdrawal: relapse below F-VASI75 after stopping ruxolitinib cream"
+      },
+      {
+        "value": 0.58,
+        "basis": "Sealed Tranquillo LTE forecast for an oral JAK inhibitor: 42% still responding after stopping"
+      },
+      {
+        "value": 0.73,
+        "basis": "TRuE-V: loss of F-VASI90, the threshold responders sit just above (median 195 days)"
+      }
+    ],
+    "maintenance_hazard_ratios": [
+      {
+        "regimen": "Continuous Ruxolitinib 1.5% Cream",
+        "hazard_ratio": 0.42,
+        "basis": "TRuE-V randomized withdrawal (NCT04530344): relapse below F-VASI75, 95% CI 0.18-0.99"
+      },
+      {
+        "regimen": "Twice-Weekly Tacrolimus 0.1% Ointment",
+        "hazard_ratio": 0.47,
+        "basis": "One trial (PMID 25521460): 26.8% vs 48.4% of patches depigmented, not significant once patients' several patches are allowed for"
+      },
+      {
+        "regimen": "Twice-Weekly Ruxolitinib 1.5% Cream",
+        "hazard_ratio": null,
+        "basis": "No trial has tested it"
+      }
+    ]
   },
   "profiles": {
     "facial_only": [
@@ -21,8 +49,30 @@
         "cost_gbp": 2628.0,
         "usd_savings_vs_cont_rux": 0.0,
         "pct_savings_vs_cont_rux": 0.0,
-        "cost_per_relapse_prevented_usd": 86223.53,
-        "cost_per_relapse_prevented_gbp": 15458.82
+        "hazard_ratio": 0.42,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.124,
+            "relapses_prevented_per_100": 14.6,
+            "cost_per_relapse_prevented_usd": 100270.5,
+            "cost_per_relapse_prevented_gbp": 17977.27
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.305,
+            "relapses_prevented_per_100": 27.5,
+            "cost_per_relapse_prevented_usd": 53370.16,
+            "cost_per_relapse_prevented_gbp": 9568.62
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.423,
+            "relapses_prevented_per_100": 30.7,
+            "cost_per_relapse_prevented_usd": 47746.55,
+            "cost_per_relapse_prevented_gbp": 8560.37
+          }
+        ]
       },
       {
         "profile": "Facial-only responder",
@@ -34,8 +84,8 @@
         "cost_gbp": 657.0,
         "usd_savings_vs_cont_rux": 12564.0,
         "pct_savings_vs_cont_rux": 85.7,
-        "cost_per_relapse_prevented_usd": 12317.65,
-        "cost_per_relapse_prevented_gbp": 3864.71
+        "hazard_ratio": null,
+        "relapse_prevention": null
       },
       {
         "profile": "Facial-only responder",
@@ -47,8 +97,30 @@
         "cost_gbp": 31.5,
         "usd_savings_vs_cont_rux": 14613.0,
         "pct_savings_vs_cont_rux": 99.7,
-        "cost_per_relapse_prevented_usd": 264.71,
-        "cost_per_relapse_prevented_gbp": 185.29
+        "hazard_ratio": 0.47,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.137,
+            "relapses_prevented_per_100": 13.3,
+            "cost_per_relapse_prevented_usd": 339.61,
+            "cost_per_relapse_prevented_gbp": 237.73
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.335,
+            "relapses_prevented_per_100": 24.5,
+            "cost_per_relapse_prevented_usd": 183.55,
+            "cost_per_relapse_prevented_gbp": 128.49
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.46,
+            "relapses_prevented_per_100": 27.0,
+            "cost_per_relapse_prevented_usd": 166.4,
+            "cost_per_relapse_prevented_gbp": 116.48
+          }
+        ]
       },
       {
         "profile": "Facial-only responder",
@@ -60,8 +132,8 @@
         "cost_gbp": 0.0,
         "usd_savings_vs_cont_rux": 14658.0,
         "pct_savings_vs_cont_rux": 100.0,
-        "cost_per_relapse_prevented_usd": 0.0,
-        "cost_per_relapse_prevented_gbp": 0.0
+        "hazard_ratio": null,
+        "relapse_prevention": null
       }
     ],
     "face_and_limited_body": [
@@ -75,8 +147,30 @@
         "cost_gbp": 5256.0,
         "usd_savings_vs_cont_rux": 0.0,
         "pct_savings_vs_cont_rux": 0.0,
-        "cost_per_relapse_prevented_usd": 160129.41,
-        "cost_per_relapse_prevented_gbp": 30917.65
+        "hazard_ratio": 0.42,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.124,
+            "relapses_prevented_per_100": 14.6,
+            "cost_per_relapse_prevented_usd": 186216.64,
+            "cost_per_relapse_prevented_gbp": 35954.55
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.305,
+            "relapses_prevented_per_100": 27.5,
+            "cost_per_relapse_prevented_usd": 99116.01,
+            "cost_per_relapse_prevented_gbp": 19137.23
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.423,
+            "relapses_prevented_per_100": 30.7,
+            "cost_per_relapse_prevented_usd": 88672.17,
+            "cost_per_relapse_prevented_gbp": 17120.75
+          }
+        ]
       },
       {
         "profile": "Face + limited body responder",
@@ -88,8 +182,8 @@
         "cost_gbp": 1314.0,
         "usd_savings_vs_cont_rux": 23034.0,
         "pct_savings_vs_cont_rux": 84.6,
-        "cost_per_relapse_prevented_usd": 24635.29,
-        "cost_per_relapse_prevented_gbp": 7729.41
+        "hazard_ratio": null,
+        "relapse_prevention": null
       },
       {
         "profile": "Face + limited body responder",
@@ -101,8 +195,30 @@
         "cost_gbp": 63.0,
         "usd_savings_vs_cont_rux": 27132.0,
         "pct_savings_vs_cont_rux": 99.7,
-        "cost_per_relapse_prevented_usd": 529.41,
-        "cost_per_relapse_prevented_gbp": 370.59
+        "hazard_ratio": 0.47,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.137,
+            "relapses_prevented_per_100": 13.3,
+            "cost_per_relapse_prevented_usd": 679.22,
+            "cost_per_relapse_prevented_gbp": 475.45
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.335,
+            "relapses_prevented_per_100": 24.5,
+            "cost_per_relapse_prevented_usd": 367.1,
+            "cost_per_relapse_prevented_gbp": 256.97
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.46,
+            "relapses_prevented_per_100": 27.0,
+            "cost_per_relapse_prevented_usd": 332.8,
+            "cost_per_relapse_prevented_gbp": 232.96
+          }
+        ]
       },
       {
         "profile": "Face + limited body responder",
@@ -114,8 +230,8 @@
         "cost_gbp": 0.0,
         "usd_savings_vs_cont_rux": 27222.0,
         "pct_savings_vs_cont_rux": 100.0,
-        "cost_per_relapse_prevented_usd": 0.0,
-        "cost_per_relapse_prevented_gbp": 0.0
+        "hazard_ratio": null,
+        "relapse_prevention": null
       }
     ],
     "moderate_body": [
@@ -129,8 +245,30 @@
         "cost_gbp": 9855.0,
         "usd_savings_vs_cont_rux": 0.0,
         "pct_savings_vs_cont_rux": 0.0,
-        "cost_per_relapse_prevented_usd": 307941.18,
-        "cost_per_relapse_prevented_gbp": 57970.59
+        "hazard_ratio": 0.42,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.124,
+            "relapses_prevented_per_100": 14.6,
+            "cost_per_relapse_prevented_usd": 358108.93,
+            "cost_per_relapse_prevented_gbp": 67414.78
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.305,
+            "relapses_prevented_per_100": 27.5,
+            "cost_per_relapse_prevented_usd": 190607.71,
+            "cost_per_relapse_prevented_gbp": 35882.31
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.423,
+            "relapses_prevented_per_100": 30.7,
+            "cost_per_relapse_prevented_usd": 170523.41,
+            "cost_per_relapse_prevented_gbp": 32101.4
+          }
+        ]
       },
       {
         "profile": "Moderate body responder",
@@ -142,8 +280,8 @@
         "cost_gbp": 1971.0,
         "usd_savings_vs_cont_rux": 43974.0,
         "pct_savings_vs_cont_rux": 84.0,
-        "cost_per_relapse_prevented_usd": 49270.59,
-        "cost_per_relapse_prevented_gbp": 11594.12
+        "hazard_ratio": null,
+        "relapse_prevention": null
       },
       {
         "profile": "Moderate body responder",
@@ -155,8 +293,30 @@
         "cost_gbp": 126.0,
         "usd_savings_vs_cont_rux": 52170.0,
         "pct_savings_vs_cont_rux": 99.7,
-        "cost_per_relapse_prevented_usd": 1058.82,
-        "cost_per_relapse_prevented_gbp": 741.18
+        "hazard_ratio": 0.47,
+        "relapse_prevention": [
+          {
+            "stop_loss_52w": 0.27,
+            "maintained_loss_52w": 0.137,
+            "relapses_prevented_per_100": 13.3,
+            "cost_per_relapse_prevented_usd": 1358.44,
+            "cost_per_relapse_prevented_gbp": 950.91
+          },
+          {
+            "stop_loss_52w": 0.58,
+            "maintained_loss_52w": 0.335,
+            "relapses_prevented_per_100": 24.5,
+            "cost_per_relapse_prevented_usd": 734.21,
+            "cost_per_relapse_prevented_gbp": 513.95
+          },
+          {
+            "stop_loss_52w": 0.73,
+            "maintained_loss_52w": 0.46,
+            "relapses_prevented_per_100": 27.0,
+            "cost_per_relapse_prevented_usd": 665.6,
+            "cost_per_relapse_prevented_gbp": 465.92
+          }
+        ]
       },
       {
         "profile": "Moderate body responder",
@@ -168,8 +328,8 @@
         "cost_gbp": 0.0,
         "usd_savings_vs_cont_rux": 52350.0,
         "pct_savings_vs_cont_rux": 100.0,
-        "cost_per_relapse_prevented_usd": 0.0,
-        "cost_per_relapse_prevented_gbp": 0.0
+        "hazard_ratio": null,
+        "relapse_prevention": null
       }
     ]
   }

@@ -19,7 +19,7 @@ import httpx
 from sqlmodel import Session, select
 
 from vitiligo.graph.normalize import normalize_entity_key
-from vitiligo.graph.store import upsert_edge, upsert_entity
+from vitiligo.graph.store import replace_evidence, upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.storage import session_scope
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
@@ -413,7 +413,7 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
                     confidence=1.0,
                     extraction_method="curated_pathway",
                     evidence=evidence,
-                    claim=ClaimKind.OBSERVED,
+                    claim=ClaimKind.ASSERTED,
                     causal_level="knowledge_base",
                 )
                 if inserted:
@@ -453,7 +453,7 @@ def seed_canonical_pathways_and_cell_types(session: Session) -> dict[str, int]:
                     confidence=0.95,
                     extraction_method="cell_ontology",
                     evidence=evidence,
-                    claim=ClaimKind.OBSERVED,
+                    claim=ClaimKind.ASSERTED,
                     causal_level="knowledge_base",
                 )
                 if inserted:
@@ -654,7 +654,7 @@ def seed_mygene_pathways_and_processes(
                     predicate=RelationKind.PARTICIPATES_IN,
                     object_id=p_ent.id,
                     confidence=0.92,
-                    claim=ClaimKind.OBSERVED,
+                    claim=ClaimKind.ASSERTED,
                     causal_level="knowledge_base",
                     extraction_method="wikipathways",
                     evidence=[evidence],
@@ -695,7 +695,7 @@ def seed_mygene_pathways_and_processes(
                     predicate=RelationKind.PARTICIPATES_IN,
                     object_id=p_ent.id,
                     confidence=0.90,
-                    claim=ClaimKind.OBSERVED,
+                    claim=ClaimKind.ASSERTED,
                     causal_level="knowledge_base",
                     extraction_method="gene_ontology_experimental",
                     evidence=[evidence],
@@ -945,8 +945,8 @@ def seed_mychem_drug_target_mechanisms(
                                 predicate=pred,
                                 object_id=t_ent.id,
                                 confidence=0.92,
-                                claim=ClaimKind.OBSERVED,
-                                causal_level="perturbation_in_human",
+                                claim=ClaimKind.ASSERTED,
+                                causal_level="knowledge_base",
                                 extraction_method="chembl_mechanism",
                                 evidence=[evidence],
                             )
@@ -1043,7 +1043,14 @@ def seed_patient_coexpression_edges(
     min_abs_r: float = 0.70,
     max_insert_edges: int = 15000,
 ) -> int:
-    """Commit patient biopsy co-expression edges directly to SQLite graph_edges."""
+    """Bring the patient biopsy co-expression edges to what the cache says now.
+
+    Each pair carries its Pearson r with its sign. The cache once kept only |r|,
+    and the graph called that ``pearson_r``, so anti-correlated pairs read as
+    correlated; a cache from then still gives |r| here. Pairs are named by the
+    database ids the cache records, or failing that through the graph dataset
+    the cache was computed on. Returns the edges inserted.
+    """
     cache_path = Path(cache_path)
     if not cache_path.exists():
         logger.warning("Coexpression cache not found at %s", cache_path)
@@ -1051,92 +1058,74 @@ def seed_patient_coexpression_edges(
 
     import torch
 
-    from vitiligo.gnn.dataset import load_graph_dataset
+    coexp = torch.load(cache_path, weights_only=True)
+    weights = [float(w) for w in coexp["edge_weight"].tolist()]
+    signed = [float(r) for r in coexp["edge_r"].tolist()] if "edge_r" in coexp else weights
+    if "entity_ids" in coexp:
+        ids = coexp["entity_ids"].tolist()
+        ends = list(zip(ids[0], ids[1], strict=True))
+    else:
+        from vitiligo.gnn.dataset import load_graph_dataset
 
-    ds = load_graph_dataset()
-    coexp_data = torch.load(cache_path, weights_only=True)
-    src_indices = coexp_data["edge_index"][0]
-    dst_indices = coexp_data["edge_index"][1]
-    weights = coexp_data["edge_weight"]
+        ds = load_graph_dataset()
+        index = coexp["edge_index"].tolist()
+        ends = [
+            (ds.entities[u].db_id, ds.entities[v].db_id)
+            for u, v in zip(index[0], index[1], strict=True)
+        ]
 
-    # Preload entities mapping
     entity_map: dict[int, GraphEntity] = {
         e.id: e for e in session.exec(select(GraphEntity)).all() if e.id is not None
     }
-
-    # Fetch existing co-expression edge pairs to avoid duplicates
-    existing_pairs: set[tuple[int, int]] = set()
-    existing_edges = session.exec(
-        select(GraphEdge.subject_id, GraphEdge.object_id).where(
-            GraphEdge.predicate == RelationKind.CO_EXPRESSED_WITH
-        )
-    ).all()
-    for s_id, o_id in existing_edges:
-        existing_pairs.add((min(s_id, o_id), max(s_id, o_id)))
-
-    inserted_count = 0
-    seen_in_batch: set[tuple[int, int]] = set()
-
-    for i in range(len(src_indices)):
-        u_idx = int(src_indices[i].item())
-        v_idx = int(dst_indices[i].item())
-        r_val = float(weights[i].item())
-
-        if abs(r_val) < min_abs_r:
+    wanted: dict[tuple[int | None, int | None], tuple[GraphEntity, GraphEntity, list[Any]]] = {}
+    for (u_id, v_id), r_val in zip(ends, signed, strict=True):
+        if abs(r_val) < min_abs_r or u_id == v_id:
             continue
-
-        meta_u = ds.entities[u_idx]
-        meta_v = ds.entities[v_idx]
-
-        u_id = meta_u.db_id
-        v_id = meta_v.db_id
-
-        if u_id == v_id or u_id not in entity_map or v_id not in entity_map:
+        if u_id not in entity_map or v_id not in entity_map:
             continue
-
-        pair_key = (min(u_id, v_id), max(u_id, v_id))
-        if pair_key in existing_pairs or pair_key in seen_in_batch:
+        key = (min(u_id, v_id), max(u_id, v_id))
+        if key in wanted:
             continue
-        seen_in_batch.add(pair_key)
-
-        ent_a = entity_map[pair_key[0]]
-        ent_b = entity_map[pair_key[1]]
-
-        evidence = {
-            "source_type": "geo",
-            "source_id": "geo:GSE311770",
-            "relation": "co_expressed_with",
-            "score": round(abs(r_val), 3),
-            "pearson_r": round(r_val, 3),
-            "section": "punch_biopsies_n105",
-            "snippet": (
-                f"{ent_a.name} is functionally co-expressed with {ent_b.name} "
-                f"(Pearson |r|={abs(r_val):.2f}, p<1e-5) across 105 human vitiligo skin punch biopsies (GSE311770)."
-            ),
-        }
-
-        edge = GraphEdge(
-            subject_id=ent_a.id,
-            predicate=RelationKind.CO_EXPRESSED_WITH,
-            object_id=ent_b.id,
-            confidence=0.85,
-            claim=ClaimKind.OBSERVED,
-            causal_level="correlation_in_human",
-            extraction_method="geo_punch_biopsies_gse311770",
-            evidence=[evidence],
-        )
-        session.add(edge)
-        inserted_count += 1
-
-        if inserted_count >= max_insert_edges:
+        if len(wanted) >= max_insert_edges:
             break
+        ent_a, ent_b = entity_map[key[0]], entity_map[key[1]]
+        wanted[key] = (
+            ent_a,
+            ent_b,
+            [
+                {
+                    "source_type": "geo",
+                    "source_id": "geo:GSE311770",
+                    "relation": "co_expressed_with",
+                    "score": round(abs(r_val), 3),
+                    "pearson_r": round(r_val, 3),
+                    "section": "punch_biopsies_n105",
+                    "snippet": (
+                        f"{ent_a.name} is co-expressed with {ent_b.name} "
+                        f"(Pearson r = {r_val:+.2f}, p < 1e-5) across 105 human vitiligo "
+                        "skin punch biopsies (GSE311770)."
+                    ),
+                }
+            ],
+        )
 
-    session.flush()
-    logger.info(
-        "Committed %d unique patient punch biopsy co-expression edges into graph_edges",
-        inserted_count,
+    inserted, removed = replace_evidence(
+        session,
+        "geo",
+        wanted,
+        predicate=RelationKind.CO_EXPRESSED_WITH,
+        extraction_method="geo_punch_biopsies_gse311770",
+        confidence=0.85,
+        claim=ClaimKind.OBSERVED,
+        causal_level="correlation_in_human",
     )
-    return inserted_count
+    logger.info(
+        "Patient punch biopsy co-expression: %d pairs, %d edges inserted, %d removed",
+        len(wanted),
+        inserted,
+        removed,
+    )
+    return inserted
 
 
 _CELL_MENTION_PATTERNS: dict[str, re.Pattern[str]] = {
@@ -1498,12 +1487,21 @@ def compute_or_load_single_cell_lineage_profiles(
 
 
 def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
-    """Seed empirically measured EXPRESSED_IN edges from GSE298871 human skin scRNA-seq."""
+    """Bring the GSE298871 EXPRESSED_IN evidence to what the lineage profile says now.
+
+    A gene's row for a skin lineage carries its mean expression there, the share
+    of the lineage's cells detecting it and its enrichment over the other
+    lineages. This step used to add only pairs it had not seen, so a recomputed
+    profile never reached the graph: on 2026-11-21 the graph held lineages for
+    505 genes, 421 of its 675 values current, where the profile has 1,443. A row
+    joins any EXPRESSED_IN edge of the pair, a curated marker's included, and an
+    edge only these rows support takes their confidence.
+    """
     payload = compute_or_load_single_cell_lineage_profiles()
     gene_profiles: dict[str, dict[str, Any]] = payload.get("genes", {})
     lineage_cells: dict[str, int] = payload.get("lineage_cells", {})
     if not gene_profiles:
-        return {"sc_expressed_in_added": 0}
+        return {"sc_expressed_in_added": 0, "sc_expressed_in_removed": 0}
 
     targets: dict[str, GraphEntity] = {
         e.name: e
@@ -1517,14 +1515,8 @@ def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
             select(GraphEntity).where(GraphEntity.kind == EntityKind.CELL_TYPE)
         ).all()
     }
-    existing_expressed: set[tuple[int, int]] = {
-        (e.subject_id, e.object_id)
-        for e in session.exec(
-            select(GraphEdge).where(GraphEdge.predicate == RelationKind.EXPRESSED_IN)
-        ).all()
-    }
 
-    added = 0
+    wanted: dict[tuple[int | None, int | None], tuple[GraphEntity, GraphEntity, list[Any]]] = {}
     for gene_sym, prof in gene_profiles.items():
         t_ent = targets.get(gene_sym)
         if t_ent is None or t_ent.id is None:
@@ -1534,10 +1526,6 @@ def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
             c_ent = cells.get(lname)
             if c_ent is None or c_ent.id is None:
                 continue
-            pair = (t_ent.id, c_ent.id)
-            if pair in existing_expressed:
-                continue
-            existing_expressed.add(pair)
             fc = float(item["fold_enrichment"])
             pct = float(item["pct_detect"])
             cp10k = float(item["mean_cp10k"])
@@ -1548,35 +1536,118 @@ def seed_single_cell_lineage_expression(session: Session) -> dict[str, int]:
                 f"{gene_sym} is expressed at {cp10k:.2f} CP10K across {pct * 100:.1f}% of {lname} cells "
                 f"({fc:.1f}-fold lineage enrichment)."
             )
-            session.add(
-                GraphEdge(
-                    subject_id=t_ent.id,
-                    predicate=RelationKind.EXPRESSED_IN,
-                    object_id=c_ent.id,
-                    confidence=conf,
-                    claim=ClaimKind.OBSERVED,
-                    causal_level="correlation_in_human",
-                    extraction_method="sc_rnaseq_gse298871",
-                    evidence=[
-                        {
-                            "source_type": "geo_scrnaseq",
-                            "source_id": "geo:GSE298871",
-                            "relation": "EXPRESSED_IN",
-                            "score": conf,
-                            "mean_cp10k": cp10k,
-                            "pct_detect": pct,
-                            "fold_enrichment": fc,
-                            "n_lineage_cells": n_cells,
-                            "snippet": snippet,
-                        }
-                    ],
-                )
+            wanted[(t_ent.id, c_ent.id)] = (
+                t_ent,
+                c_ent,
+                [
+                    {
+                        "source_type": "geo_scrnaseq",
+                        "source_id": "geo:GSE298871",
+                        "relation": "EXPRESSED_IN",
+                        "score": conf,
+                        "mean_cp10k": cp10k,
+                        "pct_detect": pct,
+                        "fold_enrichment": fc,
+                        "n_lineage_cells": n_cells,
+                        "snippet": snippet,
+                    }
+                ],
             )
-            added += 1
 
+    added, removed = replace_evidence(
+        session,
+        "geo_scrnaseq",
+        wanted,
+        predicate=RelationKind.EXPRESSED_IN,
+        extraction_method="sc_rnaseq_gse298871",
+        confidence=lambda rows: float(rows[0]["score"]),
+        claim=ClaimKind.OBSERVED,
+        causal_level="correlation_in_human",
+    )
+    # A merged edge keeps the higher of its old and new confidence; one these
+    # rows alone support follows them down as well as up.
+    for (subject_id, object_id), (_, _, rows) in wanted.items():
+        edge = session.exec(
+            select(GraphEdge).where(
+                GraphEdge.subject_id == subject_id,
+                GraphEdge.predicate == RelationKind.EXPRESSED_IN,
+                GraphEdge.object_id == object_id,
+            )
+        ).first()
+        if edge is None or edge.confidence == rows[0]["score"]:
+            continue
+        if all(r.get("source_type") == "geo_scrnaseq" for r in edge.evidence or []):
+            edge.confidence = float(rows[0]["score"])
+            session.add(edge)
     session.flush()
-    logger.info("Single-cell RNA-seq (GSE298871): added %d EXPRESSED_IN edges", added)
-    return {"sc_expressed_in_added": added}
+    logger.info(
+        "Single-cell RNA-seq (GSE298871): %d pairs, %d EXPRESSED_IN edges added, %d removed",
+        len(wanted),
+        added,
+        removed,
+    )
+    return {"sc_expressed_in_added": added, "sc_expressed_in_removed": removed}
+
+
+# Relations read out of curated databases, and the rows that state them: WikiPathways
+# memberships, Gene Ontology annotations, ChEMBL's curated mechanisms, Cell Ontology
+# markers and this project's canonical pathway lists.
+CURATED_ANNOTATION_METHODS = frozenset(
+    {
+        "wikipathways",
+        "gene_ontology_experimental",
+        "chembl_mechanism",
+        "cell_ontology",
+        "curated_pathway",
+    }
+)
+_CURATED_ROWS = frozenset(
+    {
+        ("wikipathways", "wikipathways_curated"),
+        ("go", "experimental_go_bp"),
+        ("chembl", "curated_mechanism_of_action"),
+        ("cell_ontology", "canonical_marker"),
+        ("pathway_knowledge_base", "canonical_pathway_definition"),
+    }
+)
+# A paper's sentence read by a text miner states a relation too; it measures nothing.
+_TEXT_MINED = frozenset(
+    {
+        "pubtator3",
+        "biored-BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext",
+        "biored-biomedbert-silver-gold",
+        "biored-biomedbert-fulltext",
+    }
+)
+
+
+def assert_curated_annotations(session: Session) -> int:
+    """Label a curated annotation that nothing has measured as asserted.
+
+    A curator's statement is the database's claim, not an observation; the
+    graph labelled 21,625 of them observed until 2026-11-21, and ChEMBL's
+    mechanisms sat on the perturbation-in-human rung. They keep the
+    knowledge-base rung, which the graph model weighs as before. Returns the
+    edges relabelled.
+    """
+    changed = 0
+    for edge in session.exec(select(GraphEdge)).all():
+        if edge.extraction_method not in CURATED_ANNOTATION_METHODS:
+            continue
+        rows = edge.evidence or []
+        if not all(
+            (r.get("source_type"), r.get("section")) in _CURATED_ROWS
+            or r.get("source_type") in _TEXT_MINED
+            for r in rows
+        ):
+            continue
+        if edge.claim != ClaimKind.ASSERTED or edge.causal_level != "knowledge_base":
+            edge.claim = ClaimKind.ASSERTED
+            edge.causal_level = "knowledge_base"
+            session.add(edge)
+            changed += 1
+    session.flush()
+    return changed
 
 
 def enrich_knowledge_graph(min_abs_r: float = 0.70) -> dict[str, Any]:

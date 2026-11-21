@@ -64,16 +64,22 @@ _CTIS_RE = re.compile(r"\bCTIS(20\d{2}-\d{6}-\d{2}(?:-\d{2})?)\b", re.IGNORECASE
 # the API copy and the real figure on the ICTRP one.
 _ISRCTN_RE = re.compile(r"\bISRCTN\d{6,}\b", re.IGNORECASE)
 
-_PHASE_PATTERNS: list[tuple[str, str]] = [
-    (r"phase\s*1\s*[/&]\s*phase\s*2|phase\s*i\s*[/&]\s*phase\s*ii", "PHASE1/PHASE2"),
-    (r"phase\s*2\s*[/&]\s*phase\s*3|phase\s*ii\s*[/&]\s*phase\s*iii", "PHASE2/PHASE3"),
-    (r"phase\s*3\s*[/&]\s*phase\s*4|phase\s*iii\s*[/&]\s*phase\s*iv", "PHASE3/PHASE4"),
-    (r"phase\s*4|phase\s*iv", "PHASE4"),
-    (r"phase\s*3|phase\s*iii", "PHASE3"),
-    (r"phase\s*2|phase\s*ii", "PHASE2"),
-    (r"early\s*phase\s*1|phase\s*0", "EARLY_PHASE1"),
-    (r"phase\s*1|phase\s*i", "PHASE1"),
-]
+# CTIS and EudraCT records reach ICTRP listing every phase with a yes or no:
+# "Human pharmacology (Phase I): no Therapeutic exploratory (Phase II): yes ...".
+# Searching that text for a phase found "Phase IV" in all 27 of them, so 25
+# trials in phase 1, 2 or 3 were held as phase 4 (cached export, measured 2026-11-21).
+_PHASE_FLAG = re.compile(r"\(phase\s+(i{1,3}|iv)\)\s*:\s*(yes|no)?")
+_PHASE_NUMERAL = {
+    "0": "0",  # ChiCTR's and IRCT's phase 0, kept as the registry writes it
+    "1": "PHASE1",
+    "2": "PHASE2",
+    "3": "PHASE3",
+    "4": "PHASE4",
+    "i": "PHASE1",
+    "ii": "PHASE2",
+    "iii": "PHASE3",
+    "iv": "PHASE4",
+}
 
 _STATUS_MAP: dict[str, str] = {
     "recruiting": "RECRUITING",
@@ -415,18 +421,32 @@ def _parse_int(value: str | None) -> int | None:
 
 
 def _normalize_phase(raw: str | None) -> list[str]:
+    """The phases one ICTRP phase field names, in ClinicalTrials.gov's spelling.
+
+    Registries write a list of phases many ways, and every numeral counts:
+    "Phase 2/ Phase 3", "2-3", "Phase I/II", "Phase II,III", PACTR's "Phase-3",
+    IRCT's "0 (exploratory trials)". Reading only the first numeral after
+    "Phase" had held "Phase I/II", "Phase I,II" and "Phase II,III" as one phase,
+    and "Phase-3" (4 trials), "Phase-4" (3) and "0 (exploratory trials)" (1) as
+    none. A field that names no phase -- "Retrospective study", "Post-market" --
+    is kept as written.
+    """
     if not raw:
         return []
-    text = raw.strip().lower()
+    text = " ".join(raw.split()).lower()
     if text in {"not applicable", "na", "n/a", "none", "-"}:
         return []
-    for pattern, label in _PHASE_PATTERNS:
-        if re.search(pattern, text):
-            return label.split("/") if "/" in label else [label]
-    # IRCT and others state a bare numeral where the field means a phase.
-    bare = re.fullmatch(r"([1-4])(?:\s*[/&-]\s*([1-4]))?", text)
-    if bare:
-        return [f"PHASE{n}" for n in bare.groups() if n]
+    flags = _PHASE_FLAG.findall(text)
+    if flags:
+        return [_PHASE_NUMERAL[numeral] for numeral, answer in flags if answer == "yes"]
+    if re.fullmatch(r"early\s*phase\s*1", text):
+        return ["EARLY_PHASE1"]
+    # "I (Phase I study)" and "0 (exploratory trials)": the gloss restates the phase.
+    bare = re.sub(r"\s*\([^)]*\)", "", text)
+    parts = [part for part in re.split(r"phase|[\s/,&-]+", bare) if part]
+    if parts and all(part in _PHASE_NUMERAL for part in parts):
+        found = {_PHASE_NUMERAL[part] for part in parts}
+        return sorted(found, key=list(_PHASE_NUMERAL.values()).index)
     return [raw.strip().upper().replace(" ", "_")]
 
 

@@ -652,7 +652,7 @@ async function loadCurativeDiscovery() {
       <span class="trial-stat"><strong>18,730</strong> entities</span>
       <span class="trial-stat">TREATS MRR <strong>${Number(treats.filtered_mrr || 0.566).toFixed(3)}</strong> (Hits@1: ${(Number(treats.filtered_hits_at_1 || 0.544) * 100).toFixed(1)}%)</span>
       <span class="trial-stat">Median Rank <strong>${treats.filtered_median_rank || 1}</strong></span>
-      <span class="trial-stat">Stage-2 AUROC <strong>${Number(reranker.cv_oof_auroc || 0.898).toFixed(3)}</strong></span>
+      <span class="trial-stat">Stage-2 AUROC <strong>${reranker.cv_oof_auroc != null ? Number(reranker.cv_oof_auroc).toFixed(3) : '—'}</strong></span>
     `;
 
     renderCurativeView();

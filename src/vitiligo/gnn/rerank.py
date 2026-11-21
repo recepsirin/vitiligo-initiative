@@ -122,7 +122,8 @@ def load_gse256271_barriers() -> dict[str, float]:
         return {}
     try:
         df = pd.read_csv(GSE256271_PATH, compression="gzip")
-        # log2FoldChange: positive means higher in responding, negative means higher in non-responding
+        # log2FoldChange: positive means higher in NON-responding lesions (PDE4B: mean 0 in
+        # responders, 96.9 in non-responders, log2FC +9.10). transcriptomic_alignment reads it so.
         gene_fc: dict[str, float] = {}
         for _, row in df.iterrows():
             g = str(row["Gene"]).strip().upper()
@@ -132,6 +133,29 @@ def load_gse256271_barriers() -> dict[str, float]:
     except Exception as exc:
         logger.warning("Failed to load GSE256271 DE table: %s", exc)
         return {}
+
+
+def transcriptomic_alignment(
+    inhibition: dict[str, float], activation: dict[str, float], gse_fc: dict[str, float]
+) -> float:
+    """How far a drug's predicted actions lean toward response in GSE256271.
+
+    ``gse_fc`` is the deposited log2 fold change of non-responding over responding
+    lesions, so a positive value marks a gene higher where repigmentation failed
+    (PDE4B +9.10). Inhibiting such a gene leans toward response, and so does
+    activating a gene higher in responders. ``inhibition`` and ``activation`` are the
+    GNN's link scores for the drug against each gene; only predicted links count.
+    Until 2026-11-21 both terms read the fold change the other way round, so
+    inhibiting a non-responder gene lowered the score.
+    """
+    score = 0.0
+    for gene, link in inhibition.items():
+        if link > 0.0 and gene in gse_fc:
+            score += link * gse_fc[gene]
+    for gene, link in activation.items():
+        if link > 0.0 and gene in gse_fc:
+            score += link * max(0.0, -gse_fc[gene])
+    return score
 
 
 @torch.no_grad()
@@ -205,15 +229,11 @@ def build_candidate_feature_tensor(
     barrier_t = torch.tensor(barrier_scores, device=device)
 
     # 7. Transcriptomic GSE256271 signature alignment score (1D)
-    trans_score = 0.0
-    for g, score in zip(
-        CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=False
-    ):
-        if score > 0.0 and g in gse_fc:
-            trans_score += max(0.0, score) * (-gse_fc[g])
-    for g, score in zip(CORE_REGEN_GENES, regen_scores, strict=False):
-        if score > 0.0 and g in gse_fc:
-            trans_score += max(0.0, score) * max(0.0, gse_fc[g])
+    trans_score = transcriptomic_alignment(
+        dict(zip(CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=True)),
+        dict(zip(CORE_REGEN_GENES, regen_scores, strict=True)),
+        gse_fc,
+    )
     trans_t = torch.tensor([trans_score], device=device)
 
     # Concatenate all components into 1172-D vector
@@ -767,7 +787,7 @@ def _write_rerank_markdown(report: dict[str, Any], out_path: Path) -> None:
         "# Stage-2 Dense Cross-Encoder Reranked Curative Candidates",
         "",
         f"**Architecture:** `{report['architecture']}`  ",
-        f"**Feature Vector:** `{report['feature_dimension']}-D` (1024-D Morgan Fingerprints + 128-D RGAT-ComplEx Latent + 18-D Triad Target Affinities + GSE256271 Barrier Alignment)  ",
+        f"**Feature Vector:** `{report['feature_dimension']}-D` (1,024-D Morgan fingerprints + 128-D RGAT-ComplEx latent + 1-D TREATS link score + 18-D triad target scores + 1-D GSE256271 alignment)  ",
         f"**5-Fold Out-of-Fold CV:** `AUROC = {report.get('cv_oof_auroc', 0.0):.4f}`, `Accuracy = {report.get('cv_oof_accuracy', 0.0) * 100:.1f}%`  ",
         "",
         "| S2 Rank | S1 Rank | Candidate Drug | Prob | Rerank Logit | TRM Disarm | McSC Regen | PDE4B Barrier | Curative Triad Alignment | Key Targets (`*` = Verified) |",

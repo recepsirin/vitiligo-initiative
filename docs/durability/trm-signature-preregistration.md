@@ -141,3 +141,30 @@ The signature $S_{\text{TRM}}$ is sealed and locked. It will be tested without m
 ### Code & Reproduction
 - Implementation: [`src/vitiligo/models/trm_score.py`](../../src/vitiligo/models/trm_score.py)
 - Unit tests: [`tests/unit/test_trm_score.py`](../../tests/unit/test_trm_score.py)
+
+---
+
+## Amendments
+
+1. **Correction, 2026-11-12, before any post-withdrawal sample has been scored.** The table in section 5 was not computed with the formula in section 4. Its twelve values are reproduced exactly by $\log_2(1 + \bar{E}_{\text{TRM}}) \,/\, \log_2(1 + \bar{E}_{\text{norm}})$ with $\bar{E}_{\text{norm}}$ taken over `ACTB` and `GAPDH` alone: the circulating term is missing, and `RPLP0` is left out of the normalizer. No committed version of [`trm_score.py`](../../src/vitiligo/models/trm_score.py) computes that; it has computed the formula in section 4 since it was first committed. The gene sets, the formula and the falsification rules are unchanged. This amendment corrects the figures, not the score.
+
+   **What the sealed formula gives.**
+
+   | Patient | Non-lesional | Lesional | Lesional / non-lesional | Section 5 reported |
+   |---|---|---|---|---|
+   | PtA | 0.0054 | 0.0122 | $2.2\times$ | 0.0068, 0.0136 ($2.0\times$) |
+   | PtC | 0.0092 | 0.0114 | $1.2\times$ | 0.0108, 0.0132 ($1.2\times$) |
+   | PtD | 0.0133 | 0.0136 | $1.0\times$ | 0.0147, 0.0159 ($1.1\times$) |
+   | PtE | 0.0157 | 0.0744 | $4.8\times$ | 0.0217, 0.0952 ($4.4\times$) |
+   | PtF | 0.0044 | 0.0101 | $2.3\times$ | 0.0054, 0.0109 ($2.0\times$) |
+   | PtG | 0.0060 | 0.0093 | $1.6\times$ | 0.0078, 0.0118 ($1.5\times$) |
+
+   **What stands.** Lesional skin scores higher in 6 of 6 patients. The sign test ($P = 0.0156$) and the Wilcoxon signed-rank test ($W = 21$, $P = 0.03125$) are as reported, because both depend only on all six differences being positive.
+
+   **What weakens.** PtD's lesional score is 2.7% above its non-lesional score, where section 5 showed 8%. One of the six pairs is close to a tie.
+
+   **Cell count.** Section 2 says 20,550 cells. The six archives hold 19,550: 8,903 non-lesional and 10,647 lesional. The means quoted there for `CXCL9` and `CXCL10`, and the ratios for `IL15` and `IL15RA`, are reproduced from those cells.
+
+   **How to check.** `python scripts/durability/trm_reference.py` scores the archives with the implementation and writes [`data/trm-signature-reference.json`](data/trm-signature-reference.json), which holds the mean expression of every panel gene for each sample. Both columns of the table above can be recomputed from that file.
+
+   **Effect on the seal.** None. Seal `2c102804` is the hash of the hypothesis record [`trm-il15-relapse`](../mechanisms/README.md): its claim, its context and its test. The record quotes no figure from section 5, and the seal still verifies.

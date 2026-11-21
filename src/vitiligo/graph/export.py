@@ -93,7 +93,15 @@ _GOVERNMENT_TEXT = {
     "go": "Gene Ontology Consortium (CC BY 4.0)",
     "reactome": "Reactome Pathway Knowledgebase (CC BY 4.0)",
     "cell_ontology": "Cell Ontology (CC BY 4.0)",
-    "chembl": "ChEMBL / DrugCentral Open Bioactivity (CC BY-SA / CC0)",
+}
+# ChEMBL (CC BY-SA 3.0) and DrugCentral (CC BY-SA 4.0) ask that what is made from
+# them be shared alike, so their rows go to share-alike/ under CC BY-SA 4.0 and
+# the rest of the release stays CC BY 4.0. Both arrive as "chembl" rows; the
+# section tells them apart. Until 2026-11-21 they sat in the CC BY files under
+# one label that called DrugCentral CC0.
+_SHARE_ALIKE = {
+    "curated_mechanism_of_action": "ChEMBL (CC BY-SA 3.0)",
+    "human_bioactivity_assay": "DrugCentral (CC BY-SA 4.0)",
 }
 _MODEL = "biored-BiomedNLP-BiomedBERT-base-uncased-abstract-fulltext"
 _COLUMNS = ("source_id", "source_type", "relation", "score", "section", "snippet")
@@ -107,25 +115,34 @@ class ReleaseStats:
     quoted: int
     ictrp_relations: int
     ictrp_evidence: int
+    share_alike_relations: int
+    share_alike_evidence: int
     dropped: int
 
 
 def export_release(out: Path, licences: dict[str, str | None]) -> ReleaseStats:
     """Write the graph as a dataset others may reuse: entities, relations, evidence.
 
-    ``licences`` maps a PMID to its full text's licence. Three sources set
+    ``licences`` maps a PMID to its full text's licence. Four sources set
     terms of their own. WHO's ICTRP forbids commercial use, so what rests on it
-    goes to ``ictrp/`` under WHO's terms and the rest is CC BY 4.0. DrugBank
-    does not allow redistribution, so its entries are left out. And a
-    sentence quoted from a paper is the paper's, so it is published only where
-    the paper's licence allows; otherwise its pointer still is.
+    goes to ``ictrp/`` under WHO's terms. ChEMBL and DrugCentral require
+    share-alike, so their rows go to ``share-alike/`` under CC BY-SA 4.0; the
+    rest is CC BY 4.0. DrugBank does not allow redistribution, so its entries
+    are left out. And a sentence quoted from a paper is the paper's, so it is
+    published only where the paper's licence allows; otherwise its pointer
+    still is.
+
+    A relation goes where its own rows are: with the CC BY files if any row is
+    theirs, else with the share-alike ones, else with ICTRP's. Its other rows sit
+    in their own folders and point at it by id.
     """
     with Session(get_engine(), expire_on_commit=False) as session:
         entities = {e.id: e for e in session.exec(select(GraphEntity)).all()}
         edges = list(session.exec(select(GraphEdge).order_by(col(GraphEdge.id))).all())
 
-    main: dict[str, list[dict[str, Any]]] = {"relations": [], "evidence": []}
-    ictrp: dict[str, list[dict[str, Any]]] = {"relations": [], "evidence": []}
+    folders: dict[str, dict[str, list[dict[str, Any]]]] = {
+        terms: {"relations": [], "evidence": []} for terms in ("main", "share_alike", "ictrp")
+    }
     dropped = quoted = 0
     for edge in edges:
         kept = [
@@ -134,36 +151,67 @@ def export_release(out: Path, licences: dict[str, str | None]) -> ReleaseStats:
             if not str(e.get("source_id", "")).startswith("drugbank:")
         ]
         dropped += len(edge.evidence or []) - len(kept)
-        rows = [_evidence_row(edge.id, e, licences) for e in kept]
-        quoted += sum(1 for r in rows if r["text"] is not None)
-        own = [r for r in rows if not r["source"].startswith("ictrp:")]
-        who = [r for r in rows if r["source"].startswith("ictrp:")]
-        if own:
-            main["relations"].append(_relation_row(edge, len(own)))
-            main["evidence"] += own
-            ictrp["evidence"] += who
-        elif who:
-            ictrp["relations"].append(_relation_row(edge, len(who)))
-            ictrp["evidence"] += who
+        rows: dict[str, list[dict[str, Any]]] = {terms: [] for terms in folders}
+        for item in kept:
+            row = _evidence_row(edge.id, item, licences)
+            quoted += row["text"] is not None
+            rows[_terms(item)].append(row)
+        home = next((terms for terms in folders if rows[terms]), None)
+        if home is None:
+            continue
+        folders[home]["relations"].append(_relation_row(edge, len(rows[home])))
+        for terms, part in rows.items():
+            folders[terms]["evidence"] += part
 
-    in_main = {i for r in main["relations"] for i in (r["subject_id"], r["object_id"])}
-    in_ictrp = {i for r in ictrp["relations"] for i in (r["subject_id"], r["object_id"])}
-    main["entities"] = [_release_entity(entities[i], strip_ictrp=True) for i in sorted(in_main)]
-    ictrp["entities"] = [_release_entity(entities[i]) for i in sorted(in_ictrp - in_main)]
-    for folder, tables in ((out, main), (out / "ictrp", ictrp)):
+    def ends(terms: str) -> set[int]:
+        return {i for r in folders[terms]["relations"] for i in (r["subject_id"], r["object_id"])}
+
+    in_main = ends("main")
+    folders["main"]["entities"] = [
+        _release_entity(entities[i], strip_ictrp=True) for i in sorted(in_main)
+    ]
+    folders["share_alike"]["entities"] = [
+        _release_entity(entities[i], strip_ictrp=True)
+        for i in sorted(ends("share_alike") - in_main)
+    ]
+    folders["ictrp"]["entities"] = [
+        _release_entity(entities[i]) for i in sorted(ends("ictrp") - in_main)
+    ]
+    for folder, tables in (
+        (out, folders["main"]),
+        (out / "share-alike", folders["share_alike"]),
+        (out / "ictrp", folders["ictrp"]),
+    ):
         folder.mkdir(parents=True, exist_ok=True)
-        for name, rows in tables.items():
-            with (folder / f"{name}.jsonl").open("w", encoding="utf-8") as fh:
-                fh.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+        for name, table in tables.items():
+            path = folder / f"{name}.jsonl"
+            if not table:
+                # Every entity the share-alike relations name is also in the
+                # main file, so that table is empty: leave it out, never stale.
+                path.unlink(missing_ok=True)
+                continue
+            with path.open("w", encoding="utf-8") as fh:
+                fh.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in table)
     return ReleaseStats(
-        entities=len(main["entities"]),
-        relations=len(main["relations"]),
-        evidence=len(main["evidence"]),
+        entities=len(folders["main"]["entities"]),
+        relations=len(folders["main"]["relations"]),
+        evidence=len(folders["main"]["evidence"]),
         quoted=quoted,
-        ictrp_relations=len(ictrp["relations"]),
-        ictrp_evidence=len(ictrp["evidence"]),
+        ictrp_relations=len(folders["ictrp"]["relations"]),
+        ictrp_evidence=len(folders["ictrp"]["evidence"]),
+        share_alike_relations=len(folders["share_alike"]["relations"]),
+        share_alike_evidence=len(folders["share_alike"]["evidence"]),
         dropped=dropped,
     )
+
+
+def _terms(item: dict[str, Any]) -> str:
+    """Whose terms an evidence row is published under: main, share_alike or ictrp."""
+    if str(item.get("source_id", "")).startswith("ictrp:"):
+        return "ictrp"
+    if item.get("source_type") == "chembl":
+        return "share_alike"
+    return "main"
 
 
 def _evidence_row(
@@ -172,9 +220,14 @@ def _evidence_row(
     source = str(item.get("source_id", ""))
     scheme, _, ident = source.partition(":")
     snippet = item.get("snippet")
-    licence = licences.get(ident) if scheme == "pmid" else _GOVERNMENT_TEXT.get(scheme)
-    if scheme == "pmid" and licence not in _OPEN_LICENCES:
-        licence = None
+    if scheme == "pmid":
+        licence = licences.get(ident)
+        if licence not in _OPEN_LICENCES:
+            licence = None
+    elif item.get("source_type") == "chembl":
+        licence = _SHARE_ALIKE.get(str(item.get("section")))
+    else:
+        licence = _GOVERNMENT_TEXT.get(scheme)
     kind = str(item.get("source_type", ""))
     return {
         "relation_id": relation_id,

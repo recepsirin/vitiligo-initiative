@@ -514,6 +514,112 @@ def gnn_baseline(
     console.print(table)
 
 
+@gnn_app.command("build-dataset")
+def gnn_build_dataset(
+    out_dir: str = typer.Option(
+        ..., "--out-dir", help="Folder for the new dataset and its caches; the published ones stay."
+    ),
+    refresh_smiles: bool = typer.Option(
+        False, "--refresh-smiles", help="Ask PubChem again for drugs it did not resolve before."
+    ),
+) -> None:
+    """Build a training dataset from the current database: graph and 1,936-D node features.
+
+    The graph comes from the database's edges, weighted on the causal ladder;
+    each entity gets a BiomedBERT name embedding (768), a Morgan fingerprint
+    (1,024), HGNC gene groups (128) and the GEO profile (16). This is how
+    data/cache/gnn/vitiligo_gnn_dataset_enriched.pt, the published model's
+    training data, was built from the database of 9 November 2026; to train on a
+    new build, copy its vitiligo_gnn_dataset_enriched.pt there.
+    """
+    import shutil
+    from pathlib import Path
+
+    from vitiligo.gnn.chemicals import DEFAULT_SMILES_CACHE
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.gnn.geo_meta import (
+        FEATURE_BLOCKS,
+        GEO_DIMENSIONS,
+        build_enriched_graph_dataset,
+        empty_dimensions,
+    )
+
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    init_db()
+    base = load_graph_dataset(cache_path=out / "vitiligo_gnn_dataset.pt", force_reload=True)
+    smiles = out / "drug_smiles.json"
+    if DEFAULT_SMILES_CACHE.exists() and not smiles.exists():
+        shutil.copyfile(DEFAULT_SMILES_CACHE, smiles)
+    dataset = build_enriched_graph_dataset(
+        base,
+        output_path=out / "vitiligo_gnn_dataset_enriched.pt",
+        geo_cache_path=out / "geo_consensus_16d.pt",
+        chemical_cache_path=out / "chemical_fingerprints.pt",
+        smiles_cache_path=smiles,
+        refresh_unresolved=refresh_smiles,
+    )
+    console.print(
+        f"{dataset.num_nodes:,} entities, {dataset.num_edges:,} edges across "
+        f"{dataset.num_relations} relations -> {out / 'vitiligo_gnn_dataset_enriched.pt'}"
+    )
+    assert dataset.node_features is not None
+    for dim in empty_dimensions(dataset.node_features[:, FEATURE_BLOCKS[-1][1] :]):
+        console.print(f"[yellow]GEO dimension {dim} ({GEO_DIMENSIONS[dim]}) is empty[/yellow]")
+
+
+@gnn_app.command("check-features")
+def gnn_check_features(
+    dataset_path: str = typer.Option(
+        "data/cache/gnn/vitiligo_gnn_dataset_enriched.pt",
+        "--dataset",
+        help="The dataset whose node features to rebuild and compare.",
+    ),
+) -> None:
+    """Rebuild a dataset's 1,936-D node features from the raw inputs and compare them.
+
+    Each block is recomputed into a temporary folder: BiomedBERT name embeddings
+    (data/models/relations/biomedbert-silver-gold), Morgan fingerprints from the
+    recorded SMILES, HGNC gene groups and the GEO profile from the series under
+    data/geo. Nothing is fetched and no cache is overwritten. Exits 1 if a block
+    differs.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.gnn.geo_meta import (
+        FEATURE_BLOCKS,
+        GEO_DIMENSIONS,
+        check_node_features,
+        empty_dimensions,
+    )
+
+    path = Path(dataset_path)
+    if not path.is_file():
+        console.print(f"[red]No dataset at {path}[/red]")
+        raise typer.Exit(1)
+    dataset = load_graph_dataset(cache_path=path)
+    with tempfile.TemporaryDirectory() as tmp:
+        rows = check_node_features(dataset, Path(tmp))
+    table = Table(title=f"Node features of {path.name}, rebuilt from the raw inputs")
+    for column in ("Block", "Columns", "Identical", "Largest difference"):
+        table.add_column(column)
+    for r in rows:
+        table.add_row(
+            str(r["block"]),
+            str(r["columns"]),
+            "yes" if r["identical"] else "[red]no[/red]",
+            f"{r['max_difference']:.3g}",
+        )
+    console.print(table)
+    assert dataset.node_features is not None
+    for dim in empty_dimensions(dataset.node_features[:, FEATURE_BLOCKS[-1][1] :]):
+        console.print(f"[yellow]GEO dimension {dim} ({GEO_DIMENSIONS[dim]}) is empty[/yellow]")
+    if not all(r["identical"] for r in rows):
+        raise typer.Exit(1)
+
+
 @gnn_app.command("train")
 def gnn_train(
     epochs: int = typer.Option(25, "--epochs", help="Number of training epochs."),
@@ -1824,7 +1930,8 @@ def graph_release_cmd(
     """Write the graph as a reusable dataset, within each source's terms.
 
     Entities, relations and evidence as JSON Lines, CC BY 4.0; what rests on
-    WHO ICTRP alone in ictrp/, under WHO's terms. A sentence quoted from a
+    WHO ICTRP alone in ictrp/, under WHO's terms; what comes from ChEMBL and
+    DrugCentral in share-alike/, under CC BY-SA 4.0. A sentence quoted from a
     paper is included only where the paper's licence allows it.
     """
     from pathlib import Path
@@ -1852,11 +1959,48 @@ def graph_release_cmd(
         ("Sentences quoted", stats.quoted),
         ("ICTRP relations", stats.ictrp_relations),
         ("ICTRP evidence", stats.ictrp_evidence),
+        ("Share-alike relations", stats.share_alike_relations),
+        ("Share-alike evidence", stats.share_alike_evidence),
         ("Left out (DrugBank)", stats.dropped),
     ):
         table.add_row(label, f"{value:,}")
     console.print(table)
     console.print(f"Written to [cyan]{out}[/cyan]")
+
+
+@graph_app.command("refresh")
+def graph_refresh_cmd() -> None:
+    """Bring the layers sources keep updating to what they say now, fetching nothing.
+
+    Trial statuses and phases from the registry records held; co-expression
+    pairs with the sign of their correlation, from the cache; single-cell
+    lineage expression from the current profile; and curated database
+    annotations labelled asserted. A relation a step leaves unchanged keeps its
+    id; run `vitiligo graph release` after it.
+    """
+    from vitiligo.graph.enrich_release import (
+        assert_curated_annotations,
+        seed_patient_coexpression_edges,
+        seed_single_cell_lineage_expression,
+    )
+    from vitiligo.graph.seed import refresh_trial_records
+
+    init_db()
+    with session_scope() as session:
+        trials = refresh_trial_records(session)
+        relabelled = assert_curated_annotations(session)
+        coexpression = seed_patient_coexpression_edges(session)
+        single_cell = seed_single_cell_lineage_expression(session)
+    table = Table(show_header=False, box=None)
+    for label, value in (
+        ("Trial rows brought up to date", trials),
+        ("Curated annotations labelled asserted", relabelled),
+        ("Co-expression edges inserted", coexpression),
+        ("Single-cell edges added", single_cell["sc_expressed_in_added"]),
+        ("Single-cell edges removed", single_cell["sc_expressed_in_removed"]),
+    ):
+        table.add_row(label, f"{value:,}")
+    console.print(table)
 
 
 @graph_app.command("enrich")

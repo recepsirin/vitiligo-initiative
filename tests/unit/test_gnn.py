@@ -93,6 +93,11 @@ def test_compute_causal_edge_weight() -> None:
         compute_causal_edge_weight("OBSERVED", "knowledge_base", 0.92, predicate="PARTICIPATES_IN")
         == 0.90
     )
+    # A curated annotation, asserted now, weighs as it did when labelled observed.
+    for predicate in ("PARTICIPATES_IN", "INHIBITS", "EXPRESSED_IN"):
+        assert compute_causal_edge_weight(
+            "ASSERTED", "knowledge_base", 0.92, predicate=predicate
+        ) == compute_causal_edge_weight("OBSERVED", "knowledge_base", 0.92, predicate=predicate)
 
 
 def test_dataset_conversions() -> None:
@@ -402,3 +407,15 @@ def test_reverse_target_screening(tmp_path) -> None:
     jak1_hits = results["INHIBITS_JAK1"].hits
     assert len(jak1_hits) > 0
     assert jak1_hits[0].drug_name in ["tofacitinib", "ritlecitinib"]
+
+
+def test_alignment_rewards_moving_a_lesion_toward_response() -> None:
+    from vitiligo.gnn.rerank import transcriptomic_alignment
+
+    # GSE256271's fold change is non-responders over responders: PDE4B is higher where
+    # lesions did not repigment (+9.10); say TYR is higher where they did (-2.0).
+    fc = {"PDE4B": 9.10, "TYR": -2.0}
+    assert transcriptomic_alignment({"PDE4B": 0.5}, {}, fc) == pytest.approx(4.55)
+    assert transcriptomic_alignment({}, {"TYR": 0.5}, fc) == pytest.approx(1.0)
+    # Activating a non-responder gene, or a link the model does not predict, adds nothing.
+    assert transcriptomic_alignment({"PDE4B": -0.3}, {"PDE4B": 0.5}, fc) == 0.0

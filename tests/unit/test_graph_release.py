@@ -89,3 +89,61 @@ def test_release_follows_each_sources_terms(tmp_path, monkeypatch) -> None:
     )
     assert trial_row["aliases"] == []
     assert stats.dropped == 2
+
+
+def test_share_alike_sources_ship_in_their_own_folder(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("VITILIGO_DB_PATH", str(tmp_path / "graph.db"))
+    cfg._settings = None
+    dbmod._engine = None
+    init_db()
+    with session_scope() as session:
+        vitiligo = upsert_entity(session, kind=EntityKind.DISEASE, name="vitiligo")
+        drug = upsert_entity(session, kind=EntityKind.DRUG, name="tofacitinib")
+        jak3 = upsert_entity(session, kind=EntityKind.TARGET, name="JAK3")
+        jak1 = upsert_entity(session, kind=EntityKind.TARGET, name="JAK1")
+
+        def edge(subject, predicate, obj, *evidence):
+            made = None
+            for item in evidence:
+                made, _ = upsert_edge(
+                    session,
+                    subject=subject,
+                    predicate=predicate,
+                    obj=obj,
+                    confidence=0.9,
+                    extraction_method="chembl_mechanism",
+                    evidence=item,
+                )
+            return made.id
+
+        mechanism = {
+            "source_type": "chembl",
+            "source_id": "chembl:CHEMBL221959",
+            "section": "curated_mechanism_of_action",
+            "snippet": "Tofacitinib acts as a verified inhibitor of JAK3.",
+        }
+        bioactivity = {
+            "source_type": "chembl",
+            "source_id": "chembl:CHEMBL221959",
+            "section": "human_bioactivity_assay",
+            "snippet": "tofacitinib exhibits potent human bioactivity against JAK1.",
+        }
+        paper = {"source_type": "pubtator3", "source_id": "pmid:3"}
+        only_chembl = edge(drug, RelationKind.INHIBITS, jak3, mechanism)
+        with_paper = edge(drug, RelationKind.INHIBITS, jak1, bioactivity, paper)
+        treats = edge(drug, RelationKind.TREATS, vitiligo, paper)
+
+    stats = export_release(tmp_path / "out", {"3": "cc by"})
+
+    out = tmp_path / "out"
+    shared = out / "share-alike"
+    assert {r["id"] for r in _read(out / "relations.jsonl")} == {with_paper, treats}
+    assert {r["id"] for r in _read(shared / "relations.jsonl")} == {only_chembl}
+    # A relation a paper also states stays in the CC BY files; its ChEMBL row does not.
+    assert {r["source"] for r in _read(out / "evidence.jsonl")} == {"pmid:3"}
+    assert {(r["relation_id"], r["text_licence"]) for r in _read(shared / "evidence.jsonl")} == {
+        (only_chembl, "ChEMBL (CC BY-SA 3.0)"),
+        (with_paper, "DrugCentral (CC BY-SA 4.0)"),
+    }
+    assert [e["name"] for e in _read(shared / "entities.jsonl")] == ["JAK3"]
+    assert (stats.share_alike_relations, stats.share_alike_evidence) == (1, 2)

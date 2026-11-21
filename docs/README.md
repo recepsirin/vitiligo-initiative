@@ -43,13 +43,13 @@ To keep the repository clean and developer-focused, the computational pharmacolo
 
 | Dossier / Asset | Key Focus | Live Space Location & Downloads |
 |---|---|---|
-| **Multi-Target Investigator Brief** | Overcoming the oral kinase plateau (~15% clearance) via concurrent immune shielding, McSC mobilization, and PDE4B barrier suppression. | [Space Tab 6: Executive Dossiers](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
-| **Preclinical Assay Cascade (VAL-DOSSIER-2026-V1)** | Three-stage experimental assay pipeline: in vitro HEM rescue, ex vivo organotypic skin explants, and suction blister roof flow cytometry. | [Space Tab 6: Executive Dossiers](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
-| **Dual-Action Formulation & Delivery Guide** | Physicochemical logP matching, Franz cell diffusion testing, vehicle bases, and follicular reservoir accumulation. | [Space Tab 6: Open Data Downloads](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
-| **Clinical Protocol Bridges & Trial Concepts** | Synchronized NB-UVB phototherapy, overcoming the +9.09 log2FC PDE4B block, and step-down maintenance design. | [Space Tab 6: Open Data Downloads](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click MD |
-| **Stage-2 Reranked Candidate Ledger** | 5-fold cross-validated candidate screening across 893 small molecules (AUROC 0.8980). | [Space Tab 1: View 2](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
-| **Pairwise Virtual Synergies Matrix** | Chou-Talalay Combination Index (CI < 0.70) and Bliss excess matrix across dermatologic compounds. | [Space Tab 1: View 1](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
-| **Reverse Target Screening Ledger** | ComplEx decoder link prediction identifying candidates targeting PDE4B, EDNRB, MITF, and IL-15. | [Space Tab 1: View 3](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) · 1-click CSV |
+| **Multi-Target Investigator Brief** | Overcoming the oral kinase plateau (~15% clearance) via concurrent immune shielding, McSC mobilization, and PDE4B barrier suppression. | [Methods & data → Documents](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#methods-dossiers) · Markdown |
+| **Preclinical Assay Cascade (VAL-DOSSIER-2026-V1)** | Three-stage experimental assay pipeline: in vitro HEM rescue, ex vivo organotypic skin explants, and suction blister roof flow cytometry. | [Methods & data → Documents](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#methods-dossiers) · Markdown |
+| **Dual-Action Formulation & Delivery Guide** | Physicochemical logP matching, Franz cell diffusion testing, vehicle bases, and follicular reservoir accumulation. | [Methods & data → Documents](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#methods-dossiers) · Markdown |
+| **Clinical Protocol Bridges & Trial Concepts** | Synchronized NB-UVB phototherapy, overcoming the +9.09 log2FC PDE4B block, and step-down maintenance design. | [Methods & data → Documents](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#methods-dossiers) · Markdown |
+| **Stage-2 Reranked Candidate Ledger** | 5-fold cross-validated candidate screening across 893 small molecules (AUROC 0.9005). | [Drug discovery → Single agents](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#combinations-rerank) · CSV |
+| **Pairwise Virtual Synergies Matrix** | Chou-Talalay Combination Index (CI < 0.70) and Bliss excess matrix across dermatologic compounds. | [Drug discovery → Combinations](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#combinations-pairs) · CSV |
+| **Reverse Target Screening Ledger** | ComplEx decoder link prediction identifying candidates targeting PDE4B, EDNRB, MITF, and IL-15. | [Drug discovery → Target screen](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#combinations-reverse) · CSV |
 | [`scientific-brief.md`](scientific-brief.md) | Disease biology, auto-antigen pathogenesis, and structural evidence gaps in non-segmental vitiligo. | In-repo background brief |
 | [`governance-ethics-brief.md`](governance-ethics-brief.md) | Governance principles, patient safety guardrails, transparency, and data privacy framework. | In-repo policy document |
 
@@ -65,7 +65,7 @@ To eliminate post-hoc data fitting, all model priors and forecast evaluation rul
 | [`model-v0.4-preregistration.md`](model-v0.4-preregistration.md) | Prior updates incorporating week 24 to week 52 extension trials and background phototherapy. | Sealed v0.4 |
 | [`model-v0.5-preregistration.md`](model-v0.5-preregistration.md) | Integration of pediatric cohorts and topical formulation bioavailability adjustments. | Sealed v0.5 |
 | [`durability-forecast-preregistration.md`](durability-forecast-preregistration.md) | Prospective relapse hazard evaluation rules following treatment cessation. | Sealed Durability |
-| [`durability/trm-signature-preregistration.md`](durability/trm-signature-preregistration.md) | **$T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$):** 10-gene blister roof RNA-seq scoring coefficients (HR > 1.0). | **Seal `2c102804`** |
+| [`durability/trm-signature-preregistration.md`](durability/trm-signature-preregistration.md) | **$T_{\text{RM}}$ Relapse Index ($S_{\text{TRM}}$):** gene panels and formula of the relapse score (17 genes), with its falsification rule (hazard ratio per SD > 1). Amended 2026-11-12. | **Seal `2c102804`** (hypothesis record) |
 | [`voi-preregistration.md`](voi-preregistration.md) | Value-of-Information (VoI) acquisition function for prioritizing evidence collection. | Sealed VoI |
 | [`voi-ranking-preregistration.md`](voi-ranking-preregistration.md) | Frozen trial ranking criteria based on expected epistemic uncertainty reduction. | Sealed Ranking |
 

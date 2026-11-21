@@ -169,6 +169,22 @@ def test_a_bare_numeral_is_read_as_a_phase() -> None:
     assert _normalize_phase("Not Applicable") == []
 
 
+def test_a_ctis_phase_list_names_only_the_phases_marked_yes() -> None:
+    # As ICTRP exports a CTIS record; every phase is named, so the flags decide.
+    text = (
+        "Human pharmacology (Phase I): no\nTherapeutic exploratory (Phase II): yes\n"
+        "Therapeutic confirmatory - (Phase III): no\nTherapeutic use (Phase IV): no"
+    )
+    assert _normalize_phase(text) == ["PHASE2"]
+
+
+def test_every_phase_a_registry_lists_counts() -> None:
+    assert _normalize_phase("Phase I/II") == ["PHASE1", "PHASE2"]
+    assert _normalize_phase("Phase II,III") == ["PHASE2", "PHASE3"]
+    assert _normalize_phase("Phase-3") == ["PHASE3"]  # PACTR
+    assert _normalize_phase("0 (exploratory trials)") == ["0"]  # IRCT
+
+
 def test_complete_and_completed_are_the_same_status() -> None:
     """PACTR writes "Complete"; splitting the two hides finished trials."""
     assert _normalize_status("Complete") == _normalize_status("Completed") == "COMPLETED"
