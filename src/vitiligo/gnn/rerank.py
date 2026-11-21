@@ -122,7 +122,10 @@ def load_gse256271_barriers() -> dict[str, float]:
         return {}
     try:
         df = pd.read_csv(GSE256271_PATH, compression="gzip")
-        # log2FoldChange: positive means higher in responding, negative means higher in non-responding
+        # log2FoldChange: positive means higher in NON-responding lesions (PDE4B: mean 0 in
+        # responders, 96.9 in non-responders, log2FC +9.10). The alignment score in
+        # build_candidate_feature_tensor was written for the opposite convention, so it runs backwards:
+        # inhibiting a non-responder gene lowers it. Fixing it means retraining the reranker.
         gene_fc: dict[str, float] = {}
         for _, row in df.iterrows():
             g = str(row["Gene"]).strip().upper()
@@ -767,7 +770,7 @@ def _write_rerank_markdown(report: dict[str, Any], out_path: Path) -> None:
         "# Stage-2 Dense Cross-Encoder Reranked Curative Candidates",
         "",
         f"**Architecture:** `{report['architecture']}`  ",
-        f"**Feature Vector:** `{report['feature_dimension']}-D` (1024-D Morgan Fingerprints + 128-D RGAT-ComplEx Latent + 18-D Triad Target Affinities + GSE256271 Barrier Alignment)  ",
+        f"**Feature Vector:** `{report['feature_dimension']}-D` (1,024-D Morgan fingerprints + 128-D RGAT-ComplEx latent + 1-D TREATS link score + 18-D triad target scores + 1-D GSE256271 alignment)  ",
         f"**5-Fold Out-of-Fold CV:** `AUROC = {report.get('cv_oof_auroc', 0.0):.4f}`, `Accuracy = {report.get('cv_oof_accuracy', 0.0) * 100:.1f}%`  ",
         "",
         "| S2 Rank | S1 Rank | Candidate Drug | Prob | Rerank Logit | TRM Disarm | McSC Regen | PDE4B Barrier | Curative Triad Alignment | Key Targets (`*` = Verified) |",

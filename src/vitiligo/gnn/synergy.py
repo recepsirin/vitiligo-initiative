@@ -263,13 +263,18 @@ def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> No
         "# Pairwise In-Silico Drug Synergy Matrix: The Curative Triad",
         "",
         "**The Vitiligo Initiative | Computational Pharmacology & Multi-Target Therapeutics**  ",
-        "**Model Basis:** Heterogeneous `RGAT-4H + ComplEx` GNN on 96,073 relations + Stage-2 Cross-Encoder reranker.  ",
+        "**Model Basis:** Heterogeneous `RGAT-4H + ComplEx` GNN + Stage-2 Cross-Encoder reranker.  ",
         "",
         "---",
         "",
-        "## Executive Summary",
+        "## Summary",
         "",
-        "Monotherapy oral or topical kinase inhibitors hit a biological ceiling at ~18% total body clearance (STOP-V Phase 3, *Nature Medicine* Nov 2026) with >34% relapse upon cessation. To overcome the $+9.09 \\log_2\\text{FC}$ `PDE4B` non-responder barrier (*GSE256271*) and disarm anchored epidermal $CD8^+ T_{\\text{RM}}$ memory cells, pairwise combinations were computationally screened across target orthogonality, Bliss excess surfaces, and virtual Chou-Talalay Combination Indices ($CI$).",
+        # No clinical figures here: the old summary quoted "~18% total body clearance"
+        # for a T-VASI50 rate (50% improvement, not clearance) and a relapse rate with no source.
+        "Pairs of the reranker's top single agents, ranked by a synergy score that combines "
+        "target orthogonality, a Bliss excess surface and a virtual Chou-Talalay "
+        "combination index, all computed from the model's predictions. They are "
+        "hypotheses to test, not measured drug interactions.",
         "",
         "| Rank | Combination Regimen | Virtual CI | Bliss Excess | Synergy Score | Route & Safety | Key Mechanistic Rationale |",
         "|---|---|---:|---:|---:|---|---|",
