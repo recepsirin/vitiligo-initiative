@@ -8,14 +8,13 @@ published on Hugging Face), so the page can be rebuilt from public data alone:
   5% and a twofold change), with every cohort's fold change, p, FDR and sample sizes,
   and how many cohorts agree. On 2026-11-21: 1,484 genes, 73 agreeing in two or more.
 - **Co-expression** across 105 skin punch biopsies (GSE311770): each gene's 15
-  strongest correlations at |Pearson r| >= 0.70. 8,367 pairs among 1,266 genes. The
-  release's ``pearson_r`` is |r|: the pipeline kept the size and dropped the sign, and
-  289 of the 8,033 pairs recomputable from the counts are anti-correlated (2026-11-21).
+  strongest correlations at |Pearson r| >= 0.70, with r's sign. 8,367 pairs among
+  1,266 genes, 299 of them anti-correlated (the release kept only |r| until its
+  corrections of 2026-11-21).
 - **Single-cell expression** (GSE298871): the skin cell types a gene is enriched in
   (at least 2.2-fold over the median of the other cell types), with its mean expression
-  and the share of cells detecting it. 505 genes. The release was seeded from an
-  earlier lineage profile and never refreshed: the current profile enriches 1,443
-  genes, and only 421 of the release's 675 values match it (2026-11-21).
+  and the share of cells detecting it. The rows are read wherever they sit: 65 join a
+  relation another source made, such as a Cell Ontology marker (DCT, PMEL, TYR).
 - **GWAS**: associations in the Space's pipeline file whose mapped or reported genes
   name the gene.
 - **The relapse panel**: the 17 genes of the sealed S_TRM signature, marked as such.
@@ -33,8 +32,9 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 GENE_KINDS = frozenset({"target", "biomarker"})
-COEXPRESSION_METHOD = "geo_punch_biopsies_gse311770"
-SINGLE_CELL_METHOD = "sc_rnaseq_gse298871"
+# The measured layers, as their evidence rows name them.
+COEXPRESSION_SOURCE = "geo:GSE311770"
+SINGLE_CELL_KIND = "geo_scrnaseq"
 EXPRESSION_FIELDS = ("contrast", "direction", "log2fc", "p", "fdr", "n_case", "n_control", "paired")
 # "HLA-DRB1 - HLA-DQA1" is a variant between two genes; lists use commas or semicolons.
 _GENE_LIST = re.compile(r"\s+-\s+|[,;/]")
@@ -83,11 +83,13 @@ def expression_results(
 def coexpression_pairs(
     relations: Mapping[str, Mapping[str, Any]], evidence: Iterable[Mapping[str, Any]]
 ) -> list[tuple[str, str, float]]:
-    """Gene pairs co-expressed across the GSE311770 biopsies, with |r| (the release keeps no sign)."""
+    """Gene pairs co-expressed across the GSE311770 biopsies, with their Pearson r."""
     pairs = []
     for row in evidence:
+        if row.get("source_kind") != "geo" or row.get("source") != COEXPRESSION_SOURCE:
+            continue
         relation = relations.get(str(row.get("relation_id")))
-        if not relation or relation.get("extraction_method") != COEXPRESSION_METHOD:
+        if not relation or relation.get("predicate") != "co_expressed_with":
             continue
         r = _details(row).get("pearson_r")
         if isinstance(r, int | float):
@@ -100,11 +102,17 @@ def cell_expression(
     evidence: Iterable[Mapping[str, Any]],
     names: Mapping[str, str],
 ) -> dict[str, list[dict[str, Any]]]:
-    """Each gene's enriched skin cell types in GSE298871, most enriched first."""
+    """Each gene's enriched skin cell types in GSE298871, most enriched first.
+
+    A row is read wherever it sits: one that joined a curated marker's relation
+    counts as one on a relation of its own.
+    """
     found: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in evidence:
+        if row.get("source_kind") != SINGLE_CELL_KIND:
+            continue
         relation = relations.get(str(row.get("relation_id")))
-        if not relation or relation.get("extraction_method") != SINGLE_CELL_METHOD:
+        if not relation:
             continue
         d = _details(row)
         found[str(relation["subject_id"])].append(
@@ -133,12 +141,11 @@ def gene_table(
     names = {i: str(e.get("name")) for i, e in ents.items()}
     rels = {str(r["id"]): r for r in relations}
     # One pass over the evidence, keeping only the three kinds of row read below.
-    methods = {COEXPRESSION_METHOD, SINGLE_CELL_METHOD}
     rows = [
         row
         for row in evidence
-        if row.get("source_kind") == "expression"
-        or rels.get(str(row.get("relation_id")), {}).get("extraction_method") in methods
+        if row.get("source_kind") in ("expression", SINGLE_CELL_KIND)
+        or row.get("source") == COEXPRESSION_SOURCE
     ]
 
     expression = expression_results(rels, rows, genes)

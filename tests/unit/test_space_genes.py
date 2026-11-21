@@ -68,18 +68,36 @@ def test_coexpression_pairs_point_at_the_genes_they_join() -> None:
         {"id": 3, "kind": "target", "name": "DPM1"},
         {"id": 4, "kind": "target", "name": "ACTB"},
     ]
-    relations = [
-        {
-            "id": 20,
-            "subject_id": 2,
-            "object_id": 3,
-            "extraction_method": "geo_punch_biopsies_gse311770",
-        }
-    ]
+    relations = [{"id": 20, "subject_id": 2, "object_id": 3, "predicate": "co_expressed_with"}]
     evidence = [
-        {"relation_id": 20, "source_kind": "geo", "details": json.dumps({"pearson_r": 0.709})}
+        {
+            "relation_id": 20,
+            "source_kind": "geo",
+            "source": "geo:GSE311770",
+            "details": json.dumps({"pearson_r": -0.709}),
+        }
     ]
     table = gene_table(entities, relations, evidence, [], {"housekeeping": ["ACTB"]})
     symbols = [g["symbol"] for g in table["genes"]]
     ((a, b, r),) = table["pairs"]
-    assert {symbols[a], symbols[b]} == {"SRSF8", "DPM1"} and r == 0.709
+    assert {symbols[a], symbols[b]} == {"SRSF8", "DPM1"} and r == -0.709
+
+
+def test_a_cell_measurement_on_a_curated_markers_relation_counts() -> None:
+    # DCT's measured enrichment in melanocytes joined the Cell Ontology marker relation.
+    entities = [
+        {"id": 2, "kind": "target", "name": "DCT"},
+        {"id": 3, "kind": "cell_type", "name": "Epidermal Melanocyte"},
+    ]
+    relations = [{"id": 30, "subject_id": 2, "object_id": 3, "extraction_method": "cell_ontology"}]
+    details = {"mean_cp10k": 61.2, "pct_detect": 0.81, "fold_enrichment": 828.66}
+    evidence = [{"relation_id": 30, "source_kind": "geo_scrnaseq", "details": json.dumps(details)}]
+    (gene,) = gene_table(entities, relations, evidence, [], {})["genes"]
+    assert gene["cells"] == [
+        {
+            "cell": "Epidermal Melanocyte",
+            "mean_cp10k": 61.2,
+            "pct_detect": 0.81,
+            "enrichment": 828.66,
+        }
+    ]
