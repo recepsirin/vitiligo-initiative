@@ -47,6 +47,32 @@ DEFAULT_COEXPRESSION_PATH = Path("data/cache/gnn/coexpression_edges.pt")
 DEFAULT_ENRICHED_DATASET_PATH = Path("data/cache/gnn/vitiligo_gnn_dataset_enriched.pt")
 
 GEO_FEATURE_DIM = 16
+# What each GEO dimension holds as extract_multi_cohort_expression_signatures fills it.
+GEO_DIMENSIONS = (
+    "GSE311770 lesional vs healthy log2FC, blended with the project's limma results",
+    "GSE311770 perilesional vs healthy log2FC",
+    "GSE311770 baseline mean expression (log2 CPM)",
+    "GSE311770 between-patient variance (SD of log2 CPM)",
+    "GSE186928 paired normal vs vitiligo log2FC",
+    "GSE186928 significance (-log10 q)",
+    "GSE256271 non-responder vs responder log2FC",
+    "GSE256271 significance (-log10 padj)",
+    "GSE272551 crisaborole 72 h log2FC",
+    "GSE272551 pan-PDE4 inhibitor 72 h log2FC",
+    "GSE150954 bulge melanocyte stem-cell log2FC",
+    "GSE150954 bulge keratinocyte stem-cell log2FC",
+    "GSE344141 5-HT1A melanogenesis log2FC",
+    "GSE298871 single-cell T-cell effector score (11 TRM markers set to at least 2.5)",
+    "GSE298871 single-cell melanocyte depletion score (7 markers set to at most -2.5)",
+    "GWAS Catalog risk-locus score",
+)
+# The node-feature matrix the graph model reads: 768 + 1,024 + 128 + 16 = 1,936 columns.
+FEATURE_BLOCKS = (
+    ("BiomedBERT name embedding", 0, 768),
+    ("Morgan fingerprint", 768, 1792),
+    ("HGNC gene groups", 1792, 1920),
+    ("GEO profile", 1920, 1936),
+)
 
 
 def load_hgnc_ensembl_mapping(hgnc_path: Path | str = HGNC_PATH) -> dict[str, str]:
@@ -88,9 +114,15 @@ def extract_multi_cohort_expression_signatures(
     10: GSE150954 Melanocyte Stem Cell Bulge log2FC
     11: GSE150954 Keratinocyte Stem Cell Niche log2FC
     12: GSE344141 5-HT1A Serotonergic Melanogenesis log2FC
-    13: GSE171161 Autoreactive Pmel Memory T-cell Score
-    14: Lesional Melanocyte Lineage Depletion Index
+    13: GSE298871 single-cell T-cell effector score (GSE171161 is not read)
+    14: GSE298871 single-cell melanocyte depletion score
     15: GWAS Catalog Disease Risk Locus Score
+
+    A dimension whose input is missing or unreadable stays zero, and a warning
+    names it. In the matrix the published model was trained on, four do:
+    GSE150954's files name their columns Common_name and Fold_change (linear),
+    which the parser does not look for; GSE344141's has mouse Ensembl ids under
+    #Geneid; and data/geo/gwas_associations.tsv was absent (measured 2026-11-21).
     """
     cache_path = Path(cache_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -383,11 +415,99 @@ def extract_multi_cohort_expression_signatures(
             logger.debug("GWAS parse note: %s", exc)
 
     tensor = torch.from_numpy(features)
+    for dim in empty_dimensions(tensor):
+        logger.warning("GEO dimension %d (%s) is zero for every entity", dim, GEO_DIMENSIONS[dim])
     torch.save(tensor, cache_path)
     logger.info(
         "Saved 16-D GEO consensus transcriptomic tensor to %s (shape: %s)", cache_path, tensor.shape
     )
     return tensor
+
+
+def empty_dimensions(features: torch.Tensor) -> list[int]:
+    """The columns of ``features`` that are zero for every row."""
+    return [int(c) for c in torch.nonzero((features != 0).sum(dim=0) == 0).flatten()]
+
+
+def assemble_node_features(
+    dataset: GraphDataset,
+    *,
+    geo_cache_path: Path | str = DEFAULT_GEO_CONSENSUS_PATH,
+    chemical_cache_path: Path | str | None = None,
+    smiles_cache_path: Path | str | None = None,
+    refresh_unresolved: bool = False,
+    force_reload: bool = False,
+) -> torch.Tensor:
+    """The 1,936-D node features: BiomedBERT, Morgan fingerprints, HGNC groups, GEO profile.
+
+    ``build_enriched_graph_dataset`` and ``check_node_features`` both call this,
+    so a check exercises the build itself. A drug whose SMILES lookup failed
+    before is not looked up again unless ``refresh_unresolved``, so a rebuild
+    reads the same inputs as the build it repeats.
+    """
+    from vitiligo.gnn.chemicals import DEFAULT_CHEMICAL_CACHE, build_chemical_node_features
+    from vitiligo.gnn.features import (
+        extract_biomedbert_node_embeddings,
+        extract_target_family_features,
+    )
+
+    geo_16d = extract_multi_cohort_expression_signatures(
+        dataset, cache_path=geo_cache_path, force_reload=force_reload
+    )
+    bert_feats = extract_biomedbert_node_embeddings(dataset)
+    chem_feats = build_chemical_node_features(
+        dataset,
+        cache_path=chemical_cache_path or DEFAULT_CHEMICAL_CACHE,
+        force_reload=force_reload,
+        smiles_cache_path=smiles_cache_path,
+        refresh_unresolved=refresh_unresolved,
+    )
+    family_feats = extract_target_family_features(dataset)
+    return torch.cat([bert_feats, chem_feats, family_feats, geo_16d], dim=1)
+
+
+def compare_feature_blocks(saved: torch.Tensor, rebuilt: torch.Tensor) -> list[dict[str, object]]:
+    """Each block of two node-feature matrices: identical or not, and the largest difference."""
+    if saved.shape != rebuilt.shape:
+        raise ValueError(f"shapes differ: {tuple(saved.shape)} and {tuple(rebuilt.shape)}")
+    rows = []
+    for name, start, end in FEATURE_BLOCKS:
+        a, b = saved[:, start:end].float(), rebuilt[:, start:end].float()
+        rows.append(
+            {
+                "block": name,
+                "columns": f"{start}-{end - 1}",
+                "identical": bool(torch.equal(a, b)),
+                "max_difference": float((a - b).abs().max()),
+            }
+        )
+    return rows
+
+
+def check_node_features(dataset: GraphDataset, workdir: Path) -> list[dict[str, object]]:
+    """Rebuild ``dataset``'s node features from the raw inputs and compare them, block by block.
+
+    Every cache is written under ``workdir`` and recomputed; the SMILES cache is
+    copied there and read as recorded, so nothing is fetched or overwritten.
+    """
+    import shutil
+
+    from vitiligo.gnn.chemicals import DEFAULT_SMILES_CACHE
+
+    if dataset.node_features is None:
+        raise ValueError("the dataset carries no node features to check")
+    workdir.mkdir(parents=True, exist_ok=True)
+    smiles = workdir / "drug_smiles.json"
+    if DEFAULT_SMILES_CACHE.exists():
+        shutil.copyfile(DEFAULT_SMILES_CACHE, smiles)
+    rebuilt = assemble_node_features(
+        dataset,
+        geo_cache_path=workdir / "geo_consensus_16d.pt",
+        chemical_cache_path=workdir / "chemical_fingerprints.pt",
+        smiles_cache_path=smiles,
+        force_reload=True,
+    )
+    return compare_feature_blocks(dataset.node_features, rebuilt)
 
 
 def extract_coexpression_edges(
@@ -519,8 +639,18 @@ def build_enriched_graph_dataset(
     dataset: GraphDataset | None = None,
     output_path: Path | str = DEFAULT_ENRICHED_DATASET_PATH,
     force_reload: bool = False,
+    *,
+    geo_cache_path: Path | str = DEFAULT_GEO_CONSENSUS_PATH,
+    chemical_cache_path: Path | str | None = None,
+    smiles_cache_path: Path | str | None = None,
+    refresh_unresolved: bool = False,
 ) -> GraphDataset:
-    """Combine existing graph with 16-D cross-cohort GEO transcriptomics and co-expression edges."""
+    """Combine existing graph with 16-D cross-cohort GEO transcriptomics and co-expression edges.
+
+    This built ``vitiligo_gnn_dataset_enriched.pt``, the published model's training
+    data; ``vitiligo gnn build-dataset`` runs it and ``vitiligo gnn check-features``
+    confirms its node features rebuild from the raw inputs.
+    """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -528,9 +658,6 @@ def build_enriched_graph_dataset(
         dataset = load_graph_dataset(
             cache_path=DEFAULT_BASE_DATASET_PATH, force_reload=force_reload
         )
-
-    # 1. Extract / load 16-D consensus GEO transcriptomics
-    geo_16d = extract_multi_cohort_expression_signatures(dataset, force_reload=force_reload)
 
     # 2. Mine co-expression edges from GSE311770 (deduplicating against SQLite CO_EXPRESSED_WITH edges)
     rel_name = "CO_EXPRESSED_WITH"
@@ -564,19 +691,15 @@ def build_enriched_graph_dataset(
         combined_edge_type = torch.cat([dataset.edge_type, new_edge_types], dim=0)
         combined_edge_weight = torch.cat([dataset.edge_weight, new_edge_weight], dim=0)
 
-    # 4. Update node features: fuse BiomedBERT (768D) + Morgan Fingerprints (1024D) + HGNC (128D) + GEO (16D) = 1936D
-    from vitiligo.gnn.chemicals import build_chemical_node_features
-    from vitiligo.gnn.features import (
-        extract_biomedbert_node_embeddings,
-        extract_target_family_features,
+    # 4. Node features: BiomedBERT (768) + Morgan (1,024) + HGNC (128) + GEO (16) = 1,936
+    enriched_features = assemble_node_features(
+        dataset,
+        geo_cache_path=geo_cache_path,
+        chemical_cache_path=chemical_cache_path,
+        smiles_cache_path=smiles_cache_path,
+        refresh_unresolved=refresh_unresolved,
+        force_reload=force_reload,
     )
-
-    bert_feats = extract_biomedbert_node_embeddings(dataset)
-    chem_feats = build_chemical_node_features(dataset)
-    family_feats = extract_target_family_features(dataset)
-
-    # Fused tensor: 768 + 1024 + 128 + 16 = 1936D
-    enriched_features = torch.cat([bert_feats, chem_feats, family_feats, geo_16d], dim=1)
     logger.info(
         "Constructed unified 1936-D enriched multimodal node features: %s", enriched_features.shape
     )
