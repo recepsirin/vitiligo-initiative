@@ -123,9 +123,7 @@ def load_gse256271_barriers() -> dict[str, float]:
     try:
         df = pd.read_csv(GSE256271_PATH, compression="gzip")
         # log2FoldChange: positive means higher in NON-responding lesions (PDE4B: mean 0 in
-        # responders, 96.9 in non-responders, log2FC +9.10). The alignment score in
-        # build_candidate_feature_tensor was written for the opposite convention, so it runs backwards:
-        # inhibiting a non-responder gene lowers it. Fixing it means retraining the reranker.
+        # responders, 96.9 in non-responders, log2FC +9.10). transcriptomic_alignment reads it so.
         gene_fc: dict[str, float] = {}
         for _, row in df.iterrows():
             g = str(row["Gene"]).strip().upper()
@@ -135,6 +133,29 @@ def load_gse256271_barriers() -> dict[str, float]:
     except Exception as exc:
         logger.warning("Failed to load GSE256271 DE table: %s", exc)
         return {}
+
+
+def transcriptomic_alignment(
+    inhibition: dict[str, float], activation: dict[str, float], gse_fc: dict[str, float]
+) -> float:
+    """How far a drug's predicted actions lean toward response in GSE256271.
+
+    ``gse_fc`` is the deposited log2 fold change of non-responding over responding
+    lesions, so a positive value marks a gene higher where repigmentation failed
+    (PDE4B +9.10). Inhibiting such a gene leans toward response, and so does
+    activating a gene higher in responders. ``inhibition`` and ``activation`` are the
+    GNN's link scores for the drug against each gene; only predicted links count.
+    Until 2026-11-21 both terms read the fold change the other way round, so
+    inhibiting a non-responder gene lowered the score.
+    """
+    score = 0.0
+    for gene, link in inhibition.items():
+        if link > 0.0 and gene in gse_fc:
+            score += link * gse_fc[gene]
+    for gene, link in activation.items():
+        if link > 0.0 and gene in gse_fc:
+            score += link * max(0.0, -gse_fc[gene])
+    return score
 
 
 @torch.no_grad()
@@ -208,15 +229,11 @@ def build_candidate_feature_tensor(
     barrier_t = torch.tensor(barrier_scores, device=device)
 
     # 7. Transcriptomic GSE256271 signature alignment score (1D)
-    trans_score = 0.0
-    for g, score in zip(
-        CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=False
-    ):
-        if score > 0.0 and g in gse_fc:
-            trans_score += max(0.0, score) * (-gse_fc[g])
-    for g, score in zip(CORE_REGEN_GENES, regen_scores, strict=False):
-        if score > 0.0 and g in gse_fc:
-            trans_score += max(0.0, score) * max(0.0, gse_fc[g])
+    trans_score = transcriptomic_alignment(
+        dict(zip(CORE_TRM_GENES + CORE_BARRIER_GENES, trm_scores + barrier_scores, strict=True)),
+        dict(zip(CORE_REGEN_GENES, regen_scores, strict=True)),
+        gse_fc,
+    )
     trans_t = torch.tensor([trans_score], device=device)
 
     # Concatenate all components into 1172-D vector
