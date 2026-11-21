@@ -13,12 +13,13 @@ is a wrong number on a public page. Three checks; any one failing exits non-zero
 - **No data file has drifted from the pipeline output it is a copy of.** `--sync`
   copies the pipeline outputs over the Space's copies first.
 - **Each gzipped twin says what its plain file says.** The page reads
-  `trials.json.gz`, `data_pipeline.json.gz` and `trial_results.json.gz`; a twin left
-  behind by a re-export would show stale rows.
+  each file's `.json.gz` twin; a twin left behind by a re-export would show stale rows.
 
-`trials.json`, `data_pipeline.json` and `trial_results.json` are written into the
-Space by `scripts/export_space_trials.py`, `scripts/export_space_pipeline.py` and
-`scripts/export_space_results.py` (which reads `trials.json`, so run it last).
+`trials.json`, `data_pipeline.json`, `trial_results.json` and `genes.json` are written
+into the Space by `scripts/export_space_trials.py`, `scripts/export_space_pipeline.py`,
+`scripts/export_space_results.py` (which reads `trials.json`) and
+`scripts/export_space_genes.py` (which reads `data_pipeline.json` and the
+knowledge-graph release); run them in that order.
 `anatomical_model.json` is specified by hand, so it has no pipeline output to
 compare against.
 """
