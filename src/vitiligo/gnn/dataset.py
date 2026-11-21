@@ -206,6 +206,11 @@ def compute_causal_edge_weight(
 ) -> float:
     """Compute continuous scalar edge weight incorporating causal ladder, predicate semantics, and confidence."""
     claim_upper = (claim or "ASSERTED").upper()
+    # A curated knowledge base's statement weighs as a measurement does. Such
+    # relations were labelled observed until 2026-11-21 and are asserted now (a
+    # curator states them, nothing measured them); keying on the rung keeps
+    # every edge's weight what the model was trained with.
+    verified = claim_upper == "OBSERVED" or causal_level == "knowledge_base"
 
     # Moderate adverse event clinical trial listings (CHANGES) to prevent overpowering mechanism signals
     if predicate == "CHANGES":
@@ -220,11 +225,11 @@ def compute_causal_edge_weight(
         "PARTICIPATES_IN",
         "EXPRESSED_IN",
     ):
-        if claim_upper == "OBSERVED":
+        if verified:
             return 1.0 if predicate in ("TREATS", "INHIBITS", "ACTIVATES") else 0.90
         return max(0.65, float(confidence) * 0.90)
 
-    if claim_upper == "OBSERVED":
+    if verified:
         if causal_level and causal_level in CAUSAL_LEVEL_WEIGHTS:
             return float(CAUSAL_LEVEL_WEIGHTS[causal_level])
         return max(0.65, float(confidence))

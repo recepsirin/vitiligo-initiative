@@ -93,6 +93,11 @@ def test_compute_causal_edge_weight() -> None:
         compute_causal_edge_weight("OBSERVED", "knowledge_base", 0.92, predicate="PARTICIPATES_IN")
         == 0.90
     )
+    # A curated annotation, asserted now, weighs as it did when labelled observed.
+    for predicate in ("PARTICIPATES_IN", "INHIBITS", "EXPRESSED_IN"):
+        assert compute_causal_edge_weight(
+            "ASSERTED", "knowledge_base", 0.92, predicate=predicate
+        ) == compute_causal_edge_weight("OBSERVED", "knowledge_base", 0.92, predicate=predicate)
 
 
 def test_dataset_conversions() -> None:

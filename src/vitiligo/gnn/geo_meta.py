@@ -466,6 +466,7 @@ def extract_coexpression_edges(
     src_list: list[int] = []
     dst_list: list[int] = []
     weight_list: list[float] = []
+    r_list: list[float] = []
 
     # For each gene, extract top correlated partners meeting the threshold
     for i in range(num_genes):
@@ -483,10 +484,26 @@ def extract_coexpression_edges(
                     dst_list.append(v)
                     # Causal ladder weight for direct patient biopsy co-expression: 0.85
                     weight_list.append(float(abs(r_val)))
+                    r_list.append(r_val)
 
     edge_index = torch.tensor([src_list, dst_list], dtype=torch.long)
     edge_weight = torch.tensor(weight_list, dtype=torch.float)
-    result = {"edge_index": edge_index, "edge_weight": edge_weight}
+    result = {
+        "edge_index": edge_index,
+        "edge_weight": edge_weight,
+        # The model weighs |r|; the graph's evidence states r with its sign,
+        # which the cache once dropped.
+        "edge_r": torch.tensor(r_list, dtype=torch.float),
+        # Each edge's genes as database ids, so a reader need not rebuild the
+        # node numbering of the dataset this cache was computed on.
+        "entity_ids": torch.tensor(
+            [
+                [dataset.entities[u].db_id for u in src_list],
+                [dataset.entities[v].db_id for v in dst_list],
+            ],
+            dtype=torch.long,
+        ),
+    }
 
     torch.save(result, cache_path)
     logger.info(

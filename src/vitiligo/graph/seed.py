@@ -66,6 +66,7 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
             inserted += ins
             merged += mer
 
+        refresh_trial_records(session)
         removed = _drop_untrue_trial_claims(session, {_trial_ref(t) for t in trials})
         entities = int(session.exec(select(func.count()).select_from(GraphEntity)).one() or 0)
 
@@ -79,6 +80,38 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
     return GraphSeedStats(
         entities=entities, edges_inserted=inserted, edges_merged=merged, edges_removed=removed
     )
+
+
+def refresh_trial_records(session: Session) -> int:
+    """Bring each trial's own evidence row to its registry record's status and phases.
+
+    ``upsert_edge`` keeps a row it has already seen from a source, so a trial's
+    row kept the status and phases of the record it was first seeded from. On
+    2026-11-21 the graph had 16 statuses and 27 phases behind the records held.
+    Returns the rows changed.
+    """
+    trials = {_trial_ref(t): t for t in session.exec(select(Trial)).all()}
+    changed = 0
+    for edge in session.exec(
+        select(GraphEdge).where(GraphEdge.predicate == RelationKind.INVESTIGATES)
+    ).all():
+        rows = []
+        for row in edge.evidence or []:
+            trial = (
+                trials.get(str(row.get("source_id"))) if row.get("source_type") == "trial" else None
+            )
+            if trial is not None and (row.get("status"), row.get("phases")) != (
+                trial.status,
+                trial.phases,
+            ):
+                row = {**row, "status": trial.status, "phases": trial.phases}
+                changed += 1
+            rows.append(row)
+        if rows != (edge.evidence or []):
+            edge.evidence = rows
+            session.add(edge)
+    session.flush()
+    return changed
 
 
 def _trial_ref(trial: Trial) -> str:
