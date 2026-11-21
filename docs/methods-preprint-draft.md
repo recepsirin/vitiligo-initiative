@@ -224,7 +224,7 @@ The Stage-2 cross-encoder evaluated on 5-fold stratified out-of-fold cross-valid
 - **Cross-Validated AUROC:** **0.898**
 - **Cross-Validated Accuracy:** **83.9%**
 
-These rankings informed the **Curative Triad** multi-target hypothesis: pairing an immunomodulatory kinase disarmer (e.g., topical ruxolitinib 1.5% cream) with an intracellular cyclic nucleotide phosphodiesterase-4 inhibitor (e.g., topical roflumilast 0.3% cream) and physical stem-cell mobilization (NB-UVB phototherapy). Ruxolitinib and roflumilast rank second and sixteenth among the reranker's top 20; the pairing itself was chosen by hand and is not among the synergy screen's top pairs.
+These rankings informed the **Curative Triad** multi-target hypothesis: pairing an immunomodulatory kinase disarmer (e.g., topical ruxolitinib 1.5% cream) with an intracellular cyclic nucleotide phosphodiesterase-4 inhibitor (e.g., topical roflumilast 0.3% cream) and physical stem-cell mobilization (NB-UVB phototherapy). Ruxolitinib + roflumilast is the stage-1 screen's second-ranked combination, and the two drugs rank second and sixteenth among the reranker's top 20; the pairwise synergy screen does not place the pair in its top ten.
 
 ### 3.4 Resident Memory T-Cell Relapse Signature ($S_{\text{TRM}}$)
 

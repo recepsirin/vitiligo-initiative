@@ -681,7 +681,7 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
         "# Relational GNN Curative Discovery Report",
         "",
         "> Computational discovery screen using heterogeneous multi-relational graph neural networks (`RGAT-4H + ComplEx`)",
-        f"> over {num_ent:,} entities, {num_edg:,} edges, and 58 GEO transcriptomic/perturbation series.",
+        f"> over {num_ent:,} entities and {num_edg:,} edges.",
         "> Cytotoxic oncology chemotherapies and non-dermatologic comorbidity confounders are quarantined.",
         "> Verified Knowledge Graph mechanisms (ChEMBL / DrugCentral / Literature) are marked with `*`.",
         "",
