@@ -2,11 +2,19 @@
 
     python scripts/durability/maintenance_cost.py
 
-Compares the annual direct medication costs and cost per relapse prevented across:
+Compares the annual direct medication costs, and the cost per relapse prevented, of:
 - Continuous daily ruxolitinib 1.5% cream (standard of care continuing)
 - Intermittent twice-weekly ruxolitinib 1.5% cream (step-down JAK)
 - Proactive twice-weekly tacrolimus 0.1% ointment (cheap generic step-down)
-- Complete treatment cessation (vehicle / observation)
+- Complete treatment cessation (vehicle / observation), the comparator
+
+Cost per relapse prevented is a year's drug cost divided by the share of responders
+whose relapse the regimen prevents in that year: the loss after stopping minus the
+loss on the regimen, from the regimen's own hazard ratio against stopping. The loss
+after stopping is unknown for the people who would be treated, so the figure is given
+for each of the three scenarios ``vitiligo.models.relapse_evidence`` works out, and a
+regimen no trial has tested gets none. That module also says what the model assumed
+before (one relapse rate misread, and every regimen as good as continuous ruxolitinib).
 
 Addresses roadmap item 4.1 for the stop-vs-step-down trial concept (docs/durability/maintenance-trial-concept.md)
 and the safety and access evidence map (docs/safety-access/README.md).
@@ -17,6 +25,9 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
+
+from vitiligo.models.relapse_evidence import MAINTENANCE, STOP_LOSS, maintained_loss
 
 # Pricing benchmarks (2026):
 # US Wholesale Acquisition Cost (WAC) / Retail cash benchmark (GoodRx/Drugs.com)
@@ -31,13 +42,6 @@ UK_RUX_TUBE_GRAMS = 100.0
 UK_TAC_TUBE_COST = 31.50  # 60 g generic ointment (£0.525 / g)
 UK_TAC_TUBE_GRAMS = 60.0
 
-# Durability & Relapse Rates over 52 weeks (from TRuE-V randomized withdrawal, docs/durability/README.md):
-# Stopping: ~42% lose response (< F-VASI75); Continuing: ~25% lose response.
-P_RELAPSE_STOP = 0.42
-P_RELAPSE_CONTINUE = 0.25
-ARR_CONTINUE = P_RELAPSE_STOP - P_RELAPSE_CONTINUE  # 0.17
-NNT_CONTINUE = 1.0 / ARR_CONTINUE  # 5.88 patients per relapse prevented
-
 
 @dataclass
 class RegimenCost:
@@ -50,8 +54,30 @@ class RegimenCost:
     cost_gbp: float
     usd_savings_vs_cont_rux: float
     pct_savings_vs_cont_rux: float
-    cost_per_relapse_prevented_usd: float
-    cost_per_relapse_prevented_gbp: float
+    hazard_ratio: float | None
+    relapse_prevention: list[dict[str, float]] | None
+
+
+def relapse_prevention(
+    cost_usd: float, cost_gbp: float, hazard_ratio: float | None
+) -> list[dict[str, float]] | None:
+    """Relapses prevented and their cost, for each loss-after-stopping scenario."""
+    if hazard_ratio is None:
+        return None
+    rows = []
+    for scenario in STOP_LOSS:
+        on_regimen = maintained_loss(scenario.value, hazard_ratio)
+        prevented = scenario.value - on_regimen
+        rows.append(
+            {
+                "stop_loss_52w": scenario.value,
+                "maintained_loss_52w": round(on_regimen, 3),
+                "relapses_prevented_per_100": round(prevented * 100, 1),
+                "cost_per_relapse_prevented_usd": round(cost_usd / prevented, 2),
+                "cost_per_relapse_prevented_gbp": round(cost_gbp / prevented, 2),
+            }
+        )
+    return rows
 
 
 def compute_costs(
@@ -81,76 +107,92 @@ def compute_costs(
     cost_tac_2w_us = tubes_tac_2w_us * US_TAC_TUBE_COST
     cost_tac_2w_uk = tubes_tac_2w_uk * UK_TAC_TUBE_COST
 
-    # 4. Complete cessation (vehicle / stop)
-    cost_stop_us = 0.0
-    cost_stop_uk = 0.0
+    def saving(cost: float) -> tuple[float, float]:
+        return round(cost_rux_cont_us - cost, 2), round(
+            (cost_rux_cont_us - cost) / cost_rux_cont_us * 100, 1
+        )
 
-    # NNT cost proxy (cost per relapse prevented assuming maintain HR ~ 0.50)
-    rux_cont_icer_us = cost_rux_cont_us * NNT_CONTINUE
-    rux_cont_icer_uk = cost_rux_cont_uk * NNT_CONTINUE
-    rux_2w_icer_us = cost_rux_2w_us * NNT_CONTINUE
-    rux_2w_icer_uk = cost_rux_2w_uk * NNT_CONTINUE
-    tac_2w_icer_us = cost_tac_2w_us * NNT_CONTINUE
-    tac_2w_icer_uk = cost_tac_2w_uk * NNT_CONTINUE
+    def arm(
+        regimen: str, frequency: str, grams: float, tubes: int, us: float, uk: float, key: str
+    ) -> RegimenCost:
+        hr = MAINTENANCE[key].hazard_ratio
+        usd_saving, pct_saving = saving(us)
+        return RegimenCost(
+            profile=profile_name,
+            regimen=regimen,
+            frequency=frequency,
+            annual_grams=round(grams, 1),
+            tubes_needed=tubes,
+            cost_usd=round(us, 2),
+            cost_gbp=round(uk, 2),
+            usd_savings_vs_cont_rux=usd_saving,
+            pct_savings_vs_cont_rux=pct_saving,
+            hazard_ratio=hr,
+            relapse_prevention=relapse_prevention(us, uk, hr),
+        )
 
     return [
-        RegimenCost(
-            profile=profile_name,
-            regimen="Continuous Ruxolitinib 1.5% Cream",
-            frequency="Twice daily (365 days)",
-            annual_grams=round(ann_g_rux_cont, 1),
-            tubes_needed=tubes_rux_us,
-            cost_usd=round(cost_rux_cont_us, 2),
-            cost_gbp=round(cost_rux_cont_uk, 2),
-            usd_savings_vs_cont_rux=0.0,
-            pct_savings_vs_cont_rux=0.0,
-            cost_per_relapse_prevented_usd=round(rux_cont_icer_us, 2),
-            cost_per_relapse_prevented_gbp=round(rux_cont_icer_uk, 2),
+        arm(
+            "Continuous Ruxolitinib 1.5% Cream",
+            "Twice daily (365 days)",
+            ann_g_rux_cont,
+            tubes_rux_us,
+            cost_rux_cont_us,
+            cost_rux_cont_uk,
+            "continuous_ruxolitinib",
         ),
-        RegimenCost(
-            profile=profile_name,
-            regimen="Twice-Weekly Ruxolitinib 1.5% Cream",
-            frequency="Twice weekly (104 days)",
-            annual_grams=round(ann_g_rux_2w, 1),
-            tubes_needed=tubes_rux_2w_us,
-            cost_usd=round(cost_rux_2w_us, 2),
-            cost_gbp=round(cost_rux_2w_uk, 2),
-            usd_savings_vs_cont_rux=round(cost_rux_cont_us - cost_rux_2w_us, 2),
-            pct_savings_vs_cont_rux=round(
-                (cost_rux_cont_us - cost_rux_2w_us) / cost_rux_cont_us * 100, 1
-            ),
-            cost_per_relapse_prevented_usd=round(rux_2w_icer_us, 2),
-            cost_per_relapse_prevented_gbp=round(rux_2w_icer_uk, 2),
+        arm(
+            "Twice-Weekly Ruxolitinib 1.5% Cream",
+            "Twice weekly (104 days)",
+            ann_g_rux_2w,
+            tubes_rux_2w_us,
+            cost_rux_2w_us,
+            cost_rux_2w_uk,
+            "twice_weekly_ruxolitinib",
         ),
-        RegimenCost(
-            profile=profile_name,
-            regimen="Twice-Weekly Tacrolimus 0.1% Ointment",
-            frequency="Twice weekly (104 days)",
-            annual_grams=round(ann_g_tac_2w, 1),
-            tubes_needed=tubes_tac_2w_us,
-            cost_usd=round(cost_tac_2w_us, 2),
-            cost_gbp=round(cost_tac_2w_uk, 2),
-            usd_savings_vs_cont_rux=round(cost_rux_cont_us - cost_tac_2w_us, 2),
-            pct_savings_vs_cont_rux=round(
-                (cost_rux_cont_us - cost_tac_2w_us) / cost_rux_cont_us * 100, 1
-            ),
-            cost_per_relapse_prevented_usd=round(tac_2w_icer_us, 2),
-            cost_per_relapse_prevented_gbp=round(tac_2w_icer_uk, 2),
+        arm(
+            "Twice-Weekly Tacrolimus 0.1% Ointment",
+            "Twice weekly (104 days)",
+            ann_g_tac_2w,
+            tubes_tac_2w_us,
+            cost_tac_2w_us,
+            cost_tac_2w_uk,
+            "twice_weekly_tacrolimus",
         ),
+        # The comparator every hazard ratio is measured against.
         RegimenCost(
             profile=profile_name,
             regimen="Complete Cessation (Stop)",
             frequency="None (Observation)",
             annual_grams=0.0,
             tubes_needed=0,
-            cost_usd=cost_stop_us,
-            cost_gbp=cost_stop_uk,
+            cost_usd=0.0,
+            cost_gbp=0.0,
             usd_savings_vs_cont_rux=round(cost_rux_cont_us, 2),
             pct_savings_vs_cont_rux=100.0,
-            cost_per_relapse_prevented_usd=0.0,
-            cost_per_relapse_prevented_gbp=0.0,
+            hazard_ratio=None,
+            relapse_prevention=None,
         ),
     ]
+
+
+def assumptions() -> dict[str, Any]:
+    names = {
+        "continuous_ruxolitinib": "Continuous Ruxolitinib 1.5% Cream",
+        "twice_weekly_ruxolitinib": "Twice-Weekly Ruxolitinib 1.5% Cream",
+        "twice_weekly_tacrolimus": "Twice-Weekly Tacrolimus 0.1% Ointment",
+    }
+    return {
+        "us_rux_60g_wac_usd": US_RUX_TUBE_COST,
+        "us_tac_60g_retail_usd": US_TAC_TUBE_COST,
+        "uk_rux_100g_nice_gbp": UK_RUX_TUBE_COST,
+        "uk_tac_60g_tariff_gbp": UK_TAC_TUBE_COST,
+        "stop_loss_scenarios": [{"value": s.value, "basis": s.basis} for s in STOP_LOSS],
+        "maintenance_hazard_ratios": [
+            {"regimen": names[k], "hazard_ratio": e.hazard_ratio, "basis": e.basis}
+            for k, e in MAINTENANCE.items()
+        ],
+    }
 
 
 def main() -> None:
@@ -171,15 +213,7 @@ def main() -> None:
 
     all_results = {
         "title": "Vitiligo Maintenance Therapy Pharmacoeconomic Model",
-        "assumptions": {
-            "us_rux_60g_wac_usd": US_RUX_TUBE_COST,
-            "us_tac_60g_retail_usd": US_TAC_TUBE_COST,
-            "uk_rux_100g_nice_gbp": UK_RUX_TUBE_COST,
-            "uk_tac_60g_tariff_gbp": UK_TAC_TUBE_COST,
-            "one_year_relapse_rate_stopped": P_RELAPSE_STOP,
-            "one_year_relapse_rate_maintained": P_RELAPSE_CONTINUE,
-            "nnt_per_relapse_prevented": round(NNT_CONTINUE, 2),
-        },
+        "assumptions": assumptions(),
         "profiles": {
             "facial_only": [asdict(r) for r in facial],
             "face_and_limited_body": [asdict(r) for r in face_body],

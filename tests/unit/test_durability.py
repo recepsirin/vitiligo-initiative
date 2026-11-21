@@ -89,3 +89,42 @@ def test_maintenance_cost_calculation() -> None:
     assert tac_2w.annual_grams == 52.0
     assert tac_2w.cost_usd < 100.0
     assert tac_2w.pct_savings_vs_cont_rux > 99.0
+
+
+def _facial_costs() -> list:
+    import sys
+    from pathlib import Path
+
+    repo_root = str(Path(__file__).resolve().parents[2])
+    if repo_root not in sys.path:
+        sys.path.insert(0, repo_root)
+    from scripts.durability.maintenance_cost import compute_costs
+
+    return compute_costs("Facial-only responder", 1.0, 0.5)
+
+
+def test_a_regimen_no_trial_has_tested_gets_no_cost_per_relapse_prevented() -> None:
+    twice_weekly_rux = _facial_costs()[1]
+    assert twice_weekly_rux.regimen == "Twice-Weekly Ruxolitinib 1.5% Cream"
+    assert twice_weekly_rux.hazard_ratio is None and twice_weekly_rux.relapse_prevention is None
+
+
+def test_each_regimen_prevents_relapse_by_its_own_hazard_ratio() -> None:
+    cont_rux, _, tac, _ = _facial_costs()
+    # At 27% loss after stopping: 1 - 0.73**0.42 on ruxolitinib, 1 - 0.73**0.47 on tacrolimus.
+    assert cont_rux.relapse_prevention[0]["relapses_prevented_per_100"] == 14.6
+    assert tac.relapse_prevention[0]["relapses_prevented_per_100"] == 13.3
+
+
+def test_the_oral_forecast_enters_as_the_share_who_lose_response() -> None:
+    from vitiligo.models.relapse_evidence import STOP_LOSS
+
+    # The sealed forecast has 42% still responding after stopping: 58% lose response.
+    assert [s.value for s in STOP_LOSS] == [0.27, 0.58, 0.73]
+
+
+def test_maintenance_loss_follows_proportional_hazards() -> None:
+    from vitiligo.models.relapse_evidence import maintained_loss
+
+    assert maintained_loss(0.75, 0.5) == pytest.approx(0.5)
+    assert maintained_loss(0.3, 1.0) == pytest.approx(0.3)

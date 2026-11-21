@@ -16,15 +16,15 @@ import json
 import math
 from pathlib import Path
 
+from vitiligo.models.relapse_evidence import STOP_LOSS as STOP_LOSS_SCENARIOS
+
 Z_ALPHA = 1.959964  # two-sided 5%
 Z_POWER = 0.841621  # 80% power
 DROPOUT = 0.15
 
-# One-year loss of response after stopping, from the evidence:
-#   0.27 relapse below F-VASI75 after stopping the cream (TRuE-V, Schoenfeld events)
-#   0.58 the sealed oral forecast's median (1 - 0.42)
-#   0.73 loss of a threshold patients sit just above (TRuE-V F-VASI90, constant hazard)
-STOP_LOSS = (0.27, 0.58, 0.73)
+# One-year loss of response after stopping: the three scenarios
+# vitiligo.models.relapse_evidence works out from the evidence (0.27, 0.58, 0.73).
+STOP_LOSS = tuple(s.value for s in STOP_LOSS_SCENARIOS)
 HAZARD_RATIOS = (0.4, 0.5, 0.6)
 
 
