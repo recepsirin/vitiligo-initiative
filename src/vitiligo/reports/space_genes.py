@@ -7,10 +7,15 @@ published on Hugging Face), so the page can be rebuilt from public data alone:
   lesional skin (the release's ``expression`` evidence: limma's moderated t, FDR below
   5% and a twofold change), with every cohort's fold change, p, FDR and sample sizes,
   and how many cohorts agree. On 2026-11-21: 1,484 genes, 73 agreeing in two or more.
-- **Co-expression** across 105 skin punch biopsies (GSE311770): gene pairs whose
-  expression correlates at |Pearson r| >= 0.70, p < 1e-5. 8,367 pairs among 1,266 genes.
-- **Single-cell expression** (GSE298871): the skin cell types a gene is enriched in,
-  with its mean expression and the share of cells detecting it. 505 genes.
+- **Co-expression** across 105 skin punch biopsies (GSE311770): each gene's 15
+  strongest correlations at |Pearson r| >= 0.70. 8,367 pairs among 1,266 genes. The
+  release's ``pearson_r`` is |r|: the pipeline kept the size and dropped the sign, and
+  289 of the 8,033 pairs recomputable from the counts are anti-correlated (2026-11-21).
+- **Single-cell expression** (GSE298871): the skin cell types a gene is enriched in
+  (at least 2.2-fold over the median of the other cell types), with its mean expression
+  and the share of cells detecting it. 505 genes. The release was seeded from an
+  earlier lineage profile and never refreshed: the current profile enriches 1,443
+  genes, and only 421 of the release's 675 values match it (2026-11-21).
 - **GWAS**: associations in the Space's pipeline file whose mapped or reported genes
   name the gene.
 - **The relapse panel**: the 17 genes of the sealed S_TRM signature, marked as such.
@@ -78,7 +83,7 @@ def expression_results(
 def coexpression_pairs(
     relations: Mapping[str, Mapping[str, Any]], evidence: Iterable[Mapping[str, Any]]
 ) -> list[tuple[str, str, float]]:
-    """Gene pairs co-expressed across the GSE311770 biopsies, with their Pearson r."""
+    """Gene pairs co-expressed across the GSE311770 biopsies, with |r| (the release keeps no sign)."""
     pairs = []
     for row in evidence:
         relation = relations.get(str(row.get("relation_id")))
@@ -127,7 +132,14 @@ def gene_table(
     genes = {i: e for i, e in ents.items() if e.get("kind") in GENE_KINDS}
     names = {i: str(e.get("name")) for i, e in ents.items()}
     rels = {str(r["id"]): r for r in relations}
-    rows = list(evidence)
+    # One pass over the evidence, keeping only the three kinds of row read below.
+    methods = {COEXPRESSION_METHOD, SINGLE_CELL_METHOD}
+    rows = [
+        row
+        for row in evidence
+        if row.get("source_kind") == "expression"
+        or rels.get(str(row.get("relation_id")), {}).get("extraction_method") in methods
+    ]
 
     expression = expression_results(rels, rows, genes)
     pairs = coexpression_pairs(rels, rows)
@@ -154,7 +166,8 @@ def gene_table(
     for symbol in symbols:
         ids = symbol_ids.get(symbol, [])
         results = sorted(
-            (r for g in ids for r in expression.get(g, [])), key=lambda r: r.get("fdr") or 1.0
+            (r for g in ids for r in expression.get(g, [])),
+            key=lambda r: 1.0 if r.get("fdr") is None else r["fdr"],  # an FDR of 0.0 comes first
         )
         entrez = next(
             (

@@ -26,7 +26,7 @@ from vitiligo.reports.space_genes import gene_table
 ROOT = Path(__file__).resolve().parent.parent
 RELEASE = ROOT / "data" / "release" / "knowledge-graph"
 SPACE = ROOT / "exports" / "hf_space"
-DEFAULT_OUT = Path("exports/hf_space/genes.json")
+DEFAULT_OUT = ROOT / "exports" / "hf_space" / "genes.json"
 
 
 def _lines(path: Path) -> list[dict[str, Any]]:
@@ -62,6 +62,9 @@ def build() -> dict[str, Any]:
             "genes": len(genes),
             "expressed_differently": sum(1 for g in genes if g.get("expression")),
             "replicated": sum(1 for g in genes if g.get("agreeing", 0) >= 2),
+            "disagreeing": sum(
+                1 for g in genes if len({r.get("direction") for r in g.get("expression", [])}) > 1
+            ),
             "with_cells": sum(1 for g in genes if g.get("cells")),
             "with_gwas": sum(1 for g in genes if g.get("gwas")),
             "panel": sum(1 for g in genes if g.get("panel")),

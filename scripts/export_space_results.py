@@ -32,7 +32,7 @@ from vitiligo.trials.curated_results import Sources, records, verify
 
 ROOT = Path(__file__).resolve().parent.parent
 EXPLORER = ROOT / "exports" / "hf_space" / "trials.json"
-DEFAULT_OUT = Path("exports/hf_space/trial_results.json")
+DEFAULT_OUT = ROOT / "exports" / "hf_space" / "trial_results.json"
 
 
 def build() -> dict[str, Any]:

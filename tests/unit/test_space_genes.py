@@ -48,6 +48,15 @@ def test_entities_sharing_a_symbol_are_one_gene() -> None:
     assert {r["source"] for r in genes[0]["expression"]} == {"geo:GSE65127", "geo:GSE75819"}
 
 
+def test_the_most_significant_cohort_comes_first_even_at_an_fdr_of_zero() -> None:
+    entities = [VITILIGO, {"id": 2, "kind": "target", "name": "TYR"}]
+    relations = [{"id": 10, "subject_id": 2, "object_id": 1, "extraction_method": "expression"}]
+    evidence = [_expression(10, "geo:GSE75819", -3.0), _expression(10, "geo:GSE65127", -5.0)]
+    evidence[1]["details"] = json.dumps({"direction": "lower", "log2fc": -5.0, "fdr": 0.0})
+    results = gene_table(entities, relations, evidence, [], {})["genes"][0]["expression"]
+    assert [r["source"] for r in results] == ["geo:GSE65127", "geo:GSE75819"]
+
+
 def test_a_panel_gene_is_listed_even_without_a_measurement() -> None:
     genes = gene_table([VITILIGO], [], [], [], {"housekeeping": ["RPLP0"]})["genes"]
     assert genes == [{"symbol": "RPLP0", "agreeing": 0, "panel": "housekeeping"}]

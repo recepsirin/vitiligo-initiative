@@ -69,14 +69,21 @@ def main() -> None:
     parser.add_argument(
         "--sync", action="store_true", help="copy pipeline outputs into the Space folder first"
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="fail when a pipeline output is missing here, so its file could not be compared",
+    )
     args = parser.parse_args()
 
     problems: list[str] = []
     compared = 0
+    uncompared: list[str] = []
     for name, source in SOURCES.items():
         origin = ROOT / source
         if not origin.is_file():
-            continue  # a fresh clone has no pipeline outputs to compare with
+            uncompared.append(name)  # a fresh clone has no pipeline outputs to compare with
+            continue
         if args.sync:
             shutil.copyfile(origin, SPACE / name)
         compared += 1
@@ -97,9 +104,19 @@ def main() -> None:
             if twin.is_file() and gzip.decompress(twin.read_bytes()) != path.read_bytes():
                 problems.append(f"{twin.name} does not match {name} (re-run the export)")
 
+    if args.strict:
+        problems += [
+            f"{name} was not compared: its pipeline output is missing" for name in uncompared
+        ]
     if problems:
         sys.exit("\n".join(f"exports/hf_space: {p}" for p in problems))
-    print(f"exports/hf_space: {len(files)} files present, {compared} match their pipeline output")
+    missing = (
+        f"; not compared, no pipeline output here: {', '.join(uncompared)}" if uncompared else ""
+    )
+    print(
+        f"exports/hf_space: {len(files)} files present, {compared} match their pipeline output"
+        + missing
+    )
 
 
 if __name__ == "__main__":

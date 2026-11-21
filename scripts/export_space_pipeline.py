@@ -29,7 +29,7 @@ from vitiligo.storage import GeneticAssociation, ResearchProject, get_engine
 
 ROOT = Path(__file__).resolve().parent.parent
 TOPLINE = ROOT / "curation" / "topline-results.json"
-DEFAULT_OUT = Path("exports/hf_space/data_pipeline.json")
+DEFAULT_OUT = ROOT / "exports" / "hf_space" / "data_pipeline.json"
 TABLES = ("curated_outcomes", "gwas", "nih")
 
 

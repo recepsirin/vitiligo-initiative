@@ -35,7 +35,7 @@ from vitiligo.trials.explorer import (
 )
 from vitiligo.trials.relevance import in_vitiligo_corpus
 
-DEFAULT_OUT = Path("exports/hf_space/trials.json")
+DEFAULT_OUT = Path(__file__).resolve().parent.parent / "exports" / "hf_space" / "trials.json"
 
 
 def build() -> dict[str, Any]:
