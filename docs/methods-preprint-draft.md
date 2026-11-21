@@ -12,7 +12,7 @@
 
 **Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, WHO ICTRP (by search export, by record id, and by optional XML export), ISRCTN, and optional XML imports from DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
 
-**Results.** The local corpus contains 14,914 documents (11,677 PubMed, 2,755 PMC full-text, 57 GEO series), 14,509 title–abstract embeddings, 5,038 trial records (including 2,257 vitiligo-specific trials across 16 international registries), 241 pharmacological/genetic priors for vitiligo (EFO_0004208), 157 GWAS Catalog susceptibility loci, and a heterogeneous knowledge graph of 18,736 entities and 96,079 edges. A 1,924-dimensional relational GNN (FastRGCN with an asymmetric ComplEx $C^{64}$ Hermitian decoder) achieves a test MRR of 0.1867 and Hits@10 of 25.7%, while a Stage-2 wide-and-deep cross-encoder achieves an out-of-fold AUROC of 0.8980 for multi-target Curative Triad candidate ranking. Tissue-resident memory ($T_{\text{RM}}$) single-cell transcriptomics from suction blister roofs ($n=19,550$ cells) yields a pre-registered 17-gene prospective relapse index ($S_{\text{TRM}}$; hypothesis seal `2c102804`, predicting $\text{HR}_{\text{SD}} > 1.0$). The entire analytical suite is deployed openly as a static, client-side web application on Hugging Face Spaces.
+**Results.** The local corpus contains 14,914 documents (11,726 PubMed, 2,771 PMC full-text, 360 Crossref, 57 GEO series), 14,509 title–abstract embeddings, 5,038 trial records (including 2,239 vitiligo trials: 1,043 registered across 19 registries and 1,196 known only from publications), 241 pharmacological/genetic priors for vitiligo (EFO_0004208), 157 GWAS Catalog associations (145 variants, 129 at $p < 5 \times 10^{-8}$), and a heterogeneous knowledge graph of 18,736 entities and 96,079 edges. A relational graph attention network (four heads, 1,936-dimensional input features, asymmetric ComplEx $C^{64}$ Hermitian decoder) achieves a filtered test MRR of 0.1156 over all relations, and 0.1867 (Hits@10 25.7%) on therapeutic relations, while a Stage-2 wide-and-deep cross-encoder achieves an out-of-fold AUROC of 0.8980 for multi-target Curative Triad candidate ranking. Tissue-resident memory ($T_{\text{RM}}$) single-cell transcriptomics from suction blister roofs ($n=19,550$ cells) yields a pre-registered 17-gene prospective relapse index ($S_{\text{TRM}}$; hypothesis seal `2c102804`, predicting $\text{HR}_{\text{SD}} > 1.0$). The entire analytical suite is deployed openly as a static, client-side web application on Hugging Face Spaces.
 
 **Conclusions.** We release reproducible, open-access infrastructure for vitiligo translational medicine and clinical evidence synthesis. The engine is intended for research and education, not clinical decision-making, and every reported figure is traceable to primary registry or literature citations. All models, knowledge graph snapshots, and interactive discovery tools are publicly accessible.
 
@@ -153,19 +153,20 @@ The lower bound $y_{\min}$ corresponds to the conservative worst-case assumption
 
 To discover synergistic therapeutic combinations targeting the multifaceted pathology of non-segmental vitiligo, the analytical pipeline incorporates two complementary machine-learning systems:
 
-#### 2.9.1 Relational Graph Convolutional Network (FastRGCN)
-We implemented a multi-relational FastRGCN with an asymmetric ComplEx $C^{64}$ Hermitian decoder. The model embeds entities $\mathbf{e} \in \mathbb{C}^{64}$ and relation types $\mathbf{r} \in \mathbb{C}^{64}$ into a complex vector space. The scoring function for a triple $(s, r, o)$ is defined by the real part of the Hermitian inner product:
+#### 2.9.1 Relational Graph Attention Network (RGAT-4H)
+We implemented a multi-relational graph attention network with four attention heads (RGAT-4H) and an asymmetric ComplEx $C^{64}$ Hermitian decoder, over 1,936-dimensional input node features (768-D BiomedBERT text embeddings, 1,024-D Morgan fingerprints, 128-D protein-family vectors and a 16-D cross-cohort transcriptomic and genetic profile). The model embeds entities $\mathbf{e} \in \mathbb{C}^{64}$ and relation types $\mathbf{r} \in \mathbb{C}^{64}$ into a complex vector space. The scoring function for a triple $(s, r, o)$ is defined by the real part of the Hermitian inner product:
 $$f(s, r, o) = \text{Re}\left( \langle \mathbf{e}_s, \mathbf{w}_r, \bar{\mathbf{e}}_o \rangle \right) = \sum_{k=1}^d \left[ \text{Re}(w_{r,k})(\text{Re}(e_{s,k})\text{Re}(e_{o,k}) + \text{Im}(e_{s,k})\text{Im}(e_{o,k})) + \text{Im}(w_{r,k})(\text{Re}(e_{s,k})\text{Im}(e_{o,k}) - \text{Im}(e_{s,k})\text{Re}(e_{o,k})) \right]$$
-The model was trained on 80,000 positive graph triples with 50 negative samples per positive edge, utilizing filtered Mean Reciprocal Rank (MRR) and Hits@10 for model checkpointing.
+The model was trained for 30 epochs on 76,859 training triples with type-constrained self-adversarial negative sampling, keeping the checkpoint with the best filtered validation Mean Reciprocal Rank (MRR), checked every five epochs.
 
 #### 2.9.2 Stage-2 Wide-and-Deep Cross-Encoder
-To evaluate candidate synergy across multi-target combinations, candidates are evaluated through a Stage-2 wide-and-deep cross-encoder combining:
-- Relational link prediction score from the GNN.
-- Semantic literature co-occurrence in PubMed/PMC abstracts.
-- Shared target overlap and pathway convergence (WikiPathways / Reactome).
-- Phenotypic clinical trial maturity scores.
+The GNN's top-ranked drugs are reranked by a Stage-2 wide-and-deep cross-encoder over a 1,172-dimensional feature vector:
+- 1,024-D Morgan (ECFP4) fingerprints of the drug.
+- The GNN's 128-D embedding of the drug.
+- The GNN's (drug, TREATS, vitiligo) link score.
+- 18 GNN link scores against target genes: eight for resident-memory T-cell disarmament, seven for melanocyte stem-cell regeneration and three for the non-responder barrier (`PDE4B`, `PDE4A`, `PLA2G12A`).
+- One alignment score against the GSE256271 responder vs. non-responder fold changes. As implemented it runs opposite to its intent: the deposited table's positive fold changes are higher in non-responders, and the score treats them as higher in responders. Correcting it requires retraining the reranker.
 
-The model was cross-validated using 5-fold stratified out-of-fold partitioning, optimizing Area Under the Receiver Operating Characteristic (AUROC).
+It was trained to separate hand-labelled disease-modifying and regenerative drugs from palliative and toxic decoys, and cross-validated with 5-fold stratified out-of-fold partitioning.
 
 ### 2.10 Web Application, Public Deployment, and Governance
 
@@ -173,7 +174,7 @@ The web application is packaged as a lightweight, containerized ASGI application
 - In-memory SQLite connection pooling with WAL mode enabled.
 - IP-based sliding-window rate limiting to prevent abuse.
 - Complete static UI bundle styled with GitHub Primer design tokens, requiring zero external CDN JavaScript dependencies.
-- A client-side static edition deployed to Hugging Face Spaces (`re-cep/vitiligo-curative-discovery`), executing all search and visualization logic directly within modern browser runtimes via compiled WebAssembly and client-side JavaScript.
+- A static companion site on Hugging Face Spaces (`re-cep/vitiligo-curative-discovery`) that presents the model outputs, the trial explorer and the published outcome tables from exported JSON files, drawn in the browser with plain JavaScript; it runs no search over the corpus and calls no server.
 
 ---
 
@@ -181,19 +182,20 @@ The web application is packaged as a lightweight, containerized ASGI application
 
 ### 3.1 Corpus and Knowledge Graph Scale
 
-The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 clinical trial records, and 14,509 dense vector embeddings. The heterogeneous knowledge graph comprises 18,736 entities and 96,079 validated edges.
+The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 clinical trial records, and 14,509 dense vector embeddings. The heterogeneous knowledge graph comprises 18,736 entities and 96,079 edges.
 
 | Metric Category | Entity / Source Type | Count |
 |---|---|---|
 | **Scientific Documents** | PubMed Indexed Publications | 11,726 |
 | | PMC Open Access Full-Text Articles | 2,771 |
+| | Crossref Records | 360 |
 | | NCBI GEO Transcriptomic Series | 57 |
 | | **Total Unified Documents** | **14,914** |
 | **Embeddings & Trials** | 384-dimensional Title/Abstract Vectors | 14,509 |
 | | Clinical Trial Registry Records (Total) | 5,038 |
-| | Vitiligo-Specific Harmonized Trials | 2,257 |
+| | Vitiligo Trials (registry copies merged) | 2,239 |
 | **Priors & Genetics** | Open Targets Disease Priors (`EFO_0004208`) | 241 |
-| | GWAS Catalog Susceptibility Loci ($p < 5 \times 10^{-8}$) | 157 |
+| | GWAS Catalog Associations (145 variants; 129 at $p < 5 \times 10^{-8}$) | 157 |
 | **Knowledge Graph Entities** | Disease Nodes | 6,899 |
 | | Target / Protein Nodes | 4,348 |
 | | Drug / Chemical Nodes | 2,264 |
@@ -203,28 +205,26 @@ The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 c
 | | Pathway Nodes | 810 |
 | | Clinical Outcomes, Cell Types, Mechanisms, Phenotypes | 40 |
 | | **Total Knowledge Graph Entities** | **18,736** |
-| **Knowledge Graph Edges** | Total Validated Relations | **96,079** |
-| | *Observed* (Empirically Measured) | 61,205 (63.7%) |
-| | *Asserted* (Curated Knowledge Base) | 34,874 (36.3%) |
+| **Knowledge Graph Edges** | Total Relations | **96,079** |
+| | *Observed* (39,580 measurements; 21,625 curated pathway, gene-ontology, cell-type and drug-mechanism annotations) | 61,205 (63.7%) |
+| | *Asserted* (stated by a paper, registry or database) | 34,874 (36.3%) |
 | | *Perturbation in Human* (Trial / Perturbation Data) | 29,000 (30.2%) |
 
 ### 3.2 Clinical Trial Harmonization and Population Analysis
 
-Analysis of the 2,257 vitiligo-specific trials revealed substantial reporting heterogeneity. Among trials reporting quantitative responder rates at primary endpoints (weeks 24–52), **78.4% of published records report results exclusively on as-observed cohorts**. When evaluated under nonparametric Manski bounds, trials with dropout rates exceeding 15% demonstrated wide partial identification intervals. For example, in long-term extension studies, nominal responder rates of 75% on completers translated into guaranteed ITT bounds of $[52.4\%, 78.1\%]$, illustrating the critical necessity of displaying explicit population tags.
+Trials report responder rates on different populations, and the difference matters most where many participants are missing. Under nonparametric Manski bounds, the interval for a rate is as wide as the share of randomised participants without an outcome. In HI-Light (ISRCTN17160087), the largest vitiligo trial in the corpus, 147 of 517 participants were missing at the primary endpoint, so each arm's assumption-free bracket is about 27 points wide: 11.6–42.8% for topical corticosteroid alone and 19.4–46.3% for the combination with NB-UVB, against a 9.8-point spread between arms as observed. The trial's own analysis imputed missing outcomes and found the combination superior by 10.9% (95% CI 1.0–20.9). Both readings are true, which is why the engine shows each rate with its population and its bounds.
 
 ### 3.3 Representation Learning Performance
 
-The multi-relational FastRGCN with ComplEx $C^{64}$ decoder achieved strong link prediction accuracy on held-out test edges:
-- **Test MRR (Mean Reciprocal Rank):** **0.1867**
-- **Test Hits@10:** **25.7%**
-- **Test Hits@3:** **18.2%**
-- **Test Hits@1:** **12.4%**
+On 9,607 held-out test edges, the relational graph attention network (RGAT-4H, ComplEx $C^{64}$ decoder) scored:
+- **All relations:** filtered MRR **0.1156** (raw 0.1064; type-constrained 0.1355); filtered Hits@1 **8.7%**, Hits@10 **16.7%**.
+- **Therapeutic relations (5,532 test edges):** MRR **0.1867**; Hits@1 **14.6%**, Hits@10 **25.7%**.
 
 The Stage-2 cross-encoder evaluated on 5-fold stratified out-of-fold cross-validation achieved:
-- **Cross-Validated AUROC:** **0.8980**
-- **Average Precision (PR-AUC):** **0.8415**
+- **Cross-Validated AUROC:** **0.898**
+- **Cross-Validated Accuracy:** **83.9%**
 
-These representations powered the identification of the **Curative Triad** multi-target hypothesis: pairing an immunomodulatory kinase disarmer (e.g., topical ruxolitinib 1.5% cream) with an intracellular cyclic nucleotide phosphodiesterase-4 inhibitor (e.g., topical roflumilast 0.3% cream) and physical stem-cell mobilization (NB-UVB phototherapy).
+These rankings informed the **Curative Triad** multi-target hypothesis: pairing an immunomodulatory kinase disarmer (e.g., topical ruxolitinib 1.5% cream) with an intracellular cyclic nucleotide phosphodiesterase-4 inhibitor (e.g., topical roflumilast 0.3% cream) and physical stem-cell mobilization (NB-UVB phototherapy). Ruxolitinib and roflumilast rank second and sixteenth among the reranker's top 20; the pairing itself was chosen by hand and is not among the synergy screen's top pairs.
 
 ### 3.4 Resident Memory T-Cell Relapse Signature ($S_{\text{TRM}}$)
 
