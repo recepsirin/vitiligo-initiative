@@ -98,7 +98,7 @@ See the complete index and table of contents in **[`docs/README.md`](docs/README
 
 ## Status
 
-v1.0.0 is tagged and runs local-first; a public URL is not live yet. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
+v1.1.0 is tagged and runs local-first; a public URL is not live yet. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
 
 ## Community and citation
 
