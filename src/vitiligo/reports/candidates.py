@@ -20,14 +20,22 @@ from importlib import resources
 from pathlib import Path
 from typing import Any
 
+from sqlmodel import Session, select
+
 from vitiligo import __version__
 from vitiligo.corpus_stats import get_corpus_stats
 from vitiligo.embed import semantic_search
 from vitiligo.embed.search import SearchHit
-from vitiligo.graph.query import GraphEdgeView, get_neighbors, search_entities
+from vitiligo.graph.literature_seed import CONFIDENCE as PUBTATOR_CONFIDENCE
+from vitiligo.graph.literature_seed import EXTRACTION_METHOD as PUBTATOR_METHOD
+from vitiligo.graph.normalize import VITILIGO_ENTITY_KEY
 from vitiligo.priors import clinical_stage_rank, list_drug_priors
-from vitiligo.storage import Document, Prior, SourceKind, Trial
+from vitiligo.relations.apply import CONFIDENCE as EXTRACTOR_CONFIDENCE
+from vitiligo.relations.apply import METHOD_PREFIX as EXTRACTOR_PREFIX
+from vitiligo.storage import Document, Prior, SourceKind, Trial, get_engine
+from vitiligo.storage.models import EntityKind, GraphEdge, GraphEntity, RelationKind
 from vitiligo.trials import TrialFilter, list_trials, retrieve_relevant_trials
+from vitiligo.trials.relevance import is_vitiligo_trial
 
 # Shipped as package data so non-editable installs (Docker, wheels) find it.
 DEFAULT_INTENTS_RESOURCE = "candidate-intents.json"
@@ -121,6 +129,7 @@ class GraphRef:
     object_name: str
     confidence: float
     extraction_method: str
+    papers: int = 0  # distinct papers stating the relation, which the graph scores
 
 
 @dataclass
@@ -266,28 +275,92 @@ def _trial_matches_drug(trial: Trial, token: str) -> bool:
     return token in haystack
 
 
-def _graph_points(edges: list[GraphEdgeView]) -> int:
-    """Score graph edges that add evidence beyond the prior and trial components.
+# What the graph adds is the papers stating a drug treats vitiligo. A relation's
+# rows from its priors, trials and registry text count for nothing here, whichever
+# source created the relation: the stage and trial components score them.
+_TREATS_POINTS = 25
+# A paper's row carries the paper's id. Rows read from registry records (ctgov:,
+# ictrp:, euctr:), grant abstracts (reporter:) or GEO series (geo:) are not papers.
+_PAPER_IDS = ("pmid:", "pmc:", "doi:")
 
-    Structured edges are seeded from the same priors and trials those components
-    already score (``graph.seed``), so only edges extracted from papers count.
+
+@dataclass(frozen=True)
+class _Treats:
+    """A drug's ``treats`` relation to vitiligo, with the papers stating it."""
+
+    drug: str
+    disease: str
+    confidence: float
+    extraction_method: str
+    papers: dict[str, float]  # paper id -> confidence of the method that read it
+
+
+def _paper_confidence(row: dict[str, Any]) -> float | None:
+    """The confidence a paper's row gives its relation; None for any other row."""
+    if not str(row.get("source_id", "")).startswith(_PAPER_IDS):
+        return None
+    method = str(row.get("source_type", ""))
+    if method == PUBTATOR_METHOD:
+        return PUBTATOR_CONFIDENCE
+    if method.startswith(EXTRACTOR_PREFIX):
+        return EXTRACTOR_CONFIDENCE
+    return None
+
+
+def _vitiligo_treatments() -> list[_Treats]:
+    """Every drug's ``treats`` relation to the vitiligo node that papers state.
+
+    The node is found by its kind and key. A search by name, sorted alphabetically,
+    returned other entities whose names hold the word and never reached it, and a
+    capped neighbour list dropped most relations (issue #22).
     """
-    points = 0
-    seen: set[int] = set()
-    for edge in edges:
-        if edge.extraction_method == "structured" or edge.id in seen:
-            continue
-        seen.add(edge.id)
-        pred = edge.predicate.lower()
-        if pred == "treats":
-            points += int(25 * edge.confidence)
-        elif pred == "investigates":
-            points += int(15 * edge.confidence)
-        elif pred in {"tested_in", "inhibits", "targets"}:
-            points += int(8 * edge.confidence)
-    return min(points, 40)
+    with Session(get_engine(), expire_on_commit=False) as session:
+        vitiligo = session.exec(
+            select(GraphEntity).where(
+                GraphEntity.kind == EntityKind.DISEASE, GraphEntity.key == VITILIGO_ENTITY_KEY
+            )
+        ).first()
+        if vitiligo is None:
+            return []
+        rows = session.exec(
+            select(GraphEdge, GraphEntity)
+            .join(GraphEntity, GraphEntity.id == GraphEdge.subject_id)  # type: ignore[arg-type]
+            .where(
+                GraphEdge.object_id == vitiligo.id,
+                GraphEdge.predicate == RelationKind.TREATS,
+                GraphEntity.kind == EntityKind.DRUG,
+            )
+            .order_by(GraphEdge.id)  # type: ignore[arg-type]
+        ).all()
+    relations: list[_Treats] = []
+    for edge, drug in rows:
+        papers: dict[str, float] = {}
+        for row in edge.evidence or []:
+            confidence = _paper_confidence(row)
+            if confidence is not None:
+                paper = str(row["source_id"])
+                papers[paper] = max(confidence, papers.get(paper, 0.0))
+        if papers:
+            relations.append(
+                _Treats(drug.name, vitiligo.name, edge.confidence, edge.extraction_method, papers)
+            )
+    return relations
 
 
+def _graph_points(relations: list[_Treats]) -> int:
+    """Score the papers stating a drug treats vitiligo (0-25).
+
+    25 x the confidence of the best method that read one of them (PubTator 3 0.5,
+    the relation extractor 0.4), as for any relation extracted from papers, over
+    all the drug's spellings, so synonyms do not add up. How many papers there are
+    is not scored: the readers miss whole drugs (none of the 51 documents naming
+    ritlecitinib gave a relation), so a count would reward being read.
+    """
+    best = max((c for relation in relations for c in relation.papers.values()), default=0.0)
+    return int(_TREATS_POINTS * best)
+
+
+_EVERY_TRIAL = 1_000_000  # a limit no query reaches
 _ACTIVE_TRIAL_STATUSES = frozenset({"RECRUITING", "ACTIVE_NOT_RECRUITING", "AUTHORISED"})
 
 
@@ -336,14 +409,14 @@ class _DrugBundle:
     display_name: str
     token: str
     prior: Prior | None = None
-    graph_edges: list[GraphEdgeView] = field(default_factory=list)
+    graph_relations: list[_Treats] = field(default_factory=list)
     trials: list[Trial] = field(default_factory=list)
     mechanisms: list[str] = field(default_factory=list)
 
     def merge(self, other: _DrugBundle) -> None:
         if self.prior is None:
             self.prior = other.prior
-        self.graph_edges.extend(other.graph_edges)
+        self.graph_relations.extend(other.graph_relations)
         self.trials.extend(other.trials)
         for mech in other.mechanisms:
             if mech not in self.mechanisms:
@@ -372,8 +445,6 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
                 label = mech.get("mechanism") if isinstance(mech, dict) else str(mech)
                 if label and label not in bundle.mechanisms:
                     bundle.mechanisms.append(label)
-        if "graph_edges" in kwargs:
-            bundle.graph_edges.extend(kwargs["graph_edges"])
         if "trials" in kwargs:
             for trial in kwargs["trials"]:
                 if trial not in bundle.trials:
@@ -385,28 +456,25 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
             continue
         upsert(prior.name, prior=prior)
 
-    for entity in search_entities("vitiligo", limit=5):
-        kind = entity.kind.value if hasattr(entity.kind, "value") else str(entity.kind)
-        if kind != "disease":
-            continue
-        for edge in get_neighbors(entity.name, hops=1, limit=200):
-            drug_name = None
-            if edge.subject_kind == "drug" and edge.object_name.lower() == "vitiligo":
-                drug_name = edge.subject_name
-            elif edge.object_kind == "drug" and edge.subject_name.lower() == "vitiligo":
-                drug_name = edge.object_name
-            if drug_name:
-                upsert(drug_name, graph_edges=[edge])
+    # A candidate gains the papers stating it treats vitiligo, under whichever name
+    # each spells it. A drug known only from papers is not made a candidate: every
+    # candidate in past reports was a prior, and the 405 drugs papers name include
+    # misreadings ("tyrosine") and classes ("Steroids"), whose stage would come from
+    # whatever trials their stem matches.
+    for relation in _vitiligo_treatments():
+        bundle = bundles.get(normalize_drug_token(relation.drug))
+        if bundle is not None:
+            bundle.graph_relations.append(relation)
 
-    for prior_token in list(bundles):
-        for edge in get_neighbors(bundles[prior_token].display_name, hops=1, limit=20):
-            if "vitiligo" in (edge.object_name + edge.subject_name).lower():
-                bundles[prior_token].graph_edges.append(edge)
-
+    # The store also holds a prior's trials in other diseases (its "derm_drug" and
+    # "jak_class" scopes): only vitiligo trials are evidence here. Unfiltered, none
+    # of the 15 trials baricitinib was scored on was one.
     all_trials: list[Trial] = []
     for intent in load_intents():
         all_trials.extend(
-            retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
+            trial
+            for trial in retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
+            if is_vitiligo_trial(trial)
         )
     seen_trial: set[tuple[str, str]] = set()
     unique_trials: list[Trial] = []
@@ -426,7 +494,8 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
                     seen.add(key)
                     matched.append(trial)
         # Direct registry lookup by intervention name (catches trials missed by intent overlap).
-        for trial in list_trials(TrialFilter(query=token, limit=15)):
+        named = list_trials(TrialFilter(query=token, limit=_EVERY_TRIAL))
+        for trial in [trial for trial in named if is_vitiligo_trial(trial)][:15]:
             key = (str(trial.source), trial.source_id)
             if key not in seen:
                 seen.add(key)
@@ -516,7 +585,7 @@ def _rank_candidates_for_intent(
             bundle.prior.clinical_stage if bundle.prior else _best_stage_from_trials(bundle.trials)
         )
 
-        graph_pts = _graph_points(bundle.graph_edges)
+        graph_pts = _graph_points(bundle.graph_relations)
         trial_pts = _trial_points(bundle.trials)
         lit_refs = _literature_for_drug(token, intent_hits)
         lit_pts = _literature_points(lit_refs)
@@ -554,13 +623,14 @@ def _rank_candidates_for_intent(
                 prior_source_id=bundle.prior.source_id if bundle.prior else None,
                 graph_refs=[
                     GraphRef(
-                        predicate=e.predicate,
-                        subject_name=e.subject_name,
-                        object_name=e.object_name,
-                        confidence=e.confidence,
-                        extraction_method=e.extraction_method,
+                        predicate=RelationKind.TREATS.value,
+                        subject_name=r.drug,
+                        object_name=r.disease,
+                        confidence=r.confidence,
+                        extraction_method=r.extraction_method,
+                        papers=len(r.papers),
                     )
-                    for e in bundle.graph_edges[:6]
+                    for r in sorted(bundle.graph_relations, key=lambda r: -len(r.papers))[:6]
                 ],
                 trial_refs=[
                     TrialRef(
@@ -615,13 +685,19 @@ def build_candidate_report(
 
     notes = [
         "Deterministic ranking — not a clinical recommendation.",
-        "Score rubric: prior clinical stage (0-40) + graph edges (0-40) + trials (0-35) + literature (0-20).",
+        "Score rubric: prior clinical stage (0-40) + graph (0-25) + trials (0-35) + literature (0-20).",
         "The score measures evidence maturity: how far and how much a drug has been studied in vitiligo. "
         "It is not a ranking of therapeutic potential; a promising but little-studied target scores low.",
-        "Each source counts once: graph edges seeded from priors and trials are not scored again "
-        "(only edges extracted from papers count), and a paper held in both PubMed and PMC counts once.",
+        "Each source counts once: the graph scores only the papers stating a drug treats vitiligo, "
+        "not the priors, trials or registry text on the same relation, which the stage and trial "
+        "components score; a paper held in both PubMed and PMC counts once.",
+        "Graph: 25 x the confidence of the best reader of a paper stating the drug treats vitiligo "
+        "(PubTator 3 0.5, so 12; relation extractor 0.4, so 10), over every spelling of the drug. "
+        "The readers miss some drugs entirely (none of the 51 documents naming ritlecitinib gave a "
+        "relation), so a drug scoring 0 here may simply be unread.",
         "Prior stage and top trial phase both reflect clinical development, so they overlap.",
-        "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count.",
+        "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count, "
+        "and only vitiligo trials count: the trial store also holds a drug's trials in other diseases.",
         "Re-run after corpus updates: vitiligo report candidates",
     ]
     return CandidateReport(
@@ -636,8 +712,8 @@ def build_candidate_report(
 
 
 _METHODOLOGY = (
-    "Candidates are aggregated from Open Targets drug priors (Phase 2+), knowledge-graph "
-    "edges linking drugs to vitiligo, registered trials whose interventions match the drug "
+    "Candidates are Open Targets drug priors (Phase 2+), scored on the papers in the "
+    "knowledge graph stating each treats vitiligo, registered trials whose interventions match the drug "
     "stem, and semantic literature retrieval for each intent query. Scores are transparent "
     "and reproducible from the local corpus snapshot. The score ranks evidence maturity, "
     "not therapeutic potential."
@@ -685,7 +761,7 @@ def render_candidate_report_markdown(report: CandidateReport) -> str:
         "| Component | Max points | Source |",
         "|-----------|------------|--------|",
         "| Prior clinical stage | 40 | Open Targets (`EFO_0004208`) |",
-        "| Knowledge graph | 40 | Edges extracted from papers (seeded edges restate priors and trials) |",
+        "| Knowledge graph | 25 | Papers stating the drug treats vitiligo (PubTator 3, relation extractor) |",
         "| Registered trials | 35 | CT.gov, EU CTR, ICTRP |",
         "| Literature retrieval | 20 | Semantic search (top-K per intent) |",
         "",
@@ -783,7 +859,8 @@ def _render_candidate_block(cand: RankedCandidate) -> list[str]:
         for g in cand.graph_refs[:4]:
             lines.append(
                 f"- {g.subject_name} —[{g.predicate}]→ {g.object_name} "
-                f"(conf={g.confidence:.2f}, {g.extraction_method})"
+                f"(stated by {g.papers} papers; edge confidence {g.confidence:.2f}, "
+                f"created by {g.extraction_method})"
             )
         lines.append("")
 

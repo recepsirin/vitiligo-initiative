@@ -2,27 +2,54 @@
 
 from __future__ import annotations
 
-import pytest
+from collections.abc import Iterator
+from pathlib import Path
+from typing import Any
 
+import pytest
+from sqlmodel import Session
+
+import vitiligo.config as cfg
+import vitiligo.storage.db as dbmod
 from vitiligo.embed.search import SearchHit
-from vitiligo.graph.query import GraphEdgeView
+from vitiligo.graph.query import search_entities
+from vitiligo.graph.store import upsert_entity
 from vitiligo.reports.candidates import (
     IntentSpec,
     ScoreBreakdown,
     _best_stage,
+    _collect_drug_bundles,
     _evidence_strength,
     _graph_points,
     _literature_for_drug,
     _literature_points,
     _stage_points,
     _trial_points,
+    _vitiligo_treatments,
     build_candidate_report,
     load_intents,
     normalize_drug_token,
     normalize_stage,
     trial_stage,
 )
-from vitiligo.storage import Document, SourceKind, Trial, TrialSourceKind, init_db
+from vitiligo.storage import (
+    Document,
+    Prior,
+    SourceKind,
+    Trial,
+    TrialSourceKind,
+    init_db,
+    session_scope,
+)
+from vitiligo.storage.models import (
+    ClaimKind,
+    EntityKind,
+    GraphEdge,
+    GraphEntity,
+    PriorKind,
+    PriorSourceKind,
+    RelationKind,
+)
 
 
 def test_normalize_drug_token_stems_formulations() -> None:
@@ -79,6 +106,7 @@ def test_build_candidate_report_on_local_corpus(require_local_corpus) -> None:
     # Approved JAK inhibitors should pick up registered trials via direct lookup.
     rux = next((c for c in report.global_top if c.canonical_token == "ruxolitinib"), None)
     if rux is not None:
+        assert rux.score.graph > 0  # issue #22: the graph once scored 0 for every candidate
         assert rux.score.trials > 0
         assert rux.trial_refs
 
@@ -205,30 +233,132 @@ def test_markdown_shows_full_cards_once_and_intent_tables() -> None:
     assert "rationale" not in md.lower()
 
 
-def _edge(edge_id: int, method: str, predicate: str = "treats") -> GraphEdgeView:
-    return GraphEdgeView(
-        id=edge_id,
-        subject_kind="drug",
-        subject_name="ruxolitinib",
-        subject_key="ruxolitinib",
-        predicate=predicate,
-        object_kind="disease",
-        object_name="Vitiligo",
-        object_key="vitiligo",
-        confidence=0.88,
-        extraction_method=method,
-        evidence_count=1,
+@pytest.fixture
+def graph_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    monkeypatch.setenv("VITILIGO_DB_PATH", str(tmp_path / "graph.db"))
+    cfg._settings = None
+    dbmod._engine = None
+    init_db()
+    yield
+    cfg._settings = None
+    dbmod._engine = None
+
+
+_PRIOR = {"source_type": "prior", "source_id": "opentargets:CHEMBL1"}
+_TRIAL = {"source_type": "trial", "source_id": "ctgov:NCT01"}
+# PubTator 3 also reads registry records: such a row restates the trial, it is no paper.
+_REGISTRY_TEXT = {"source_type": "pubtator3", "source_id": "ctgov:NCT01", "score": 0.9}
+
+
+def _paper(pmid: int, method: str = "pubtator3") -> dict[str, Any]:
+    return {"source_type": method, "source_id": f"pmid:{pmid}", "relation": "Treat", "score": 0.9}
+
+
+def _treats(
+    session: Session,
+    drug: GraphEntity,
+    disease: GraphEntity,
+    *rows: dict[str, Any],
+    method: str = "structured",
+) -> None:
+    session.add(
+        GraphEdge(
+            subject_id=drug.id,  # type: ignore[arg-type]
+            predicate=RelationKind.TREATS,
+            object_id=disease.id,  # type: ignore[arg-type]
+            confidence=0.88,
+            extraction_method=method,
+            evidence=list(rows),
+            claim=ClaimKind.ASSERTED,
+        )
     )
 
 
-def test_graph_points_skip_edges_seeded_from_priors_and_trials() -> None:
-    """Seeded edges restate the prior and trial components; scoring them double-counts."""
-    assert _graph_points([_edge(1, "structured"), _edge(2, "structured", "investigates")]) == 0
-    assert _graph_points([_edge(3, "llm")]) == 22
+def test_the_graph_scores_the_papers_on_a_relation_a_registry_created(graph_db) -> None:
+    """Issue #22: a relation keeps the method of the source that created it, so the
+    papers joining one a registry created were skipped with its prior and trial."""
+    with session_scope() as session:
+        vitiligo = upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+        rux = upsert_entity(session, kind=EntityKind.DRUG, name="ruxolitinib")
+        bari = upsert_entity(session, kind=EntityKind.DRUG, name="baricitinib")
+        povo = upsert_entity(session, kind=EntityKind.DRUG, name="povorcitinib")
+        _treats(session, rux, vitiligo, _PRIOR, _TRIAL, _paper(1), _paper(2, "biored-BiomedBERT"))
+        _treats(session, bari, vitiligo, _paper(3, "biored-BiomedBERT"), method="biored-BiomedBERT")
+        _treats(session, povo, vitiligo, _PRIOR, _TRIAL, _REGISTRY_TEXT)
+    relations = {relation.drug: relation for relation in _vitiligo_treatments()}
+    assert set(relations) == {"ruxolitinib", "baricitinib"}  # no paper states povorcitinib's
+    assert relations["ruxolitinib"].papers == {"pmid:1": 0.5, "pmid:2": 0.4}
+    assert _graph_points([relations["ruxolitinib"]]) == 12  # PubTator 3 read one: 25 x 0.5
+    assert _graph_points([relations["baricitinib"]]) == 10  # the extractor alone: 25 x 0.4
+    assert _graph_points([]) == 0
 
 
-def test_graph_points_count_an_edge_once() -> None:
-    assert _graph_points([_edge(3, "llm"), _edge(3, "llm")]) == 22
+def test_the_report_finds_vitiligo_however_many_names_hold_the_word(graph_db) -> None:
+    """Issue #22: a search by name, sorted alphabetically, returned other entities
+    holding the word, and an ICTRP record once made a drug named "Vitiligo"."""
+    with session_scope() as session:
+        upsert_entity(session, kind=EntityKind.DRUG, name="Vitiligo")  # its key, and first
+        for n in range(30):
+            upsert_entity(session, kind=EntityKind.DRUG, name=f"A vitiligo cream {n}")
+        vitiligo = upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+        rux = upsert_entity(session, kind=EntityKind.DRUG, name="ruxolitinib")
+        _treats(session, rux, vitiligo, _paper(1))
+    assert [(r.drug, r.disease) for r in _vitiligo_treatments()] == [("ruxolitinib", "Vitiligo")]
+
+
+def test_a_candidate_is_scored_on_its_vitiligo_trials_and_its_papers(graph_db) -> None:
+    with session_scope() as session:
+        session.add(
+            Prior(
+                source=PriorSourceKind.OPENTARGETS,
+                kind=PriorKind.DRUG,
+                source_id="CHEMBL2105759",
+                disease_id="EFO_0004208",
+                name="BARICITINIB",
+                clinical_stage="PHASE_3",
+            )
+        )
+        vitiligo_trial = Trial(
+            source=TrialSourceKind.CTGOV,
+            source_id="NCT1",
+            brief_title="Baricitinib in vitiligo",
+            conditions=["Vitiligo"],
+            phases=["PHASE2"],
+        )
+        # The store holds a JAK inhibitor's trials in any disease, for the drug class.
+        other = Trial(
+            source=TrialSourceKind.CTGOV,
+            source_id="NCT2",
+            brief_title="JAK inhibitor baricitinib in alopecia areata",
+            conditions=["Alopecia Areata"],
+            phases=["PHASE3"],
+            has_results=True,
+        )
+        session.add_all([vitiligo_trial, other])
+        vitiligo = upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+        for pmid, name in enumerate(("baricitinib", "Baricitinib 4 mg", "tyrosine"), start=1):
+            drug = upsert_entity(session, kind=EntityKind.DRUG, name=name)
+            _treats(session, drug, vitiligo, _paper(pmid), method="pubtator3")
+    bundles = _collect_drug_bundles()
+    # A drug known only from papers ("tyrosine", a misreading) is no candidate.
+    assert set(bundles) == {"baricitinib"}
+    baricitinib = bundles["baricitinib"]
+    assert [trial.source_id for trial in baricitinib.trials] == ["NCT1"]
+    # Its papers count under each spelling, and the spellings do not add up.
+    assert sorted(r.drug for r in baricitinib.graph_relations) == [
+        "Baricitinib 4 mg",
+        "baricitinib",
+    ]
+    assert _graph_points(baricitinib.graph_relations) == 12
+
+
+def test_a_search_finds_the_entity_with_the_querys_key_first(graph_db) -> None:
+    with session_scope() as session:
+        upsert_entity(session, kind=EntityKind.DISEASE, name="Acrofacial vitiligo")
+        upsert_entity(session, kind=EntityKind.DRUG, name="A cream for vitiligo")
+        upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+    found = [entity.name for entity in search_entities("vitiligo", limit=2)]
+    assert found == ["Vitiligo", "A cream for vitiligo"]
 
 
 def test_literature_counts_a_pubmed_and_pmc_record_of_one_paper_once() -> None:
