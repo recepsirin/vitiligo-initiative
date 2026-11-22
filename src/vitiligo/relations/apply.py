@@ -65,6 +65,8 @@ UNRELIABLE = frozenset({"TABLE", "FIG"})
 SKIP = READ_BY_PUBTATOR | NOT_CLAIMS | UNRELIABLE
 MIN_SCORE = 0.8
 CONFIDENCE = 0.4
+# An edge's extraction method names the encoder: "biored-" + its name.
+METHOD_PREFIX = "biored-"
 
 
 def trusted(subject: Node, predicate: RelationKind, obj: Node) -> bool:

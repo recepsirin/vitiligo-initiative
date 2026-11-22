@@ -5,8 +5,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from sqlalchemy import desc, func, or_
-from sqlmodel import Session, select
+from sqlalchemy import case, desc, func, or_
+from sqlmodel import Session, col, select
 
 from vitiligo.graph.normalize import normalize_entity_key
 from vitiligo.storage import get_engine
@@ -104,6 +104,10 @@ def summarize_graph() -> dict[str, list[GraphStatsRow]]:
 
 
 def search_entities(query: str, *, limit: int = 25) -> list[GraphEntity]:
+    """Entities whose key is the query's, first, then those whose name holds it.
+
+    Sorted by name alone, "vitiligo" returned 25 other entities before the disease.
+    """
     needle = query.strip()
     if not needle:
         return []
@@ -118,7 +122,7 @@ def search_entities(query: str, *, limit: int = 25) -> list[GraphEntity]:
                     GraphEntity.name.ilike(pattern),  # type: ignore[union-attr]
                 )
             )
-            .order_by(GraphEntity.name)
+            .order_by(case((col(GraphEntity.key) == key, 0), else_=1), GraphEntity.name)
             .limit(limit)
         )
         return list(session.exec(stmt).all())

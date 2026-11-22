@@ -990,7 +990,13 @@ def run_fulltext_relation_ingestion(model_path: Path) -> IngestionStats:
     from transformers import AutoTokenizer
 
     from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
-    from vitiligo.relations.apply import CONFIDENCE, MIN_SCORE, read_documents, trusted
+    from vitiligo.relations.apply import (
+        CONFIDENCE,
+        METHOD_PREFIX,
+        MIN_SCORE,
+        read_documents,
+        trusted,
+    )
     from vitiligo.relations.train import load
     from vitiligo.sources.mesh import load_index
     from vitiligo.sources.pubtator import cached_documents
@@ -1017,7 +1023,7 @@ def run_fulltext_relation_ingestion(model_path: Path) -> IngestionStats:
             given = _given_names(session)
         symbols = gene_symbols([*cached_documents(kind="abstracts"), *fulltexts])
         reader = LiteratureReader(load_index(wanted), given, symbols)
-        method = "biored-" + str(saved["encoder"]).rsplit("/", 1)[-1]
+        method = METHOD_PREFIX + str(saved["encoder"]).rsplit("/", 1)[-1]
         with session_scope() as session:
             stats = load_literature(
                 session,
@@ -1173,6 +1179,7 @@ def run_unannotated_relation_ingestion(model_path: Path) -> IngestionStats:
     from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
     from vitiligo.relations.apply import (
         CONFIDENCE,
+        METHOD_PREFIX,
         MIN_SCORE,
         UNRELIABLE,
         read_documents,
@@ -1216,7 +1223,7 @@ def run_unannotated_relation_ingestion(model_path: Path) -> IngestionStats:
             given = _given_names(session)
         symbols = gene_symbols([*abstracts, *fulltexts])
         reader = LiteratureReader(load_index(wanted), given, symbols)
-        method = "biored-" + str(saved["encoder"]).rsplit("/", 1)[-1]
+        method = METHOD_PREFIX + str(saved["encoder"]).rsplit("/", 1)[-1]
         with session_scope() as session:
             stats = load_literature(
                 session,
