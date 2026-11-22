@@ -12,7 +12,7 @@
 
 **Methods.** We developed the Vitiligo Initiative Evidence Engine, an open-source pipeline (Apache 2.0) comprising: (1) idempotent ingestion from PubMed, PubMed Central Open Access, NCBI GEO DataSets, ClinicalTrials.gov, the EU Clinical Trials Register (CTIS), Open Targets, WHO ICTRP (by search export, by record id, and by optional XML export), ISRCTN, and optional XML imports from DrugBank; (2) document storage and bookkeeping in SQLite; (3) semantic search using ONNX embeddings (`BAAI/bge-small-en-v1.5`) with rule-based evidence-level tagging; (4) cross-registry trial normalization and structured search; (5) a knowledge graph (v1) seeded deterministically from genetic/pharmacological priors and trial interventions; (6) a deterministic therapeutic candidate ranking, and a clinician-facing table of posted trial results that records the analysis population each figure was computed on and brackets figures counting only the patients assessed; and (7) a FastAPI web interface with deployment tooling for EU-region hosting. No component calls a language model: every figure the engine reports is derived from stored records and reproduces from the same corpus.
 
-**Results.** The local corpus contains 14,914 documents (11,726 PubMed, 2,771 PMC full-text, 360 Crossref, 57 GEO series), 14,509 title–abstract embeddings, 5,038 trial records (including 2,239 vitiligo trials: 1,043 registered across 19 registries and 1,196 known only from publications), 241 pharmacological/genetic priors for vitiligo (EFO_0004208), 157 GWAS Catalog associations (145 variants, 129 at $p < 5 \times 10^{-8}$), and a heterogeneous knowledge graph of 18,344 entities and 95,338 edges. A relational graph attention network (four heads, 1,936-dimensional input features, asymmetric ComplEx $C^{64}$ Hermitian decoder) achieves a filtered test MRR of 0.1156 over all relations, and 0.1867 (Hits@10 25.7%) on therapeutic relations, while a Stage-2 wide-and-deep cross-encoder achieves an out-of-fold AUROC of 0.9005 for multi-target Curative Triad candidate ranking. Tissue-resident memory ($T_{\text{RM}}$) single-cell transcriptomics from suction blister roofs ($n=19,550$ cells) yields a pre-registered 17-gene prospective relapse index ($S_{\text{TRM}}$; hypothesis seal `2c102804`, predicting $\text{HR}_{\text{SD}} > 1.0$). The entire analytical suite is deployed openly as a static, client-side web application on Hugging Face Spaces.
+**Results.** The local corpus contains 14,914 documents (11,726 PubMed, 2,771 PMC full-text, 360 Crossref, 57 GEO series), 14,509 title–abstract embeddings, 5,038 trial records (including 2,239 vitiligo trials: 1,043 registered across 19 registries and 1,196 known only from publications), 241 pharmacological/genetic priors for vitiligo (EFO_0004208), 157 GWAS Catalog associations (145 variants, 129 at $p < 5 \times 10^{-8}$), and a heterogeneous knowledge graph of 18,309 entities and 95,238 edges. A relational graph attention network (four heads, 1,936-dimensional input features, asymmetric ComplEx $C^{64}$ Hermitian decoder) achieves a filtered test MRR of 0.1156 over all relations, and 0.1867 (Hits@10 25.7%) on therapeutic relations, while a Stage-2 wide-and-deep cross-encoder achieves an out-of-fold AUROC of 0.9005 for multi-target Curative Triad candidate ranking. Tissue-resident memory ($T_{\text{RM}}$) single-cell transcriptomics from suction blister roofs ($n=19,550$ cells) yields a pre-registered 17-gene prospective relapse index ($S_{\text{TRM}}$; hypothesis seal `2c102804`, predicting $\text{HR}_{\text{SD}} > 1.0$). The entire analytical suite is deployed openly as a static, client-side web application on Hugging Face Spaces.
 
 **Conclusions.** We release reproducible, open-access infrastructure for vitiligo translational medicine and clinical evidence synthesis. The engine is intended for research and education, not clinical decision-making, and every reported figure is traceable to primary registry or literature citations. All models, knowledge graph snapshots, and interactive discovery tools are publicly accessible.
 
@@ -126,6 +126,8 @@ $$V \in \{\text{disease}, \text{target}, \text{drug}, \text{trial}, \text{interv
 The relation set $\mathcal{R}$ includes 14 canonical directed edge types:
 $$\mathcal{R} \in \{\text{changes}, \text{associated\_with}, \text{participates\_in}, \text{co\_expressed\_with}, \text{tested\_in}, \text{treats}, \text{inhibits}, \text{investigates}, \text{causes}, \text{activates}, \text{expressed\_in}, \text{targets}, \text{combined\_with}, \text{occurs\_in}\}$$
 
+One drug is one vertex. A paper's chemical is named by its MeSH heading and a registry's or prior's by its own name, so drug vertices whose names are one MeSH concept's terms are merged, keeping the name the registry or prior gave and the others as aliases: ritlecitinib's papers, read by PubTator under MeSH's heading "PF-06651600", join the trials' ritlecitinib (32 concepts were split before this rule, 36 vertices merged). Six Open Targets drug priors that PubTator never tags in the papers naming them are marked by name, and the project's relation extractor (BiomedBERT trained on BioRED and on PubTator's labels of the corpus) reads those passages; read by hand, 76 of the 81 "treats vitiligo" relations it loaded are right.
+
 #### 2.7.2 Deterministic Seeding and Causal Ladder Tagging
 Unlike knowledge graphs constructed entirely through unconstrained language-model extraction, every edge in our graph is tagged with its **claim type** and **causal ladder rung**:
 - **Claim Kind:**
@@ -182,7 +184,7 @@ The web application is packaged as a lightweight, containerized ASGI application
 
 ### 3.1 Corpus and Knowledge Graph Scale
 
-The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 clinical trial records, and 14,509 dense vector embeddings. The heterogeneous knowledge graph comprises 18,344 entities and 95,338 edges.
+The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 clinical trial records, and 14,509 dense vector embeddings. The heterogeneous knowledge graph comprises 18,309 entities and 95,238 edges.
 
 | Metric Category | Entity / Source Type | Count |
 |---|---|---|
@@ -198,17 +200,17 @@ The ingested and harmonized corpus contains 14,914 scientific documents, 5,038 c
 | | GWAS Catalog Associations (145 variants; 129 at $p < 5 \times 10^{-8}$) | 157 |
 | **Knowledge Graph Entities** | Disease Nodes | 6,899 |
 | | Target / Protein Nodes | 4,348 |
-| | Drug / Chemical Nodes | 1,872 |
+| | Drug / Chemical Nodes | 1,836 |
 | | Clinical Trial Nodes | 2,262 |
 | | Intervention Nodes | 1,201 |
 | | Biomarker Nodes | 912 |
 | | Pathway Nodes | 810 |
 | | Clinical Outcomes, Cell Types, Mechanisms, Phenotypes | 40 |
-| | **Total Knowledge Graph Entities** | **18,344** |
-| **Knowledge Graph Edges** | Total Relations | **95,338** |
-| | *Observed* (measured: trial results, gene expression, co-expression and single-cell expression, assays, genetics) | 39,642 (41.6%) |
-| | *Asserted* (stated by a paper, registry or curated database; 21,625 curated annotations were labelled observed until 21 November 2026) | 55,696 (58.4%) |
-| | *Perturbation in Human* (Trial / Perturbation Data) | 28,592 (30.0%) |
+| | **Total Knowledge Graph Entities** | **18,309** |
+| **Knowledge Graph Edges** | Total Relations | **95,238** |
+| | *Observed* (measured: trial results, gene expression, co-expression and single-cell expression, assays, genetics) | 39,630 (41.6%) |
+| | *Asserted* (stated by a paper, registry or curated database; 21,625 curated annotations were labelled observed until 21 November 2026) | 55,608 (58.4%) |
+| | *Perturbation in Human* (Trial / Perturbation Data) | 28,588 (30.0%) |
 
 ### 3.2 Clinical Trial Harmonization and Population Analysis
 
