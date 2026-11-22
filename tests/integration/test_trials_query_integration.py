@@ -154,6 +154,7 @@ def test_retrieve_relevant_trials_weights_rare_tokens(test_db_path) -> None:
             source=TrialSourceKind.CTGOV,
             source_id=f"NCT2000000{i}",
             brief_title=f"Topical combination regimen {i}",
+            conditions=["Vitiligo"],
             phases=["PHASE3"],
         )
         for i in range(10)
@@ -185,7 +186,7 @@ def test_retrieve_relevant_trials_matches_word_starts_only(test_db_path) -> None
             Trial(
                 source=TrialSourceKind.CTGOV,
                 source_id="NCT30000001",
-                brief_title="Inactive lesions",
+                brief_title="Inactive vitiligo lesions",
             ),
             Trial(
                 source=TrialSourceKind.CTGOV,
@@ -233,3 +234,97 @@ def test_retrieve_relevant_trials_weights_tested_fields_over_prose(test_db_path)
     )
     results = retrieve_relevant_trials("ruxolitinib", require_high_signal=False)
     assert [t.source_id for t in results] == ["NCT40000002", "NCT40000001"]
+
+
+def test_retrieval_returns_vitiligo_trials_only(test_db_path) -> None:
+    """The store also holds a JAK inhibitor's trials in other diseases (issue #23)."""
+    from vitiligo.storage import Trial
+
+    _seed(
+        [
+            Trial(
+                source=TrialSourceKind.CTGOV,
+                source_id="NCT50000001",
+                brief_title="Ruxolitinib in myelofibrosis",
+                conditions=["Myelofibrosis"],
+                phases=["PHASE3"],
+                has_results=True,
+            ),
+            Trial(
+                source=TrialSourceKind.CTGOV,
+                source_id="NCT50000002",
+                brief_title="Ruxolitinib cream",
+                conditions=["Vitiligo"],
+                phases=["PHASE2"],
+            ),
+        ]
+    )
+    assert _ids(retrieve_relevant_trials("ruxolitinib")) == {"NCT50000002"}
+
+
+def test_retrieval_ranks_every_match_not_only_the_newest(test_db_path) -> None:
+    """A cap of 1,000 matches, newest first, left a 2008 acral trial unranked."""
+    from vitiligo.storage import Trial
+
+    newer = [
+        Trial(
+            source=TrialSourceKind.CTGOV,
+            source_id=f"NCT6{i:07d}",
+            brief_title=f"Repigmentation study {i}",
+            conditions=["Vitiligo"],
+            last_update_date="2025-01-01",
+        )
+        for i in range(1000)
+    ]
+    older = Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id="NCT00622180",
+        brief_title="Acral repigmentation with narrowband UVB",
+        conditions=["Vitiligo"],
+        last_update_date="2008-01-01",
+    )
+    _seed([*newer, older])
+    results = retrieve_relevant_trials("acral repigmentation", limit=1, require_high_signal=False)
+    assert [t.source_id for t in results] == ["NCT00622180"]
+
+
+def test_a_site_a_trial_excludes_earns_it_no_credit(test_db_path) -> None:
+    """Issue #23: "excluding hands and feet" made an anifrolumab trial an acral one."""
+    from vitiligo.storage import Trial
+
+    _seed(
+        [
+            Trial(
+                source=TrialSourceKind.EUCTR,
+                source_id="2024-512041-17-00",
+                brief_title="Anifrolumab and phototherapy",
+                conditions=[
+                    "Non-segmental vitiligo, body surface area >5% excluding hands and feet"
+                ],
+            ),
+            Trial(
+                source=TrialSourceKind.ICTRP,
+                source_id="CTRI/2023/06/054258",
+                brief_title="Tofacitinib gel for vitiligo on hands and feet",
+                conditions=["Vitiligo"],
+            ),
+            # Only a site is excluded: "exclude the effect of NB-UVB" still names it.
+            Trial(
+                source=TrialSourceKind.CTGOV,
+                source_id="NCT70000003",
+                brief_title="Control groups to exclude the systemic effect of UVB in vitiligo",
+                conditions=["Vitiligo"],
+            ),
+            # The exclusion ends with its clause.
+            Trial(
+                source=TrialSourceKind.CTGOV,
+                source_id="NCT70000004",
+                brief_title="Excluding sunlight as a confounder, face lesions in vitiligo",
+                conditions=["Vitiligo"],
+            ),
+        ]
+    )
+    hands = retrieve_relevant_trials("hands feet", require_high_signal=False)
+    assert _ids(hands) == {"CTRI/2023/06/054258"}
+    assert _ids(retrieve_relevant_trials("uvb", require_high_signal=False)) == {"NCT70000003"}
+    assert _ids(retrieve_relevant_trials("face", require_high_signal=False)) == {"NCT70000004"}

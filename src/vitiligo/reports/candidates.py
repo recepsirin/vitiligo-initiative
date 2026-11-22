@@ -467,14 +467,13 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
             bundle.graph_relations.append(relation)
 
     # The store also holds a prior's trials in other diseases (its "derm_drug" and
-    # "jak_class" scopes): only vitiligo trials are evidence here. Unfiltered, none
-    # of the 15 trials baricitinib was scored on was one.
+    # "jak_class" scopes): only vitiligo trials are evidence here. Intent retrieval
+    # returns no others; a drug's own lookup must drop them, for unfiltered none of
+    # the 15 trials baricitinib was scored on was one.
     all_trials: list[Trial] = []
     for intent in load_intents():
         all_trials.extend(
-            trial
-            for trial in retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
-            if is_vitiligo_trial(trial)
+            retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
         )
     seen_trial: set[tuple[str, str]] = set()
     unique_trials: list[Trial] = []

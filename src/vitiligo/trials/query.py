@@ -18,6 +18,7 @@ from sqlmodel import Session, select
 
 from vitiligo.storage import Trial, TrialSourceKind, get_engine
 from vitiligo.trials.countries import normalize_country
+from vitiligo.trials.relevance import is_vitiligo_trial
 
 _ALL_SOURCES: tuple[TrialSourceKind, ...] = tuple(TrialSourceKind)
 
@@ -108,8 +109,8 @@ _HIGH_SIGNAL_PHASES: tuple[str, ...] = (
 )
 
 
-# Words that carry no discriminating signal when matching an intent against a
-# vitiligo-only trial store ("vitiligo" itself matches every record).
+# Words that carry no discriminating signal when matching an intent against
+# vitiligo trials ("vitiligo" itself matches every one).
 _INTENT_STOPWORDS: frozenset[str] = frozenset(
     {
         "and",
@@ -125,8 +126,7 @@ _INTENT_STOPWORDS: frozenset[str] = frozenset(
     }
 )
 
-# Upper bound on trials pulled for Python-side re-scoring of a multi-token intent.
-_CANDIDATE_POOL_CAP = 1000
+_EVERY_MATCH = 1_000_000  # a limit no query reaches
 
 
 def _intent_tokens(intent: str) -> list[str]:
@@ -159,6 +159,22 @@ def _trial_fields(trial: Trial) -> tuple[str, str]:
     return " \n ".join(primary).lower(), " \n ".join(prose).lower()
 
 
+# A body site a clause excludes is not where a trial treats: a condition reading
+# "... >5% excluding hands and feet" made an anifrolumab trial the second answer
+# to "acral vitiligo hands feet" (issue #23). Only sites, and only "excluding":
+# "to exclude the systemic effect of NB-UVB" still names the treatment, and in a
+# result "except for the acral lesions" marks where a difference fell short.
+_SITES = frozenset({"acral", "hands", "feet", "face", "facial"})
+_EXCLUDING = re.compile(r"\bexclud\w*\b[^.,;:()\n]{0,40}$")
+
+
+def _affirmed(token: str, pattern: re.Pattern[str], text: str) -> bool:
+    """Whether ``token`` occurs in ``text``, a site counting only where not excluded."""
+    if token not in _SITES:
+        return pattern.search(text) is not None
+    return any(not _EXCLUDING.search(text[: m.start()]) for m in pattern.finditer(text))
+
+
 def _token_pattern(token: str) -> re.Pattern[str]:
     """Match ``token`` at a word start; hyphens also match a space or nothing.
 
@@ -179,12 +195,12 @@ def retrieve_relevant_trials(
     limit: int = 15,
     require_high_signal: bool = True,
 ) -> list[Trial]:
-    """Return trials most relevant to a research intent.
+    """Return the vitiligo trials most relevant to a research intent.
 
-    Until trials are embedded, "relevance" is:
-    - candidates: trials matching ANY intent token at a word start in title /
-      summary / conditions / keywords / interventions (a multi-word intent is
-      never matched as one literal phrase), then
+    - candidates: vitiligo trials matching ANY intent token at a word start in
+      title / summary / conditions / keywords / interventions (a multi-word
+      intent is never matched as one literal phrase), a word inside an
+      exclusion ("excluding hands and feet") not counting, then
     - quality filter: high-signal phase (>=Phase 2) OR reported results, then
     - ranking: intent tokens matched at word starts, each weighted by rarity
       across the candidate pool (smoothed IDF) and by field — titles,
@@ -193,6 +209,10 @@ def retrieve_relevant_trials(
 
     An intent with no discriminating tokens (e.g. just "vitiligo") falls back
     to a literal match on the whole intent, newest first.
+
+    Ranking trials by an embedding with the documents' encoder was measured on
+    the candidate intents and not adopted (issue #23): 15 of their 25 top-five
+    trials were relevant, against 20 here.
     """
     intent = (intent or "").strip()
     if not intent:
@@ -209,17 +229,16 @@ def retrieve_relevant_trials(
                     desc(Trial.last_update_date),  # type: ignore[arg-type]
                     desc(Trial.id),  # type: ignore[arg-type]
                 )
-                .limit(_CANDIDATE_POOL_CAP)
             )
             candidates = list(session.exec(stmt))
     else:
         candidates = list_trials(
-            TrialFilter(
-                query=intent,
-                sources=_ALL_SOURCES,
-                limit=limit * 4 if limit else 60,
-            )
+            TrialFilter(query=intent, sources=_ALL_SOURCES, limit=_EVERY_MATCH)
         )
+    # The store also holds trials of the JAK class and of prior drugs in other
+    # diseases, which led two intents with prostate cancer and atopic dermatitis.
+    # Every match is read: a cap of 1,000, newest first, left out older trials.
+    candidates = [trial for trial in candidates if is_vitiligo_trial(trial)]
 
     # Per-token field weight for each trial: 1.0 if the token appears in a
     # primary field, 0.5 if only in prose, absent otherwise.
@@ -229,9 +248,9 @@ def retrieve_relevant_trials(
         primary, prose = _trial_fields(trial)
         hits: dict[str, float] = {}
         for tok, pattern in patterns.items():
-            if pattern.search(primary):
+            if _affirmed(tok, pattern, primary):
                 hits[tok] = _PRIMARY_FIELD_WEIGHT
-            elif pattern.search(prose):
+            elif _affirmed(tok, pattern, prose):
                 hits[tok] = _PROSE_FIELD_WEIGHT
         field_weights[id(trial)] = hits
 
