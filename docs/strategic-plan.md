@@ -53,7 +53,7 @@ The loop is the point: each cycle makes the next one cheaper. AI shortens the bu
 
 | Layer | Status |
 |---|---|
-| Evidence Engine | v1.0.0: corpus, semantic search, cited Q&A, hypothesis ranking, knowledge graph, web UI ([`engine.md`](engine.md)) |
+| Evidence Engine | v1.1.0: corpus, semantic search, cited Q&A, hypothesis ranking, knowledge graph, web UI ([`engine.md`](engine.md)) |
 | JAK-inhibitor atlas and arm table | Built from registries and posted results; open CSV/JSON exports |
 | Scenario model | v0.2 default, back-tested on held-out trials; two pre-registered challengers ([`jak-scenario-model.md`](jak-scenario-model.md)) |
 | Sealed forecasts | Scored weekly as results post ([scoreboard](../forecasts/README.md)) |
