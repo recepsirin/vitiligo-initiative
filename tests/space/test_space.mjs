@@ -123,9 +123,11 @@ try {
   eq('first page', await count('#trial-body tr'), 25);
   await expectCount('every trial is listed', T.length);
   eq('rows come in file order (newest first)', await text('#trial-body tr:first-child .title-btn'), T[0].title);
-  // master's merge of PR #19, from which every Space data file regenerates byte for byte
+  // The code links name one commit, CODE_AT in app.js; the method link must open the exporting code there.
+  const codeAt = (readFileSync(join(dir, 'app.js'), 'utf8').match(/var CODE_AT = '(https:\/\/github\.com\/recepsirin\/vitiligo-initiative\/blob\/[0-9a-f]{40}\/)';/) || [])[1];
+  check('the code links name one full commit', Boolean(codeAt), 'CODE_AT not found in app.js');
   eq('the method link points at the exporting code', await p.eval(`document.querySelector('#trial-method').href`),
-    'https://github.com/recepsirin/vitiligo-initiative/blob/4a5f4027531feac306fc287a5b1042f1b33fef81/src/vitiligo/trials/explorer.py');
+    `${codeAt}src/vitiligo/trials/explorer.py`);
 
   // options carry counts computed from the rows
   const opt = (sel, value) => p.eval(`[...document.querySelectorAll('${sel} option')].find(o => o.value === ${JSON.stringify(value)})?.textContent || ''`);
