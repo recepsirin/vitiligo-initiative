@@ -260,3 +260,134 @@ def test_an_ictrp_intervention_is_named_by_its_label_not_its_description() -> No
     assert split_intervention("Nil: Nil") == []
     prose = "Intervention group: The pigment-free area is first microneedled, then grafted."
     assert split_intervention(prose) == [("", prose)]
+
+
+def test_chinese_registries_label_the_group_not_what_it_is_given() -> None:
+    from vitiligo.sources.ictrp import intervention_entries, split_intervention
+
+    def names(text: str) -> list[str]:
+        return [name for name, _ in split_intervention(text, grouped=True)]
+
+    # ChiCTR and ITMCTR write "Group:intervention;" for each group.
+    assert names(
+        "Glucocorticoid-tofacitinib group:Prednisolone acetate + tofacitinib;"
+        "Tofacitinib group:Tofacitinib;"
+    ) == ["Prednisolone acetate + tofacitinib", "Tofacitinib"]
+    # A group given nothing names nothing: once, "Vitiligo" became a drug. The
+    # registry's text stays, for the trial's treatment groups to read.
+    text = "Ruxolitinib cream with phototherapy group:None;Vitiligo group:none;"
+    entries = intervention_entries(text, trial_id="ChiCTR2600121327")
+    assert [(e["name"], e["free_text"]) for e in entries] == [("", text)]
+    assert names("Control Group: Monotherapy Group(Treated with 1.5% cream):None;") == []
+    # A registrant's "; " stays inside one group's intervention, labels and all.
+    assert names(
+        "Progressive stage group:oral glycyrrhizin\n1. adult: 50mg, TID; 2. minors: "
+        "weight>60kg, 50mg, TID;Stable group:None;"
+    ) == [""]
+    # Other registries keep the CTRI reading: the label names the intervention.
+    assert (
+        intervention_entries("Fangbai Granule: 6 g twice daily", trial_id="CTRI/2020/01/1")[0][
+            "name"
+        ]
+        == "Fangbai Granule"
+    )
+
+
+@pytest.mark.parametrize(
+    ("text", "name"),
+    [
+        ("Thuravadhi Chooranam (Internal): 5 g twice daily", "Thuravadhi Chooranam (Internal)"),
+        ("Intervention group 1 : ) Micro-needling.", "Micro-needling"),
+        (
+            "Treatment is performed with a device (JMDN code: 70528000)",
+            "Treatment is performed with a device",
+        ),
+        ("Oral tofacitinib(Group A): 5 mg daily", "Oral tofacitinib"),
+        ("Group B (Oral and Topical PUVAsol Therapy): daily", "Oral and Topical PUVAsol Therapy"),
+        ("Group A (Study group, Unani medicine group): daily", "Unani medicine"),
+        ("Vitiligo;Tacrolimus ointment", "Tacrolimus ointment"),
+        ("Group-A: UNIM-044(O),\nTwo capsules daily", "UNIM-044(O)"),
+        ("Group I Melagenina Plus® (Experimental): twice daily", "Melagenina Plus®"),
+        ("Active control group, PUVA sol: weekly", "PUVA sol"),
+        ("Trade Name: Cosentyx®", "Cosentyx®"),
+        ("methotrexate treated group: 10 mg weekly", "methotrexate"),
+        ("Efficacy of 2% Tofacitnib gel in Acral Vitiligo: twice daily", "2% Tofacitnib gel"),
+        ("SPARC121 as Active: once daily", "SPARC121"),
+        ("Excimer light with: two sessions a week", "Excimer light"),
+        (
+            "Topical 88% phenol application in the treatment of vitiligo: once",
+            "Topical 88% phenol application",
+        ),
+        (
+            "0.2% tacrolimus with excimer lamp is the intervention: twice daily",
+            "0.2% tacrolimus with excimer lamp",
+        ),
+        ("Unani Formulation namely: Safoof-e-Bars", "Unani Formulation"),
+        (
+            "PRACCHANNA KARMA FOLLOWED BY BALYADI LEPA IN THE MANAGEMENT OF SHWITRA: daily",
+            "PRACCHANNA KARMA FOLLOWED BY BALYADI LEPA",
+        ),
+        (
+            "Active agent - tacrolimus ointment and phototherapy for vitiligo: daily",
+            "tacrolimus ointment and phototherapy",
+        ),
+        ("DHATRYADI KWATH FOR ORAL INTAKE ALONG WITH: daily", "DHATRYADI KWATH FOR ORAL INTAKE"),
+        ("(Fangbai Granule): 6 g", "Fangbai Granule"),
+    ],
+)
+def test_an_intervention_is_named_without_the_arm_or_context_around_it(
+    text: str, name: str
+) -> None:
+    from vitiligo.sources.ictrp import split_intervention
+
+    assert split_intervention(text)[0][0] == name
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Not provided at time of registration",  # a placeholder
+        "NilControl",
+        "nill",
+        "Without CAP treatment",  # a negation
+        "We will participate in the study 20 patients randomized into 2 study groups",
+        "Four depigmented regions on the trunk or extremities will be randomly allocated",
+        "Apply 2 times a day.",  # an instruction
+        "200 HEALTHY INDIVIDUALS BETWEEN 20 - 60 YRS OF AGE",  # a population
+        "Peripheral blood",  # a sample
+        "1. Dermatology Life Quality Index",  # a measure
+        "Orally",  # a route
+        "L80- Vitiligo",  # the condition
+        "randomized controlled trial",  # the design
+        "Product Code",  # a field
+        "Part-1",  # an arm
+        "30 sessions of treatments",  # a schedule
+        "Take the skin",
+        "control group without placebo",
+        "Children with vitiligo who failed to previous topical treatments",
+        "Â¢Women in fertile age planning for conception",  # mojibake before a population
+        "Skin tissue and blister fluid from normal control subjects",
+        "1) Taking healthy skin",
+        "Adverse effects",
+        "Cognitive Assessment",
+        "topical and subcutaneous",
+        "Progressive non-segmental vitiligo",
+        "Single arm clinical study",
+        "Control lesion",
+        "gruop b",
+        "Case",
+        "1. Study setting",
+        "Medical Device",
+    ],
+)
+def test_what_names_nothing_a_group_is_given_makes_no_name(text: str) -> None:
+    from vitiligo.sources.ictrp import split_intervention
+
+    assert all(name == "" for name, _ in split_intervention(text))
+
+
+def test_irct_lists_its_intervention_category_beside_the_interventions() -> None:
+    from vitiligo.sources.ictrp import split_intervention
+
+    listed = "Narrow Band UVB phototherapy;Treatment - Devices;Treatment - Drugs"
+    assert split_intervention(listed) == [("Narrow Band UVB phototherapy", "")]

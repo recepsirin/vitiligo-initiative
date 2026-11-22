@@ -115,26 +115,95 @@ _LABEL_PREFIX = re.compile(
 # follows it; a short first line names it too. A value that is prose -- 116 with
 # no label, about 120 behind an arm label -- names nothing, and keeps its text.
 _NAME_MAX = 80
-_PLACEHOLDER = re.compile(r"^(?:nil|none|na|n/a|not applicable|-)$", re.I)
-# Labels that name an arm or a field, not what the arm receives.
+# "Nome" and "nill" are registrants' typos (ChiCTR2600118018, ChiCTR2000035934).
+_PLACEHOLDER = re.compile(r"^(?:nil|nill|none|nome|na|n/a|not applicable|-)$", re.I)
+# Labels that name an arm, a field or the design, not what an arm receives. IRCT
+# lists its intervention category ("Treatment - Drugs") beside the interventions,
+# and a half-side study names its "Control lesion".
 _ARM_LABEL = re.compile(
     r"^(?:(?:intervention|control|experimental|treatment|study|comparator|trial|observation"
-    r"|vehicle control)\s*(?:group|arm|agent|drug|product)?\s*\w{0,3}"
+    r"|vehicle control)\s*(?:group|arm|agent|drug|product|lesion)?\s*\w{0,3}"
     r"|(?:first|second|third)\s+intervention(?:\s+group)?"
-    r"|(?:group|arm)\s*\w{1,3}|product name)$",
+    r"|(?:group|gruop|arm|part)[\s-]*\w{1,3}|case|(?:\d+\.\s*)?study setting"
+    r"|product (?:name|code)|trade name|medical device|treatment\s*-\s*\w+"
+    r"|randomi[sz]ed controlled trial|single arm(?: clinical study)?)$",
     re.I,
 )
-# A sentence about the arm, not a name for what it receives.
+# What names nothing a group is given: a sentence, an instruction, a negation or
+# a placeholder ("We will participate ...", "Apply 2 times a day.", "Without CAP
+# treatment", "Not provided at time of registration"), a population ("200 HEALTHY
+# INDIVIDUALS ..."), a sample, a measure, a route or the condition itself.
 _NOT_A_NAME = re.compile(
     r"^(?:all|the|a|an|in|each|both|see|this|there|patients?|participants?|subjects?"
-    r"|receiving|vitiligo patients|no)\b",
+    r"|receiving|vitiligo patients|no|control\s+group|take|apply|without|we|consisting"
+    r"|nil(?:control)?|not\s+(?:applicab\w*|provided)|\d+\s+sessions?"
+    r"|(?:\d+\s+)?(?:healthy|children|pediatric|women|men|adults)"
+    r"|(?:\d+\W*\s*)?(?:taking\s+\w+\s+skin|peripheral\s+blood|skin\s+tissues?|adverse\s+effects?)"
+    r"|orally$|topically$|(?:oral|topical)\s+and\s+(?:oral|topical|subcutaneous)$)\b",
     re.I,
 )
+_SENTENCE = re.compile(r"\b(?:will|who)\b", re.I)
+_MEASURE = re.compile(r"\b(?:index|scale|assessment|questionnaire)$", re.I)
+_CONDITION = re.compile(
+    r"^(?:L\d\d\W*)?(?:(?:non-?)?(?:progressive|segmental|stable|active)\s+)*vitiligo$", re.I
+)
+# "Group I Melagenina Plus®", "Active control group, PUVA sol": the arm, then its name.
+_ARM_PREFIX = re.compile(
+    r"^(?:(?:group|arm)\s*(?!of\b)(?:\(\w{1,3}\)|\w{1,3})|(?:active\s+)?(?:control|study)\s+group)"
+    r"\s*(?:[:.,-]\s*|\s+)(?=\S)",
+    re.I,
+)
+# Context around a name: "Efficacy of 2% Tofacitnib gel in Acral Vitiligo",
+# "SPARC121 as Active", "Excimer light with".
+_AIM_PREFIX = re.compile(r"^(?:(?:efficacy|safety|effect|use)\s+of|active agent\s*-)\s+", re.I)
+_CONTEXT_SUFFIX = re.compile(
+    r"\s+(?:(?:in|for)\s+(?:the\s+(?:treatment|management)\s+of\s+)?(?:acral\s+)?"
+    r"(?:vitiligo(?:\s+vulgaris)?|s?h?witra)"
+    r"|(?:as|is)\s+(?:the\s+)?(?:active|comparator|intervention)"
+    r"|and|with|along|of|namely|containing|either)$",
+    re.I,
+)
+_LEADING_JUNK = re.compile(r"^(?:[^\w(]|Â)+")  # bullets and mojibake: "Â¢Women in ..."
 _PRODUCT_CODE = re.compile(
     r",\s*product code\b.*$", re.I
 )  # CTIS: "Ritlecitinib, Product Code: ..."
 _LABELLED = re.compile(rf"^([^:]{{1,{_NAME_MAX}}}):\s*(.*)$")
 _TAG = re.compile(r"</?\w+\s*/?>")  # a few records arrive wrapped in HTML paragraphs
+# "Oral tofacitinib (Group A)" names the tablet; "Group B (Oral PUVAsol)" too.
+_BRACKETED = re.compile(r"^(.+?)\s*\(([^()]+)\)$")
+# "TA Group", "placebo treated patients": the arm is named after what it receives.
+_GROUP_SUFFIX = re.compile(
+    r"\s+(?:(?:treated|treatment)\s+(?:group|arm|patients)|group|arm)$", re.I
+)
+# ChiCTR and ITMCTR write each group with what it is given, "Group:intervention;",
+# and "None" for a group given nothing, so the label names a group, never the
+# intervention: "Vitiligo group:None;", "CKBA 0.5% group:Apply topically ...".
+# Read the CTRI way, such labels became drug entities, one of them "Vitiligo".
+# The registry joins the pairs with a bare ";"; a registrant's own "; " stays
+# inside one ("TID); 2. minors: weight>60kg").
+_GROUPED_REGISTRIES = ("ChiCTR", "ITMCTR")
+_PAIR_BOUNDARY = re.compile(r";(?=\S)")
+
+
+def _trim(text: str) -> str:
+    """Strip the punctuation around a name, keeping a bracket that closes.
+
+    Stripping every bracket left 47 names open: "Thuravadhi Chooranam (Internal".
+    """
+    # A leading ")" never closes: IRCT writes "Intervention group 1 : ) Micro-needling".
+    text = _LEADING_JUNK.sub("", text.strip()).rstrip(".").strip(" ,")
+    while text.endswith(")") and text.count(")") > text.count("("):
+        text = text[:-1].rstrip(" ,.")
+    while text.startswith("(") and text.count("(") > text.count(")"):
+        text = text[1:].lstrip(" ,")
+    while text.endswith("("):
+        text = text[:-1].rstrip(" ,.")
+    while text.count("(") > text.count(")"):  # cut at a colon: "... device (JMDN code"
+        text = text[: text.rindex("(")].rstrip(" ,.")
+    inner = text[1:-1]
+    if text.startswith("(") and text.endswith(")") and inner.count("(") == inner.count(")"):
+        text = inner.strip()
+    return text
 
 
 def _name(candidate: str) -> str | None:
@@ -146,22 +215,75 @@ def _name(candidate: str) -> str | None:
         labelled = _LABELLED.match(part.strip())
         if labelled and _ARM_LABEL.match(labelled.group(1).strip()):
             part = labelled.group(2)
-        part = _PRODUCT_CODE.sub("", part).strip().rstrip(".").strip(" ,()")
-        if not part:
+        part = _trim(_PRODUCT_CODE.sub("", part))
+        bracketed = _BRACKETED.match(part)
+        if bracketed:
+            outer, inner = bracketed.group(1).strip(), bracketed.group(2).strip()
+            if _ARM_LABEL.match(inner):
+                part = outer
+            elif _ARM_LABEL.match(outer):
+                part = _trim(inner)
+        if not part or _ARM_LABEL.match(part):
             continue
-        if _PLACEHOLDER.match(part) or _NOT_A_NAME.match(part) or len(part) > _NAME_MAX:
+        if len(part) > _NAME_MAX or _names_nothing(part):
             return None
-        if not _ARM_LABEL.match(part):
+        part = _without_context(part)
+        if part and not _ARM_LABEL.match(part) and not _CONDITION.match(part):
             return part
     return None
 
 
-def split_intervention(text: str) -> list[tuple[str, str]]:
+def _names_nothing(part: str) -> bool:
+    return bool(
+        _PLACEHOLDER.match(part)
+        or _NOT_A_NAME.match(part)
+        or _SENTENCE.search(part)
+        or _MEASURE.search(part)
+    )
+
+
+def _without_context(part: str) -> str:
+    """The name inside an arm prefix, an aim, a role or a trailing connective."""
+    part = _AIM_PREFIX.sub("", _ARM_PREFIX.sub("", part))
+    while True:
+        shorter = _trim(_GROUP_SUFFIX.sub("", _CONTEXT_SUFFIX.sub("", part)))
+        if shorter == part:
+            return part
+        part = shorter
+
+
+def _group_pairs(text: str) -> list[tuple[str, str]] | None:
+    """(name, description) for each "Group:intervention;" pair, or None if none.
+
+    A group given "None" yields nothing; a description that is prose, no name.
+    """
+    given_to: list[str] = []
+    for chunk in _PAIR_BOUNDARY.split(text.strip().rstrip(";")):
+        group, colon, given = chunk.partition(":")
+        if colon and len(group) <= _NAME_MAX and "\n" not in group:
+            given_to.append(given)
+        elif given_to:  # a bare ";" inside one group's intervention
+            given_to[-1] += ";" + chunk
+    if not given_to:
+        return None
+    pairs: dict[str, tuple[str, str]] = {}
+    for raw in given_to:
+        given = raw.strip(" ;\n")
+        # "Control Group: Monotherapy Group(...):None" gives the group nothing too.
+        if not given or _PLACEHOLDER.match(given.rsplit(":", 1)[-1].strip(" ;.")):
+            continue
+        name = _name(given) if "\n" not in given else None
+        pairs.setdefault(name or given, (name or "", given))
+    return list(pairs.values())
+
+
+def split_intervention(text: str, *, grouped: bool = False) -> list[tuple[str, str]]:
     """An ICTRP free-text intervention as (name, description) pairs.
 
     An empty name means the value is prose that names no intervention; an empty
     list means it is a placeholder ("Nil: Nil"). CTRI values end with the next
-    arm's heading, a lone "Control" line, which is dropped.
+    arm's heading, a lone "Control" line, which is dropped. ``grouped`` reads the
+    value as ChiCTR and ITMCTR write it, one "Group:intervention;" per group.
     """
     lines = [line.strip() for line in _TAG.sub("", text or "").split("\n") if line.strip()]
     if len(lines) > 1 and lines[-1].lower() == "control":
@@ -169,6 +291,10 @@ def split_intervention(text: str) -> list[tuple[str, str]]:
     if not lines:
         return []
     body = "\n".join(lines)
+    if grouped:
+        pairs = _group_pairs(body)
+        if pairs is not None:
+            return pairs
     head = lines[0]
     for _ in range(3):  # "Control group: Experimental group: X" carries several labels
         match = _LABELLED.match(head)
@@ -194,8 +320,17 @@ def split_intervention(text: str) -> list[tuple[str, str]]:
     return [("", body)]
 
 
-def intervention_entries(text: str, details: str | None = None) -> list[dict[str, Any]]:
-    """The trial interventions one ICTRP value gives, each keeping the registry's text."""
+def intervention_entries(
+    text: str, details: str | None = None, *, trial_id: str = ""
+) -> list[dict[str, Any]]:
+    """The trial interventions one ICTRP value gives, each keeping the registry's text.
+
+    ``trial_id`` tells which registry wrote the value (see ``_GROUPED_REGISTRIES``).
+    A value that names nothing still gives one unnamed entry: a trial's treatment
+    groups read the text ("... with phototherapy group:None;").
+    """
+    grouped = trial_id.startswith(_GROUPED_REGISTRIES)
+    named = split_intervention(text, grouped=grouped) or [("", "")]
     return [
         {
             "type": "DRUG",
@@ -204,7 +339,7 @@ def intervention_entries(text: str, details: str | None = None) -> list[dict[str
             "free_text": text,
             "other_names": [],
         }
-        for name, description in split_intervention(text)
+        for name, description in named
     ]
 
 
@@ -268,7 +403,7 @@ def parse_ictrp_record(root: Element) -> Trial | None:
         text = _text(el, "Intervention_FreeText") or _text(el, "Intervention_code")
         if not text:
             continue
-        interventions += intervention_entries(text, _text(el, "Other_details"))
+        interventions += intervention_entries(text, _text(el, "Other_details"), trial_id=trial_id)
 
     sponsors: list[dict[str, Any]] = []
     primary_sponsor = _text(root, "Trial/Primary_sponsor")
