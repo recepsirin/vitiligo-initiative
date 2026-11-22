@@ -60,7 +60,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, func, select
 
 from vitiligo.graph.normalize import VITILIGO_ENTITY_NAME, normalize_entity_key
 from vitiligo.graph.store import upsert_edge, upsert_entity
@@ -359,8 +359,20 @@ def load_literature(
     def entity(node: Node) -> GraphEntity:
         # A paper is the weakest source in the graph, so a node another source
         # already named keeps that name -- Upadacitinib does not become MeSH's
-        # "upadacitinib" -- and the name read here is kept as an alias.
-        held = session.exec(
+        # "upadacitinib" -- and the name read here is kept as an alias. A MeSH
+        # concept merged under another name ("PF-06651600" under ritlecitinib,
+        # ``graph.resolve``) is found by its identifier.
+        ui = dict(node.external_ids).get("mesh")
+        held = (
+            session.exec(
+                select(GraphEntity).where(
+                    GraphEntity.kind == node.kind,
+                    func.json_extract(GraphEntity.external_ids, "$.mesh") == ui,
+                )
+            ).first()
+            if ui
+            else None
+        ) or session.exec(
             select(GraphEntity).where(
                 GraphEntity.kind == node.kind,
                 GraphEntity.key == normalize_entity_key(node.name),

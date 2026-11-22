@@ -303,3 +303,32 @@ def test_a_clean_name_clears_the_cut_ones_an_entity_was_given(graph_db) -> None:
         )
         again = upsert_entity(session, kind=EntityKind.DRUG, name="Etanercept")
         assert again.aliases == ["Etanercept", "Etanercept ((ylb-113)"]
+
+
+def test_a_merged_drug_keeps_the_trials_that_name_it_by_an_alias(graph_db) -> None:
+    """A trial that names "PF-06651600" still names ritlecitinib once MeSH merged them."""
+    with session_scope() as session:
+        session.add(
+            Trial(
+                source=TrialSourceKind.CTGOV,
+                source_id="NCT03715829",
+                brief_title="PF-06651600 in vitiligo",
+                interventions=[{"type": "DRUG", "name": "PF-06651600"}],
+            )
+        )
+        trial = upsert_entity(session, kind=EntityKind.TRIAL, name="NCT03715829")
+        drug = upsert_entity(
+            session, kind=EntityKind.DRUG, name="ritlecitinib", aliases=["PF-06651600"]
+        )
+        row = {"source_type": "trial", "source_id": "ctgov:NCT03715829"}
+        _edge(
+            session,
+            drug,
+            RelationKind.TESTED_IN,
+            trial,
+            row,
+            method="structured",
+            claim=ClaimKind.ASSERTED,
+            level=None,
+        )
+        assert prune_trial_interventions(session, curated={}) == 0
