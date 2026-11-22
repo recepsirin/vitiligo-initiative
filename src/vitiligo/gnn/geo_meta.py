@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import re
 from pathlib import Path
 
 import numpy as np
@@ -39,7 +40,8 @@ GSE150954_MC = Path("data/geo/GSE150954/GSE150954_Untreated_v_Treated_MCBG.csv.g
 GSE150954_KC = Path("data/geo/GSE150954/GSE150954_Untreated_v_Treated_KCBG.csv.gz")
 GSE344141_PATH = Path("data/geo/GSE344141/GSE344141_FPKMs_All_Samples.csv.gz")
 GSE171161_PATH = Path("data/geo/GSE171161/GSE171161_Pmel_Memory_counts.txt.gz")
-GWAS_ASSOC_PATH = Path("data/geo/gwas_associations.tsv")
+GSE344141_SYMBOLS = Path("data/geo/GSE344141/ensembl_mouse_symbols.tsv")
+_MYGENE_QUERY = "https://mygene.info/v3/query"
 
 DEFAULT_BASE_DATASET_PATH = Path("data/cache/gnn/vitiligo_gnn_dataset.pt")
 DEFAULT_GEO_CONSENSUS_PATH = Path("data/cache/gnn/geo_consensus_16d.pt")
@@ -61,7 +63,7 @@ GEO_DIMENSIONS = (
     "GSE272551 pan-PDE4 inhibitor 72 h log2FC",
     "GSE150954 bulge melanocyte stem-cell log2FC",
     "GSE150954 bulge keratinocyte stem-cell log2FC",
-    "GSE344141 5-HT1A melanogenesis log2FC",
+    "GSE344141 fluoxetine vs control log2FC (mouse skin; 5-HT1A)",
     "GSE298871 single-cell T-cell effector score (11 TRM markers set to at least 2.5)",
     "GSE298871 single-cell melanocyte depletion score (7 markers set to at most -2.5)",
     "GWAS Catalog risk-locus score",
@@ -73,6 +75,111 @@ FEATURE_BLOCKS = (
     ("HGNC gene groups", 1792, 1920),
     ("GEO profile", 1920, 1936),
 )
+
+
+def gse150954_log2fc(path: Path) -> dict[str, float]:
+    """Each gene's log2 change, NB-UVB-treated over untreated bulge precursors.
+
+    The file signs its linear fold change: 2.04 is treated over untreated, -2.82
+    untreated over treated (on the 11,908 melanocyte genes with both means above
+    1, the signed log2 equals log2 of the means' ratio, r = 1.000). A gene counts
+    where its mean is at least 1 in either arm, as in GSE344141; a symbol written
+    twice keeps its first row.
+    """
+    with gzip.open(path, "rt") as f:
+        df = pd.read_csv(
+            f, usecols=["Common_name", "Control_mean", "Treatment_mean", "Fold_change"]
+        )
+    expressed = df[(df["Control_mean"] >= 1) | (df["Treatment_mean"] >= 1)].dropna()
+    changes: dict[str, float] = {}
+    for name, fold in expressed[["Common_name", "Fold_change"]].itertuples(index=False):
+        if fold:
+            changes.setdefault(
+                str(name).strip().upper(), float(np.sign(fold) * np.log2(max(abs(fold), 1.0)))
+            )
+    return changes
+
+
+def mouse_symbols(ids: list[str], cache: Path = GSE344141_SYMBOLS) -> dict[str, str]:
+    """Mouse Ensembl gene ids' symbols: from MyGene.info once, then from ``cache``."""
+    held: dict[str, str] = {}
+    if cache.exists():
+        for line in cache.read_text(encoding="utf-8").splitlines():
+            ensembl, _, symbol = line.partition("\t")
+            held[ensembl] = symbol
+    missing = [i for i in dict.fromkeys(ids) if i not in held]
+    if missing:
+        import httpx
+
+        for start in range(0, len(missing), 1000):
+            batch = missing[start : start + 1000]
+            response = httpx.post(
+                _MYGENE_QUERY,
+                data={
+                    "q": ",".join(batch),
+                    "scopes": "ensembl.gene",
+                    "fields": "symbol",
+                    "species": "mouse",
+                },
+                timeout=120,
+            )
+            response.raise_for_status()
+            for hit in response.json():
+                held.setdefault(
+                    str(hit["query"]), "" if hit.get("notfound") else str(hit.get("symbol") or "")
+                )
+            for ensembl in batch:
+                held.setdefault(ensembl, "")
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text("".join(f"{k}\t{v}\n" for k, v in sorted(held.items())), encoding="utf-8")
+    return {k: v for k, v in held.items() if v}
+
+
+def gse344141_log2fc(path: Path, symbols_cache: Path = GSE344141_SYMBOLS) -> dict[str, float]:
+    """Each gene's log2 change in mouse skin on fluoxetine over control (GSE344141).
+
+    Fluoxetine acts through the epithelial 5-HT1A receptor, as the series' title
+    says. A gene counts where expressed at FPKM >= 1 in either arm, its mouse
+    symbol written the human way (Sox17 is SOX17); a symbol two ids share takes
+    the more expressed one.
+    """
+    with gzip.open(path, "rt") as f:
+        df = pd.read_csv(f)
+    control = df.filter(like="Ctrl_").mean(axis=1)
+    fluoxetine = df.filter(like="Flu_").mean(axis=1)
+    expressed = (control >= 1) | (fluoxetine >= 1)
+    symbols = mouse_symbols(df.loc[expressed, "#Geneid"].astype(str).tolist(), symbols_cache)
+    changes: dict[str, float] = {}
+    for i in (control + fluoxetine)[expressed].sort_values(ascending=False, kind="stable").index:
+        symbol = symbols.get(str(df.at[i, "#Geneid"]), "")
+        if symbol:
+            changes.setdefault(
+                symbol.upper(), float(np.log2((fluoxetine[i] + 0.1) / (control[i] + 0.1)))
+            )
+    return changes
+
+
+def gwas_locus_scores() -> dict[str, float]:
+    """Each mapped gene's strongest vitiligo association in the corpus: -log10 p, at most 10.
+
+    Read from the GWAS Catalog associations the corpus holds; an intergenic hit
+    ("ABC - XYZ") credits both genes.
+    """
+    from sqlmodel import Session, select
+
+    from vitiligo.storage import GeneticAssociation, get_engine
+
+    scores: dict[str, float] = {}
+    with Session(get_engine()) as session:
+        for association in session.exec(select(GeneticAssociation)):
+            if association.p_value is None or association.p_value <= 0:
+                continue
+            score = float(min(10.0, -np.log10(max(association.p_value, 1e-30))))
+            for gene in re.split(r"\s*(?:,|;| - )\s*", association.mapped_gene or ""):
+                symbol = gene.strip().upper()
+                if symbol:
+                    scores[symbol] = max(scores.get(symbol, 0.0), score)
+    return scores
 
 
 def load_hgnc_ensembl_mapping(hgnc_path: Path | str = HGNC_PATH) -> dict[str, str]:
@@ -118,11 +225,12 @@ def extract_multi_cohort_expression_signatures(
     14: GSE298871 single-cell melanocyte depletion score
     15: GWAS Catalog Disease Risk Locus Score
 
-    A dimension whose input is missing or unreadable stays zero, and a warning
-    names it. In the matrix the published model was trained on, four do:
-    GSE150954's files name their columns Common_name and Fold_change (linear),
-    which the parser does not look for; GSE344141's has mouse Ensembl ids under
-    #Geneid; and data/geo/gwas_associations.tsv was absent (measured 2026-11-21).
+    A dimension whose input is missing stays zero, and a warning names it. Until
+    22 November 2026 four did, in the matrix the first model was trained on:
+    GSE150954's files name their columns Common_name and Fold_change, which the
+    parser did not look for; GSE344141's holds mouse Ensembl ids under #Geneid;
+    and a GWAS file the corpus never wrote was read, not the database's own
+    GWAS Catalog associations.
     """
     cache_path = Path(cache_path)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -271,63 +379,19 @@ def extract_multi_cohort_expression_signatures(
         except Exception as exc:
             logger.warning("Failed to parse GSE272551 PDE4: %s", exc)
 
-    # 5. Ingest GSE150954 (Melanocyte stem cell bulge & keratinocyte bulge mobilization)
-    if GSE150954_MC.exists():
-        try:
-            with gzip.open(GSE150954_MC, "rt") as f:
-                df_mc = pd.read_csv(f, nrows=10000)
-                col_gene = "gene" if "gene" in df_mc.columns else df_mc.columns[0]
-                col_fc = "log2FoldChange" if "log2FoldChange" in df_mc.columns else "logFC"
-                if col_fc in df_mc.columns:
-                    for _, row in df_mc.dropna(subset=[col_gene, col_fc]).iterrows():
-                        g_sym = str(row[col_gene]).strip().upper()
-                        if g_sym in sym_to_node:
-                            n_idx = sym_to_node[g_sym]
-                            features[n_idx, 10] = float(np.clip(float(row[col_fc]), -6.0, 6.0))
-        except Exception as exc:
-            logger.debug("GSE150954 MC parse note: %s", exc)
+    # 5. GSE150954: hair-follicle bulge precursors of NB-UVB-treated over untreated
+    #    vitiligo skin, melanocytes (10) and keratinocytes (11).
+    for dim, path in ((10, GSE150954_MC), (11, GSE150954_KC)):
+        if path.exists():
+            for g_sym, fc in gse150954_log2fc(path).items():
+                if g_sym in sym_to_node:
+                    features[sym_to_node[g_sym], dim] = float(np.clip(fc, -6.0, 6.0))
 
-    if GSE150954_KC.exists():
-        try:
-            with gzip.open(GSE150954_KC, "rt") as f:
-                df_kc = pd.read_csv(f, nrows=10000)
-                col_gene = "gene" if "gene" in df_kc.columns else df_kc.columns[0]
-                col_fc = "log2FoldChange" if "log2FoldChange" in df_kc.columns else "logFC"
-                if col_fc in df_kc.columns:
-                    for _, row in df_kc.dropna(subset=[col_gene, col_fc]).iterrows():
-                        g_sym = str(row[col_gene]).strip().upper()
-                        if g_sym in sym_to_node:
-                            n_idx = sym_to_node[g_sym]
-                            features[n_idx, 11] = float(np.clip(float(row[col_fc]), -6.0, 6.0))
-        except Exception as exc:
-            logger.debug("GSE150954 KC parse note: %s", exc)
-
-    # 6. Ingest GSE344141 (5-HT1A serotonergic McSC differentiation)
+    # 6. GSE344141: mouse skin on fluoxetine over control (12).
     if GSE344141_PATH.exists():
-        try:
-            with gzip.open(GSE344141_PATH, "rt") as f:
-                df_344 = pd.read_csv(f, nrows=15000)
-                col_gene = "Gene" if "Gene" in df_344.columns else "gene_id"
-                if col_gene in df_344.columns and len(df_344.columns) >= 3:
-                    fpkm_cols = [c for c in df_344.columns if c != col_gene]
-                    if len(fpkm_cols) >= 2:
-                        control_col = fpkm_cols[0]
-                        treated_col = fpkm_cols[1]
-                        for _, row in df_344.dropna(
-                            subset=[col_gene, control_col, treated_col]
-                        ).iterrows():
-                            g_sym = str(row[col_gene]).strip().upper()
-                            if g_sym in sym_to_node:
-                                n_idx = sym_to_node[g_sym]
-                                try:
-                                    c_val = float(row[control_col])
-                                    t_val = float(row[treated_col])
-                                    fc = np.log2((t_val + 0.1) / (c_val + 0.1))
-                                    features[n_idx, 12] = float(np.clip(fc, -6.0, 6.0))
-                                except ValueError:
-                                    continue
-        except Exception as exc:
-            logger.debug("GSE344141 parse note: %s", exc)
+        for g_sym, fc in gse344141_log2fc(GSE344141_PATH).items():
+            if g_sym in sym_to_node:
+                features[sym_to_node[g_sym], 12] = float(np.clip(fc, -6.0, 6.0))
 
     # 7. Single-Cell Lineage Specificity (GSE298871, 17,057 cells) + Multi-Cohort limma Differentials (GSE75819, GSE65127)
     try:
@@ -394,25 +458,10 @@ def extract_multi_cohort_expression_signatures(
         if m in sym_to_node:
             features[sym_to_node[m], 13] = max(float(features[sym_to_node[m], 13]), 2.5)
 
-    # 8. Ingest GWAS Catalog Associations
-    if GWAS_ASSOC_PATH.exists():
-        try:
-            with open(GWAS_ASSOC_PATH, encoding="utf-8") as f:
-                reader = csv.DictReader(f, delimiter="\t")
-                for row in reader:
-                    g_sym = str(row.get("MAPPED_GENE", "")).strip().upper()
-                    p_val_str = str(row.get("P-VALUE", "1.0"))
-                    try:
-                        p_val = float(p_val_str)
-                        score = min(10.0, -np.log10(max(p_val, 1e-30)))
-                    except ValueError:
-                        score = 2.0
-                    if g_sym in sym_to_node:
-                        features[sym_to_node[g_sym], 15] = max(
-                            features[sym_to_node[g_sym], 15], float(score)
-                        )
-        except Exception as exc:
-            logger.debug("GWAS parse note: %s", exc)
+    # 8. GWAS Catalog: each mapped gene's strongest vitiligo association (15).
+    for g_sym, score in gwas_locus_scores().items():
+        if g_sym in sym_to_node:
+            features[sym_to_node[g_sym], 15] = max(features[sym_to_node[g_sym], 15], score)
 
     tensor = torch.from_numpy(features)
     for dim in empty_dimensions(tensor):
