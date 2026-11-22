@@ -145,3 +145,52 @@ def test_a_genes_gwas_score_is_its_strongest_association(test_db_path) -> None:
             )
         session.commit()
     assert gwas_locus_scores() == pytest.approx({"TYR": 9.0, "PTPN22": 10.0, "AP4B1-AS1": 10.0})
+
+
+def test_a_merged_entity_is_found_by_the_names_it_absorbed(test_db_path, tmp_path) -> None:
+    """The MeSH merge made "calcipotriol" an alias of "calcipotriene", and the
+    reranker's labels, looked up by name, silently lost it (and fluticasone)."""
+    from sqlmodel import Session
+
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.graph.store import upsert_entity
+    from vitiligo.storage import get_engine
+    from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        drug = upsert_entity(session, kind=EntityKind.DRUG, name="calcipotriene")
+        drug.aliases = ["calcipotriene", "Calcipotriol", "vitamin D analogue"]
+        other = upsert_entity(session, kind=EntityKind.DRUG, name="tacalcitol")
+        other.aliases = ["tacalcitol", "vitamin D analogue"]  # held twice: resolves to neither
+        named = upsert_entity(session, kind=EntityKind.DRUG, name="Calcipotriol")  # a display name
+        named.aliases = ["Calcipotriol solution"]
+        disease = upsert_entity(session, kind=EntityKind.DISEASE, name="Vitiligo")
+        for subject in (drug, other, named):
+            session.add(
+                GraphEdge(
+                    subject_id=subject.id,  # type: ignore[arg-type]
+                    predicate=RelationKind.TREATS,
+                    object_id=disease.id,  # type: ignore[arg-type]
+                    confidence=0.5,
+                    extraction_method="structured",
+                    evidence=[],
+                    claim=ClaimKind.ASSERTED,
+                )
+            )
+        session.commit()
+    dataset = load_graph_dataset(
+        db_path=test_db_path, cache_path=tmp_path / "ds.pt", force_reload=True
+    )
+    index = {e.name: e.idx for e in dataset.entities}
+    assert dataset.name_to_idx["calcipotriol"] == index["Calcipotriol"]  # the display name wins
+    del dataset  # and without that entity, the alias finds the merged one:
+    with Session(get_engine()) as session:
+        session.delete(session.get(GraphEntity, named.id))
+        session.commit()
+    dataset = load_graph_dataset(
+        db_path=test_db_path, cache_path=tmp_path / "ds2.pt", force_reload=True
+    )
+    index = {e.name: e.idx for e in dataset.entities}
+    assert dataset.name_to_idx["calcipotriol"] == index["calcipotriene"]
+    assert dataset.name_to_idx["Calcipotriol"] == index["calcipotriene"]
+    assert "vitamin d analogue" not in dataset.name_to_idx
