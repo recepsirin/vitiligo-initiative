@@ -64,6 +64,7 @@ from sqlmodel import Session, func, select
 
 from vitiligo.graph.normalize import VITILIGO_ENTITY_NAME, normalize_entity_key
 from vitiligo.graph.store import upsert_edge, upsert_entity
+from vitiligo.relations.priors import PREFIX as PRIOR
 from vitiligo.sources.mesh import MeshRecord, normalise
 from vitiligo.sources.pubtator import AnnotatedDocument, Concept, Mention
 from vitiligo.storage.models import ClaimKind, EntityKind, GraphEntity, RelationKind
@@ -211,6 +212,8 @@ class LiteratureReader:
         return self._mesh.get(concept.identifier.removeprefix("MESH:"))
 
     def is_drug(self, concept: Concept) -> bool:
+        if concept.identifier.startswith(PRIOR):
+            return True  # an Open Targets drug prior, named where PubTator missed it
         if concept.identifier not in self._drug_cache:
             record = self._record(concept)
             self._drug_cache[concept.identifier] = record is not None and (
@@ -243,6 +246,8 @@ class LiteratureReader:
             if any(_LASER.match(m.after) for m in mentions):
                 return Node(EntityKind.INTERVENTION, f"{name} laser")
             ids = (("mesh", record.ui),) if record else ()
+            if concept.identifier.startswith(PRIOR):
+                ids = (("chembl", concept.identifier.removeprefix(PRIOR)),)
             kind = EntityKind.DRUG if self.is_drug(concept) else EntityKind.BIOMARKER
             return Node(kind, name, ids)
         if concept.type == "Gene":

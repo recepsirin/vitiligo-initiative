@@ -481,3 +481,19 @@ def test_a_mesh_concept_merged_under_another_name_is_found_by_its_identifier(
         drugs = session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)).all()
     assert [drug.name for drug in drugs] == ["ritlecitinib"]
     assert ("ritlecitinib", RelationKind.TREATS, "Vitiligo") in _edges()
+
+
+def test_a_prior_marked_where_pubtator_missed_it_is_a_drug(test_db_path: Path) -> None:
+    """relations.priors names povorcitinib where PubTator tagged nothing."""
+    _load(
+        _doc(
+            "1",
+            "povorcitinib repigmented vitiligo.",
+            [("povorcitinib", "Chemical", "PRIOR:CHEMBL5095203", "POVORCITINIB"), VITILIGO],
+            [("Negative_Correlation", 1.0, "PRIOR:CHEMBL5095203", "MESH:D014820")],
+        )
+    )
+    with session_scope() as session:
+        [drug] = session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)).all()
+    assert drug.external_ids == {"chembl": "CHEMBL5095203"}
+    assert (drug.name, RelationKind.TREATS, "Vitiligo") in _edges()

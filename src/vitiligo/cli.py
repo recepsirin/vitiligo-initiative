@@ -399,6 +399,34 @@ def ingest_unannotated_relations(
     _print_ingest_stats(stats)
 
 
+@ingest_app.command("prior-relations")
+def ingest_prior_relations(
+    model: str = typer.Option(..., help=MODEL_HELP),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="List the relations that would load; write nothing."
+    ),
+) -> None:
+    """Read the relations of drug priors PubTator never tags into the graph.
+
+    Afamelanotide, povorcitinib, etanercept and three more: their names mark them
+    in the documents that write them, and the trained model reads the passages.
+    """
+    from vitiligo.ingest.pipeline import run_prior_relation_ingestion
+
+    console.rule("[bold]Relations of drug priors PubTator never tags[/bold]")
+    stats, loaded = run_prior_relation_ingestion(Path(model), dry_run=dry_run)
+    for row in loaded:
+        console.print(
+            f"{row['subject']} -[{row['predicate']}]-> {row['object']} "
+            f"({row['source_id']}, {row['score']}): {str(row['snippet'] or '')[:240]}",
+            markup=False,
+            highlight=False,
+        )
+    console.print()
+    console.rule("[bold green]Done[/bold green]" + (" (dry run)" if dry_run else ""))
+    _print_ingest_stats(stats)
+
+
 @relations_app.command("train")
 def relations_train(
     encoder: str = typer.Option(
