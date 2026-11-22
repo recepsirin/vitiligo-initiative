@@ -11,14 +11,14 @@ import math
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 from sqlalchemy import String, cast, desc, func, or_
 from sqlmodel import Session, select
 
 from vitiligo.storage import Trial, TrialSourceKind, get_engine
 from vitiligo.trials.countries import normalize_country
-from vitiligo.trials.relevance import is_vitiligo_trial
+from vitiligo.trials.relevance import JAK_INHIBITORS, is_vitiligo_trial
 
 _ALL_SOURCES: tuple[TrialSourceKind, ...] = tuple(TrialSourceKind)
 
@@ -190,10 +190,45 @@ def _token_like_variants(token: str) -> list[str]:
     return list(dict.fromkeys([token, token.replace("-", ""), token.replace("-", " ")]))
 
 
+class _Treatment(NamedTuple):
+    """A treatment trials name in more than one way."""
+
+    name: str
+    written: frozenset[str]  # how an intent may write it, hyphens dropped
+    forms: tuple[str, ...]  # what a trial may write, as _token_pattern reads them
+
+
+_PHOTOTHERAPY = ("photo-therapy", "narrow-band", "nb-uvb", "uvb", "excimer")
+# A spelling is named by any of its forms: an intent's "narrowband UVB" is the
+# "NB-UVB", "nbUVB" or "phototherapy" a trial registers. A class is named by its
+# own word only: "JAK" reaches every JAK inhibitor, "ruxolitinib" stays itself.
+# Either way it counts once (issue #23).
+_TREATMENTS = (
+    _Treatment("phototherapy", frozenset(f.replace("-", "") for f in _PHOTOTHERAPY), _PHOTOTHERAPY),
+    _Treatment("jak", frozenset({"jak", "janus"}), ("jak", "janus", *JAK_INHIBITORS)),
+)
+
+
+def _intent_units(tokens: list[str]) -> tuple[dict[str, tuple[str, ...]], set[str]]:
+    """Each unit an intent is scored on with its forms, and which units are treatments."""
+    units: dict[str, tuple[str, ...]] = {}
+    treatments: set[str] = set()
+    for token in tokens:
+        treatment = next((t for t in _TREATMENTS if token.replace("-", "") in t.written), None)
+        if treatment is None:
+            units.setdefault(token, (token,))
+        else:
+            units[treatment.name] = treatment.forms
+            treatments.add(treatment.name)
+    return units, treatments
+
+
 def retrieve_relevant_trials(
     intent: str,
     limit: int = 15,
     require_high_signal: bool = True,
+    *,
+    combination: bool = False,
 ) -> list[Trial]:
     """Return the vitiligo trials most relevant to a research intent.
 
@@ -206,22 +241,29 @@ def retrieve_relevant_trials(
       across the candidate pool (smoothed IDF) and by field — titles,
       conditions, keywords and intervention names count fully; summary and
       intervention-description prose counts half — then phase/results bonus.
+      A treatment trials write several ways (phototherapy, the JAK class)
+      is one unit, matched by any of its forms.
+
+    ``combination`` ranks first the trials naming every treatment the intent
+    does: asked for a JAK inhibitor with NB-UVB, a trial of either alone is not
+    one. Without it, 1 of that intent's top five trials tested both.
 
     An intent with no discriminating tokens (e.g. just "vitiligo") falls back
     to a literal match on the whole intent, newest first.
 
     Ranking trials by an embedding with the documents' encoder was measured on
     the candidate intents and not adopted (issue #23): 15 of their 25 top-five
-    trials were relevant, against 20 here.
+    trials were relevant, against 20 for this ranking then and 25 now.
     """
     intent = (intent or "").strip()
     if not intent:
         return []
 
     intent_tokens = _intent_tokens(intent)
+    units, treatments = _intent_units(intent_tokens)
     if intent_tokens:
         with Session(get_engine(), expire_on_commit=False) as session:
-            terms = [v for tok in intent_tokens for v in _token_like_variants(tok)]
+            terms = [v for forms in units.values() for f in forms for v in _token_like_variants(f)]
             stmt = (
                 select(Trial)
                 .where(or_(*(_text_match(term) for term in terms)))
@@ -240,18 +282,18 @@ def retrieve_relevant_trials(
     # Every match is read: a cap of 1,000, newest first, left out older trials.
     candidates = [trial for trial in candidates if is_vitiligo_trial(trial)]
 
-    # Per-token field weight for each trial: 1.0 if the token appears in a
+    # Per-unit field weight for each trial: 1.0 if one of its forms appears in a
     # primary field, 0.5 if only in prose, absent otherwise.
-    patterns = {tok: _token_pattern(tok) for tok in intent_tokens}
+    patterns = {unit: [_token_pattern(f) for f in forms] for unit, forms in units.items()}
     field_weights: dict[int, dict[str, float]] = {}
     for trial in candidates:
         primary, prose = _trial_fields(trial)
         hits: dict[str, float] = {}
-        for tok, pattern in patterns.items():
-            if _affirmed(tok, pattern, primary):
-                hits[tok] = _PRIMARY_FIELD_WEIGHT
-            elif _affirmed(tok, pattern, prose):
-                hits[tok] = _PROSE_FIELD_WEIGHT
+        for unit, unit_patterns in patterns.items():
+            if any(_affirmed(unit, pattern, primary) for pattern in unit_patterns):
+                hits[unit] = _PRIMARY_FIELD_WEIGHT
+            elif any(_affirmed(unit, pattern, prose) for pattern in unit_patterns):
+                hits[unit] = _PROSE_FIELD_WEIGHT
         field_weights[id(trial)] = hits
 
     if intent_tokens:
@@ -264,9 +306,9 @@ def retrieve_relevant_trials(
     # ("topical", "combination") — a smoothed inverse document frequency.
     pool_size = len(candidates)
     idf = {
-        tok: math.log((pool_size + 1) / (sum(tok in hits for hits in field_weights.values()) + 1))
+        unit: math.log((pool_size + 1) / (sum(unit in hits for hits in field_weights.values()) + 1))
         + 1.0
-        for tok in intent_tokens
+        for unit in units
     }
 
     if require_high_signal:
@@ -282,12 +324,13 @@ def retrieve_relevant_trials(
     if not intent_tokens:
         return candidates[:limit]
 
-    def score(trial: Trial) -> tuple[float, int, int]:
+    def score(trial: Trial) -> tuple[bool, float, int, int]:
         hits = field_weights[id(trial)]
-        relevance = round(sum(idf[tok] * weight for tok, weight in hits.items()), 9)
+        names_all = combination and treatments <= hits.keys()
+        relevance = round(sum(idf[unit] * weight for unit, weight in hits.items()), 9)
         phase_bonus = sum(1 for p in (trial.phases or []) if p in _HIGH_SIGNAL_PHASES)
         results_bonus = 1 if trial.has_results else 0
-        return (relevance, phase_bonus + results_bonus, trial.id or 0)
+        return (names_all, relevance, phase_bonus + results_bonus, trial.id or 0)
 
     candidates.sort(key=score, reverse=True)
     return candidates[:limit]

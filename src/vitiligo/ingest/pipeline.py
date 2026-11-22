@@ -91,6 +91,7 @@ from vitiligo.trials.countries import normalize_countries
 from vitiligo.trials.relevance import (
     DERM_DRUG_SCOPE,
     DRUG_CLASS_SCOPE,
+    JAK_INHIBITORS,
     fold,
     is_vitiligo_trial,
     treats_skin_disease,
@@ -309,25 +310,6 @@ def run_ctgov_ingestion(
         factory=factory,
         commit_every=commit_every,
     )
-
-
-# The JAK inhibitors this project's scenario model is built on, plus the rest
-# of the class in clinical use. A drug's trials in other diseases are the
-# class's evidence base: ritlecitinib and baricitinib are approved in alopecia
-# areata, ruxolitinib in myelofibrosis, and their dose-response and safety do
-# not stop being informative because the skin in question is not vitiligo.
-JAK_INHIBITORS: tuple[str, ...] = (
-    "ruxolitinib",
-    "ritlecitinib",
-    "baricitinib",
-    "upadacitinib",
-    "tofacitinib",
-    "abrocitinib",
-    "deucravacitinib",
-    "delgocitinib",
-    "ivarmacitinib",
-    "povorcitinib",
-)
 
 
 # The drugs this project holds a vitiligo prior for, beyond the JAK class, and

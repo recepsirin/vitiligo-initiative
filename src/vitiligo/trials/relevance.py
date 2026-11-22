@@ -188,6 +188,25 @@ def is_vitiligo_trial(trial: Trial) -> bool:
     return names_vitiligo(_subject(trial))
 
 
+# The JAK inhibitors this project's scenario model is built on, plus the rest
+# of the class in clinical use. A drug's trials in other diseases are the
+# class's evidence base: ritlecitinib and baricitinib are approved in alopecia
+# areata, ruxolitinib in myelofibrosis, and their dose-response and safety do
+# not stop being informative because the skin in question is not vitiligo.
+JAK_INHIBITORS: tuple[str, ...] = (
+    "ruxolitinib",
+    "ritlecitinib",
+    "baricitinib",
+    "upadacitinib",
+    "tofacitinib",
+    "abrocitinib",
+    "deucravacitinib",
+    "delgocitinib",
+    "ivarmacitinib",
+    "povorcitinib",
+)
+
+
 # What a trial is held for. A trial of a JAK inhibitor in rheumatoid arthritis
 # is in the corpus because the drug class is the same, not because the disease
 # is, and its metadata says so.

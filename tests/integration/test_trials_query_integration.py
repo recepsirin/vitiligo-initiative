@@ -326,5 +326,84 @@ def test_a_site_a_trial_excludes_earns_it_no_credit(test_db_path) -> None:
     )
     hands = retrieve_relevant_trials("hands feet", require_high_signal=False)
     assert _ids(hands) == {"CTRI/2023/06/054258"}
-    assert _ids(retrieve_relevant_trials("uvb", require_high_signal=False)) == {"NCT70000003"}
+    # The anifrolumab trial's "phototherapy" is the treatment "uvb" names.
+    assert _ids(retrieve_relevant_trials("uvb", require_high_signal=False)) == {
+        "NCT70000003",
+        "2024-512041-17-00",
+    }
     assert _ids(retrieve_relevant_trials("face", require_high_signal=False)) == {"NCT70000004"}
+
+
+def _trial(source_id: str, title: str, **fields):
+    from vitiligo.storage import Trial
+
+    return Trial(
+        source=TrialSourceKind.CTGOV,
+        source_id=source_id,
+        brief_title=title,
+        conditions=["Vitiligo"],
+        **fields,
+    )
+
+
+def test_a_treatment_written_another_way_is_the_same_treatment(test_db_path) -> None:
+    """Issue #23: "narrowband UVB" missed the "nbUVB" and "phototherapy" a trial registers."""
+    _seed(
+        [
+            _trial("NCT80000001", "Ritlecitinib with nbUVB"),
+            _trial("NCT80000002", "Home phototherapy"),
+            _trial("NCT80000003", "Narrow band UVB on the trunk"),
+            _trial("NCT80000004", "Targeted excimer light"),
+            _trial("NCT80000005", "Topical tacrolimus"),
+        ]
+    )
+    assert _ids(retrieve_relevant_trials("narrowband uvb", require_high_signal=False)) == {
+        "NCT80000001",
+        "NCT80000002",
+        "NCT80000003",
+        "NCT80000004",
+    }
+
+
+def test_two_spellings_of_one_treatment_count_once(test_db_path) -> None:
+    """A trial writing "narrowband" and "UVB" scored them as two of the intent's words."""
+    _seed(
+        [
+            _trial(
+                "NCT81000001", "Tacrolimus with phototherapy"
+            ),  # inserted first: the id tie-break
+            _trial("NCT81000002", "Narrowband UVB, the light alone"),
+        ]
+    )
+    ranked = retrieve_relevant_trials("tacrolimus narrowband uvb", require_high_signal=False)
+    assert [t.source_id for t in ranked] == ["NCT81000001", "NCT81000002"]
+
+
+def test_a_class_is_reached_from_its_own_word_only(test_db_path) -> None:
+    """ "JAK" is every JAK inhibitor; "ruxolitinib" stays ruxolitinib."""
+    _seed(
+        [_trial("NCT82000001", "Tofacitinib ointment"), _trial("NCT82000002", "Ruxolitinib cream")]
+    )
+    assert _ids(retrieve_relevant_trials("jak", require_high_signal=False)) == {
+        "NCT82000001",
+        "NCT82000002",
+    }
+    assert _ids(retrieve_relevant_trials("ruxolitinib", require_high_signal=False)) == {
+        "NCT82000002"
+    }
+
+
+def test_a_combination_intent_ranks_the_combination_first(test_db_path) -> None:
+    """Asked for a JAK inhibitor with NB-UVB, 1 of the top five trials tested both."""
+    _seed(
+        [
+            _trial("NCT83000001", "Ritlecitinib and nbUVB"),
+            _trial("NCT83000002", "JAK inhibitor cream, a combination regimen"),
+            _trial("NCT83000003", "Narrowband UVB combination with tacrolimus"),
+        ]
+    )
+    intent = "JAK inhibitor narrowband UVB combination vitiligo"
+    alone = retrieve_relevant_trials(intent, require_high_signal=False)
+    assert alone[0].source_id != "NCT83000001"  # more of the intent's words, one treatment
+    both = retrieve_relevant_trials(intent, require_high_signal=False, combination=True)
+    assert both[0].source_id == "NCT83000001"
