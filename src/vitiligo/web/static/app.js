@@ -646,12 +646,15 @@ async function loadCurativeDiscovery() {
     const metrics = curativeData.benchmark_metrics || {};
     const reranker = curativeData.stage2_reranker || {};
     const treats = (metrics.per_relation || {}).TREATS || {};
+    const graph = curativeData.graph || {};
+    // A figure the outputs do not hold shows as a dash, never as a typed-in number.
+    const shown = (value, format) => (value == null ? '—' : format(Number(value)));
 
     meta.innerHTML = `
-      <span class="trial-stat trial-stat-total"><strong>96,073</strong> relations</span>
-      <span class="trial-stat"><strong>18,730</strong> entities</span>
-      <span class="trial-stat">TREATS MRR <strong>${Number(treats.filtered_mrr || 0.566).toFixed(3)}</strong> (Hits@1: ${(Number(treats.filtered_hits_at_1 || 0.544) * 100).toFixed(1)}%)</span>
-      <span class="trial-stat">Median Rank <strong>${treats.filtered_median_rank || 1}</strong></span>
+      <span class="trial-stat trial-stat-total"><strong>${shown(graph.relations, (n) => n.toLocaleString('en-US'))}</strong> relations</span>
+      <span class="trial-stat"><strong>${shown(graph.entities, (n) => n.toLocaleString('en-US'))}</strong> entities</span>
+      <span class="trial-stat">TREATS MRR <strong>${shown(treats.filtered_mrr, (x) => x.toFixed(3))}</strong> (Hits@1: ${shown(treats.filtered_hits_at_1, (x) => `${(x * 100).toFixed(1)}%`)})</span>
+      <span class="trial-stat">Median Rank <strong>${shown(treats.filtered_median_rank, (x) => String(x))}</strong></span>
       <span class="trial-stat">Stage-2 AUROC <strong>${reranker.cv_oof_auroc != null ? Number(reranker.cv_oof_auroc).toFixed(3) : '—'}</strong></span>
     `;
 

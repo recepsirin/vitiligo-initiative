@@ -219,3 +219,18 @@ def test_gnn_predict_endpoint(api_client) -> None:
     if not body_triple.get("error"):
         assert len(body_triple["predictions"]) == 1
         assert "probability" in body_triple["predictions"][0]
+
+
+def test_the_discovery_view_counts_the_graph_its_screen_ran_on(
+    api_client, tmp_path, monkeypatch
+) -> None:
+    """The view typed in 96,073 relations and 18,730 entities, the counts of a graph since replaced."""
+    import json
+
+    (tmp_path / "exports").mkdir()
+    (tmp_path / "exports" / "gnn_candidate_report.json").write_text(
+        json.dumps({"num_entities": 18309, "num_edges": 95238}), encoding="utf-8"
+    )
+    monkeypatch.chdir(tmp_path)
+    body = api_client.get("/api/gnn/discovery?top_k=5").json()
+    assert body["graph"] == {"entities": 18309, "relations": 95238}

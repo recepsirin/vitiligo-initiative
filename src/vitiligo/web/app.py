@@ -444,6 +444,11 @@ def create_app() -> FastAPI:
         screen_res = _read_json(Path("exports/gnn_candidate_report.json"))
 
         return {
+            # The graph the screen ran on, as its output records it.
+            "graph": {
+                "entities": screen_res.get("num_entities"),
+                "relations": screen_res.get("num_edges"),
+            },
             "benchmark_metrics": train_res.get("test_metrics", {}),
             "stage2_reranker": {
                 "architecture": rerank_res.get("architecture", ""),
