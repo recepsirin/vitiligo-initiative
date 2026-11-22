@@ -42,8 +42,16 @@ def upsert_entity(
         return entity
 
     alias_set = list(dict.fromkeys([*(existing.aliases or []), *merged_aliases]))[:30]
+    if "\n" in existing.name and "\n" not in display:
+        # A line break in a display name is a parsing artefact (issue #21): a clean
+        # name for the same entity replaces it, and leaves its aliases too.
+        alias_set = [a for a in alias_set if a != existing.name]
+        existing.name = display
+    elif len(display) > len(existing.name):
+        # A tie keeps the name the entity has: otherwise a registry's capitals or
+        # spacing flip it ("Zasocitinib" became "ZASOCITINIB" from an ICTRP record).
+        existing.name = display
     existing.aliases = alias_set
-    existing.name = display if len(display) >= len(existing.name) else existing.name
     existing.external_ids = {**(existing.external_ids or {}), **merged_external}
     existing.updated_at = datetime.now(UTC)
     session.add(existing)

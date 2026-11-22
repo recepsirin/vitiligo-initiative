@@ -151,3 +151,20 @@ def test_every_ictrp_record_is_credited_to_a_named_registry(require_local_corpus
         if not any(pattern.search(t.source_id) for t in ictrp)
     ]
     assert not unused, f"prefixes naming no held record: {unused}"
+
+
+def test_an_ictrp_trials_groups_read_the_registrys_whole_text() -> None:
+    # The name is the label; the treatment is in the text the registry wrote.
+    trial = Trial(
+        source=TrialSourceKind.ICTRP,
+        source_id="CTRI/2018/01/011120",
+        brief_title="Aragvadhadi preparations in vitiligo",
+        interventions=[
+            {
+                "type": "DRUG",
+                "name": "Aragvadhadi Gel",
+                "free_text": "Aragvadhadi Gel: applied with NB-UVB phototherapy twice weekly",
+            }
+        ],
+    )
+    assert "phototherapy" in treatment_text(trial).lower()

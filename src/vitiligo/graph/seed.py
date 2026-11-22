@@ -8,7 +8,11 @@ from typing import Any
 
 from sqlmodel import Session, func, or_, select
 
-from vitiligo.graph.normalize import VITILIGO_ENTITY_KEY, VITILIGO_ENTITY_NAME
+from vitiligo.graph.normalize import (
+    VITILIGO_ENTITY_KEY,
+    VITILIGO_ENTITY_NAME,
+    normalize_entity_key,
+)
 from vitiligo.graph.store import upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
 from vitiligo.storage import Prior, PriorKind, Trial, session_scope
@@ -67,7 +71,8 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
             merged += mer
 
         refresh_trial_records(session)
-        removed = _drop_untrue_trial_claims(session, {_trial_ref(t) for t in trials})
+        removed = prune_trial_interventions(session, curated)
+        removed += _drop_untrue_trial_claims(session, {_trial_ref(t) for t in trials})
         entities = int(session.exec(select(func.count()).select_from(GraphEntity)).one() or 0)
 
     logger.info(
@@ -80,6 +85,67 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
     return GraphSeedStats(
         entities=entities, edges_inserted=inserted, edges_merged=merged, edges_removed=removed
     )
+
+
+def prune_trial_interventions(
+    session: Session, curated: dict[str, list[dict[str, Any]]] | None = None
+) -> int:
+    """Take out the intervention edges a trial's record no longer names.
+
+    Seeding adds an intervention's tested_in and treats edges and never removes
+    one, so when a parser fix renames interventions (issue #21: ICTRP values that
+    were whole descriptions) the old entities would stay beside the new. A
+    trial's row leaves an edge whose intervention its record no longer names; an
+    edge left with no evidence is deleted, and so is an entity left with no edge.
+    Returns the edges deleted.
+    """
+    curated = _curated_interventions() if curated is None else curated
+    named: dict[str, set[str]] = {}
+    for trial in session.exec(select(Trial)).all():
+        items = trial.interventions or curated.get(trial.source_id, [])
+        named[_trial_ref(trial)] = {
+            normalize_entity_key(name)
+            for name in (str(iv.get("name") or "").strip() for iv in items)
+            if name
+        }
+    keys = {e.id: e.key for e in session.exec(select(GraphEntity)).all()}
+    removed = 0
+    orphaned: set[int] = set()
+    for edge in session.exec(
+        select(GraphEdge).where(
+            or_(
+                GraphEdge.predicate == RelationKind.TESTED_IN,
+                GraphEdge.predicate == RelationKind.TREATS,
+            )
+        )
+    ).all():
+        held = list(edge.evidence or [])
+        key = keys.get(edge.subject_id)
+        kept = [
+            row
+            for row in held
+            if row.get("source_type") != "trial"
+            or str(row.get("source_id")) not in named
+            or key in named[str(row.get("source_id"))]
+        ]
+        if kept == held:
+            continue
+        if kept:
+            edge.evidence = kept
+            session.add(edge)
+        else:
+            session.delete(edge)
+            orphaned |= {edge.subject_id, edge.object_id}
+            removed += 1
+    session.flush()
+    for entity_id in orphaned:
+        touching = or_(GraphEdge.subject_id == entity_id, GraphEdge.object_id == entity_id)
+        if session.exec(select(GraphEdge.id).where(touching)).first() is None:
+            entity = session.get(GraphEntity, entity_id)
+            if entity is not None:
+                session.delete(entity)
+    session.flush()
+    return removed
 
 
 def refresh_trial_records(session: Session) -> int:

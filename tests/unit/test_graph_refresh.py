@@ -8,10 +8,10 @@ from sqlmodel import select
 import vitiligo.config as cfg
 import vitiligo.graph.enrich_release as enrich
 import vitiligo.storage.db as dbmod
-from vitiligo.graph.seed import refresh_trial_records
+from vitiligo.graph.seed import prune_trial_interventions, refresh_trial_records
 from vitiligo.graph.store import upsert_edge, upsert_entity
 from vitiligo.storage import Trial, TrialSourceKind, init_db, session_scope
-from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, RelationKind
+from vitiligo.storage.models import ClaimKind, EntityKind, GraphEdge, GraphEntity, RelationKind
 
 
 @pytest.fixture
@@ -210,3 +210,71 @@ def test_single_cell_rows_follow_the_current_profile(graph_db, monkeypatch) -> N
     assert [(e.id, e.confidence, [r["fold_enrichment"] for r in e.evidence]) for e in edges] == [
         (kept, 0.82, [4.0])
     ]
+
+
+def test_an_intervention_its_trial_no_longer_names_leaves_the_graph(graph_db) -> None:
+    with session_scope() as session:
+        session.add(
+            Trial(
+                source=TrialSourceKind.ICTRP,
+                source_id="CTRI/2012/11/003157",
+                brief_title="Apamargaksharyoga in vitiligo",
+                interventions=[{"type": "DRUG", "name": "Ointment of Apamargaksharyoga"}],
+            )
+        )
+        vitiligo = upsert_entity(session, kind=EntityKind.DISEASE, name="vitiligo")
+        trial = upsert_entity(session, kind=EntityKind.TRIAL, name="CTRI/2012/11/003157")
+        row = {"source_type": "trial", "source_id": "ictrp:CTRI/2012/11/003157"}
+        old = upsert_entity(
+            session, kind=EntityKind.DRUG, name="Ointment of Apamargaksharyoga: Dose: QS daily"
+        )
+        new = upsert_entity(session, kind=EntityKind.DRUG, name="Ointment of Apamargaksharyoga")
+        for drug in (old, new):
+            _edge(
+                session,
+                drug,
+                RelationKind.TESTED_IN,
+                trial,
+                row,
+                method="structured",
+                claim=ClaimKind.ASSERTED,
+                level=None,
+            )
+        investigates = _edge(
+            session,
+            trial,
+            RelationKind.INVESTIGATES,
+            vitiligo,
+            row,
+            method="structured",
+            claim=ClaimKind.ASSERTED,
+            level=None,
+        )
+        assert prune_trial_interventions(session, curated={}) == 1
+        edges = {e.id for e in session.exec(select(GraphEdge)).all()}
+        names = {e.name for e in session.exec(select(GraphEntity)).all()}
+    assert investigates in edges and len(edges) == 2
+    assert "Ointment of Apamargaksharyoga" in names
+    assert "Ointment of Apamargaksharyoga: Dose: QS daily" not in names
+
+
+def test_a_clean_name_replaces_one_broken_across_lines(graph_db) -> None:
+    broken = "Women planning conception within 3 months.\nÃ¢â?"
+    with session_scope() as session:
+        first = upsert_entity(session, kind=EntityKind.DRUG, name=broken)
+        again = upsert_entity(
+            session, kind=EntityKind.DRUG, name="Women planning conception within 3 months"
+        )
+        assert again.id == first.id
+        assert again.name == "Women planning conception within 3 months"
+        assert broken not in again.aliases
+
+
+def test_a_registrys_capitals_do_not_rename_an_entity(graph_db) -> None:
+    with session_scope() as session:
+        upsert_entity(session, kind=EntityKind.DRUG, name="Zasocitinib")
+        again = upsert_entity(session, kind=EntityKind.DRUG, name="ZASOCITINIB")
+        assert again.name == "Zasocitinib"
+        assert upsert_entity(session, kind=EntityKind.DRUG, name="Zasocitinib tablets").name == (
+            "Zasocitinib tablets"
+        )

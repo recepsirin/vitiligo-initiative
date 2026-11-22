@@ -357,9 +357,13 @@ _COMPILED: tuple[tuple[str, tuple[re.Pattern[str], ...]], ...] = tuple(
 
 
 def treatment_text(trial: Trial) -> str:
-    """What the trial gives: intervention names and titles."""
-    names = [str(i.get("name") or "") for i in (trial.interventions or [])]
-    return " | ".join([*names, trial.brief_title or "", trial.official_title or ""])
+    """What the trial gives: intervention names and titles.
+
+    An ICTRP intervention reads as the registry wrote it (``free_text``): its
+    name is only the label, and the treatment is often in the rest.
+    """
+    texts = [str(i.get("free_text") or i.get("name") or "") for i in (trial.interventions or [])]
+    return " | ".join([*dict.fromkeys(texts), trial.brief_title or "", trial.official_title or ""])
 
 
 def is_treatment_study(trial: Trial) -> bool:
