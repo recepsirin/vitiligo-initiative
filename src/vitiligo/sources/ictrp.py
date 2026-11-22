@@ -107,6 +107,107 @@ _LABEL_PREFIX = re.compile(
 )
 
 
+# ICTRP's free-text intervention runs an arm's name and its description into one
+# value: "Ointment of Apamargaksharyoga: Dose: QS for local application, ...".
+# Kept whole, 670 such values became drug entities named with a description
+# (issue #21). A label before the first colon names the intervention, unless it
+# names an arm or a field ("Intervention group:", "Product name:"), when the name
+# follows it; a short first line names it too. A value that is prose -- 116 with
+# no label, about 120 behind an arm label -- names nothing, and keeps its text.
+_NAME_MAX = 80
+_PLACEHOLDER = re.compile(r"^(?:nil|none|na|n/a|not applicable|-)$", re.I)
+# Labels that name an arm or a field, not what the arm receives.
+_ARM_LABEL = re.compile(
+    r"^(?:(?:intervention|control|experimental|treatment|study|comparator|trial|observation"
+    r"|vehicle control)\s*(?:group|arm|agent|drug|product)?\s*\w{0,3}"
+    r"|(?:first|second|third)\s+intervention(?:\s+group)?"
+    r"|(?:group|arm)\s*\w{1,3}|product name)$",
+    re.I,
+)
+# A sentence about the arm, not a name for what it receives.
+_NOT_A_NAME = re.compile(
+    r"^(?:all|the|a|an|in|each|both|see|this|there|patients?|participants?|subjects?"
+    r"|receiving|vitiligo patients|no)\b",
+    re.I,
+)
+_PRODUCT_CODE = re.compile(
+    r",\s*product code\b.*$", re.I
+)  # CTIS: "Ritlecitinib, Product Code: ..."
+_LABELLED = re.compile(rf"^([^:]{{1,{_NAME_MAX}}}):\s*(.*)$")
+_TAG = re.compile(r"</?\w+\s*/?>")  # a few records arrive wrapped in HTML paragraphs
+
+
+def _name(candidate: str) -> str | None:
+    """The intervention a candidate names, or None if it names none.
+
+    "Fangbai Granule;Control group" names the granule; "none;Group 2" nothing.
+    """
+    for part in candidate.split(";"):
+        labelled = _LABELLED.match(part.strip())
+        if labelled and _ARM_LABEL.match(labelled.group(1).strip()):
+            part = labelled.group(2)
+        part = _PRODUCT_CODE.sub("", part).strip().rstrip(".").strip(" ,()")
+        if not part:
+            continue
+        if _PLACEHOLDER.match(part) or _NOT_A_NAME.match(part) or len(part) > _NAME_MAX:
+            return None
+        if not _ARM_LABEL.match(part):
+            return part
+    return None
+
+
+def split_intervention(text: str) -> list[tuple[str, str]]:
+    """An ICTRP free-text intervention as (name, description) pairs.
+
+    An empty name means the value is prose that names no intervention; an empty
+    list means it is a placeholder ("Nil: Nil"). CTRI values end with the next
+    arm's heading, a lone "Control" line, which is dropped.
+    """
+    lines = [line.strip() for line in _TAG.sub("", text or "").split("\n") if line.strip()]
+    if len(lines) > 1 and lines[-1].lower() == "control":
+        lines = lines[:-1]
+    if not lines:
+        return []
+    body = "\n".join(lines)
+    head = lines[0]
+    for _ in range(3):  # "Control group: Experimental group: X" carries several labels
+        match = _LABELLED.match(head)
+        if match is None:
+            break
+        label, rest = match.group(1).strip(), match.group(2).strip()
+        if _PLACEHOLDER.match(label) and (not rest or _PLACEHOLDER.match(rest)):
+            return []
+        if _ARM_LABEL.match(label) or _PLACEHOLDER.match(label):
+            head = rest
+            continue
+        name = _name(label)
+        return [(name, body)] if name else [("", body)]
+    if len(lines) == 1 and head.count(";") >= 1 and not _LABELLED.match(head):
+        names = [n for n in (_name(item) for item in head.split(";")) if n]
+        if names and all(len(item.strip()) <= _NAME_MAX for item in head.split(";")):
+            return [(n, "") for n in dict.fromkeys(names)]
+    if _PLACEHOLDER.match(head):
+        return []
+    name = _name(head) if len(head) <= _NAME_MAX else None
+    if name:
+        return [(name, body if body != name else "")]
+    return [("", body)]
+
+
+def intervention_entries(text: str, details: str | None = None) -> list[dict[str, Any]]:
+    """The trial interventions one ICTRP value gives, each keeping the registry's text."""
+    return [
+        {
+            "type": "DRUG",
+            "name": name,
+            "description": "\n".join(part for part in (description, details) if part) or None,
+            "free_text": text,
+            "other_names": [],
+        }
+        for name, description in split_intervention(text)
+    ]
+
+
 def strip_label_prefix(text: str) -> str:
     """Drop the field label ICTRP prints into a value, however many times."""
     return _LABEL_PREFIX.sub("", text.strip()).strip()
@@ -164,17 +265,10 @@ def parse_ictrp_record(root: Element) -> Trial | None:
 
     interventions: list[dict[str, Any]] = []
     for el in root.iter("Intervention"):
-        name = _text(el, "Intervention_FreeText") or _text(el, "Intervention_code")
-        if not name:
+        text = _text(el, "Intervention_FreeText") or _text(el, "Intervention_code")
+        if not text:
             continue
-        interventions.append(
-            {
-                "type": "DRUG",
-                "name": name,
-                "description": _text(el, "Other_details"),
-                "other_names": [],
-            }
-        )
+        interventions += intervention_entries(text, _text(el, "Other_details"))
 
     sponsors: list[dict[str, Any]] = []
     primary_sponsor = _text(root, "Trial/Primary_sponsor")

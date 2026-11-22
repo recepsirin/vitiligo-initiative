@@ -240,3 +240,23 @@ def test_japanese_ids_are_asked_for_in_the_form_ictrp_keys_them_by(cited: str, a
     worth resolving rather than guessing about.
     """
     assert ictrp_trial_id(cited) == asked
+
+
+def test_an_ictrp_intervention_is_named_by_its_label_not_its_description() -> None:
+    from vitiligo.sources.ictrp import split_intervention
+
+    # As CTRI records reach ICTRP: name, description, and the next arm's heading.
+    ctri = "Ointment of Apamargaksharyoga: Dose: QS once a day\nDuration: 8weeks\nControl"
+    assert split_intervention(ctri) == [
+        (
+            "Ointment of Apamargaksharyoga",
+            "Ointment of Apamargaksharyoga: Dose: QS once a day\nDuration: 8weeks",
+        )
+    ]
+    # An arm's label is not what the arm receives; the name follows it.
+    assert split_intervention("Intervention group: Oral tofacitinib")[0][0] == "Oral tofacitinib"
+    assert split_intervention("Placebo: identical cream twice daily")[0][0] == "Placebo"
+    assert split_intervention(";phototherapy;phototherapy") == [("phototherapy", "")]
+    assert split_intervention("Nil: Nil") == []
+    prose = "Intervention group: The pigment-free area is first microneedled, then grafted."
+    assert split_intervention(prose) == [("", prose)]
