@@ -278,3 +278,28 @@ def test_a_registrys_capitals_do_not_rename_an_entity(graph_db) -> None:
         assert upsert_entity(session, kind=EntityKind.DRUG, name="Zasocitinib tablets").name == (
             "Zasocitinib tablets"
         )
+
+
+def test_a_closed_name_replaces_one_left_with_an_open_bracket(graph_db) -> None:
+    with session_scope() as session:
+        upsert_entity(session, kind=EntityKind.DRUG, name="Thuravadhi Chooranam (Internal")
+        again = upsert_entity(session, kind=EntityKind.DRUG, name="Thuravadhi Chooranam (Internal)")
+        assert again.name == "Thuravadhi Chooranam (Internal)"
+        assert again.aliases == ["Thuravadhi Chooranam (Internal)"]
+
+
+def test_a_clean_name_clears_the_cut_ones_an_entity_was_given(graph_db) -> None:
+    with session_scope() as session:
+        upsert_entity(session, kind=EntityKind.DRUG, name="two creams (Tacrolimus + Elocom);")
+        upsert_entity(session, kind=EntityKind.DRUG, name="two creams (Tacrolimus + Elocom")
+        clean = upsert_entity(
+            session, kind=EntityKind.DRUG, name="two creams (Tacrolimus + Elocom)"
+        )
+        assert clean.name == "two creams (Tacrolimus + Elocom)"
+        assert clean.aliases == ["two creams (Tacrolimus + Elocom)"]
+        # A synonym another source spells with an open bracket has its own key: it stays.
+        upsert_entity(
+            session, kind=EntityKind.DRUG, name="Etanercept", aliases=["Etanercept ((ylb-113)"]
+        )
+        again = upsert_entity(session, kind=EntityKind.DRUG, name="Etanercept")
+        assert again.aliases == ["Etanercept", "Etanercept ((ylb-113)"]

@@ -42,10 +42,11 @@ def upsert_entity(
         return entity
 
     alias_set = list(dict.fromkeys([*(existing.aliases or []), *merged_aliases]))[:30]
-    if "\n" in existing.name and "\n" not in display:
-        # A line break in a display name is a parsing artefact (issue #21): a clean
-        # name for the same entity replaces it, and leaves its aliases too.
-        alias_set = [a for a in alias_set if a != existing.name]
+    if not _broken(display):
+        # A name a parser cut (issue #21) gives way to a clean one with the same key,
+        # as the entity's name and among its aliases.
+        alias_set = [a for a in alias_set if not (_broken(a) and normalize_entity_key(a) == key)]
+    if _broken(existing.name) and not _broken(display):
         existing.name = display
     elif len(display) > len(existing.name):
         # A tie keeps the name the entity has: otherwise a registry's capitals or
@@ -57,6 +58,14 @@ def upsert_entity(
     session.add(existing)
     session.flush()
     return existing
+
+
+def _broken(name: str) -> bool:
+    """A display name a parser cut: a line break, a bracket left open, a trailing ";".
+
+    The ICTRP parser once did all three ("Thuravadhi Chooranam (Internal").
+    """
+    return "\n" in name or name.count("(") != name.count(")") or name.rstrip().endswith(";")
 
 
 def upsert_edge(
