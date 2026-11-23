@@ -114,6 +114,22 @@ try {
     eq(`#${hash} -> subview`, await visibleSub(), sub);
   }
 
+  // ------------------------------------------------------ the site model
+  // Each cell shows its own value for the chosen time, a measured one or a
+  // missing one ("not curated") as well as an assumed one.
+  console.log('site model');
+  await go('anatomical', 400);
+  await p.waitFor(`document.querySelectorAll('#anat-heat tbody td button').length > 0`);
+  const shortValue = (t) => { const i = t.indexOf('%'); return i < 0 ? t : t.slice(0, i + 1); };
+  for (const [i, t] of D.anatomy.timepoints.entries()) {
+    await p.eval(`document.querySelectorAll('#anat-time button')[${i}].click()`);
+    await p.sleep(100);
+    eq(`every site-model cell shows its value at ${t.label}`,
+      await p.eval(`JSON.stringify([...document.querySelectorAll('#anat-heat tbody td button')].map((b) => b.textContent))`),
+      JSON.stringify(D.anatomy.sites.flatMap((s) => D.anatomy.regimens.map((r) => shortValue(s.regimens[r.key][t.text])))));
+  }
+  eq('a cell\'s detail carries the model\'s note', (await text('#anat-detail .card__foot')).trim(), D.anatomy.note);
+
   // ------------------------------------------------------ the trials view
   console.log('trials explorer');
   await go('pipeline-trials', 600);

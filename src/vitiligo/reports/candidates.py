@@ -473,7 +473,12 @@ def _collect_drug_bundles() -> dict[str, _DrugBundle]:
     all_trials: list[Trial] = []
     for intent in load_intents():
         all_trials.extend(
-            retrieve_relevant_trials(intent.query, limit=20, require_high_signal=True)
+            retrieve_relevant_trials(
+                intent.query,
+                limit=20,
+                require_high_signal=True,
+                combination=intent.goal == "combination",
+            )
         )
     seen_trial: set[tuple[str, str]] = set()
     unique_trials: list[Trial] = []

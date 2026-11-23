@@ -375,3 +375,21 @@ def test_literature_counts_a_pubmed_and_pmc_record_of_one_paper_once() -> None:
     refs = _literature_for_drug("ruxolitinib", hits)
     assert [(r.source_id, r.rank) for r in refs] == [("PMC11851260", 1), ("PMC1", 3)]
     assert _literature_points(refs) == 8
+
+
+def test_the_report_asks_a_combination_intent_for_the_combination(graph_db, monkeypatch) -> None:
+    """Issue #23: its query named ruxolitinib, and a trial of either treatment alone ranked first."""
+    import vitiligo.reports.candidates as candidates
+
+    asked: list[tuple[str, bool]] = []
+
+    def retrieve(query: str, **kwargs):  # type: ignore[no-untyped-def]
+        asked.append((query, kwargs.get("combination", False)))
+        return []
+
+    monkeypatch.setattr(candidates, "retrieve_relevant_trials", retrieve)
+    _collect_drug_bundles()
+    assert [query for query, combination in asked if combination] == [
+        "JAK inhibitor narrowband UVB combination vitiligo"
+    ]
+    assert len(asked) == len(load_intents())
