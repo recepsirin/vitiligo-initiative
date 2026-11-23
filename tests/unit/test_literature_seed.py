@@ -42,6 +42,7 @@ MESH = {
         _record("D000077271", "Imiquimod", actions=("Adjuvants, Immunologic",)),
         _record("C000613732", "upadacitinib", actions=("Janus Kinase Inhibitors",)),
         _record("C540383", "ruxolitinib"),  # a supplementary record: no actions in 2026
+        _record("C000614924", "PF-06651600", "ritlecitinib", actions=("Janus Kinase Inhibitors",)),
         _record("D008543", "Melanins", "melanin"),
         _record("D002245", "Carbon Dioxide", "CO2"),
         _record("D016112", "Ichthyosis Vulgaris"),
@@ -454,3 +455,45 @@ def test_target_bind_and_alias_directional_resolution(test_db_path: Path) -> Non
         "In human keratinocytes, interferon-gamma potently induces IP-10 secretion.",
     )
     assert resolved == (ifng, RelationKind.ACTIVATES, cxcl10)
+
+
+def test_a_mesh_concept_merged_under_another_name_is_found_by_its_identifier(
+    test_db_path: Path,
+) -> None:
+    """Ritlecitinib's papers sat on MeSH's heading, "PF-06651600", until graph.resolve."""
+    with session_scope() as session:
+        upsert_entity(
+            session,
+            kind=EntityKind.DRUG,
+            name="ritlecitinib",
+            aliases=["PF-06651600"],
+            external_ids={"mesh": "C000614924"},
+        )
+    _load(
+        _doc(
+            "1",
+            "PF-06651600 repigmented vitiligo.",
+            [("PF-06651600", "Chemical", "MESH:C000614924", "PF-06651600"), VITILIGO],
+            [("Negative_Correlation", 1.0, "MESH:C000614924", "MESH:D014820")],
+        )
+    )
+    with session_scope() as session:
+        drugs = session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)).all()
+    assert [drug.name for drug in drugs] == ["ritlecitinib"]
+    assert ("ritlecitinib", RelationKind.TREATS, "Vitiligo") in _edges()
+
+
+def test_a_prior_marked_where_pubtator_missed_it_is_a_drug(test_db_path: Path) -> None:
+    """relations.priors names povorcitinib where PubTator tagged nothing."""
+    _load(
+        _doc(
+            "1",
+            "povorcitinib repigmented vitiligo.",
+            [("povorcitinib", "Chemical", "PRIOR:CHEMBL5095203", "POVORCITINIB"), VITILIGO],
+            [("Negative_Correlation", 1.0, "PRIOR:CHEMBL5095203", "MESH:D014820")],
+        )
+    )
+    with session_scope() as session:
+        [drug] = session.exec(select(GraphEntity).where(GraphEntity.kind == EntityKind.DRUG)).all()
+    assert drug.external_ids == {"chembl": "CHEMBL5095203"}
+    assert (drug.name, RelationKind.TREATS, "Vitiligo") in _edges()

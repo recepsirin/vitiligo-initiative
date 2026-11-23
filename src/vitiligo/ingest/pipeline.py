@@ -1267,6 +1267,117 @@ def run_unannotated_relation_ingestion(model_path: Path) -> IngestionStats:
     )
 
 
+def run_prior_relation_ingestion(
+    model_path: Path, *, dry_run: bool = False
+) -> tuple[IngestionStats, list[dict[str, Any]]]:
+    """Read the relations of drug priors PubTator never tags (``relations.priors``).
+
+    Each prior's names mark it in the PubTator documents that write them, and the
+    relation model reads those passages, abstracts included; only the relations a
+    prior takes part in are loaded, by the same checks and loader as the model's
+    other relations. Returns the stats and every relation loaded; with
+    ``dry_run`` nothing is written, so the relations can be read first. Needs
+    the ``train`` extra.
+    """
+    from transformers import AutoTokenizer
+
+    from vitiligo.graph.literature_seed import LiteratureReader, gene_symbols, load_literature
+    from vitiligo.priors import list_drug_priors
+    from vitiligo.relations.apply import (
+        CONFIDENCE,
+        METHOD_PREFIX,
+        MIN_SCORE,
+        NOT_CLAIMS,
+        UNRELIABLE,
+        read_documents,
+        trusted,
+    )
+    from vitiligo.relations.priors import prior_relations, untagged_priors, with_priors
+    from vitiligo.relations.train import load
+    from vitiligo.sources.mesh import load_index
+    from vitiligo.sources.pubtator import cached_documents
+    from vitiligo.storage import get_engine
+    from vitiligo.storage.models import GraphEdge, GraphEntity
+
+    init_db()
+    documents = [*cached_documents(kind="abstracts"), *cached_documents(kind="fulltext")]
+    forms = untagged_priors(list_drug_priors(limit=10_000), documents)
+    marked = [d for d in (with_priors(doc, forms) for doc in documents) if d is not None]
+    model, bias, saved = load(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(saved["encoder"])
+    # PubTator never read these names, so its abstracts are read here too.
+    read = [
+        prior_relations(doc)
+        for doc in read_documents(model, tokenizer, bias, marked, skip=NOT_CLAIMS | UNRELIABLE)
+    ]
+    read = [doc for doc in read if doc.relations]
+    wanted = {
+        side.identifier
+        for doc in read
+        for relation in doc.relations
+        for side in (relation.first, relation.second)
+    }
+    method = METHOD_PREFIX + str(saved["encoder"]).rsplit("/", 1)[-1]
+    with Session(get_engine(), expire_on_commit=False) as session:
+        reader = LiteratureReader(
+            load_index(wanted), _given_names(session), gene_symbols(documents)
+        )
+        before = {
+            (edge.id, row.get("source_id"), row.get("snippet"))
+            for edge in session.exec(select(GraphEdge))
+            for row in edge.evidence or []
+            if row.get("source_type") == method
+        }
+        stats = load_literature(
+            session,
+            read,
+            reader,
+            method=method,
+            min_score=MIN_SCORE,
+            confidence=CONFIDENCE,
+            accept=trusted,
+        )
+        session.flush()
+        names = {e.id: e.name for e in session.exec(select(GraphEntity))}
+        loaded = [
+            {
+                "subject": names.get(edge.subject_id),
+                "predicate": edge.predicate.value,
+                "object": names.get(edge.object_id),
+                "source_id": row.get("source_id"),
+                "score": row.get("score"),
+                "snippet": row.get("snippet"),
+            }
+            for edge in session.exec(select(GraphEdge))
+            for row in edge.evidence or []
+            if row.get("source_type") == method
+            and (edge.id, row.get("source_id"), row.get("snippet")) not in before
+        ]
+        if dry_run:
+            session.rollback()
+        else:
+            session.commit()
+    logger.info(
+        "Prior relations: %d marked documents, %d relations read, %d loaded%s",
+        len(marked),
+        stats.relations,
+        stats.loaded,
+        " (dry run, nothing written)" if dry_run else "",
+    )
+    return (
+        IngestionStats(
+            source="prior-relations",
+            total_found=stats.relations,
+            fetched=len(marked),
+            inserted=0 if dry_run else stats.edges_inserted,
+            updated=0 if dry_run else stats.loaded - stats.edges_inserted,
+            skipped=sum(stats.dropped.values()),
+            run_id=None,
+        ),
+        loaded,
+    )
+
+
 def run_vitiligo_outcome_ingestion(commit_every: int = 50) -> IngestionStats:
     """Hold the cancer immunotherapy trials in which vitiligo appeared.
 

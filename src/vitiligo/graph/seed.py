@@ -13,8 +13,10 @@ from vitiligo.graph.normalize import (
     VITILIGO_ENTITY_NAME,
     normalize_entity_key,
 )
+from vitiligo.graph.resolve import merge_mesh_synonyms
 from vitiligo.graph.store import upsert_edge, upsert_entity
 from vitiligo.logging import get_logger
+from vitiligo.sources.mesh import MeshRecord, load_index
 from vitiligo.storage import Prior, PriorKind, Trial, session_scope
 from vitiligo.storage.models import EntityKind, GraphEdge, GraphEntity, RelationKind
 from vitiligo.trials.curated_results import records
@@ -73,6 +75,9 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
         refresh_trial_records(session)
         removed = prune_trial_interventions(session, curated)
         removed += _drop_untrue_trial_claims(session, {_trial_ref(t) for t in trials})
+        # Seeding names a drug as its source does ("RITLECITINIB TOSYLATE"); fold
+        # every name one MeSH concept covers into one entity again.
+        merge_mesh_synonyms(session, _mesh_index(session))
         entities = int(session.exec(select(func.count()).select_from(GraphEntity)).one() or 0)
 
     logger.info(
@@ -87,6 +92,18 @@ def seed_graph_from_structured_sources() -> GraphSeedStats:
     )
 
 
+def _mesh_index(session: Session) -> dict[str, MeshRecord]:
+    """The MeSH records of the concepts drug entities hold."""
+    wanted = {
+        f"MESH:{ui}"
+        for ids in session.exec(
+            select(GraphEntity.external_ids).where(GraphEntity.kind == EntityKind.DRUG)
+        )
+        if (ui := (ids or {}).get("mesh"))
+    }
+    return load_index(wanted) if wanted else {}
+
+
 def prune_trial_interventions(
     session: Session, curated: dict[str, list[dict[str, Any]]] | None = None
 ) -> int:
@@ -97,6 +114,7 @@ def prune_trial_interventions(
     were whole descriptions) the old entities would stay beside the new. A
     trial's row leaves an edge whose intervention its record no longer names; an
     edge left with no evidence is deleted, and so is an entity left with no edge.
+    An entity answers to its aliases too: merged MeSH synonyms keep each name.
     Returns the edges deleted.
     """
     curated = _curated_interventions() if curated is None else curated
@@ -108,7 +126,10 @@ def prune_trial_interventions(
             for name in (str(iv.get("name") or "").strip() for iv in items)
             if name
         }
-    keys = {e.id: e.key for e in session.exec(select(GraphEntity)).all()}
+    keys = {
+        e.id: {e.key, *(normalize_entity_key(a) for a in e.aliases or [])}
+        for e in session.exec(select(GraphEntity)).all()
+    }
     removed = 0
     orphaned: set[int] = set()
     for edge in session.exec(
@@ -120,13 +141,13 @@ def prune_trial_interventions(
         )
     ).all():
         held = list(edge.evidence or [])
-        key = keys.get(edge.subject_id)
+        names = keys.get(edge.subject_id, set())
         kept = [
             row
             for row in held
             if row.get("source_type") != "trial"
             or str(row.get("source_id")) not in named
-            or key in named[str(row.get("source_id"))]
+            or names & named[str(row.get("source_id"))]
         ]
         if kept == held:
             continue

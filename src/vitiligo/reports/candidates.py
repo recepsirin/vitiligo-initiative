@@ -353,8 +353,8 @@ def _graph_points(relations: list[_Treats]) -> int:
     25 x the confidence of the best method that read one of them (PubTator 3 0.5,
     the relation extractor 0.4), as for any relation extracted from papers, over
     all the drug's spellings, so synonyms do not add up. How many papers there are
-    is not scored: the readers miss whole drugs (none of the 51 documents naming
-    ritlecitinib gave a relation), so a count would reward being read.
+    is not scored: PubTator tags no mention of some drugs (povorcitinib,
+    afamelanotide) in the papers about them, so a count would reward being read.
     """
     best = max((c for relation in relations for c in relation.papers.values()), default=0.0)
     return int(_TREATS_POINTS * best)
@@ -692,8 +692,8 @@ def build_candidate_report(
         "components score; a paper held in both PubMed and PMC counts once.",
         "Graph: 25 x the confidence of the best reader of a paper stating the drug treats vitiligo "
         "(PubTator 3 0.5, so 12; relation extractor 0.4, so 10), over every spelling of the drug. "
-        "The readers miss some drugs entirely (none of the 51 documents naming ritlecitinib gave a "
-        "relation), so a drug scoring 0 here may simply be unread.",
+        "PubTator tags no mention of some drugs in the papers about them (povorcitinib, "
+        "afamelanotide), so a drug scoring 0 here may simply be unread.",
         "Prior stage and top trial phase both reflect clinical development, so they overlap.",
         "Trials score the best evidence (top phase 15, posted Phase 2+ results 10, active trial 5, breadth up to 5), not trial count, "
         "and only vitiligo trials count: the trial store also holds a drug's trials in other diseases.",
