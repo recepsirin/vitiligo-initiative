@@ -267,7 +267,7 @@ def load_graph_dataset(
 
     # 1. Fetch entities
     entity_rows = cur.execute(
-        "SELECT id, kind, key, name, external_ids FROM graph_entities ORDER BY id"
+        "SELECT id, kind, key, name, external_ids, aliases FROM graph_entities ORDER BY id"
     ).fetchall()
 
     entities: list[EntityMeta] = []
@@ -277,13 +277,17 @@ def load_graph_dataset(
     kind_to_indices: dict[str, list[int]] = {}
     canonical_drug_indices: list[int] = []
 
-    for idx, (db_id, kind, key, name, ext_raw) in enumerate(entity_rows):
+    alias_holders: dict[str, set[int]] = {}
+    for idx, (db_id, kind, key, name, ext_raw, aliases_raw) in enumerate(entity_rows):
         meta = EntityMeta(idx=idx, db_id=db_id, kind=kind, key=key, name=name)
         entities.append(meta)
         id_to_idx[db_id] = idx
         name_to_idx[name] = idx
         name_to_idx[name.lower()] = idx
         key_to_idx[key] = idx
+        for alias in json.loads(aliases_raw) if aliases_raw else []:
+            for form in (alias, alias.lower()):
+                alias_holders.setdefault(form, set()).add(idx)
         kind_to_indices.setdefault(kind, []).append(idx)
 
         if kind == "DRUG":
@@ -296,6 +300,14 @@ def load_graph_dataset(
             )
             if has_id and not_artifact:
                 canonical_drug_indices.append(idx)
+
+    # A merged entity answers to the names it absorbed: "calcipotriol" became an
+    # alias of "calcipotriene", and the reranker's labels, among other lookups,
+    # still ask by the old name. A display name wins over an alias; an alias two
+    # entities hold resolves to neither.
+    for form, holders in alias_holders.items():
+        if form not in name_to_idx and len(holders) == 1:
+            name_to_idx[form] = next(iter(holders))
 
     # 2. Map predicates
     pred_set = list(PREDICATES)

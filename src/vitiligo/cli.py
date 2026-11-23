@@ -609,7 +609,8 @@ def gnn_check_features(
     Each block is recomputed into a temporary folder: BiomedBERT name embeddings
     (data/models/relations/biomedbert-silver-gold), Morgan fingerprints from the
     recorded SMILES, HGNC gene groups and the GEO profile from the series under
-    data/geo. Nothing is fetched and no cache is overwritten. Exits 1 if a block
+    data/geo. Nothing is fetched but GSE344141's mouse gene symbols, once, when
+    their cache is missing, and no cache is overwritten. Exits 1 if a block
     differs.
     """
     import tempfile
