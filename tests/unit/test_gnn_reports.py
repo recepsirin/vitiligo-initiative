@@ -62,27 +62,111 @@ def test_the_reverse_screen_summary_names_only_drugs_the_screen_returned(tmp_pat
         assert absent not in text
 
 
-def test_the_synergy_summary_quotes_no_clinical_figures(tmp_path: Path) -> None:
+def test_the_synergy_summary_quotes_no_clinical_or_assay_synergy_figures(tmp_path: Path) -> None:
     pair = SynergyPairResult(
         rank=1,
         drug_a="cyclosporine",
         drug_b="Pioglitazone",
         drug_a_pillar="Pillar 1",
         drug_b_pillar="Pillar 2",
-        synergy_score=4.18,
-        bliss_excess=0.1476,
-        virtual_ci=0.35,
+        synergy_score=3.85,
+        pathway_complementarity=0.82,
         target_orthogonality=0.9,
-        route_compatibility="Oral / Systemic Combination",
+        route_compatibility="Systemic / Oral Combination",
         safety_tier="standard",
-        drug_a_targets=["CD8A"],
-        drug_b_targets=["MITF"],
-        mechanistic_rationale="Immune disarmament + McSC mobilization",
+        drug_a_targets=["CD8A (Inh*)"],
+        drug_b_targets=["MITF (Act)"],
+        mechanistic_rationale="Immune/TRM axis via cyclosporine (KG: CD8A); Regeneration axis via Pioglitazone (model-predicted: MITF)",
     )
     out = tmp_path / "synergy.md"
     _render_synergy_markdown([pair], out)
-    summary = out.read_text(encoding="utf-8").split("## Summary", 1)[1].split("| Rank", 1)[0]
+    text = out.read_text(encoding="utf-8")
+    summary = text.split("## Summary", 1)[1].split("| Rank", 1)[0]
     assert not re.search(r"\d+(\.\d+)?\s*%", summary)
+    assert "Chou-Talalay" not in text
+    assert "Virtual CI" not in text
+    assert "Bliss" not in text
+
+
+def test_safety_profile_avoids_substring_and_indication_mislabels() -> None:
+    from vitiligo.gnn.screen import get_safety_profile
+
+    iso_tier, iso_chemo = get_safety_profile("Isotretinoin")
+    assert not iso_chemo
+    assert not iso_tier.startswith("Topical")
+    assert "Retinoid" in iso_tier and "teratogenic" in iso_tier.lower()
+
+    tret_tier, _ = get_safety_profile("tretinoin")
+    assert tret_tier.startswith("Topical")
+
+    for onc in ("fedratinib", "momelotinib", "CERDULATINIB"):
+        tier, chemo = get_safety_profile(onc)
+        assert not chemo
+        assert "approved in derm/rheum" not in tier.lower()
+
+    bari_tier, _ = get_safety_profile("baricitinib")
+    assert "approved in derm/rheum" in bari_tier.lower()
+
+    siro_tier, _ = get_safety_profile("SIROLIMUS")
+    assert "Kinase/PDE4" not in siro_tier
+
+
+def test_synergy_rationale_credits_only_drugs_assigned_to_each_pillar(tmp_path: Path) -> None:
+    import json
+
+    from vitiligo.gnn.synergy import screen_pairwise_synergy
+
+    candidates_data = {
+        "candidates": [
+            {
+                "drug_name": "baricitinib",
+                "curative_triad_alignment": "Pillar 1: TRM Disarmament",
+                "trm_disarmament_score": 1.6,
+                "stem_cell_regen_score": 0.4,
+                "barrier_suppression_score": 0.3,
+                "matched_targets": ["JAK1 (Inh*)", "JAK3 (Inh*)", "STAT1 (Inh*)"],
+                "safety_tier": "Targeted Kinase/PDE4 (Approved in derm/rheum; class safety monitoring)",
+            },
+            {
+                "drug_name": "afamelanotide",
+                "curative_triad_alignment": "Pillar 2: Stem-Cell Regeneration",
+                # Higher uncalibrated latent TRM score than baricitinib, but not assigned to Pillar 1.
+                "trm_disarmament_score": 2.4,
+                "stem_cell_regen_score": 2.1,
+                "barrier_suppression_score": 0.2,
+                "matched_targets": ["MITF (Act)"],
+                "safety_tier": "Repurposed Non-Oncology (Systemic/repurposed safety profile)",
+            },
+            {
+                "drug_name": "roflumilast",
+                "curative_triad_alignment": "Pillar 3: PDE4B Barrier Suppression",
+                "trm_disarmament_score": 0.5,
+                "stem_cell_regen_score": 0.4,
+                "barrier_suppression_score": 2.2,
+                "matched_targets": ["PDE4B (Inh*)", "PDE4A (Inh*)"],
+                "safety_tier": "Targeted Kinase/PDE4 (Approved in derm/rheum; class safety monitoring)",
+            },
+        ]
+    }
+    cand_file = tmp_path / "candidates.json"
+    cand_file.write_text(json.dumps(candidates_data), encoding="utf-8")
+
+    results = screen_pairwise_synergy(
+        top_candidates_path=cand_file,
+        top_n_candidates=10,
+        top_k_pairs=10,
+        out_json=tmp_path / "syn.json",
+        out_md=tmp_path / "syn.md",
+    )
+    by_pair = {frozenset((r.drug_a.lower(), r.drug_b.lower())): r for r in results}
+
+    bari_afam = by_pair[frozenset(("baricitinib", "afamelanotide"))]
+    assert "baricitinib: Immune/TRM (KG:" in bari_afam.mechanistic_rationale
+    assert "afamelanotide: Regeneration (model-predicted: MITF)" in bari_afam.mechanistic_rationale
+    assert "afamelanotide: Immune/TRM" not in bari_afam.mechanistic_rationale
+
+    bari_roflu = by_pair[frozenset(("baricitinib", "roflumilast"))]
+    assert "roflumilast: PDE4B barrier (KG: PDE4B, PDE4A)" in bari_roflu.mechanistic_rationale
 
 
 def test_the_reverse_screen_asks_only_for_drugs_a_source_records(tmp_path: Path) -> None:

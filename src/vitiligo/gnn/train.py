@@ -521,8 +521,11 @@ def train_relational_gnn(
     total_time = round(time.time() - start_time, 2)
 
     enc_label = f"RGAT-{model.heads}H" if model.encoder_type == "rgat" else "FastRGCN"
+    decoder_label = (
+        "ComplEx" if model.decoder_type.lower() == "complex" else model.decoder_type.capitalize()
+    )
     report = {
-        "model_type": f"RelationalGNN ({enc_label} + {model.decoder_type.capitalize()})",
+        "model_type": f"RelationalGNN ({enc_label} + {decoder_label})",
         "encoder_type": model.encoder_type,
         "heads": model.heads,
         "decoder_type": model.decoder_type,

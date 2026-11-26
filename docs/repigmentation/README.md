@@ -77,9 +77,9 @@ Repigmentation is not simply the mirror image of depigmentation. Halting the $CD
   - Facial F-VASI75 accelerated to 32 weeks earlier than monotherapy.
 - **Biological Rationale:** The kinase inhibitor suppresses $T_{\text{RM}}$ interferon-$\gamma$ release, while NB-UVB provides the physical mitogenic stimulus mobilizing the follicular McSC reservoir (see [Translational Discovery Suite: Protocol Bridges](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)).
 
-### Strategy 2: Multi-Target Curative Triad (PDE4B Barrier Reversal)
-- **Computational Synergy Matrix:** In our relational GNN and Stage-2 cross-encoder screening, pairing a kinase disarmer (Ruxolitinib, Tofacitinib, Baricitinib) with a selective PDE4 inhibitor (Roflumilast, Crisaborole, Apremilast) yielded a virtual Chou-Talalay Combination Index **$CI = 0.35$** and Bliss excess of **$+14.8\%$** (see [Translational Discovery Suite: Synergy Matrix](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery)).
-- **Mechanism:** Dual topical application of ruxolitinib cream + roflumilast cream simultaneously disarms local IFN-$\gamma$ signaling and restores intracellular cAMP in the non-responder tissue microenvironment.
+### Strategy 2: Multi-Target Pairing (PDE4B Barrier Suppression)
+- **Computational Combination Screening:** In our relational GNN and Stage-2 cross-encoder screening, pairing a kinase disarmer (e.g., ruxolitinib, tofacitinib, baricitinib, ritlecitinib) with a selective PDE4 inhibitor (roflumilast, crisaborole, apremilast) yields high cross-axis pathway complementarity and target orthogonality as an *in silico* hypothesis (see [Translational Discovery Suite: Drug Discovery](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery#combinations-pairs)). Experimental synergy (Bliss / Chou-Talalay) remains to be tested in wet-lab assays.
+- **Mechanism:** Dual topical application of ruxolitinib cream + roflumilast cream is hypothesized to simultaneously disarm local IFN-$\gamma$ signaling and restore intracellular cAMP in the non-responder tissue microenvironment.
 
 ### Strategy 3: Stem-Cell Mobilizers & Prostaglandin Analogs
 - **Agonists:** $\alpha$-Melanocyte-stimulating hormone ($\alpha$-MSH) analogs (**afamelanotide**, subcutaneous bioresorbable implant) and Prostaglandin F2$\alpha$ receptor agonists (**bimatoprost**, **latanoprost** topical).
@@ -101,5 +101,5 @@ Repigmentation is not simply the mirror image of depigmentation. Halting the $CD
 | **Follicular precursor requirement** | **Demonstrated** | `GSE150954` (human ORS bulge RNA-seq), Richmond 2018 |
 | **Intrinsic non-responder barrier (`PDE4B` $+9.09 \log_2\text{FC}$)** | **Demonstrated in biopsies** | `GSE256271` (paired responder vs. non-responder RNA-seq) |
 | **Kinase inhibitor + NB-UVB synergy** | **Randomized trial evidence** | NCT04052425 (ruxolitinib + NB-UVB; Rosmarin 2023) |
-| **JAK inhibitor + PDE4 inhibitor synergy** | **In-silico matrix screened** | $CI \approx 0.35$, Bliss excess $+14.8\%$; pre-clinical testing proposed |
+| **JAK inhibitor + PDE4 inhibitor pairing** | **In-silico hypothesis** | High cross-axis complementarity & target orthogonality in GNN screen; pre-clinical checkerboard synergy assays proposed |
 | **Targeting hand/acral disease in trials** | **Unmet gap** | 0 trials using H-VASI as primary outcome; dedicated acral trial concepts needed |

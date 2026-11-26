@@ -930,7 +930,7 @@ def gnn_synergy(
         "exports/pairwise-synergy-matrix.md", "--out-md", help="Path to Markdown report."
     ),
 ) -> None:
-    """Screen pairwise drug synergy across target orthogonality, Bliss excess, and virtual CI."""
+    """Screen pairwise in-silico combination hypotheses by pathway complementarity and target orthogonality."""
     from pathlib import Path
 
     from vitiligo.gnn.synergy import screen_pairwise_synergy
@@ -942,33 +942,21 @@ def gnn_synergy(
         out_md=Path(out_md),
     )
 
-    table = Table(title="Top Synergistic Drug Combinations (Curative Triad)")
+    table = Table(title="Top In-Silico Combination Hypotheses (3-Pillar Framework)")
     table.add_column("Rank", justify="right", style="cyan")
     table.add_column("Combination", style="bold")
-    table.add_column("Virtual CI", justify="right")
-    table.add_column("Bliss Excess", justify="right")
-    table.add_column("Synergy", justify="right")
+    table.add_column("Pair Score", justify="right")
+    table.add_column("Complementarity", justify="right")
+    table.add_column("Orthogonality", justify="right")
     table.add_column("Mechanistic Rationale")
 
     for r in results[:top_k]:
-        ci_str = (
-            f"[bold green]{r.virtual_ci:.2f}[/bold green]"
-            if r.virtual_ci < 0.7
-            else f"{r.virtual_ci:.2f}"
-        )
-        bliss_val = r.bliss_excess
-        if abs(bliss_val) < 1e-4:
-            bliss_str = "0.000"
-        elif bliss_val > 0:
-            bliss_str = f"+{bliss_val:.3f}"
-        else:
-            bliss_str = f"{bliss_val:.3f}"
         table.add_row(
             str(r.rank),
             f"{r.drug_a.capitalize()} + {r.drug_b.capitalize()}",
-            ci_str,
-            bliss_str,
             f"{r.synergy_score:.2f}",
+            f"{r.pathway_complementarity:.2f}",
+            f"{r.target_orthogonality:.2f}",
             r.mechanistic_rationale,
         )
     console.print(table)

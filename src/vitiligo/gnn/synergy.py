@@ -1,11 +1,11 @@
-"""Pairwise In-Silico Drug Synergy Matrix Screening for Curative Vitiligo Therapy.
+"""Pairwise in-silico drug combination hypothesis screening across vitiligo axes.
 
-Simulates and scores pairwise combinations across the Curative Triad:
-1. Target Space Orthogonality: Jaccard dissimilarity across molecular targets.
-2. Pillar Complementarity: Pairing immune reset (Pillar 1) with stem-cell mobilization (Pillar 2) or PDE4B barrier suppression (Pillar 3).
-3. In-Silico Bliss Excess Surface: Joint multi-target response beyond independent probability.
-4. Virtual Chou-Talalay Combination Index (CI < 0.70 indicating strong synergy).
-5. Dermatologic Safety & Route Feasibility (Dual Topical vs. Systemic + Topical).
+Scores candidate pairs from Stage-2 single-agent predictions using two explicit
+graph-derived components (no experimental dose-response or Bliss/Chou-Talalay claims):
+1. Target Space Orthogonality: Jaccard distance (1 - Jaccard similarity) between matched target sets.
+2. Pathway Complementarity: Cross-axis pairing of immune/TRM scores with regeneration or PDE4B barrier scores.
+3. Composite Pair Score: Weighted combination of complementarity, orthogonality, and their product.
+4. Dermatologic Route & Safety Heuristic: Topical vs. systemic pairing summary.
 """
 
 from __future__ import annotations
@@ -20,6 +20,9 @@ import numpy as np
 from vitiligo.gnn.dataset import GraphDataset
 from vitiligo.gnn.model import RelationalGNN
 from vitiligo.gnn.rerank import (
+    CORE_BARRIER_GENES,
+    CORE_REGEN_GENES,
+    CORE_TRM_GENES,
     DEFAULT_RERANK_REPORT_JSON,
 )
 from vitiligo.gnn.screen import (
@@ -33,6 +36,10 @@ logger = get_logger(__name__)
 DEFAULT_SYNERGY_REPORT_JSON = Path("exports/gnn_pairwise_synergy_matrix.json")
 DEFAULT_SYNERGY_REPORT_MD = Path("exports/pairwise-synergy-matrix.md")
 
+_TRM_GENE_SET = {g.upper() for g in CORE_TRM_GENES}
+_REGEN_GENE_SET = {g.upper() for g in CORE_REGEN_GENES}
+_BARRIER_GENE_SET = {g.upper() for g in CORE_BARRIER_GENES}
+
 
 @dataclass
 class SynergyPairResult:
@@ -42,8 +49,7 @@ class SynergyPairResult:
     drug_a_pillar: str
     drug_b_pillar: str
     synergy_score: float
-    bliss_excess: float
-    virtual_ci: float
+    pathway_complementarity: float
     target_orthogonality: float
     route_compatibility: str
     safety_tier: str
@@ -76,6 +82,66 @@ def compute_target_orthogonality(targets_a: list[str], targets_b: list[str]) -> 
     return float(1.0 - (inter / union))
 
 
+def _targets_for_axis(targets: list[str], gene_set: set[str]) -> tuple[list[str], list[str]]:
+    """Split matched targets belonging to an axis into KG-verified (*) and model-predicted genes."""
+    verified: list[str] = []
+    predicted: list[str] = []
+    for raw in targets:
+        gene = raw.split()[0].upper()
+        if gene not in gene_set:
+            continue
+        if "*" in raw:
+            verified.append(gene)
+        else:
+            predicted.append(gene)
+    return verified, predicted
+
+
+def _has_pillar(pillar_text: str, tokens: tuple[str, ...]) -> bool:
+    low = pillar_text.lower()
+    return any(tok in low for tok in tokens)
+
+
+def _format_axis_evidence(verified: list[str], predicted: list[str]) -> str:
+    if verified:
+        shown = ", ".join(verified[:4])
+        return f"KG: {shown}"
+    if predicted:
+        shown = ", ".join(predicted[:3])
+        return f"model-predicted: {shown}"
+    return "model-predicted"
+
+
+def _describe_drug_axes(pillar: str, targets: list[str]) -> str:
+    """Summarize one drug's assigned axes with KG-verified vs. model-predicted target support."""
+    axes: list[str] = []
+    for label, tokens, gene_set in (
+        ("Immune/TRM", ("pillar 1", "trm", "immune"), _TRM_GENE_SET),
+        ("Regeneration", ("pillar 2", "stem-cell", "regen"), _REGEN_GENE_SET),
+        ("PDE4B barrier", ("pillar 3", "pde4", "barrier"), _BARRIER_GENE_SET),
+    ):
+        if not _has_pillar(pillar, tokens):
+            continue
+        ver, pred = _targets_for_axis(targets, gene_set)
+        axes.append(f"{label} ({_format_axis_evidence(ver, pred)})")
+    return ", ".join(axes) if axes else "multi-target score"
+
+
+def _build_pair_rationale(
+    *,
+    name_a: str,
+    pillar_a: str,
+    targets_a: list[str],
+    name_b: str,
+    pillar_b: str,
+    targets_b: list[str],
+) -> str:
+    """Build a transparent per-drug rationale distinguishing KG-verified vs. predicted targets."""
+    desc_a = _describe_drug_axes(pillar_a, targets_a)
+    desc_b = _describe_drug_axes(pillar_b, targets_b)
+    return f"{name_a}: {desc_a}; {name_b}: {desc_b}"
+
+
 def screen_pairwise_synergy(
     dataset: GraphDataset | None = None,
     gnn_model: RelationalGNN | None = None,
@@ -85,8 +151,8 @@ def screen_pairwise_synergy(
     out_json: Path = DEFAULT_SYNERGY_REPORT_JSON,
     out_md: Path = DEFAULT_SYNERGY_REPORT_MD,
 ) -> list[SynergyPairResult]:
-    """Screen pairwise synergy across top Curative Triad candidates."""
-    logger.info("Starting pairwise in-silico drug synergy matrix screening...")
+    """Screen pairwise in-silico combination hypotheses across top Stage-2 candidates."""
+    logger.info("Starting pairwise in-silico combination screening...")
 
     if not top_candidates_path.is_file():
         raise FileNotFoundError(f"Top candidates file not found at {top_candidates_path}")
@@ -105,11 +171,11 @@ def screen_pairwise_synergy(
         name_a = cand_a.get("drug_name", "")
         canon_a = canonicalize_drug_name(name_a)
         mech_a = get_mechanism_class(name_a)
-        prob_a = float(cand_a.get("probability", 0.5))
         trm_a = float(cand_a.get("trm_disarmament_score", 0.0))
         sc_a = float(cand_a.get("stem_cell_regen_score", 0.0))
         bar_a = float(cand_a.get("barrier_suppression_score", 0.0))
         targets_a = cand_a.get("matched_targets", [])
+        pillar_a = cand_a.get("curative_triad_alignment", "Pillar 1")
 
         for j in range(i + 1, len(candidates)):
             cand_b = candidates[j]
@@ -119,81 +185,56 @@ def screen_pairwise_synergy(
                 continue
 
             mech_b = get_mechanism_class(name_b)
-            prob_b = float(cand_b.get("probability", 0.5))
             trm_b = float(cand_b.get("trm_disarmament_score", 0.0))
             sc_b = float(cand_b.get("stem_cell_regen_score", 0.0))
             bar_b = float(cand_b.get("barrier_suppression_score", 0.0))
             targets_b = cand_b.get("matched_targets", [])
+            pillar_b = cand_b.get("curative_triad_alignment", "Pillar 2/3")
 
-            # Penalize same-class redundancy (e.g. 2 JAK inhibitors or 2 steroids)
+            # Exclude same-class redundancy (e.g. 2 JAK inhibitors or 2 steroids)
             if mech_a == mech_b and mech_a in ("JAK_STAT_INHIBITOR", "CORTICOSTEROID"):
                 continue
 
-            # 1. Target Orthogonality (1.0 = completely distinct targets)
+            # 1. Target Orthogonality (Jaccard distance: 1.0 = no shared matched targets)
             ortho = compute_target_orthogonality(targets_a, targets_b)
 
-            # 2. Curative Triad Complementarity:
-            # Pair immune disarmament (trm) with regenerative (sc) or barrier (bar)
+            # 2. Pathway Complementarity:
+            # Cross-axis pairing of immune/TRM score with regeneration or barrier score
             comp_ab = (trm_a * max(sc_b, bar_b)) + (trm_b * max(sc_a, bar_a))
-            # Normalization scale
             comp_score = float(np.tanh(comp_ab / 3.0))
 
-            # 3. Bliss Independence Excess Surface (Clinical Monotherapy Response Calibration)
-            # Map candidate disease-modifying confidence into clinical monotherapy response (~15-35%)
-            eff_a = float(np.clip(prob_a * 0.35, 0.10, 0.45))
-            eff_b = float(np.clip(prob_b * 0.35, 0.10, 0.45))
-            non_resp_indep = (1.0 - eff_a) * (1.0 - eff_b)
-            bliss_indep = 1.0 - non_resp_indep
+            # 3. Composite In-Silico Pair Score (heuristic graph ranking; not a measured interaction)
+            pair_score = float(2.0 * comp_score + 1.5 * ortho + 0.7 * comp_score * ortho)
 
-            # Synergistic reduction of remaining refractory risk via orthogonal target coupling:
-            risk_reduction_synergy = float(np.clip(0.35 * ortho * comp_score, 0.0, 0.85))
-            joint_prob = 1.0 - (non_resp_indep * (1.0 - risk_reduction_synergy))
-            bliss_excess = float(joint_prob - bliss_indep)
-
-            # 4. Virtual Chou-Talalay Combination Index (CI)
-            # CI < 0.70 strong synergy, 0.70-0.90 moderate synergy, 0.90-1.10 additive
-            virtual_ci = float(max(0.35, 1.0 - (0.45 * comp_score) - (0.25 * ortho)))
-
-            # 5. Composite Synergy Score
-            syn_score = float(2.0 * comp_score + 1.5 * ortho + 2.0 * risk_reduction_synergy)
-
-            # Safety & Route Compatibility
+            # Route & Safety Compatibility
             tier_a = cand_a.get("safety_tier", "")
             tier_b = cand_b.get("safety_tier", "")
-            if "Topical" in tier_a and "Topical" in tier_b:
-                route = "Dual Topical (High compliance; minimal systemic load)"
-            elif "Topical" in tier_a or "Topical" in tier_b:
-                route = "Targeted Oral + Topical Adjuvant (Systemic halt + localized rescue)"
+            if tier_a.startswith("Topical") and tier_b.startswith("Topical"):
+                route = "Dual Topical (Minimal systemic load)"
+            elif tier_a.startswith("Topical") or tier_b.startswith("Topical"):
+                route = "Systemic + Topical Adjuvant (Systemic control + localized targeting)"
             else:
-                route = "Oral / Systemic Combination (Clinical monitoring recommended)"
+                route = "Systemic / Oral Combination (Clinical safety monitoring required)"
 
-            # Mechanistic rationale
-            rationale_parts = []
-            if trm_a > 1.5 or trm_b > 1.5:
-                immune_drug = name_a if trm_a >= trm_b else name_b
-                rationale_parts.append(f"Immune disarmament via {immune_drug}")
-            if bar_a > 1.8 or bar_b > 1.8:
-                barrier_drug = name_a if bar_a >= bar_b else name_b
-                rationale_parts.append(f"PDE4B (+9.09 log2FC) barrier reversal via {barrier_drug}")
-            if sc_a > 1.5 or sc_b > 1.5:
-                regen_drug = name_a if sc_a >= sc_b else name_b
-                rationale_parts.append(f"Follicular McSC stem-cell mobilization via {regen_drug}")
-
-            rationale = (
-                "; ".join(rationale_parts) if rationale_parts else "Multimodal triad synergy"
+            rationale = _build_pair_rationale(
+                name_a=name_a,
+                pillar_a=pillar_a,
+                targets_a=targets_a,
+                name_b=name_b,
+                pillar_b=pillar_b,
+                targets_b=targets_b,
             )
 
             pairs.append(
                 (
-                    syn_score,
+                    pair_score,
                     {
                         "drug_a": name_a,
                         "drug_b": name_b,
-                        "drug_a_pillar": cand_a.get("curative_triad_alignment", "Pillar 1"),
-                        "drug_b_pillar": cand_b.get("curative_triad_alignment", "Pillar 2/3"),
-                        "synergy_score": round(syn_score, 4),
-                        "bliss_excess": round(bliss_excess, 4),
-                        "virtual_ci": round(virtual_ci, 3),
+                        "drug_a_pillar": pillar_a,
+                        "drug_b_pillar": pillar_b,
+                        "synergy_score": round(pair_score, 4),
+                        "pathway_complementarity": round(comp_score, 4),
                         "target_orthogonality": round(ortho, 3),
                         "route_compatibility": route,
                         "safety_tier": f"{tier_a} + {tier_b}",
@@ -206,7 +247,7 @@ def screen_pairwise_synergy(
 
     pairs.sort(key=lambda x: x[0], reverse=True)
 
-    # Filter to ensure diversity (no drug dominates all top slots)
+    # Diversity cap: no drug appears in more than 3 listed pairs
     results: list[SynergyPairResult] = []
     drug_counts: dict[str, int] = {}
 
@@ -225,8 +266,7 @@ def screen_pairwise_synergy(
             drug_a_pillar=p["drug_a_pillar"],
             drug_b_pillar=p["drug_b_pillar"],
             synergy_score=p["synergy_score"],
-            bliss_excess=p["bliss_excess"],
-            virtual_ci=p["virtual_ci"],
+            pathway_complementarity=p["pathway_complementarity"],
             target_orthogonality=p["target_orthogonality"],
             route_compatibility=p["route_compatibility"],
             safety_tier=p["safety_tier"],
@@ -238,21 +278,25 @@ def screen_pairwise_synergy(
         if len(results) >= top_k_pairs:
             break
 
-    # Export to JSON
     out_json.parent.mkdir(parents=True, exist_ok=True)
     payload = {
-        "title": "In-Silico Pairwise Synergy Matrix Screening",
+        "title": "In-Silico Pairwise Combination Hypothesis Screening",
+        "scoring_note": (
+            "Heuristic graph-based pair ranking combining pathway complementarity "
+            "(tanh of cross-axis single-agent scores) and target orthogonality "
+            "(Jaccard distance of matched targets). Not derived from experimental "
+            "dose-response curves or empirical synergy assays."
+        ),
         "evaluated_single_agents": len(candidates),
         "total_screened_pairs": len(pairs),
         "top_synergistic_pairs": [asdict(r) for r in results],
     }
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
-    logger.info("Saved synergy matrix JSON to %s", out_json)
+    logger.info("Saved pairwise hypothesis JSON to %s", out_json)
 
-    # Export to Markdown
     _render_synergy_markdown(results, out_md)
-    logger.info("Saved synergy matrix report to %s", out_md)
+    logger.info("Saved pairwise hypothesis report to %s", out_md)
 
     return results
 
@@ -260,39 +304,31 @@ def screen_pairwise_synergy(
 def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     lines = [
-        "# Pairwise In-Silico Drug Synergy Matrix: The Curative Triad",
+        "# Pairwise In-Silico Combination Hypotheses (3-Pillar Framework)",
         "",
-        "**The Vitiligo Initiative | Computational Pharmacology & Multi-Target Therapeutics**  ",
+        "**The Vitiligo Initiative | Computational Pharmacology & Multi-Target Hypotheses**  ",
         "**Model Basis:** Heterogeneous `RGAT-4H + ComplEx` GNN + Stage-2 Cross-Encoder reranker.  ",
         "",
         "---",
         "",
         "## Summary",
         "",
-        # No clinical figures here: the old summary quoted "~18% total body clearance"
-        # for a T-VASI50 rate (50% improvement, not clearance) and a relapse rate with no source.
-        "Pairs of the reranker's top single agents, ranked by a synergy score that combines "
-        "target orthogonality, a Bliss excess surface and a virtual Chou-Talalay "
-        "combination index, all computed from the model's predictions. They are "
-        "hypotheses to test, not measured drug interactions.",
+        "Pairs of the reranker's top single agents, ranked by a composite in-silico pair score "
+        "combining pathway complementarity (cross-axis immune vs. regeneration/barrier scores) "
+        "and target orthogonality (Jaccard distance across matched targets). These are "
+        "graph-derived hypotheses to test in preclinical assays, not measured drug interactions "
+        "or dose-response synergy indices.",
         "",
-        "| Rank | Combination Regimen | Virtual CI | Bliss Excess | Synergy Score | Route & Safety | Key Mechanistic Rationale |",
+        "| Rank | Combination Hypothesis | Pair Score | Complementarity | Orthogonality | Route & Safety | Mechanistic Rationale |",
         "|---|---|---:|---:|---:|---|---|",
     ]
 
     for r in results:
         pair_str = f"**{r.drug_a.capitalize()}** + **{r.drug_b.capitalize()}**"
-        ci_str = (
-            f"**{r.virtual_ci:.2f}** (Synergistic)" if r.virtual_ci < 0.7 else f"{r.virtual_ci:.2f}"
-        )
-        if abs(r.bliss_excess) < 1e-4:
-            bliss_str = "0.000"
-        elif r.bliss_excess > 0:
-            bliss_str = f"+{r.bliss_excess:.3f}"
-        else:
-            bliss_str = f"{r.bliss_excess:.3f}"
         lines.append(
-            f"| {r.rank} | {pair_str} | {ci_str} | {bliss_str} | {r.synergy_score:.2f} | {r.route_compatibility.split('(')[0].strip()} | {r.mechanistic_rationale} |"
+            f"| {r.rank} | {pair_str} | {r.synergy_score:.2f} | "
+            f"{r.pathway_complementarity:.2f} | {r.target_orthogonality:.2f} | "
+            f"{r.route_compatibility.split('(')[0].strip()} | {r.mechanistic_rationale} |"
         )
 
     lines.extend(
@@ -306,20 +342,13 @@ def _render_synergy_markdown(results: list[SynergyPairResult], path: Path) -> No
     )
 
     for r in results[:5]:
-        if abs(r.bliss_excess) < 1e-4:
-            bliss_str = "0.000"
-        elif r.bliss_excess > 0:
-            bliss_str = f"+{r.bliss_excess:.3f}"
-        else:
-            bliss_str = f"{r.bliss_excess:.3f}"
         lines.extend(
             [
                 f"### #{r.rank}. {r.drug_a.capitalize()} + {r.drug_b.capitalize()}",
-                f"- **Synergy Score:** `{r.synergy_score:.3f}` · **Virtual CI:** `{r.virtual_ci:.2f}` (Chou-Talalay: $<0.70$ indicates strong synergy) · **Bliss Excess:** `{bliss_str}`",
-                f"- **Target Orthogonality:** `{r.target_orthogonality:.2f}` (Jaccard distance: non-redundant target mechanisms)",
+                f"- **In-Silico Pair Score:** `{r.synergy_score:.3f}` · **Pathway Complementarity:** `{r.pathway_complementarity:.3f}` · **Target Orthogonality:** `{r.target_orthogonality:.2f}` (Jaccard distance)",
                 f"- **Route Compatibility:** {r.route_compatibility}",
-                f"- **{r.drug_a.capitalize()} Targets:** {', '.join(r.drug_a_targets) or 'Immune modulation'}",
-                f"- **{r.drug_b.capitalize()} Targets:** {', '.join(r.drug_b_targets) or 'Regenerative/Barrier modulation'}",
+                f"- **{r.drug_a.capitalize()} Targets:** {', '.join(r.drug_a_targets) or 'None matched'}",
+                f"- **{r.drug_b.capitalize()} Targets:** {', '.join(r.drug_b_targets) or 'None matched'}",
                 f"- **Mechanistic Rationale:** {r.mechanistic_rationale}",
                 "",
             ]
