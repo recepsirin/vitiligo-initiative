@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import torch
 from torch import nn
 from torch.nn import functional
@@ -379,6 +381,7 @@ class RelationalGNN(nn.Module):
         top_k: int = 15,
         target_kind: str | None = None,
         canonical_only: bool = True,
+        candidate_indices: Sequence[int] | None = None,
     ) -> list[dict[str, object]]:
         """Predict candidate entities or score links across three query modes:
         1. Forward: (head, rel, ?) -> predicts top tails.
@@ -451,7 +454,9 @@ class RelationalGNN(nn.Module):
 
         # Filter by target kind if requested
         if target_kind:
-            if target_kind == "DRUG" and canonical_only and dataset.canonical_drug_indices:
+            if candidate_indices is not None:
+                allowed_indices = set(candidate_indices)
+            elif target_kind == "DRUG" and canonical_only and dataset.canonical_drug_indices:
                 allowed_indices = set(dataset.canonical_drug_indices)
             else:
                 allowed_indices = set(dataset.kind_to_indices.get(target_kind, []))

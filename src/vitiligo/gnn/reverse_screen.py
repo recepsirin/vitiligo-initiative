@@ -95,9 +95,7 @@ class TargetScreenHit:
     drug_name: str
     canonical_name: str
     score: float
-    probability: float
     mechanism_class: str
-    route: str
     safety_tier: str
     is_cytotoxic: bool
 
@@ -148,7 +146,7 @@ def run_reverse_target_screening(
                 dataset=dataset,
                 top_k=80,
                 target_kind="DRUG",
-                canonical_only=True,
+                candidate_indices=dataset.screenable_drug_indices or None,
             )
         except (KeyError, ValueError) as err:
             logger.warning("Skipping target %s (%s): %s", target_name, relation, err)
@@ -168,7 +166,7 @@ def run_reverse_target_screening(
                 continue
 
             seen_drugs.add(canon)
-            route, safety = get_safety_profile(name)
+            tier, _ = get_safety_profile(name)
             mech = get_mechanism_class(name)
 
             hit = TargetScreenHit(
@@ -176,10 +174,8 @@ def run_reverse_target_screening(
                 drug_name=name,
                 canonical_name=canon,
                 score=float(p["score"]),
-                probability=float(p["probability"]),
                 mechanism_class=mech,
-                route=route,
-                safety_tier=safety,
+                safety_tier=tier,
                 is_cytotoxic=cyto,
             )
             hits.append(hit)
@@ -199,7 +195,11 @@ def run_reverse_target_screening(
     out_json.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "title": "Reverse Target Screening across Curative Triad Bottlenecks",
-        "description": "ComplEx Hermitian link prediction scores for (?, relation, target)",
+        "description": (
+            "ComplEx Hermitian link prediction scores for (?, relation, target). The score "
+            "is an uncalibrated inner product: it orders candidates and is not a probability. "
+            "Candidates are the drugs a database or a trial records as drugs."
+        ),
         "results": {k: asdict(v) for k, v in results.items()},
     }
     with open(out_json, "w", encoding="utf-8") as f:
@@ -233,11 +233,13 @@ def _render_reverse_screen_md(results: dict[str, TargetScreenResult], path: Path
         "## Summary",
         "",
         "The three highest-scoring drugs for each target. These are model predictions to "
-        "test in the laboratory, not evidence that a drug acts on the target in vitiligo.",
+        "test in the laboratory, not evidence that a drug acts on the target in vitiligo. "
+        "The ComplEx score orders candidates; it is not calibrated, so it is not a "
+        "probability and the gap between two scores carries no units.",
         "",
     ]
     for res in results.values():
-        top = ", ".join(f"**{h.drug_name}** ({h.probability:.1%})" for h in res.hits[:3])
+        top = ", ".join(f"**{h.drug_name}** (`{h.score:.2f}`)" for h in res.hits[:3])
         lines.append(f"- **{res.pillar}**, `{res.relation}` {res.target_name}: {top or 'no hits'}")
     lines.extend(["", "---", ""])
 
@@ -248,14 +250,14 @@ def _render_reverse_screen_md(results: dict[str, TargetScreenResult], path: Path
                 "",
                 f"**Biological Function:** {res.biological_function}",
                 "",
-                "| Rank | Candidate Drug | ComplEx Score | Probability | Mechanism Class | Route & Safety |",
-                "|:---:|---|---:|---:|---|---|",
+                "| Rank | Candidate Drug | ComplEx Score | Mechanism Class | Safety tier |",
+                "|:---:|---|---:|---|---|",
             ]
         )
 
         for hit in res.hits:
             lines.append(
-                f"| {hit.rank} | **{hit.drug_name}** | `{hit.score:.3f}` | `{hit.probability:.1%}` | {hit.mechanism_class} | {hit.route} |"
+                f"| {hit.rank} | **{hit.drug_name}** | `{hit.score:.3f}` | {hit.mechanism_class} | {hit.safety_tier} |"
             )
 
         lines.extend(["", "---", ""])

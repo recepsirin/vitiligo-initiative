@@ -49,8 +49,16 @@ On 2026-11-02, the primary Phase 3 results were published in *Nature Medicine*:
 
 | Trial | Povorcitinib 30 mg QD | Placebo | Difference |
 |---|---|---|---|
-| **STOP-V1 (NCT06113445)** | **18.4%** (43/234) | **6.5%** (15/233) | +11.9% ($P = 0.0003$) |
-| **STOP-V2 (NCT06113471)** | **12.9%** (29/224) | **4.8%** (11/225) | +8.1% ($P < 0.0001$) |
+| **STOP-V1 (NCT06113445)** | **18.4%** | **6.5%** | +11.9% ($P = 0.0003$) |
+| **STOP-V2 (NCT06113471)** | **12.9%** | **4.8%** | +8.1% ($P < 0.0001$) |
+
+The rates are the trial report's own, recorded in [`check.json`](check.json) under
+`observed_t_vasi50`. Responder counts stated here before (43/234, 15/233, 29/224,
+11/225) are removed: they trace to no source. They split each trial's recorded
+enrolment 1:1, a ratio this check does not know -- it scores the forecasts under 2:1
+and 3:1 allocations as well -- and two of the four disagreed with the percentage beside
+them (15/233 is 6.4%, not 6.5%; 11/225 is 4.9%, not 4.8%), which is what back-computing
+a count from a rounded rate does.
 
 ### How the Sealed Models Scored
 

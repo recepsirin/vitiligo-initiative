@@ -648,6 +648,11 @@ def screen_candidates(
     # Generate Reports
     screen_output = {
         "screen_name": "Vitiligo Curative Discovery Screen",
+        # Each candidate's "probability" is sigmoid of its score, which is an
+        # uncalibrated sum of link-prediction scores. It orders candidates within one
+        # list and is no probability of anything; the pair screen reads it as a
+        # response rate to build its Bliss surface. The reports print the score.
+        "probability_is": "sigmoid of the uncalibrated score: an ordering, not a probability",
         "num_drugs_evaluated": num_drugs,
         "num_entities": dataset.num_nodes,
         "num_edges": dataset.num_edges,
@@ -689,14 +694,14 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
         "",
         "Molecules with high predicted and verified affinity to disarm skin CD8+ $T_{RM}$ anchoring and prevent relapse:",
         "",
-        "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets (`*` = Verified) |",
-        "|:---:|:---|:---:|:---:|:---|:---|",
+        "| Rank | Drug | Score | Safety Profile | Matched Targets (`*` = Verified) |",
+        "|:---:|:---|:---:|:---|:---|",
     ]
     for c in data["durability_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
         lines.append(
-            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {safety} | {targets} |"
         )
 
     lines.extend(
@@ -706,15 +711,15 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
             "",
             "Molecules mobilizing melanocyte stem cells (`CTNNB1`, `HTR1A`, `MITF`, `TYR`) and reversing the `PDE4B` non-response barrier (+9.09 $\\log_2\\text{FC}$ in GSE256271):",
             "",
-            "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets (`*` = Verified) |",
-            "|:---:|:---|:---:|:---:|:---|:---|",
+            "| Rank | Drug | Score | Safety Profile | Matched Targets (`*` = Verified) |",
+            "|:---:|:---|:---:|:---|:---|",
         ]
     )
     for c in data["regeneration_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
         lines.append(
-            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {safety} | {targets} |"
         )
 
     lines.extend(

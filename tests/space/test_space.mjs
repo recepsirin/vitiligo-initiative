@@ -130,6 +130,32 @@ try {
   }
   eq('a cell\'s detail carries the model\'s note', (await text('#anat-detail .card__foot')).trim(), D.anatomy.note);
 
+  // --------------------------------------------- the target screen's rows
+  // Each row reads its own fields: the score as itself, never a probability
+  // (sigmoid of an uncalibrated score printed every top five above 92%), and the
+  // safety tier, which the screen used to fill with the is_cytotoxic flag. The
+  // molecule's case and the mechanism label are the page's own business, and the
+  // score is compared as a number so a rounding tie is not a failure.
+  console.log('target screen');
+  await go('combinations-reverse', 400);
+  await p.waitFor(`document.querySelectorAll('#reverse-body tr').length > 0`);
+  for (const key of Object.keys(D.reverse.results)) {
+    await p.eval(`(() => { const s = document.querySelector('#reverse-target'); s.value = ${JSON.stringify(key)}; s.onchange(); })()`);
+    await p.sleep(120);
+    const rows = JSON.parse(await p.eval(`JSON.stringify([...document.querySelectorAll('#reverse-body tr')].map((r) => [...r.children].map((c) => c.textContent.trim())))`));
+    const hits = D.reverse.results[key].hits;
+    const wrong = hits.map((h, i) => {
+      const r = rows[i] || [];
+      if (r[0] !== String(h.rank)) return `${key} row ${i}: rank ${r[0]} != ${h.rank}`;
+      if (r[1].toLowerCase() !== (h.canonical_name || h.drug_name).toLowerCase()) return `${key} row ${i}: molecule ${r[1]} != ${h.canonical_name || h.drug_name}`;
+      // A score of exactly 3.175 rounds to 3.18 or 3.17 depending on the rounder.
+      if (!(Math.abs(Number(r[2]) - h.score) < 0.00501)) return `${key} row ${i}: score ${r[2]} != ${h.score}`;
+      if (r[4] !== h.safety_tier) return `${key} row ${i}: tier ${JSON.stringify(r[4])} != ${JSON.stringify(h.safety_tier)}`;
+      return '';
+    }).filter(Boolean);
+    check(`the ${key} rows read their own fields`, rows.length === hits.length && wrong.length === 0, wrong[0] || `${rows.length} rows, file has ${hits.length}`);
+  }
+
   // ------------------------------------------------------ the trials view
   console.log('trials explorer');
   await go('pipeline-trials', 600);

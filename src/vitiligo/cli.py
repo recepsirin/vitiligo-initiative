@@ -739,7 +739,6 @@ def gnn_screen(
     table_dur.add_column("Rank", justify="right", style="cyan")
     table_dur.add_column("Drug", style="bold")
     table_dur.add_column("Score", justify="right")
-    table_dur.add_column("Probability", justify="right")
     table_dur.add_column("Safety Profile", style="dim")
     table_dur.add_column("Matched Targets")
     for r in results["durability_top_k"][:10]:
@@ -749,7 +748,6 @@ def gnn_screen(
             str(r["rank"]),
             r["drug_name"],
             f"{r['affinity_score']:.3f}",
-            f"{r['probability']:.1%}",
             safety,
             targets,
         )
@@ -760,7 +758,6 @@ def gnn_screen(
     table_reg.add_column("Rank", justify="right", style="cyan")
     table_reg.add_column("Drug", style="bold")
     table_reg.add_column("Score", justify="right")
-    table_reg.add_column("Probability", justify="right")
     table_reg.add_column("Safety Profile", style="dim")
     table_reg.add_column("Matched Targets")
     for r in results["regeneration_top_k"][:10]:
@@ -770,7 +767,6 @@ def gnn_screen(
             str(r["rank"]),
             r["drug_name"],
             f"{r['affinity_score']:.3f}",
-            f"{r['probability']:.1%}",
             safety,
             targets,
         )
@@ -895,14 +891,12 @@ def gnn_predict(
         table.add_column("Relation", style="cyan")
         table.add_column("Tail", style="bold")
         table.add_column("Score", justify="right")
-        table.add_column("Probability", justify="right")
         for r in results:
             table.add_row(
                 str(r.get("head", head)),
                 str(r.get("relation", rel)),
                 str(r.get("tail", tail)),
                 f"{r['score']:.3f}",
-                f"{r['probability']:.1%}",
             )
         console.print(table)
         return
@@ -913,14 +907,12 @@ def gnn_predict(
     table.add_column("Entity", style="bold")
     table.add_column("Kind", style="dim")
     table.add_column("Score", justify="right")
-    table.add_column("Probability", justify="right")
     for r in results:
         table.add_row(
             str(r["rank"]),
             str(r["name"]),
             str(r["kind"]),
             f"{r['score']:.3f}",
-            f"{r['probability']:.1%}",
         )
     console.print(table)
 
@@ -1012,18 +1004,16 @@ def gnn_reverse_screen(
         table = Table(title=f"{res.pillar}: ({res.relation} {res.target_name})")
         table.add_column("Rank", justify="right", style="cyan")
         table.add_column("Candidate Drug", style="bold")
-        table.add_column("Score", justify="right")
-        table.add_column("Probability", justify="right")
+        table.add_column("ComplEx score", justify="right")
         table.add_column("Mechanism Class", style="dim")
-        table.add_column("Route & Safety")
+        table.add_column("Safety tier")
         for h in res.hits:
             table.add_row(
                 str(h.rank),
                 h.drug_name,
                 f"{h.score:.3f}",
-                f"{h.probability:.1%}",
                 h.mechanism_class,
-                h.route,
+                h.safety_tier,
             )
         console.print(table)
         console.print()

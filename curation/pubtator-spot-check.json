@@ -1,0 +1,30 @@
+{
+  "what": "A recorded hand-check of PubTator 3.0 relations loaded as 'treats vitiligo', so the dataset card's figure traces to a sample someone else can re-judge.",
+  "why": "The card stated '30 of 34 treats vitiligo' and '31 of 34 gene associated with vitiligo' from a 2026 check whose sample was never recorded, so neither figure could be reproduced. Both are withdrawn; this file replaces the first of them.",
+  "method": {
+    "population": "graph_edges with extraction_method 'pubtator3', predicate TREATS, object 'Vitiligo' (203 relations on 2026-11-23)",
+    "sample": "10 of a random sample of 34 drawn with Python random.Random(20261123).sample over the relations ordered by edge id",
+    "judged_on": "the single evidence row with the highest PubTator score, read as the paper's title and abstract in the local corpus",
+    "verdict_rule": "supported = that paper states the drug treats, repigments or is therapeutic in vitiligo; not_supported = it does not, whatever other papers on the relation may say",
+    "caveat": "Each relation carries 1 to 33 papers. Judging only the strongest one undercounts: a relation whose top paper does not support it may be supported by another. Read this as a floor on correctness, not as a rate.",
+    "checked_by": "Claude Opus 5 (claude-opus-5), 2026-11-23, at Recep's request"
+  },
+  "result": {
+    "sampled": 10,
+    "supported": 5,
+    "not_supported": 4,
+    "evidence_is_not_a_paper": 1
+  },
+  "rows": [
+    {"edge": 13337, "drug": "Metyrapone", "pmid": "6850733", "pubtator": ["Negative_Correlation", 0.841], "papers": 2, "verdict": "supported", "quote": "[Metyrapone in the therapy of vitiligo]."},
+    {"edge": 10540, "drug": "Desonide", "pmid": "36425334", "pubtator": ["Negative_Correlation", 0.999], "papers": 6, "verdict": "supported", "quote": "azathioprine, clobetasol, desonide, hydrocortisone valerate, and other drugs utilized to cure vitiligo"},
+    {"edge": 11786, "drug": "Oxidopamine", "pmid": "39958821", "pubtator": ["Negative_Correlation", 0.576], "papers": 1, "verdict": "not_supported", "quote": "Local sympathetic nerve depletion does not alter vitiligo progression in a mouse model.", "reason": "Oxidopamine is the agent that depletes the nerves in the model, and the result was null. No sentence names it with vitiligo."},
+    {"edge": 8817, "drug": "flumequine", "pmid": "31614510", "pubtator": ["Negative_Correlation", 0.999], "papers": 3, "verdict": "supported", "quote": "These data show the potential of flumequine for use as an anti-vitiligo agent."},
+    {"edge": 5233, "drug": "hydroxychloroquine", "pmid": "35411132", "pubtator": ["Negative_Correlation", 0.999], "papers": 33, "verdict": "supported", "quote": "There is ample evidence to suggest that hydroxychloroquine (HCQ) is effective for vitiligo treatment"},
+    {"edge": 5282, "drug": "cyclophosphamide", "pmid": "25003059", "pubtator": ["Negative_Correlation", 0.997], "papers": 19, "verdict": "not_supported", "quote": "Concise review of recent studies in vitiligo.", "reason": "A review of the disease; no sentence names cyclophosphamide with vitiligo."},
+    {"edge": 10173, "drug": "Masoprocol", "pmid": "35222431", "pubtator": ["Negative_Correlation", 0.978], "papers": 3, "verdict": "not_supported", "quote": "Metabolomics Signature and Potential Application of Serum Polyunsaturated Fatty Acids Metabolism in Patients With Vitiligo.", "reason": "A metabolomics study; masoprocol appears as a lipoxygenase inhibitor, not a treatment. No sentence names it with vitiligo."},
+    {"edge": 4899, "drug": "Quinacrine", "pmid": "13081920", "pubtator": ["Negative_Correlation", 0.996], "papers": 3, "verdict": "supported", "quote": "Vitiligo treated with mepacrine.", "reason": "Mepacrine is quinacrine, so the entity resolution is right."},
+    {"edge": 9593, "drug": "delgocitinib", "pmid": "ctgov:NCT07820098", "pubtator": ["Negative_Correlation", 1.0], "papers": 30, "verdict": "evidence_is_not_a_paper", "reason": "PubTator 3.0 also reads registry records. Its strongest row here restates a trial, so this relation cannot be judged as a reading of a paper."},
+    {"edge": 7117, "drug": "Dapsone", "pmid": "25685131", "pubtator": ["Negative_Correlation", 0.999], "papers": 13, "verdict": "not_supported", "quote": "Rapid partial repigmentation of vitiligo in a young female adult with a gluten-free diet.", "reason": "A case report on diet; no sentence names dapsone with vitiligo."}
+  ]
+}

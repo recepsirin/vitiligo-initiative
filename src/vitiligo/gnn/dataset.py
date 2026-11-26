@@ -55,6 +55,33 @@ class EntityMeta:
     name: str
 
 
+# DrugBank does not allow redistribution, so the public release drops every
+# relation resting only on it (``graph.export``). The model is trained on the
+# graph that release publishes, so the dataset drops them too: 2 of 95,238 edges,
+# leaving the release's own 95,236.
+def _rests_only_on_drugbank(evidence_raw: str | None) -> bool:
+    rows = json.loads(evidence_raw) if evidence_raw else []
+    return all(str(row.get("source_id", "")).startswith("drugbank:") for row in rows)
+
+
+# What makes an entity a drug to screen: a drug database records its mechanism or
+# bioactivity, or it was given in a trial. An entity known only from sentences in
+# papers is a chemical the literature mentions -- chloroform, glucose, serotonin
+# and nitrogen all ranked among the reverse screen's top five for a target, each
+# with no structured evidence of being a drug at all.
+DRUG_EVIDENCE_METHODS = frozenset(
+    {
+        "chembl_mechanism",
+        "drugcentral_bioactivity",
+        "mechanism_record",
+        "structured",
+        "posted_result",
+        "curated_result",
+        "trial_result",
+    }
+)
+
+
 @dataclass
 class GraphDataset:
     entities: list[EntityMeta]
@@ -72,6 +99,7 @@ class GraphDataset:
     # Optional node features (fused BiomedBERT + GEO transcriptomics + GWAS)
     node_features: torch.Tensor | None = None
     canonical_drug_indices: list[int] = field(default_factory=list)
+    screenable_drug_indices: list[int] = field(default_factory=list)
 
     @property
     def num_nodes(self) -> int:
@@ -182,6 +210,7 @@ class GraphDataset:
             edge_weight=self.edge_weight[train_indices],
             node_features=self.node_features,
             canonical_drug_indices=self.canonical_drug_indices,
+            screenable_drug_indices=self.screenable_drug_indices,
         )
 
         val_edges = {
@@ -322,7 +351,8 @@ def load_graph_dataset(
 
     # 3. Fetch edges
     edge_rows = cur.execute(
-        "SELECT subject_id, predicate, object_id, confidence, claim, causal_level FROM graph_edges"
+        "SELECT subject_id, predicate, object_id, confidence, claim, causal_level, "
+        "evidence, extraction_method FROM graph_edges"
     ).fetchall()
 
     src_list: list[int] = []
@@ -330,11 +360,17 @@ def load_graph_dataset(
     rel_list: list[int] = []
     w_list: list[float] = []
 
-    for s_id, pred, o_id, conf, claim, causal in edge_rows:
+    drug_evidence: dict[int, int] = {}
+    for s_id, pred, o_id, conf, claim, causal, evidence, method in edge_rows:
         if s_id not in id_to_idx or o_id not in id_to_idx:
+            continue
+        if _rests_only_on_drugbank(evidence):
             continue
         u = id_to_idx[s_id]
         v = id_to_idx[o_id]
+        if method in DRUG_EVIDENCE_METHODS:
+            drug_evidence[u] = drug_evidence.get(u, 0) + 1
+            drug_evidence[v] = drug_evidence.get(v, 0) + 1
         r = rel_to_idx[pred]
         w = compute_causal_edge_weight(claim, causal, conf or 0.5, predicate=pred)
 
@@ -346,6 +382,8 @@ def load_graph_dataset(
     edge_index = torch.tensor([src_list, dst_list], dtype=torch.long)
     edge_type = torch.tensor(rel_list, dtype=torch.long)
     edge_weight = torch.tensor(w_list, dtype=torch.float)
+
+    screenable_drug_indices = [i for i in canonical_drug_indices if drug_evidence.get(i)]
 
     # 4. Attach multimodal node features if cached and matching node count
     feature_cache = Path("data/cache/gnn/multimodal_node_features.pt")
@@ -378,6 +416,7 @@ def load_graph_dataset(
         edge_weight=edge_weight,
         node_features=node_features,
         canonical_drug_indices=canonical_drug_indices,
+        screenable_drug_indices=screenable_drug_indices,
     )
 
     # Save to cache
@@ -396,6 +435,7 @@ def load_graph_dataset(
             "edge_weight": dataset.edge_weight,
             "node_features": dataset.node_features,
             "canonical_drug_indices": dataset.canonical_drug_indices,
+            "screenable_drug_indices": dataset.screenable_drug_indices,
         },
         cache_path,
     )
