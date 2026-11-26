@@ -130,6 +130,14 @@ try {
   }
   eq('a cell\'s detail carries the model\'s note', (await text('#anat-detail .card__foot')).trim(), D.anatomy.note);
 
+  // --------------------------------------------- pairwise hypotheses view
+  console.log('pairwise hypotheses');
+  await go('combinations-pairs', 400);
+  await p.waitFor(`document.querySelectorAll('#pairs-list button').length > 0`);
+  const pairsText = await text('[data-subview="pairs"]');
+  check('pairs view does not claim Chou-Talalay CI or Bliss excess', !/Chou[–-]Talalay|Virtual combination index|Bliss excess/i.test(pairsText));
+  check('pairs view shows pathway complementarity and target orthogonality', pairsText.includes('Pathway complementarity') && pairsText.includes('Target orthogonality'));
+
   // --------------------------------------------- the target screen's rows
   // Each row reads its own fields: the score as itself, never a probability
   // (sigmoid of an uncalibrated score printed every top five above 92%), and the

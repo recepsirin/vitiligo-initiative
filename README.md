@@ -28,8 +28,10 @@ Research and education software, not medical advice.
 posted to a public registry, reproduced with its denominator and a link to its
 record, so any number on the page can be checked against its source. That holds
 without a caveat because nothing here generates text: there is no model API
-client in this repository and no key to configure. The only models are two
-local readers: the embeddings behind search and the relation extractor above.
+client in this repository and no key to configure. The only models are local,
+non-generative readers and scorers: embeddings behind search, the relation
+extractor behind graph construction, and the offline relational GNN/reranker
+behind in-silico hypothesis screening.
 
 ## What the trial-results view will and will not show
 
@@ -98,7 +100,7 @@ See the complete index and table of contents in **[`docs/README.md`](docs/README
 
 ## Status
 
-v1.1.0 is tagged and runs local-first; a public URL is not live yet. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
+v1.1.0 is tagged. The Evidence Engine runs local-first (`vitiligo serve`), while the static [Translational Discovery Suite](https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery) is live on Hugging Face Spaces. The test suite is the quality gate: CI runs everything that needs no local corpus, and `./scripts/audit/smoke-all.sh` runs the full local gate.
 
 ## Community and citation
 
