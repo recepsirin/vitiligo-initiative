@@ -766,6 +766,7 @@ def build_enriched_graph_dataset(
         edge_weight=combined_edge_weight,
         node_features=enriched_features,
         canonical_drug_indices=dataset.canonical_drug_indices,
+        screenable_drug_indices=dataset.screenable_drug_indices,
     )
 
     # Cache enriched dataset
@@ -782,6 +783,7 @@ def build_enriched_graph_dataset(
         "edge_weight": enriched_dataset.edge_weight,
         "node_features": enriched_dataset.node_features,
         "canonical_drug_indices": enriched_dataset.canonical_drug_indices,
+        "screenable_drug_indices": enriched_dataset.screenable_drug_indices,
     }
     torch.save(save_dict, output_path)
     logger.info(

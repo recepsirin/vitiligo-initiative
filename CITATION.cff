@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, knowledge graph, or sealed forecasts in research, please cite this repository."
+type: software
+title: "Vitiligo Initiative: Open Evidence Engine, Knowledge Graph, and Sealed Trial Forecasting"
+version: 1.1.0
+date-released: "2026-11-22"
+license: Apache-2.0
+repository-code: "https://github.com/recepsirin/vitiligo-initiative"
+url: "https://huggingface.co/spaces/re-cep/vitiligo-curative-discovery"
+authors:
+  - family-names: Sirin
+    given-names: Recep
+keywords:
+  - vitiligo
+  - dermatology
+  - clinical-trials
+  - knowledge-graph
+  - biomedical-nlp
+  - bayesian-forecasting
+  - drug-repurposing
+  - open-science

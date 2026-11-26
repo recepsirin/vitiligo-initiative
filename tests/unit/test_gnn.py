@@ -371,8 +371,10 @@ def test_synergy_metrics_and_screening(tmp_path) -> None:
     top = results[0]
     assert top.rank == 1
     assert top.synergy_score > 0
-    assert 0.0 <= top.virtual_ci <= 1.0
+    assert 0.0 <= top.pathway_complementarity <= 1.0
     assert 0.0 <= top.target_orthogonality <= 1.0
+    assert not hasattr(top, "virtual_ci")
+    assert not hasattr(top, "bliss_excess")
 
 
 def test_reverse_target_screening(tmp_path) -> None:

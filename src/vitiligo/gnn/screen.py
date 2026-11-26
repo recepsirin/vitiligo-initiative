@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -151,28 +152,93 @@ NON_CURATIVE_COMORBIDITIES: set[str] = {
     "levothyroxine",
 }
 
-JAK_STAT_KEYWORDS = {
+ONCOLOGY_JAK_KEYWORDS = {
+    "fedratinib",
+    "momelotinib",
+    "pacritinib",
+    "cerdulatinib",
+    "itacitinib",
+}
+
+INVESTIGATIONAL_DERM_JAK_KEYWORDS = {
+    "povorcitinib",
+    "brepocitinib",
+    "ifidancitinib",
+    "gusacitinib",
+    "ivarmacitinib",
+}
+
+DERM_RHEUM_JAK_PDE4_KEYWORDS = {
     "ruxolitinib",
     "ritlecitinib",
     "tofacitinib",
     "baricitinib",
     "upadacitinib",
-    "cerdulatinib",
-    "ifidancitinib",
-    "brepocitinib",
     "deucravacitinib",
     "peficitinib",
     "delgocitinib",
-    "gusacitinib",
-    "ivarmacitinib",
-    "povorcitinib",
-    "itacitinib",
-    "momelotinib",
-    "fedratinib",
-    "pacritinib",
     "filgotinib",
     "abrocitinib",
+    "apremilast",
+    "roflumilast",
+    "rolipram",
 }
+
+SYSTEMIC_RETINOID_KEYWORDS = {
+    "isotretinoin",
+    "acitretin",
+    "alitretinoin",
+    "etretinate",
+}
+
+SYSTEMIC_IMMUNOMODULATOR_KEYWORDS = {
+    "cyclosporine",
+    "ciclosporin",
+    "methotrexate",
+    "sirolimus",
+    "everolimus",
+    "azathioprine",
+    "mycophenolate",
+    "abatacept",
+}
+
+TOPICAL_DRUG_KEYWORDS = {
+    "tacrolimus",
+    "pimecrolimus",
+    "crisaborole",
+    "latanoprost",
+    "bimatoprost",
+    "travoprost",
+    "calcipotriol",
+    "calcipotriene",
+    "tretinoin",
+    "minoxidil",
+}
+
+TOPICAL_FORMULATION_WORDS = {
+    "cream",
+    "topical",
+    "ointment",
+    "spray",
+    "gel",
+}
+
+JAK_STAT_KEYWORDS = (
+    ONCOLOGY_JAK_KEYWORDS
+    | INVESTIGATIONAL_DERM_JAK_KEYWORDS
+    | {
+        "ruxolitinib",
+        "ritlecitinib",
+        "tofacitinib",
+        "baricitinib",
+        "upadacitinib",
+        "deucravacitinib",
+        "peficitinib",
+        "delgocitinib",
+        "filgotinib",
+        "abrocitinib",
+    }
+)
 
 REGENERATIVE_AGONIST_KEYWORDS = {
     "afamelanotide",
@@ -255,38 +321,38 @@ def get_mechanism_class(drug_name: str) -> str:
     return "OTHER_IMMUNOMODULATOR"
 
 
+def _has_word(text: str, words: set[str] | list[str]) -> bool:
+    """Match any keyword on word boundaries so substrings (e.g. tretinoin in isotretinoin) never collide."""
+    return any(re.search(rf"\b{re.escape(w)}\b", text) is not None for w in words)
+
+
 def get_safety_profile(drug_name: str) -> tuple[str, bool]:
     """Classify clinical safety profile and determine if compound is cytotoxic chemotherapy."""
     name_l = drug_name.lower()
     canon = canonicalize_drug_name(drug_name)
-    if any(k in name_l for k in CYTOTOXIC_CHEMO_KEYWORDS):
+    if _has_word(name_l, CYTOTOXIC_CHEMO_KEYWORDS) or _has_word(canon, CYTOTOXIC_CHEMO_KEYWORDS):
         return "Cytotoxic Chemo (Contraindicated in non-malignant skin)", True
-    if any(t in name_l for t in ["cream", "topical", "ointment", "spray", "gel"]) or any(
-        t in canon
-        for t in [
-            "tacrolimus",
-            "pimecrolimus",
-            "crisaborole",
-            "latanoprost",
-            "bimatoprost",
-            "travoprost",
-            "calcipotriol",
-            "tretinoin",
-            "minoxidil",
-        ]
+    if _has_word(canon, SYSTEMIC_RETINOID_KEYWORDS) and not _has_word(
+        name_l, TOPICAL_FORMULATION_WORDS
     ):
-        return "Topical (Minimal systemic exposure; high tolerability)", False
-    if any(
-        j in canon
-        for j in (
-            JAK_STAT_KEYWORDS | {"apremilast", "roflumilast", "rolipram", "abatacept", "sirolimus"}
+        return (
+            "Systemic Retinoid (Oral dermatologic agent; teratogenic, requires monitoring)",
+            False,
         )
-    ):
-        return "Targeted Kinase/PDE4 (Manageable clinical safety; approved in derm/rheum)", False
+    if _has_word(name_l, TOPICAL_FORMULATION_WORDS) or _has_word(canon, TOPICAL_DRUG_KEYWORDS):
+        return "Topical (Minimal systemic exposure; high tolerability)", False
+    if _has_word(canon, ONCOLOGY_JAK_KEYWORDS):
+        return "Oncology / Investigational Kinase Inhibitor (Hematologic safety profile)", False
+    if _has_word(canon, INVESTIGATIONAL_DERM_JAK_KEYWORDS):
+        return "Investigational JAK Inhibitor (Clinical-stage vitiligo/derm agent)", False
+    if _has_word(canon, DERM_RHEUM_JAK_PDE4_KEYWORDS):
+        return "Targeted Kinase/PDE4 (Approved in derm/rheum; class safety monitoring)", False
+    if _has_word(canon, SYSTEMIC_IMMUNOMODULATOR_KEYWORDS):
+        return "Systemic Immunomodulator (Requires clinical safety monitoring)", False
     if get_mechanism_class(drug_name) == "CORTICOSTEROID":
         return "Corticosteroid (Acute palliative rescue; high post-cessation relapse)", False
-    if any(r in canon for r in (REGENERATIVE_AGONIST_KEYWORDS | PDE4_METABOLIC_KEYWORDS)):
-        return "Repurposed Non-Oncology (Favorable systemic safety profile)", False
+    if _has_word(canon, REGENERATIVE_AGONIST_KEYWORDS | PDE4_METABOLIC_KEYWORDS):
+        return "Repurposed Non-Oncology (Systemic/repurposed safety profile)", False
     return "Standard Molecular Entity", False
 
 
@@ -647,7 +713,11 @@ def screen_candidates(
 
     # Generate Reports
     screen_output = {
-        "screen_name": "Vitiligo Curative Discovery Screen",
+        "screen_name": "Vitiligo Multi-Target Discovery Screen",
+        # Each candidate's "probability" is sigmoid of its score, which is an
+        # uncalibrated sum of link-prediction scores. It orders candidates within one
+        # list and is no probability of anything; the reports print the score.
+        "probability_is": "sigmoid of the uncalibrated score: an ordering, not a probability",
         "num_drugs_evaluated": num_drugs,
         "num_entities": dataset.num_nodes,
         "num_edges": dataset.num_edges,
@@ -689,14 +759,14 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
         "",
         "Molecules with high predicted and verified affinity to disarm skin CD8+ $T_{RM}$ anchoring and prevent relapse:",
         "",
-        "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets (`*` = Verified) |",
-        "|:---:|:---|:---:|:---:|:---|:---|",
+        "| Rank | Drug | Score | Safety Profile | Matched Targets (`*` = Verified) |",
+        "|:---:|:---|:---:|:---|:---|",
     ]
     for c in data["durability_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
         lines.append(
-            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {safety} | {targets} |"
         )
 
     lines.extend(
@@ -706,15 +776,15 @@ def _render_markdown_report(data: dict[str, Any], path: Path) -> None:
             "",
             "Molecules mobilizing melanocyte stem cells (`CTNNB1`, `HTR1A`, `MITF`, `TYR`) and reversing the `PDE4B` non-response barrier (+9.09 $\\log_2\\text{FC}$ in GSE256271):",
             "",
-            "| Rank | Drug | Score | Probability | Safety Profile | Matched Targets (`*` = Verified) |",
-            "|:---:|:---|:---:|:---:|:---|:---|",
+            "| Rank | Drug | Score | Safety Profile | Matched Targets (`*` = Verified) |",
+            "|:---:|:---|:---:|:---|:---|",
         ]
     )
     for c in data["regeneration_top_k"][:15]:
         targets = ", ".join(c["target_matches"]) if c["target_matches"] else "Pathway modulation"
         safety = c.get("safety_tier", "Standard")
         lines.append(
-            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {c['probability']:.1%} | {safety} | {targets} |"
+            f"| {c['rank']} | **{c['drug_name']}** | {c['affinity_score']:.3f} | {safety} | {targets} |"
         )
 
     lines.extend(

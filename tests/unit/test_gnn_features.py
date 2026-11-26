@@ -194,3 +194,103 @@ def test_a_merged_entity_is_found_by_the_names_it_absorbed(test_db_path, tmp_pat
     assert dataset.name_to_idx["calcipotriol"] == index["calcipotriene"]
     assert dataset.name_to_idx["Calcipotriol"] == index["calcipotriene"]
     assert "vitamin d analogue" not in dataset.name_to_idx
+
+
+def _drug_edge(session, subject, obj, method: str, *source_ids: str) -> None:
+    from vitiligo.storage.models import ClaimKind, GraphEdge, RelationKind
+
+    session.add(
+        GraphEdge(
+            subject_id=subject.id,
+            predicate=RelationKind.INHIBITS,
+            object_id=obj.id,
+            confidence=0.8,
+            extraction_method=method,
+            evidence=[{"source_type": "prior", "source_id": s} for s in source_ids],
+            claim=ClaimKind.ASSERTED,
+        )
+    )
+
+
+def test_a_relation_resting_only_on_drugbank_is_not_trained_on(test_db_path, tmp_path) -> None:
+    """The public release drops them (its terms forbid redistribution), so the graph the
+    model trains on is the graph that was published: 95,238 - 2 = the release's 95,236."""
+    from sqlmodel import Session
+
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.graph.store import upsert_entity
+    from vitiligo.storage import get_engine
+    from vitiligo.storage.models import EntityKind
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        drug = upsert_entity(session, kind=EntityKind.DRUG, name="monobenzone")
+        drug.external_ids = {"chembl": "CHEMBL1"}
+        tyr = upsert_entity(session, kind=EntityKind.TARGET, name="TYR")
+        jak1 = upsert_entity(session, kind=EntityKind.TARGET, name="JAK1")
+        jak2 = upsert_entity(session, kind=EntityKind.TARGET, name="JAK2")
+        _drug_edge(session, drug, tyr, "structured", "drugbank:DB00600")  # dropped
+        _drug_edge(session, drug, jak1, "chembl_mechanism", "chembl:CHEMBL1")  # kept
+        # Mixed evidence is kept: the release drops the DrugBank row, not the relation.
+        _drug_edge(session, drug, jak2, "structured", "drugbank:DB00600", "chembl:CHEMBL1")
+        session.commit()
+    dataset = load_graph_dataset(
+        db_path=test_db_path, cache_path=tmp_path / "ds.pt", force_reload=True
+    )
+    name_of = {e.idx: e.name for e in dataset.entities}
+    objects = [name_of[int(i)] for i in dataset.edge_index[1]]
+    assert dataset.num_edges == 2 and sorted(objects) == ["JAK1", "JAK2"]
+
+
+def test_only_drugs_a_database_or_a_trial_records_are_screenable(test_db_path, tmp_path) -> None:
+    """Chloroform, glucose, serotonin and nitrogen ranked among the reverse screen's top
+    five for a target, each known only from sentences in papers."""
+    from sqlmodel import Session
+
+    from vitiligo.gnn.dataset import load_graph_dataset
+    from vitiligo.graph.store import upsert_entity
+    from vitiligo.storage import get_engine
+    from vitiligo.storage.models import EntityKind
+
+    with Session(get_engine(), expire_on_commit=False) as session:
+        target = upsert_entity(session, kind=EntityKind.TARGET, name="JAK1")
+        for name, method in (
+            ("ruxolitinib", "chembl_mechanism"),  # a drug database records it
+            ("selenium", "structured"),  # given in a registered trial
+            ("chloroform", "pubtator3"),  # a paper mentions it
+            ("glucose", "biored-biomedbert-silver-gold"),  # the extractor read it
+        ):
+            drug = upsert_entity(session, kind=EntityKind.DRUG, name=name)
+            drug.external_ids = {"chembl": f"CHEMBL-{name}"}  # all four are canonical drugs
+            _drug_edge(session, drug, target, method, f"{method}:1")
+        session.commit()
+    dataset = load_graph_dataset(
+        db_path=test_db_path, cache_path=tmp_path / "ds.pt", force_reload=True
+    )
+    name_of = {e.idx: e.name for e in dataset.entities}
+    assert sorted(name_of[i] for i in dataset.canonical_drug_indices) == [
+        "chloroform",
+        "glucose",
+        "ruxolitinib",
+        "selenium",
+    ]
+    assert sorted(name_of[i] for i in dataset.screenable_drug_indices) == [
+        "ruxolitinib",
+        "selenium",
+    ]
+
+
+def test_the_enriched_dataset_keeps_every_field_of_the_base_one() -> None:
+    """build_enriched_graph_dataset rebuilds the dataclass by hand, so a field added to
+    GraphDataset is silently dropped from the cache the model trains on."""
+    import dataclasses
+    import inspect
+
+    from vitiligo.gnn import geo_meta
+    from vitiligo.gnn.dataset import GraphDataset
+
+    source = inspect.getsource(geo_meta.build_enriched_graph_dataset)
+    for f in dataclasses.fields(GraphDataset):
+        assert f"{f.name}=" in source, (
+            f"GraphDataset.{f.name} is not passed to the enriched dataset"
+        )
+        assert f'"{f.name}"' in source, f"GraphDataset.{f.name} is not saved in the enriched cache"
